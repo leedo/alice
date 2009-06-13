@@ -1,0 +1,4 @@
+[% FOR msg IN msgs %]<li>
+  <div class="nick">[% msg.nick %]</div>
+  <div class="msg">[% msg.msg %]</div>
+</li>[% END %]
