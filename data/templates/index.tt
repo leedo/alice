@@ -19,8 +19,8 @@
             var data = transport.responseText.slice(len).strip().evalJSON();
             len = transport.responseText.length;
             data.each(function(channel) {
-              if (channel.text.length > 0) {
-                $(channel.channel + '_messages').insert(channel.text);
+              if (channel.html.length > 0) {
+                $(channel.channel + '_messages').insert(channel.html);
               }
             })
           }

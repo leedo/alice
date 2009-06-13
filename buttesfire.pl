@@ -27,9 +27,9 @@ my $http = POE::Component::Server::HTTP->new(
   StreamHandler    => \&handle_stream,
 );
 my $irc = POE::Component::IRC::State->spawn(
-  nick    => $config->{nick}    || 'jew888',
-  ircname => $config->{ircname} || 'jew888',
-  server  => $config->{server}  || 'irc.buttes.org',
+  nick    => $config->{nick}    || 'nick',
+  ircname => $config->{ircname} || 'nick',
+  server  => $config->{server}  || 'irc.freenode.org',
   port    => $config->{port}    || 6667,
 );
 
@@ -66,9 +66,9 @@ sub handle_stream {
     }
     my @json;
     for my $channel (keys %{$res->{msgs}}) {
-      my $channel_text = '';
-      $tt->process('message.tt', {msgs => $res->{msgs}{$channel}}, \$channel_text);
-      push @json, {text => $channel_text, channel => $channel};
+      my $html = '';
+      $tt->process('message.tt', {msgs => $res->{msgs}{$channel}}, \$html);
+      push @json, {html => $html, channel => $channel};
     }
     $res->{msgs} = {};
     $res->send($header.to_json(\@json)."$seperator$header$seperator") if @json;

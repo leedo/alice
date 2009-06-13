@@ -1,0 +1,6 @@
+nick: nick
+ircname: name
+server: irc.freenode.org
+channels:
+  - "#test1"
+  - "#test1"
