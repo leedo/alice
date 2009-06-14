@@ -131,7 +131,9 @@ sub formatted_string_to_html {
     }
     push @lines, $line;
   }
-  return join "\n", @lines;
+  my $output = join "\n", @lines;
+  $output =~ s/\s{2}/ &#160;/g;
+  return $output;
 }
 
 sub parse_formatted_string {

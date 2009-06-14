@@ -1,26 +1,62 @@
+<!doctype html>
 <html>
   <head>
     <title>Buttesfire</title>
     <script type="text/javascript" 
       src="http://ajax.googleapis.com/ajax/libs/prototype/1.6.0.2/prototype.js"></script>
     <script type="text/javascript">
+      var filters = [
+        function (content) {
+          var filtered = content;
+          filtered = filtered.replace(
+            /(https?\:\/\/.+?)([\b\s<])/gi, "<a href=\"$1\">$1</a>$2");
+          filtered = filtered.replace(
+            /(<a[^>]*>)(.*?(:?jpg|jpeg|gif|png))/gi, "$1<img src=\"$2\" />");
+          return filtered;
+        }
+      ];
+      
+      var applyFilters = function (content) {
+        filters.each(function(filter) {
+          content = filter(content);
+        });
+        return content;
+      };
+      
+      var scrollToBottom = function () {
+        window.scrollTo(0, document.height);
+      }
+      
       var showChannel = function (channel) {
         var oldchannel = $$('div.channel.active').first();
         oldchannel.removeClassName('active');
         $(oldchannel.id + "_tab").removeClassName('active');
         $(channel).addClassName('active');
         $(channel + "_tab").addClassName('active');
+        scrollToBottom();
       };
+      
+      var sayMessage = function (form) {
+        new Ajax.Request('/say', {
+          method: 'get',
+          parameters: form.serialize(),
+        });
+        form.childNodes[3].value = '';
+        return false;
+      }
+      
       document.observe('dom:loaded', function () {
         var len = 0;
-        var req = new Ajax.Request('http://localhost:8080/stream', {
+        new Ajax.Request('/stream', {
           method: 'get',
           onInteractive: function (transport) {
-            var data = transport.responseText.slice(len).strip().evalJSON();
+            var data = transport.responseText.slice(len).evalJSON();
             len = transport.responseText.length;
             data.each(function(channel) {
               if (channel.html.length > 0) {
-                $(channel.channel + '_messages').insert(channel.html);
+                $(channel.channel + '_messages').insert(applyFilters(channel.html));
+                if ($(channel).hasClassName('active'))
+                  scrollToBottom();
               }
             })
           }
@@ -34,14 +70,11 @@
         font-family: Helvetica, Arial, sans-serif;
         background: #fff;
       }
-      div#container {
-        width: 100%;
-        overflow: hidden;
-        position: relative;
-      }
       div.channel {
         display: none;
         position: relative;
+        margin-top: 18px;
+        margin-bottom: 54px;
       }
       div.channel.active {
         display: block;
@@ -51,7 +84,8 @@
         margin: 0;
         padding: 0;
         background: #fff;
-        margin-bottom: 54px;
+        overflow: hidden;
+        overflow-y: auto;
       }
       div.input {
         position: fixed;
@@ -64,7 +98,7 @@
         background: #efefef;
         border-top: 1px solid #aaa;
       }
-      div.input textarea {
+      div.input input {
         width: 100%;
         height: 100%;
         border: none;
@@ -121,15 +155,17 @@
         cursor: default;
       }
       div.topic {
-        display: fixed;
+        position: fixed;
         top: 0px;
         left: 0px;
+        width: 100%;
         background: #efefef;
         font-size: 12px;
         text-align: center;
         border-top: 1px solid #fff;
         border-bottom: 1px solid #aaa;
         padding: 1px 0;
+        z-index: 998;
       }
       ul.messages li {
         border-bottom: 1px solid #eee;
@@ -150,29 +186,34 @@
         border-right: 1px solid #ccc;
         background: #fff;
       }
+      div.msg.monospace {
+        font-family: Monaco, monospace;
+        font-size: 11px;
+      }
     </style>
   </head>
   <body>
-    <div id="container">
-      <ul id="tabs">
-        [% FOR channel IN channels %]
-        [% USE String(channel) %]
-        [% channel = String.replace('#','') %]
-        <li id="[% channel %]_tab"[% IF loop.first %] class="active"[% END %] onclick="showChannel('[% channel %]')">[% channel %]</li>
-        [% END %]
-      </ul>
+    <div class="topic" id="[% channel %]_topic">(no topic is set)</div>
+    <ul id="tabs">
       [% FOR channel IN channels %]
       [% USE String(channel) %]
       [% channel = String.replace('#','') %]
-      <div class="channel[% IF loop.first %] active[% END %]" id="[% channel %]">
-        <div class="topic" id="[% channel %]_topic">(no topic is set)</div>
-        <ul class="messages" id="[% channel %]_messages">
-        </ul>
-        <div class="input" id="[% channel %]_input">
-          <textarea></textarea>
-        </div>
-      </div>
+      <li id="[% channel %]_tab"[% IF loop.first %] class="active"[% END %] onclick="showChannel('[% channel %]')">[% channel %]</li>
       [% END %]
+    </ul>
+    [% FOR channel IN channels %]
+    [% USE String(channel) %]
+    [% channel = String.replace('#','') %]
+    <div class="channel[% IF loop.first %] active[% END %]" id="[% channel %]">
+      <ul class="messages" id="[% channel %]_messages">
+      </ul>
+      <div class="input" id="[% channel %]_input">
+        <form onsubmit="return sayMessage(this);" id="[% channel %]_form">
+          <input type="hidden" name="chan" value="[% channel %]" />
+          <input name="msg" id="[% channel %]_msg"/>
+        </form>
+      </div>
     </div>
+    [% END %]
   </body>
 </html>
