@@ -8,35 +8,65 @@
       var filters = [
         function (content) {
           var filtered = content;
+          // links
           filtered = filtered.replace(
-            /(https?\:\/\/.+?)([\b\s<])/gi, "<a href=\"$1\">$1</a>$2");
+            /(https?\:\/\/.+?)([\b\s<])/gi, "<a href=\"$1\" target=\"blank\">$1</a>$2");
+          // images
           filtered = filtered.replace(
             /(<a[^>]*>)(.*?(:?jpg|jpeg|gif|png))/gi, "$1<img src=\"$2\" />");
+          // audio
+          filtered = filtered.replace(
+            /(<a href=\"(.*?(:?wav|mp3|ogg|aiff)))/gi,
+            "<img src=\"/static?f=play.png\" onclick=\"playAudio(this)\" class=\"audio\"/>$1");
           return filtered;
         }
       ];
       
-      var applyFilters = function (content) {
+      function applyFilters (content) {
         filters.each(function(filter) {
           content = filter(content);
         });
         return content;
       };
       
-      var scrollToBottom = function () {
+      function scrollToBottom () {
         window.scrollTo(0, document.height);
       }
       
-      var showChannel = function (channel) {
+      function showChannel (channel) {
         var oldchannel = $$('div.channel.active').first();
         oldchannel.removeClassName('active');
         $(oldchannel.id + "_tab").removeClassName('active');
         $(channel).addClassName('active');
         $(channel + "_tab").addClassName('active');
+        $$('#tabs li').invoke('removeClassName', 'leftof_active');
+        if ($(channel + "_tab").previous())
+          $(channel + "_tab").previous().addClassName('leftof_active');
         scrollToBottom();
+        $(channel + '_msg').focus();
       };
       
-      var sayMessage = function (form) {
+      function playAudio(image, audio) {
+        console.log(audio);
+        image.src = '/static?f=pause.png'; 
+        if (! audio) {
+            var url = image.nextSibling.href;
+            audio = new Audio(url);
+            console.log(audio);
+            audio.addEventListener('ended', function () {
+              image.src = '/static?f=play.png';
+              image.onclick = function () { playAudio(image, audio) };
+            });
+        }
+        audio.play();
+        image.onclick = function() {
+          audio.pause();
+          this.src = '/static?f=play.png';
+          this.onclick = function () { playAudio(this, audio) };
+        };
+      }
+      
+      function sayMessage (form) {
         new Ajax.Request('/say', {
           method: 'get',
           parameters: form.serialize(),
@@ -55,19 +85,20 @@
             data.each(function(channel) {
               if (channel.html.length > 0) {
                 $(channel.channel + '_messages').insert(applyFilters(channel.html));
-                if ($(channel).hasClassName('active'))
+                if ($(channel.channel).hasClassName('active'))
                   scrollToBottom();
               }
             })
           }
         });
       });
+      window.onresize = scrollToBottom;
     </script>
     <style type="text/css">
       body {
         margin: 0;
         padding: 0;
-        font-family: Helvetica, Arial, sans-serif;
+        font-family: "Lucida Grande", Helvetica, sans-serif;
         background: #fff;
       }
       div.channel {
@@ -101,9 +132,11 @@
       div.input input {
         width: 100%;
         height: 100%;
+        padding: 3px 0;
         border: none;
         border-top: 1px solid #aaa;
         margin: 0;
+        outline: 0 none;
       }
       ul#tabs {
         list-style: none;
@@ -115,7 +148,7 @@
         height: 22px;
         width: 100%;
         z-index: 999;
-        font-size: 12px;
+        font-size: 11px;
         border-top: 1px solid #999;
         background: #ddd;
       }
@@ -129,7 +162,7 @@
         float: left;
         margin: 0;
         height: 14px;
-        padding: 4px 8px 4px 8px;
+        padding: 1px 8px 8px 8px;
         border: 1px solid #999;
         border-left: 1px solid transparent;
         border-bottom: none;
@@ -138,10 +171,10 @@
         background: #ddd;
       }
       ul#tabs li.active {
+        border: 1px solid #999;
         border-top: 1px solid #efefef;
-        border-bottom: 1px solid #999;
         background: #efefef;
-        height: 12px;
+        height: 10px;
         -webkit-border-bottom-left-radius: 2px;
         -webkit-border-bottom-right-radius: 2px;
         -moz-border-radius-bottomleft: 2px;
@@ -154,13 +187,16 @@
         background: #ccc;
         cursor: default;
       }
+      ul#tabs li.leftof_active {
+        border-right: 1px solid transparent;
+      }
       div.topic {
         position: fixed;
         top: 0px;
         left: 0px;
         width: 100%;
         background: #efefef;
-        font-size: 12px;
+        font-size: 11px;
         text-align: center;
         border-top: 1px solid #fff;
         border-bottom: 1px solid #aaa;
@@ -189,6 +225,14 @@
       div.msg.monospace {
         font-family: Monaco, monospace;
         font-size: 11px;
+      }
+      img.audio {
+        cursor: pointer;
+        display: inline;
+        padding: 0 4px;
+        width: 16px;
+        height: 16px;
+        margin-bottom: -3px;
       }
     </style>
   </head>

@@ -1,5 +1,8 @@
 package IRC::Formatting;
 
+use FindBin;
+use lib "$FindBin::Bin/lib";
+use local::lib "$FindBin::Bin";
 use List::MoreUtils qw/natatime/;
 use Moose;
 use HTML::Entities;

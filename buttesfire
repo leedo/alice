@@ -4,15 +4,15 @@ use strict;
 use warnings;
 
 use lib 'lib';
+use local::lib qw/./;
 use POE qw/Component::IRC::State Component::Server::HTTP/;
 use URI::QueryParam;
-use YAML::Any qw/LoadFile/;
-use IRC::Formatting;
+use YAML qw/LoadFile/;
 use Template;
 use JSON;
 use Encode;
 use HTML::Entities;
-use Data::Dumper;
+use IRC::Formatting;
 
 my @open_responses;
 my $header = "Content-Type: text/plain\r\n\r\n";
@@ -28,6 +28,7 @@ my $http = POE::Component::Server::HTTP->new(
     '/stream'      => \&setup_stream,
     '/favicon.ico' => \&not_found,
     '/say'         => \&handle_message,
+    '/static'      => \&handle_static,
   },
   StreamHandler    => \&handle_stream,
 );
@@ -92,6 +93,21 @@ sub handle_message {
     display_message($config->{nick}, $chan, $msg);
   }
   $res->code(200);
+  return 200;
+}
+
+sub handle_static {
+  my ($req, $res) = @_;
+  $res->streaming(0);
+  $res->code(200);
+  my $file = $req->uri->query_param("f");
+  my ($ext) = ($file =~ /[^\.]\.(.+)$/);
+  $res->content_type("image/$ext");
+  if (-e "data/static/$file") {
+    open my $fh, '<', "data/static/$file";
+    my @file = <$fh>;
+    $res->content(join "", @file);
+  }
   return 200;
 }
 
