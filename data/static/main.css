@@ -1,0 +1,158 @@
+body {
+  margin: 0;
+  padding: 0;
+  font-family: "Lucida Grande", Helvetica, sans-serif;
+  background: #fff;
+}
+a:link, a:visited, a:hover, a:active { color:#0033cc; }
+a:hover {
+  text-shadow: rgba( 0, 0, 0, .3 ) 0 1px 1px;
+}
+div.channel {
+  display: none;
+  position: relative;
+  margin-top: 18px;
+  margin-bottom: 54px;
+}
+div.channel.active {
+  display: block;
+}
+ul.messages {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  background: #fff;
+  overflow: hidden;
+  overflow-y: auto;
+}
+div.input {
+  position: fixed;
+  bottom: 23px;
+  left: 0px;
+  height: 22px;
+  width: 100%;
+  padding-top: 6px;
+  border-bottom: 2px solid #efefef;
+  background: #efefef;
+  border-top: 1px solid #aaa;
+}
+div.input input {
+  width: 100%;
+  height: 100%;
+  padding: 3px 0;
+  border: none;
+  border-top: 1px solid #aaa;
+  margin: 0;
+  outline: 0 none;
+}
+ul#tabs {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  height: 22px;
+  width: 100%;
+  z-index: 999;
+  font-size: 11px;
+  border-top: 1px solid #999;
+  background: #ddd;
+}
+ul#tabs li:first-child {
+  margin-left: 3px;
+}
+ul#tabs li:first-child.active {
+  border-left: 1px solid #999;
+}
+ul#tabs li {
+  float: left;
+  margin: 0;
+  height: 14px;
+  padding: 1px 8px 8px 8px;
+  border: 1px solid #999;
+  border-left: 1px solid transparent;
+  border-bottom: none;
+  color: #222;
+  margin-top: -1px;
+  background: #ddd;
+}
+ul#tabs li.active {
+  border: 1px solid #999;
+  border-top: 1px solid #efefef;
+  background: #efefef;
+  height: 10px;
+  -webkit-border-bottom-left-radius: 2px;
+  -webkit-border-bottom-right-radius: 2px;
+  -moz-border-radius-bottomleft: 2px;
+  -moz-border-radius-bottomright: 2px;
+}
+ul#tabs li.active:hover {
+  background: #efefef;
+}
+ul#tabs li:hover {
+  background: #ccc;
+  cursor: default;
+}
+ul#tabs li.leftof_active {
+  border-right: 1px solid transparent;
+}
+div.topic {
+  position: fixed;
+  top: 0px;
+  left: 0px;
+  width: 100%;
+  background: #efefef;
+  font-size: 11px;
+  text-align: center;
+  border-top: 1px solid #fff;
+  border-bottom: 1px solid #aaa;
+  padding: 1px 0;
+  z-index: 998;
+}
+ul.messages li {
+  border-bottom: 1px solid #eee;
+  background: #efefef;
+  font-size: 13px;
+  clear: both;
+}
+div.left {
+  float: left;
+  width: 120px;
+  font-weight: bold;
+  text-align: right;
+  padding: 5px;
+}
+div.msg {
+  margin-left: 131px;
+  padding: 5px;
+  border-right: 1px solid #ccc;
+  background: #fff;
+}
+div.msg.monospace {
+  font-family: Monaco, monospace;
+  font-size: 11px;
+}
+img.audio {
+  cursor: pointer;
+  display: inline;
+  padding: 0 4px;
+  width: 16px;
+  height: 16px;
+  margin-bottom: -3px;
+}
+ul.messages li.event {
+  font-size: 11px;
+  background: #d9e7fb;
+  border-bottom: 1px solid #fff;
+}
+ul.messages li.event div.msg {
+  background: none;
+}
+ul.messages li.event div.left {
+  font-weight: normal;
+}
+a.nick {
+  color: #000;
+  text-decoration: none;
+}

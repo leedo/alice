@@ -1,4 +1,4 @@
-[% FOR msg IN msgs %]<li>
-  <div class="nick">[% msg.nick %]</div>
-  <div class="msg[% IF msg.nick == "Shaniqua" %] monospace[% END %]">[% msg.msg %]</div>
-</li>[% END %]
+<li>
+  <div class="left"><a href="/query?nick=[% nick %]" onclick="sendQuery('[% nick %]')" class="nick">[% nick %]</a></div>
+  <div class="msg[% IF nick == "Shaniqua" %] monospace[% END %]">[% html %]</div>
+</li>

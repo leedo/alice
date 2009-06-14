@@ -1,3 +1,4 @@
+debug: 1
 nick: nick
 ircname: name
 server: irc.freenode.org

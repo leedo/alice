@@ -1,0 +1,3 @@
+[% USE String(channel.name) %]
+[% channel.name_clean = String.replace('#','chan_') %]
+<li id="[% channel.name_clean %]_tab"[% IF loop.first %] class="active"[% END %] onclick="showChannel('[% channel.name_clean %]')">[% channel.name %]</li>
