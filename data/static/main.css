@@ -111,7 +111,6 @@ div.topic {
   z-index: 998;
 }
 ul.messages li {
-  border-bottom: 1px solid #eee;
   background: #efefef;
   font-size: 13px;
   clear: both;
@@ -126,12 +125,20 @@ div.left {
 div.msg {
   margin-left: 131px;
   padding: 5px;
-  border-right: 1px solid #ccc;
+  border-left: 1px solid #ccc;
+  border-bottom: 1px solid #eee;
   background: #fff;
+}
+ul.messages li.self {
+  background: #ffffcc;
+}
+ul.messages li.self div.msg {
+  background: none;
 }
 div.msg.monospace {
   font-family: Monaco, monospace;
   font-size: 11px;
+  line-height: 11px;
 }
 img.audio {
   cursor: pointer;

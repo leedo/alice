@@ -1,4 +1,4 @@
-<li>
+<li class="message [% nick %][% IF self %] self[% END %]">
   <div class="left"><a href="/query?nick=[% nick %]" onclick="sendQuery('[% nick %]')" class="nick">[% nick %]</a></div>
   <div class="msg[% IF nick == "Shaniqua" %] monospace[% END %]">[% html %]</div>
 </li>

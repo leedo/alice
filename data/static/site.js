@@ -16,6 +16,21 @@ var filters = [
     return filtered;
   }
 ];
+var len = 0;
+var req;
+var isCtrl = false;
+
+document.onkeyup = function (e) {
+  if (e.which == 17) isCtrl = false;
+}
+document.onkeydown = function (e) {
+  if (e.which == 17) {
+    isCtrl = true;
+  }
+  else if (isCtrl && e.which == 75) {
+    $$('.channel.active .messages').first().innerHTML = '';
+  }
+}
 
 function applyFilters (content) {
   filters.each(function(filter) {
@@ -51,16 +66,14 @@ function showChannel (channel) {
 };
 
 function playAudio(image, audio) {
-  console.log(audio);
   image.src = '/static?f=pause.png'; 
   if (! audio) {
-      var url = image.nextSibling.href;
-      audio = new Audio(url);
-      console.log(audio);
-      audio.addEventListener('ended', function () {
-        image.src = '/static?f=play.png';
-        image.onclick = function () { playAudio(image, audio) };
-      });
+    var url = image.nextSibling.href;
+    audio = new Audio(url);
+    audio.addEventListener('ended', function () {
+      image.src = '/static?f=play.png';
+      image.onclick = function () { playAudio(image, audio) };
+    });
   }
   audio.play();
   image.onclick = function() {
@@ -79,32 +92,63 @@ function sayMessage (form) {
   return false;
 }
 
-document.observe('dom:loaded', function () {
-  var len = 0;
-  new Ajax.Request('/stream', {
-    method: 'get',
-    onInteractive: function (transport) {
-      var data = transport.responseText.slice(len).evalJSON();
-      console.log(transport.responseText);
-      len = transport.responseText.length;
-      data.msgs.each(function(message) {
-        message.channel = message.channel.replace('#', 'chan_');
-        if (message.html.length > 0) {
-          $(message.channel + '_messages').insert(applyFilters(message.html));
-          if ($(message.channel).hasClassName('active'))
-            scrollToBottom();
-        }
-      });
-      data.actions.each(function(action) {
-        if (action.type == "join") {
-          var chan_clean = action.name.replace("#", "chan_");
-          if (! $(chan_clean)) {
-            $('container').insert(action.html.channel);
-            $('tabs').insert(action.html.tab);
-          }
-        }
-      })
+function stripNick (html) {
+  html = html.replace(/<div class="left">.*<\/div>/,'');
+  return html;
+}
+
+function handle_update (transport) {
+  var data = transport.responseText.slice(len).evalJSON();
+  len = transport.responseText.length;
+  data.msgs.each(function(message) {
+    message.channel = message.channel.replace('#', 'chan_');
+    if (message.html || message.full_html) {
+      var last_message = $$('#' + message.channel + ' .'
+        + message.nick + ':last-child .msg').first();
+      if (message.nick == "Shaniqua" && last_message) {
+        var html = applyFilters(message.html);
+        last_message.insert("<br />" + html);
+      }
+      else if (message.type == "message" && last_message) {
+        var html = stripNick(applyFilters(message.full_html));
+        $(message.channel + '_messages').insert(html);
+      }
+      else {
+        var html = applyFilters(message.full_html);
+        $(message.channel + '_messages').insert(html);
+      }
+      if ($(message.channel).hasClassName('active')) scrollToBottom();
     }
   });
-});
+  data.actions.each(function(action) {
+    if (action.type == "join") {
+      var chan_clean = action.name.replace("#", "chan_");
+      if (! $(chan_clean)) {
+        $('container').insert(action.html.channel);
+        $('tabs').insert(action.html.tab);
+      }
+    }
+  });
+  if (len > 500000) reconnect();
+}
+
+function connect () {
+  len = 0;
+  req = new Ajax.Request('/stream', {
+    method: 'get',
+    onCreate: function(response) {
+      if (Prototype.Browser.WebKit)
+        response.request.transport.onerror = reconnect;
+    },
+    onComplete: reconnect,
+    onInteractive: handle_update
+  });
+}
+
+function reconnect () {
+  req.abort();
+  connect();
+}
+
+document.observe('dom:loaded', connect);
 window.onresize = scrollToBottom;

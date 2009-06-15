@@ -6,7 +6,6 @@ use local::lib "$FindBin::Bin";
 use List::MoreUtils qw/natatime/;
 use Moose;
 use HTML::Entities;
-use Data::Dumper;
 
 my $BOLD      = "\002",
 my $COLOR     = "\003";
@@ -130,13 +129,13 @@ sub formatted_string_to_html {
     my @formatted_line = parse_formatted_string($_);
     my $line;
     for (@formatted_line) {
-      $line .= '<span style="'.$_->[0]->to_css.'">'.encode_entities($_->[1] || '', '<>&"').'</span>';
+      my $text = encode_entities($_->[1] || '', '<>&"');
+      $text =~ s/\s/&#160;/g;
+      $line .= '<span style="'.$_->[0]->to_css.'">'.$text.'</span>';
     }
     push @lines, $line;
   }
-  my $output = join "\n", @lines;
-  $output =~ s/\s{2}/ &#160;/g;
-  return $output;
+  return join "\n", @lines;
 }
 
 sub parse_formatted_string {

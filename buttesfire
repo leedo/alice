@@ -5,7 +5,7 @@ use warnings;
 
 use lib 'lib';
 use local::lib qw/./;
-use POE qw/Component::IRC::State Component::Server::HTTP/;
+use POE qw/Component::IRC::State Component::IRC::Plugin::Connector Component::Server::HTTP/;
 use URI::QueryParam;
 use YAML qw/LoadFile/;
 use Template;
@@ -14,6 +14,7 @@ use Encode;
 use HTML::Entities;
 use IRC::Formatting;
 use Time::HiRes qw/usleep/;
+use List::MoreUtils qw/uniq/;
 
 my @open_responses;
 my $header = "Content-Type: text/plain\r\n\r\n";
@@ -74,6 +75,10 @@ sub handle_stream {
     }
     $res->send($header . to_json({msgs => $res->{msgs}, actions => $res->{actions}})
              . "$seperator$header$seperator") if @{$res->{msgs}} or @{$res->{actions}};
+    if ($res->is_error) {
+      $res->close;
+      return;
+    }
     $res->{msgs} = [];
     $res->{actions} = [];
   }
@@ -104,6 +109,7 @@ sub handle_static {
   my $file = $req->uri->query_param("f");
   my ($ext) = ($file =~ /[^\.]\.(.+)$/);
   if (-e "data/static/$file") {
+    open my $fh, '<', "data/static/$file";
     log_debug("serving static file: $file");
     if ($ext =~ /png|gif|jpg|jpeg/i) {
       $res->content_type("image/$ext"); 
@@ -114,7 +120,6 @@ sub handle_static {
     elsif ($ext =~ /css/) {
       $res->content_type("text/css");
     }
-    open my $fh, '<', "data/static/$file";
     my @file = <$fh>;
     $res->code(200);
     $res->content(join "", @file);
@@ -133,7 +138,7 @@ sub send_index {
   $tt->process('index.tt', {
     channels => [ map {
       {name => $_, topic => $irc->channel_topic($_)}
-    } @{$config->{channels}} ]
+    } uniq(@{$config->{channels}}, keys %{$irc->channels}) ]
   }, \$output) or die $!;
   $res->content($output);
   return 200;
@@ -149,6 +154,7 @@ sub not_found {
 
 sub _start {
   $irc->yield( register => 'all' );
+  $irc->plugin_add('Connector' => POE::Component::IRC::Plugin::Connector->new);
   $irc->yield( connect => { } );
   log_info("You can view your IRC session at: http://localhost:8080/view");
   log_debug("connected to irc server");
@@ -220,7 +226,8 @@ sub display_message {
     type      => "message",
     nick      => $nick,
     channel   => $channel,
-    html       => IRC::Formatting->formatted_string_to_html($text),
+    self      => $nick eq $config->{nick},
+    html       => decode_utf8(IRC::Formatting->formatted_string_to_html($text)),
     timestamp => make_timestamp(),
   };
   add_outgoing($msg, "message");
@@ -247,7 +254,7 @@ sub add_outgoing {
   my ($hashref, $type) = @_;
   my $html = '';
   $tt->process("$type.tt", $hashref, \$html);
-  $hashref->{html} = decode_utf8($html);
+  $hashref->{full_html} = decode_utf8($html);
   log_debug("adding $type to response queues") if @open_responses;
   push @{$_->{msgs}}, $hashref for @open_responses;
 }
