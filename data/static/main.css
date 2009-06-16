@@ -114,6 +114,8 @@ ul.messages li {
   background: #efefef;
   font-size: 13px;
   clear: both;
+  width: 100%;
+  overflow: hidden;
 }
 div.left {
   float: left;
@@ -128,6 +130,12 @@ div.msg {
   border-left: 1px solid #ccc;
   border-bottom: 1px solid #eee;
   background: #fff;
+  word-wrap: break-word;
+  -khtml-line-break: after-white-space;
+  -khtml-nbsp-mode: space;
+}
+div.msg img {
+  display: block;
 }
 ul.messages li.self {
   background: #ffffcc;
@@ -138,7 +146,10 @@ ul.messages li.self div.msg {
 div.msg.monospace {
   font-family: Monaco, monospace;
   font-size: 11px;
-  line-height: 11px;
+  line-height: 13px;
+  white-space: pre-wrap;
+  word-wrap: normal;
+  padding: 8px 5px;
 }
 img.audio {
   cursor: pointer;

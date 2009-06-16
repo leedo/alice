@@ -7,7 +7,7 @@ var filters = [
       "<a href=\"$1\" target=\"blank\">$1</a>$2");
     // images
     filtered = filtered.replace(
-      /(<a[^>]*>)(.*?(:?jpg|jpeg|gif|png))/gi,
+      /(<a[^>]*?>)(.*?(:?jpg|jpeg|gif|png))/gi,
       "$1<img src=\"$2\" onload=\"loadInlineImage(this)\" />");
     // audio
     filtered = filtered.replace(
@@ -27,7 +27,8 @@ document.onkeydown = function (e) {
   if (e.which == 17) {
     isCtrl = true;
   }
-  else if (isCtrl && e.which == 75) {
+  console.log(isCtrl);
+  if (isCtrl && e.which == 75) {
     $$('.channel.active .messages').first().innerHTML = '';
   }
 }
@@ -98,8 +99,13 @@ function stripNick (html) {
 }
 
 function handle_update (transport) {
-  var data = transport.responseText.slice(len).evalJSON();
+  var data = transport.responseText.slice(len);
   len = transport.responseText.length;
+   
+  // this isn't being stripped by FF for some reason...
+  data = data.replace(/--xbuttesfirex\n/g,"");
+  data = data.replace("Content-Type: text/plain\r\n\r\n", "");
+  data = data.evalJSON();
   data.msgs.each(function(message) {
     message.channel = message.channel.replace('#', 'chan_');
     if (message.html || message.full_html) {
@@ -129,25 +135,20 @@ function handle_update (transport) {
       }
     }
   });
-  if (len > 500000) reconnect();
 }
 
 function connect () {
   len = 0;
+  console.log("connecting...");
   req = new Ajax.Request('/stream', {
     method: 'get',
     onCreate: function(response) {
       if (Prototype.Browser.WebKit)
-        response.request.transport.onerror = reconnect;
+        response.request.transport.onerror = connect;
     },
-    onComplete: reconnect,
+    onComplete: connect,
     onInteractive: handle_update
   });
-}
-
-function reconnect () {
-  req.abort();
-  connect();
 }
 
 document.observe('dom:loaded', connect);

@@ -4,7 +4,8 @@ use strict;
 use warnings;
 
 use lib 'lib';
-use local::lib qw/./;
+use lib 'extlib/lib/perl5';
+use local::lib 'extlib';
 use POE qw/Component::IRC::State Component::IRC::Plugin::Connector Component::Server::HTTP/;
 use URI::QueryParam;
 use YAML qw/LoadFile/;
@@ -18,7 +19,7 @@ use List::MoreUtils qw/uniq/;
 
 my @open_responses;
 my $header = "Content-Type: text/plain\r\n\r\n";
-my $seperator = "\n--xbuttesfirex\n";
+my $seperator = "--xbuttesfirex";
 
 my $config = LoadFile($ENV{HOME}.'/.buttesfire.yaml');
 my $tt = Template->new(INCLUDE_PATH => 'data/templates');
@@ -54,8 +55,12 @@ sub setup_stream {
   $res->streaming(1);
   $res->code(200);
   $res->content_type('multipart/x-mixed-replace; boundary=xbuttesfirex');
+  $res->header(Connection => 'close');
+  $res->{seperator} = $req->header('User-Agent') =~ /Safari/ ? 
+                      "\n$seperator\n$header$seperator\n" : "\n$seperator\n";
   $res->{msgs} = [];
   $res->{actions} = [];
+  $res->{length} = 0;
   push @open_responses, $res;
   log_debug("opening a streaming http connection");
   return 200;
@@ -63,33 +68,57 @@ sub setup_stream {
 
 sub handle_stream {
   my ($req, $res) = @_;
-  if ($res->is_error) {
+  
+  usleep(10_000);
+  
+  if ($res->is_error or $res->{length} > 50_000) {
+    log_debug("closing HTTP connection");
+    for (0 .. $#open_responses - 1) {
+      if ($res == $open_responses[$_]) {
+        splice(@open_responses, $_, 1);
+        print @open_responses;
+      }
+    }
     $res->close;
-    log_debug("closing broken HTTP connection");
+    $res->continue;
     return;
   }
   if (@{$res->{actions}} or @{$res->{msgs}}) {
+    my $output;
+    
     if (! $res->{started}) {
       $res->{started} = 1;
-      $res->send($seperator);
+      $output .= "$seperator\n";
     }
-    $res->send($header . to_json({msgs => $res->{msgs}, actions => $res->{actions}})
-             . "$seperator$header$seperator") if @{$res->{msgs}} or @{$res->{actions}};
+    
+    $output .= $header;
+    $output .= to_json({msgs => $res->{msgs}, actions => $res->{actions}});
+    $output .= $res->{seperator};
+    
+    $res->{length} += length $output;
+    $output .= "\n$seperator--\n" if $res->{length} > 50_000;
+    $res->send($output) if @{$res->{msgs}} or @{$res->{actions}};
+    
     if ($res->is_error) {
       $res->close;
+      $res->continue;
       return;
     }
-    $res->{msgs} = [];
-    $res->{actions} = [];
+    else {
+      $res->{msgs} = [];
+      $res->{actions} = []; 
+    }
   }
-  usleep(10_000);
-  $res->continue;
+  else {
+    $res->continue;
+  }
 }
 
 sub handle_message {
   my ($req, $res) = @_;
   $res->streaming(0);
-  if (my $msg = $req->uri->query_param('msg') and 
+  my $msg = $req->uri->query_param('msg');
+  if (defined $msg and length $msg and 
       my $chan = $req->uri->query_param('chan')) {
     if ($msg =~ /^\/join (.+)/) {
       $irc->yield( join => $1);

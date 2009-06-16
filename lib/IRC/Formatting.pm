@@ -1,10 +1,7 @@
 package IRC::Formatting;
 
-use FindBin;
-use lib "$FindBin::Bin/lib";
-use local::lib "$FindBin::Bin";
-use List::MoreUtils qw/natatime/;
 use Moose;
+use List::MoreUtils qw/natatime/;
 use HTML::Entities;
 
 my $BOLD      = "\002",
@@ -13,8 +10,8 @@ my $RESET     = "\017";
 my $INVERSE   = "\026";
 my $UNDERLINE = "\037";
 
-my $COLOR_SEQUENCE    = qr/(\d{0,2})(?:,(\d{0,2}))?/;
-my $COLOR_SEQUENCE_NC = qr/\d{0,2}(?:,\d{0,2})?/;
+my $COLOR_SEQUENCE    = qr/(\d{1,2})(?:,(\d{1,2}))?/;
+my $COLOR_SEQUENCE_NC = qr/\d{1,2}(?:,\d{1,2})?/;
 my $FORMAT_SEQUENCE   = qr/(
       $BOLD
     | $COLOR$COLOR_SEQUENCE_NC?  | $RESET
@@ -63,8 +60,8 @@ sub reset {
   $self->b(0);
   $self->i(0);
   $self->u(0);
-  $self->fg('');
-  $self->bg('');
+  $self->fg(undef);
+  $self->bg(undef);
 }
 
 sub accumulate {
@@ -103,7 +100,7 @@ sub _extract_colors_from {
   my ($self, $format_sequence) = @_;
   $format_sequence = substr($format_sequence, 1);
   my ($fg, $bg) = ($format_sequence =~ /$COLOR_SEQUENCE/);
-  if (!$fg) {
+  if (! defined $fg) {
     return undef, undef;
   }
   else {
@@ -115,9 +112,10 @@ sub _css_styles {
   my $self = shift;
   my ($fg, $bg) = $self->i ? ($self->bg || 0, $self->fg || 1) : ($self->fg, $self->bg);
   my $styles = {};
-  $styles->{'color'} = '#'.$COLORS[$fg] if $fg;
-  $styles->{'background-color'} = '#'.$COLORS[$bg] if $bg;
+  $styles->{'color'} = '#'.$COLORS[$fg] if defined $fg;
+  $styles->{'background-color'} = '#'.$COLORS[$bg] if defined $bg;
   $styles->{'font-weight'} = 'bold' if $self->b;
+  $styles->{'letter-spacing'} = '-1px' if $self->b;
   $styles->{'text-decoration'} = 'underline' if $self->u;
   return $styles;
 }
@@ -129,11 +127,13 @@ sub formatted_string_to_html {
     my @formatted_line = parse_formatted_string($_);
     my $line;
     for (@formatted_line) {
-      my $text = encode_entities($_->[1] || '', '<>&"');
-      $text =~ s/\s/&#160;/g;
-      $line .= '<span style="'.$_->[0]->to_css.'">'.$text.'</span>';
+      my $text = encode_entities($_->[1], '<>&"');
+      if (defined $text and length $text) {
+        $text =~ s/\s{2}/&#160; /g;
+        $line .= '<span style="'.$_->[0]->to_css.'">'.$text.'</span>'; 
+      }
     }
-    push @lines, $line;
+    push @lines, $line if length $line;
   }
   return join "\n", @lines;
 }

@@ -1,0 +1,23 @@
+--- #YAML:1.0
+name: ButtesfireWeb
+abstract: IRC client that is viewed in Safari
+version: 0.1
+author:
+  - Lee Aylward <lee@laylward.com>
+license: perl
+distribution_type: module
+requires:
+  YAML: 0
+  JSON: 0
+  Moose: 0
+  POE::Component::IRC: 0
+  POE::Component::Server::HTTP: 0
+  Template: 0
+  HTML::Entities: 0
+  List::MoreUtils: 0
+  local::lib: 0
+urls:
+  license: http://dev.perl.org/licenses/
+meta-spec:
+  version: 1.3
+  url: http://module-build.sourceforge.net/META-spec-v1.3.html
