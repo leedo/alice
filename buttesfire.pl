@@ -46,7 +46,7 @@ my $irc = POE::Component::IRC::State->spawn(
 
 POE::Session->create(
   package_states => [
-    main => [qw/_start irc_public irc_001 irc_join irc_part irc_quit irc_chan_sync/]
+    main => [qw/_start irc_public irc_001 irc_join irc_part irc_quit irc_chan_sync irc_topic/]
   ],
 );
 
@@ -233,6 +233,12 @@ sub irc_quit {
   for my $channel (@$channels) {
     display_event($nick, $channel, "quit", $msg);
   }
+}
+
+sub irc_topic {
+  my ($who, $channel, $topic) = @_[ARG0 .. ARG2];
+  my $nick = ( split /!/, $who)[0];
+  display_event($nick, $channel, "topic", $topic);
 }
 
 sub display_event {
