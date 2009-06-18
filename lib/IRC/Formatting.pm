@@ -115,7 +115,6 @@ sub _css_styles {
   $styles->{'color'} = '#'.$COLORS[$fg] if defined $fg;
   $styles->{'background-color'} = '#'.$COLORS[$bg] if defined $bg;
   $styles->{'font-weight'} = 'bold' if $self->b;
-  $styles->{'letter-spacing'} = '-1px' if $self->b;
   $styles->{'text-decoration'} = 'underline' if $self->u;
   return $styles;
 }

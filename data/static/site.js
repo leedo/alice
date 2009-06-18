@@ -8,7 +8,7 @@ var filters = [
     // images
     filtered = filtered.replace(
       /(<a[^>]*?>)(.*?(:?jpg|jpeg|gif|png))/gi,
-      "$1<img src=\"$2\" onload=\"loadInlineImage(this)\" />");
+      "$1<img src=\"$2\" onload=\"loadInlineImage(this)\" width=\"0\" alt=\"Loading Image...\" />");
     // audio
     filtered = filtered.replace(
       /(<a href=\"(.*?(:?wav|mp3|ogg|aiff)))/gi,
@@ -20,6 +20,7 @@ var len = 0;
 var req;
 var isCtrl = false;
 var isError = false;
+var seperator = "--xbuttesfirex\n";
 
 document.onkeyup = function (e) {
   if (e.which == 17) isCtrl = false;
@@ -30,6 +31,7 @@ document.onkeydown = function (e) {
   }
   if (isCtrl && e.which == 75) {
     $$('.channel.active .messages').first().innerHTML = '';
+    return false;
   }
 }
 
@@ -64,6 +66,7 @@ function showChannel (channel) {
     $(channel + "_tab").previous().addClassName('leftof_active');
   scrollToBottom();
   $(channel + '_msg').focus();
+  $(channel + '_tab').removeClassName("unread");
 };
 
 function playAudio(image, audio) {
@@ -99,18 +102,29 @@ function stripNick (html) {
 }
 
 function handle_update (transport) {
-  console.time('parse_responseText')
   var data = transport.responseText.slice(len);
-  len = transport.responseText.length;
-   
-  // this isn't being stripped by FF for some reason...
+  var start;
+  var end;
+  // only safari seems to honor seperators and content-type
   if (! Prototype.Browser.Safari) {
-    data = data.replace(/--xbuttesfirex\n/g,"");
-    data = data.replace("Content-Type: text/plain\r\n\r\n", ""); 
+    start = data.indexOf(seperator);
+    if (start > -1) {
+      start += seperator.length;
+      end = data.indexOf(seperator, start);
+      if (end == -1) return;
+    }
+    else return;
+    len += (end + seperator.length) - start;
+    data = data.slice(start, end);
+    data = data.replace("Content-Type: text/plain\r\n\r\n", "");
   }
-  data = data.evalJSON();
-  console.timeEnd('parse_responseText');
-  
+  try {
+    data = data.evalJSON();
+  }
+  catch (err) {
+    console.log(err);
+    return;
+  }
   console.time('inserting_html');
   data.msgs.each(function(message) {
     message.channel = message.channel.replace('#', 'chan_');
@@ -129,7 +143,14 @@ function handle_update (transport) {
         var html = applyFilters(message.full_html);
         $(message.channel + '_messages').insert(html);
       }
-      if ($(message.channel).hasClassName('active')) scrollToBottom();
+      // pop off the oldest message
+      if ($$(message.channel + "_messages li").length > 100)
+        $$(message.channel + "_message li")[0].remove();
+      // scroll to bottom or highlight the tab
+      if ($(message.channel).hasClassName('active'))
+        scrollToBottom();
+      else
+        $(message.channel + "_tab").addClassName("unread");
     }
   });
   data.actions.each(function(action) {

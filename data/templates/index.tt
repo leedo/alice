@@ -12,7 +12,6 @@
   </head>
   <body>
     <div id="container">
-    <div class="topic" id="[% channel %]_topic">(no topic is set)</div>
     <ul id="tabs">
       [% FOR channel IN channels %]
       [% INCLUDE "tab.tt" %]

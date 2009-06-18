@@ -1,6 +1,7 @@
 [% USE String(channel.name) %]
 [% channel.name_clean = String.replace('#','chan_') %]
 <div class="channel[% IF loop.first %] active[% END %]" id="[% channel.name_clean %]">
+  <div class="topic" id="[% channel.name_clean %]_topic">[% channel.topic.Value || "(no topic set)" %]</div>
   <ul class="messages" id="[% channel.name_clean %]_messages">
   </ul>
   <div class="input" id="[% channel.name_clean %]_input">

@@ -94,6 +94,9 @@ ul#tabs li:hover {
   background: #ccc;
   cursor: default;
 }
+ul#tabs li.unread {
+  font-weight: bold;
+}
 ul#tabs li.leftof_active {
   border-right: 1px solid transparent;
 }
@@ -136,6 +139,7 @@ div.msg {
 }
 div.msg img {
   display: block;
+  border: none;
 }
 ul.messages li.self {
   background: #ffffcc;
