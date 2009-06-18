@@ -59,7 +59,7 @@ sub setup_stream {
   $res->content_type('multipart/x-mixed-replace; boundary=xbuttesfirex');
   $res->header(Connection => 'close');
   $res->{seperator} = $req->header('User-Agent') =~ /Safari/ ? 
-                      "\n$seperator\n$header$seperator\n" : "\n$seperator\n";
+    "\n$seperator\n$header$seperator\n" : "\n$seperator\n";
   $res->{msgs} = [];
   $res->{actions} = [];
   push @open_responses, $res;
@@ -94,7 +94,8 @@ sub handle_stream {
     
     $output .= $header;
     $output .= to_json({msgs => $res->{msgs}, actions => $res->{actions}});
-    $output .= $res->{seperator};
+    # pad the output to be 1024 bytes, required for Safari?
+    $output .= " " x (1024 - length $output) . $seperator;
     
     $res->send($output) if @{$res->{msgs}} or @{$res->{actions}};
     
@@ -118,9 +119,13 @@ sub handle_message {
   $res->streaming(0);
   my $msg = $req->uri->query_param('msg');
   if (defined $msg and length $msg and 
-      my $chan = $req->uri->query_param('chan')) {
+    my $chan = $req->uri->query_param('chan')) {
     if ($msg =~ /^\/join (.+)/) {
       $irc->yield( join => $1);
+      return 200;
+    }
+    elsif ($msg =~ /^\/part (.+)/) {
+      $irc->yield( part => $1);
       return 200;
     }
     log_debug("sending message to $chan");
@@ -224,7 +229,12 @@ sub irc_part {
   my ($who, $where, $msg) = @_[ARG0 .. ARG2];
   my $nick = ( split /!/, $who)[0];
   my $channel = $where;
-  display_event($nick, $channel, "left", $msg);
+  if ($nick ne $config->{nick}) {
+    display_event($nick, $channel, "left", $msg);
+  }
+  else {
+    close_tab($channel);
+  }
 }
 
 sub irc_quit {
@@ -257,9 +267,7 @@ sub display_event {
 sub display_message {
   my ($nick, $channel, $text) = @_;
   my $html = IRC::Formatting->formatted_string_to_html($text);
-  if (utf8::is_utf8($html)) {
-    $html = decode_utf8($html);
-  }
+  $html = decode_utf8($html);
   my $msg = {
     type      => "message",
     nick      => $nick,
@@ -285,6 +293,17 @@ sub create_tab {
   $tt->process("tab.tt", {channel => {name => $name}}, \$tab_html);
   $action->{html}{tab} = $tab_html;
   log_debug("sending a request for a new tab: $name") if @open_responses;
+  push @{$_->{actions}}, $action for @open_responses;
+}
+
+sub close_tab {
+  my ($name) = @_;
+  my $action = {
+    type      => "part",
+    name      => $name,
+    timestamp => make_timestamp(),
+  };
+  log_debug("sending a request to close a tab: $name") if @open_responses;
   push @{$_->{actions}}, $action for @open_responses;
 }
 

@@ -20,7 +20,7 @@ var len = 0;
 var req;
 var isCtrl = false;
 var isError = false;
-var seperator = "--xbuttesfirex\n";
+var seperator = "--xbuttesfirex";
 
 document.onkeyup = function (e) {
   if (e.which == 17) isCtrl = false;
@@ -56,9 +56,12 @@ function scrollToBottom () {
 }
 
 function showChannel (channel) {
+  if (! $(channel)) return;
   var oldchannel = $$('div.channel.active').first();
-  oldchannel.removeClassName('active');
-  $(oldchannel.id + "_tab").removeClassName('active');
+  if (oldchannel) {
+    oldchannel.removeClassName('active');
+    $(oldchannel.id + "_tab").removeClassName('active');
+  }
   $(channel).addClassName('active');
   $(channel + "_tab").addClassName('active');
   $$('#tabs li').invoke('removeClassName', 'leftof_active');
@@ -102,24 +105,32 @@ function stripNick (html) {
 }
 
 function handle_update (transport) {
+  console.time('slicing_buffer');
   var data = transport.responseText.slice(len);
+  console.timeEnd('slicing_buffer');
   var start;
   var end;
   // only safari seems to honor seperators and content-type
   if (! Prototype.Browser.Safari) {
+    console.time('strip_content');
     start = data.indexOf(seperator);
     if (start > -1) {
       start += seperator.length;
       end = data.indexOf(seperator, start);
       if (end == -1) return;
     }
-    else return;
+    else {
+      return;
+    }
     len += (end + seperator.length) - start;
     data = data.slice(start, end);
     data = data.replace("Content-Type: text/plain\r\n\r\n", "");
+    console.timeEnd('strip_content');
   }
   try {
+    console.time('evaling_json');
     data = data.evalJSON();
+    console.timeEnd('evanling_json');
   }
   catch (err) {
     console.log(err);
@@ -155,10 +166,27 @@ function handle_update (transport) {
   });
   data.actions.each(function(action) {
     if (action.type == "join") {
-      var chan_clean = action.name.replace("#", "chan_");
-      if (! $(chan_clean)) {
+      var chan = $(action.name.replace("#", "chan_"));
+      if (! chan) {
         $('container').insert(action.html.channel);
         $('tabs').insert(action.html.tab);
+      }
+    }
+    if (action.type == "part") {
+      var chan = $(action.name.replace("#", "chan_"));
+      if (chan) {
+        if (chan.hasClassName('active')) {
+          if (chan.previous()) {
+            console.log(chan.previous());
+            showChannel(chan.previous().id);
+          }
+          else if (chan.next()) {
+            console.log(chan.next());
+            showChannel(chan.next().id);
+          }
+        }
+        chan.remove();
+        $(chan.id + "_tab").remove();
       }
     }
   });
@@ -167,7 +195,7 @@ function handle_update (transport) {
 
 function connect () {
   len = 0;
-  console.log("connecting...");
+  console.log("opening stream");
   req = new Ajax.Request('/stream', {
     method: 'get',
     onException: function (req, e) {
