@@ -19,6 +19,7 @@ var filters = [
 var len = 0;
 var req;
 var isCtrl = false;
+var isError = false;
 
 document.onkeyup = function (e) {
   if (e.which == 17) isCtrl = false;
@@ -27,7 +28,6 @@ document.onkeydown = function (e) {
   if (e.which == 17) {
     isCtrl = true;
   }
-  console.log(isCtrl);
   if (isCtrl && e.which == 75) {
     $$('.channel.active .messages').first().innerHTML = '';
   }
@@ -99,13 +99,19 @@ function stripNick (html) {
 }
 
 function handle_update (transport) {
+  console.time('parse_responseText')
   var data = transport.responseText.slice(len);
   len = transport.responseText.length;
    
   // this isn't being stripped by FF for some reason...
-  data = data.replace(/--xbuttesfirex\n/g,"");
-  data = data.replace("Content-Type: text/plain\r\n\r\n", "");
+  if (! Prototype.Browser.Safari) {
+    data = data.replace(/--xbuttesfirex\n/g,"");
+    data = data.replace("Content-Type: text/plain\r\n\r\n", ""); 
+  }
   data = data.evalJSON();
+  console.timeEnd('parse_responseText');
+  
+  console.time('inserting_html');
   data.msgs.each(function(message) {
     message.channel = message.channel.replace('#', 'chan_');
     if (message.html || message.full_html) {
@@ -135,6 +141,7 @@ function handle_update (transport) {
       }
     }
   });
+  console.timeEnd('inserting_html');
 }
 
 function connect () {
@@ -142,11 +149,14 @@ function connect () {
   console.log("connecting...");
   req = new Ajax.Request('/stream', {
     method: 'get',
-    onCreate: function(response) {
-      if (Prototype.Browser.WebKit)
-        response.request.transport.onerror = connect;
+    onException: function (req, e) {
+      console.log(e);
+      isError = true;
     },
-    onComplete: connect,
+    onComplete: function () {
+      //if (! isError) { console.log('reconnecting now...');connect() }
+      //else { console.log('reconnecting...');setTimeout(connect, 5000)}
+    },
     onInteractive: handle_update
   });
 }

@@ -17,6 +17,8 @@ use IRC::Formatting;
 use Time::HiRes qw/usleep/;
 use List::MoreUtils qw/uniq/;
 
+use constant MAX_REQ_SIZE => 1_000;
+
 my @open_responses;
 my $header = "Content-Type: text/plain\r\n\r\n";
 my $seperator = "--xbuttesfirex";
@@ -60,7 +62,6 @@ sub setup_stream {
                       "\n$seperator\n$header$seperator\n" : "\n$seperator\n";
   $res->{msgs} = [];
   $res->{actions} = [];
-  $res->{length} = 0;
   push @open_responses, $res;
   log_debug("opening a streaming http connection");
   return 200;
@@ -71,7 +72,7 @@ sub handle_stream {
   
   usleep(10_000);
   
-  if ($res->is_error or $res->{length} > 50_000) {
+  if ($res->is_error) {
     log_debug("closing HTTP connection");
     for (0 .. $#open_responses - 1) {
       if ($res == $open_responses[$_]) {
@@ -95,8 +96,6 @@ sub handle_stream {
     $output .= to_json({msgs => $res->{msgs}, actions => $res->{actions}});
     $output .= $res->{seperator};
     
-    $res->{length} += length $output;
-    $output .= "\n$seperator--\n" if $res->{length} > 50_000;
     $res->send($output) if @{$res->{msgs}} or @{$res->{actions}};
     
     if ($res->is_error) {
@@ -251,12 +250,16 @@ sub display_event {
 
 sub display_message {
   my ($nick, $channel, $text) = @_;
+  my $html = IRC::Formatting->formatted_string_to_html($text);
+  if (utf8::is_utf8($html)) {
+    $html = decode_utf8($html);
+  }
   my $msg = {
     type      => "message",
     nick      => $nick,
     channel   => $channel,
     self      => $nick eq $config->{nick},
-    html       => decode_utf8(IRC::Formatting->formatted_string_to_html($text)),
+    html       => $html,
     timestamp => make_timestamp(),
   };
   add_outgoing($msg, "message");
