@@ -213,5 +213,5 @@ function connect () {
   });
 }
 
-document.observe('dom:loaded', setTimeout(connect, 1000));
+document.observe('dom:loaded', function () {setTimeout(connect, 1000)});
 window.onresize = scrollToBottom;
