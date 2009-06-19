@@ -6,27 +6,22 @@ use warnings;
 use lib 'lib';
 use lib 'extlib/lib/perl5';
 use local::lib 'extlib';
-use POE qw/Component::IRC::State Component::IRC::Plugin::Connector Component::Server::HTTP/;
-use URI::QueryParam;
 use YAML qw/LoadFile/;
 use Template;
 use JSON;
 use Encode;
-use HTML::Entities;
 use IRC::Formatting;
 use Time::HiRes qw/usleep/;
-use List::MoreUtils qw/uniq/;
-
-use constant MAX_REQ_SIZE => 1_000;
+use URI::QueryParam;
+use POE qw/Component::IRC::State Component::IRC::Plugin::Connector
+           Component::Server::HTTP/;
 
 my @open_responses;
 my $seperator = "--xbuttesfirex";
-
 my $config = LoadFile($ENV{HOME}.'/.buttesfire.yaml');
 my $tt = Template->new(
   INCLUDE_PATH => 'data/templates',
-  ENCODING     => 'UTF8',
-);
+  ENCODING     => 'UTF8');
 
 my $http = POE::Component::Server::HTTP->new(
   Port             => 8080,
@@ -48,22 +43,27 @@ my $irc = POE::Component::IRC::State->spawn(
 
 POE::Session->create(
   package_states => [
-    main => [qw/_start irc_public irc_001 irc_join irc_part irc_quit irc_chan_sync irc_topic/]
+    main => [qw/_start irc_public irc_001 irc_join irc_part
+                irc_quit irc_chan_sync irc_topic/]
   ],
 );
-
 $poe_kernel->run;
 
 sub setup_stream {
   my ($req, $res) = @_;
-  $res->streaming(1);
   $res->code(200);
-  $res->content_type('multipart/mixed; boundary=xbuttesfirex;  charset=utf-8');
   $res->header(Connection => 'close');
+  
+  # XHR tries to reconnect again for some reason
+  my $op = $req->header('operation');
+  return 200 if $op and $op eq 'read';
+  
+  log_debug("opening a streaming http connection");
+  $res->streaming(1);
+  $res->content_type('multipart/mixed; boundary=xbuttesfirex; charset=utf-8');
   $res->{msgs} = [];
   $res->{actions} = [];
   push @open_responses, $res;
-  log_debug("opening a streaming http connection");
   return 200;
 }
 
@@ -71,13 +71,12 @@ sub handle_stream {
   my ($req, $res) = @_;
   
   usleep(20_000);
-  
+
   if ($res->is_error) {
     log_debug("closing HTTP connection");
     for (0 .. $#open_responses - 1) {
       if ($res == $open_responses[$_]) {
         splice(@open_responses, $_, 1);
-        print @open_responses;
       }
     }
     $res->close;
@@ -91,45 +90,35 @@ sub handle_stream {
       $output .= "$seperator\n";
     }
     $output .= to_json({msgs => $res->{msgs}, actions => $res->{actions}});
-    $output .= "\n$seperator\n";
-    $res->send($output) if @{$res->{msgs}} or @{$res->{actions}};
-
-    if ($res->is_error) {
-      $res->close;
-      $res->continue;
-      return;
-    }
-    else {
+    $res->send($output . "\n$seperator\n") if @{$res->{msgs}} or @{$res->{actions}};
+    if (! $res->is_error) {
       $res->{msgs} = [];
       $res->{actions} = []; 
     }
   }
-  else {
-    $res->continue;
-  }
+  $res->continue;
 }
 
 sub handle_message {
   my ($req, $res) = @_;
   $res->streaming(0);
-  my $msg = $req->uri->query_param('msg');
-  if (defined $msg and length $msg and 
-    my $chan = $req->uri->query_param('chan')) {
+  my $msg  = $req->uri->query_param('msg');
+  my $chan = $req->uri->query_param('chan');
+  if (length $msg) {
     if ($msg =~ /^\/join (.+)/) {
       $irc->yield( join => $1);
-      return 200;
     }
     elsif ($msg =~ /^\/part\s?(.+)?/) {
       $irc->yield( part => $1 || $chan);
-      return 200;
     }
-    elsif ($msg =~ /^\/names/) {
+    elsif ($msg =~ /^\/names/ and $chan) {
       show_nicks($chan);
-      return 200;
     }
-    log_debug("sending message to $chan");
-    $irc->yield( privmsg => $chan => $msg);
-    display_message($config->{nick}, $chan, decode_utf8($msg));
+    else {
+      log_debug("sending message to $chan");
+      $irc->yield( privmsg => $chan => $msg);
+      display_message($config->{nick}, $chan, decode_utf8($msg)); 
+    }
   }
   $res->code(200);
   return 200;
@@ -320,11 +309,11 @@ sub show_nicks {
   push @{$_->{actions}}, {
     type  => "announce",
     chan  => $chan,
-    str   => format_nicks($irc->channel_list($chan))
+    str   => format_nick_table($irc->channel_list($chan))
   } for @open_responses;
 }
 
-sub format_nicks {
+sub format_nick_table {
   my @nicks = @_;
   return "" unless @nicks;
   my $maxlen = 0;
