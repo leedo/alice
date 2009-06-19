@@ -20,11 +20,13 @@ use List::MoreUtils qw/uniq/;
 use constant MAX_REQ_SIZE => 1_000;
 
 my @open_responses;
-my $header = "Content-Type: text/plain\r\n\r\n";
 my $seperator = "--xbuttesfirex";
 
 my $config = LoadFile($ENV{HOME}.'/.buttesfire.yaml');
-my $tt = Template->new(INCLUDE_PATH => 'data/templates');
+my $tt = Template->new(
+  INCLUDE_PATH => 'data/templates',
+  ENCODING     => 'UTF8',
+);
 
 my $http = POE::Component::Server::HTTP->new(
   Port             => 8080,
@@ -56,10 +58,8 @@ sub setup_stream {
   my ($req, $res) = @_;
   $res->streaming(1);
   $res->code(200);
-  $res->content_type('multipart/x-mixed-replace; boundary=xbuttesfirex');
+  $res->content_type('multipart/mixed; boundary=xbuttesfirex;  charset=utf-8');
   $res->header(Connection => 'close');
-  $res->{seperator} = $req->header('User-Agent') =~ /Safari/ ? 
-    "\n$seperator\n$header$seperator\n" : "\n$seperator\n";
   $res->{msgs} = [];
   $res->{actions} = [];
   push @open_responses, $res;
@@ -70,7 +70,7 @@ sub setup_stream {
 sub handle_stream {
   my ($req, $res) = @_;
   
-  usleep(10_000);
+  usleep(20_000);
   
   if ($res->is_error) {
     log_debug("closing HTTP connection");
@@ -86,19 +86,14 @@ sub handle_stream {
   }
   if (@{$res->{actions}} or @{$res->{msgs}}) {
     my $output;
-    
     if (! $res->{started}) {
       $res->{started} = 1;
       $output .= "$seperator\n";
     }
-    
-    $output .= $header;
     $output .= to_json({msgs => $res->{msgs}, actions => $res->{actions}});
-    # pad the output to be 1024 bytes, required for Safari?
-    $output .= " " x (1024 - length $output) . $seperator;
-    
+    $output .= "\n$seperator\n";
     $res->send($output) if @{$res->{msgs}} or @{$res->{actions}};
-    
+
     if ($res->is_error) {
       $res->close;
       $res->continue;
@@ -124,13 +119,17 @@ sub handle_message {
       $irc->yield( join => $1);
       return 200;
     }
-    elsif ($msg =~ /^\/part (.+)/) {
-      $irc->yield( part => $1);
+    elsif ($msg =~ /^\/part\s?(.+)?/) {
+      $irc->yield( part => $1 || $chan);
+      return 200;
+    }
+    elsif ($msg =~ /^\/names/) {
+      show_nicks($chan);
       return 200;
     }
     log_debug("sending message to $chan");
     $irc->yield( privmsg => $chan => $msg);
-    display_message($config->{nick}, $chan, $msg);
+    display_message($config->{nick}, $chan, decode_utf8($msg));
   }
   $res->code(200);
   return 200;
@@ -171,7 +170,7 @@ sub send_index {
   $tt->process('index.tt', {
     channels => [ map {
       {name => $_, topic => $irc->channel_topic($_)}
-    } uniq(@{$config->{channels}}, keys %{$irc->channels}) ]
+    } keys %{$irc->channels} ]
   }, \$output) or die $!;
   $res->content($output);
   return 200;
@@ -205,6 +204,7 @@ sub irc_public {
   my ($who, $where, $what) = @_[ARG0 .. ARG2];
   my $nick = ( split /!/, $who )[0];
   my $channel = $where->[0];
+  $what = decode("utf8", $what, Encode::FB_WARN);
   display_message($nick, $channel, $what);
 }
 
@@ -267,7 +267,6 @@ sub display_event {
 sub display_message {
   my ($nick, $channel, $text) = @_;
   my $html = IRC::Formatting->formatted_string_to_html($text);
-  $html = decode_utf8($html);
   my $msg = {
     type      => "message",
     nick      => $nick,
@@ -311,9 +310,38 @@ sub add_outgoing {
   my ($hashref, $type) = @_;
   my $html = '';
   $tt->process("$type.tt", $hashref, \$html);
-  $hashref->{full_html} = decode_utf8($html);
+  $hashref->{full_html} = $html;
   log_debug("adding $type to response queues") if @open_responses;
   push @{$_->{msgs}}, $hashref for @open_responses;
+}
+
+sub show_nicks {
+  my $chan = $_;
+  push @{$_->{actions}}, {
+    type  => "announce",
+    chan  => $chan,
+    str   => format_names($irc->channel_list($chan))
+  } for @open_responses;
+}
+
+sub format_names {
+  my @nicks = @_;
+  my $maxlen = 0;
+  for (@nicks) {
+    my $length = length $_;
+    $maxlen = $length if $length > $maxlen;
+  }
+  my $cols = int(74  / $maxlen + 2);
+  my (@rows, @row);
+  for (@nicks) {
+    push @row, $_ . " " x ($maxlen - length $_);
+    if (@row >= $cols) {
+      push @rows, [@row];
+      @row = ();
+    }
+  }
+  push @rows, [@row] if @row;
+  return join "\n", map {join " ", @$_} @rows;
 }
 
 sub make_timestamp {

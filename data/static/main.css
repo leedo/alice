@@ -147,7 +147,7 @@ ul.messages li.self {
 ul.messages li.self div.msg {
   background: none;
 }
-div.msg.monospace {
+div.msg.monospace, div.msg.announce {
   font-family: Monaco, monospace;
   font-size: 11px;
   line-height: 13px;

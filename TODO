@@ -3,6 +3,7 @@ Javascript
   - Handle disconnects
   - Username links to private messages
   - FF weirdness (consecutive Shaniqua inserts?)
+  - Topic support
 
 Perl
   - Support private messages
@@ -12,6 +13,7 @@ Perl
   - Multiple servers
   - Configurable over HTTP request?
   - Fix cswas in IRC::Formatting
+  - Topic support
   
 HTML/CSS  
   - Fix bold spacing issue (currently -1px letter spacing on all bold, should just be Shaniqua)

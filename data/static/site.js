@@ -3,7 +3,7 @@ var filters = [
     var filtered = content;
     // links
     filtered = filtered.replace(
-      /(https?\:\/\/.+?)([\b\s<])/gi,
+      /(https?\:\/\/.+?)([\b\s<\[\]\{\}])/gi,
       "<a href=\"$1\" target=\"blank\">$1</a>$2");
     // images
     filtered = filtered.replace(
@@ -20,7 +20,7 @@ var len = 0;
 var req;
 var isCtrl = false;
 var isError = false;
-var seperator = "--xbuttesfirex";
+var seperator = "--xbuttesfirex\n";
 
 document.onkeyup = function (e) {
   if (e.which == 17) isCtrl = false;
@@ -108,27 +108,26 @@ function handle_update (transport) {
   console.time('slicing_buffer');
   var data = transport.responseText.slice(len);
   console.timeEnd('slicing_buffer');
+  
   var start;
   var end;
-  // only safari seems to honor seperators and content-type
-  if (! Prototype.Browser.Safari) {
-    console.time('strip_content');
-    start = data.indexOf(seperator);
-    if (start > -1) {
-      start += seperator.length;
-      end = data.indexOf(seperator, start);
-      if (end == -1) return;
-    }
-    else {
-      return;
-    }
-    len += (end + seperator.length) - start;
-    data = data.slice(start, end);
-    data = data.replace("Content-Type: text/plain\r\n\r\n", "");
-    console.timeEnd('strip_content');
+  console.time('strip_content');
+  start = data.indexOf(seperator);
+  if (start > -1) {
+    start += seperator.length;
+    end = data.indexOf(seperator, start);
+    if (end == -1) return;
   }
+  else {
+    return;
+  }
+  len += (end + seperator.length) - start;
+  data = data.slice(start, end);
+  console.timeEnd('strip_content');
+
   try {
     console.time('evaling_json');
+    console.log(data);
     data = data.evalJSON();
     console.timeEnd('evanling_json');
   }
@@ -154,9 +153,11 @@ function handle_update (transport) {
         var html = applyFilters(message.full_html);
         $(message.channel + '_messages').insert(html);
       }
+      
       // pop off the oldest message
       if ($$(message.channel + "_messages li").length > 100)
         $$(message.channel + "_message li")[0].remove();
+        
       // scroll to bottom or highlight the tab
       if ($(message.channel).hasClassName('active'))
         scrollToBottom();
@@ -176,17 +177,20 @@ function handle_update (transport) {
       var chan = $(action.name.replace("#", "chan_"));
       if (chan) {
         if (chan.hasClassName('active')) {
-          if (chan.previous()) {
-            console.log(chan.previous());
+          if (chan.previous())
             showChannel(chan.previous().id);
-          }
-          else if (chan.next()) {
-            console.log(chan.next());
+          else if (chan.next())
             showChannel(chan.next().id);
-          }
         }
         chan.remove();
         $(chan.id + "_tab").remove();
+      }
+    }
+    if (action.type == "announce") {
+      var chan = action.chan.replace("#", "chan_");
+      if (chan) {
+        $(chan + "_messages").insert("<li><div class='msg announce'>"+action.str+'</div></li>');
+        scrollToBottom();
       }
     }
   });
@@ -202,13 +206,9 @@ function connect () {
       console.log(e);
       isError = true;
     },
-    onComplete: function () {
-      //if (! isError) { console.log('reconnecting now...');connect() }
-      //else { console.log('reconnecting...');setTimeout(connect, 5000)}
-    },
     onInteractive: handle_update
   });
 }
 
-document.observe('dom:loaded', connect);
+document.observe('dom:loaded', setTimeout(connect, 2000));
 window.onresize = scrollToBottom;
