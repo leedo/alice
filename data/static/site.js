@@ -1,3 +1,22 @@
+var len = 0;
+var req;
+var isCtrl = false;
+var isError = false;
+var seperator = "--xbuttesfirex\n";
+
+document.onkeyup = function (e) {
+  if (e.which == 17) isCtrl = false;
+};
+document.onkeydown = function (e) {
+  if (e.which == 17) {
+    isCtrl = true;
+  }
+  if (isCtrl && e.which == 75) {
+    $$('.channel.active .messages').first().innerHTML = '';
+    return false;
+  }
+};
+
 var filters = [
   function (content) {
     var filtered = content;
@@ -16,24 +35,6 @@ var filters = [
     return filtered;
   }
 ];
-var len = 0;
-var req;
-var isCtrl = false;
-var isError = false;
-var seperator = "--xbuttesfirex\n";
-
-document.onkeyup = function (e) {
-  if (e.which == 17) isCtrl = false;
-}
-document.onkeydown = function (e) {
-  if (e.which == 17) {
-    isCtrl = true;
-  }
-  if (isCtrl && e.which == 75) {
-    $$('.channel.active .messages').first().innerHTML = '';
-    return false;
-  }
-}
 
 function applyFilters (content) {
   filters.each(function(filter) {
@@ -56,20 +57,22 @@ function scrollToBottom () {
 }
 
 function showChannel (channel) {
-  if (! $(channel)) return;
+  channel = $(channel);
+  if (! channel) return;
+  var tab = $(channel.id + "_tab");
+  var input = $(channel.id + "_msg");
   var oldchannel = $$('div.channel.active').first();
   if (oldchannel) {
     oldchannel.removeClassName('active');
     $(oldchannel.id + "_tab").removeClassName('active');
   }
-  $(channel).addClassName('active');
-  $(channel + "_tab").addClassName('active');
+  tab.addClassName('active');
+  tab.removeClassName("unread");
+  channel.addClassName('active');
   $$('#tabs li').invoke('removeClassName', 'leftof_active');
-  if ($(channel + "_tab").previous())
-    $(channel + "_tab").previous().addClassName('leftof_active');
+  if (tab.previous()) tab.previous().addClassName('leftof_active');
   scrollToBottom();
-  $(channel + '_msg').focus();
-  $(channel + '_tab').removeClassName("unread");
+  input.focus();
 };
 
 function playAudio(image, audio) {
@@ -104,111 +107,111 @@ function stripNick (html) {
   return html;
 }
 
-function handle_update (transport) {
-  console.time('slicing_buffer');
+function handleUpdate (transport) {
   var data = transport.responseText.slice(len);
-  console.timeEnd('slicing_buffer');
-  
-  var start;
-  var end;
-  console.time('strip_content');
+  var start, end;
   start = data.indexOf(seperator);
   if (start > -1) {
     start += seperator.length;
     end = data.indexOf(seperator, start);
     if (end == -1) return;
   }
-  else {
-    return;
-  }
+  else return;
   len += (end + seperator.length) - start;
   data = data.slice(start, end);
-  console.timeEnd('strip_content');
 
   try {
-    console.time('evaling_json');
-    console.log(data);
     data = data.evalJSON();
-    console.timeEnd('evanling_json');
   }
   catch (err) {
     console.log(err);
     return;
   }
-  console.time('inserting_html');
-  data.msgs.each(function(message) {
-    message.channel = message.channel.replace('#', 'chan_');
-    if (message.html || message.full_html) {
-      var last_message = $$('#' + message.channel + ' .'
-        + message.nick + ':last-child .msg').first();
-      if (message.nick == "Shaniqua" && last_message) {
-        var html = applyFilters(message.html);
-        last_message.insert("<br />" + html);
-      }
-      else if (message.type == "message" && last_message) {
-        var html = stripNick(applyFilters(message.full_html));
-        $(message.channel + '_messages').insert(html);
-      }
-      else {
-        var html = applyFilters(message.full_html);
-        $(message.channel + '_messages').insert(html);
-      }
+  data.msgs.each(function(message) {displayMessage(message)});
+  data.actions.each(function(action) {displayAction(action)});
+}
+
+function displayAction (action) {
+  if (action.type == "join")
+    createTab(action.chan, action.html);
+  else if (action.type == "part")
+    closeTab(action.chan);
+  else if (action.type == "announce")
+    announceMsg(action.chan, action.str);
+}
+
+function displayMessage (message) {
+  message.chan = message.chan.replace('#', 'chan_');
+  if (message.html || message.full_html) {
+    var last_message = $$('#' + message.chan + ' .'
+      + message.nick + ':last-child .msg').first();
+    if (message.nick == "Shaniqua" && last_message) {
+      var html = applyFilters(message.html);
+      last_message.insert("<br />" + html);
+    }
+    else if (message.type == "message" && last_message) {
+      var html = stripNick(applyFilters(message.full_html));
+      $(message.chan + '_messages').insert(html);
+    }
+    else {
+      var html = applyFilters(message.full_html);
+      $(message.chan + '_messages').insert(html);
+    }
+    
+    // pop off the oldest message
+    if ($$(message.channel + "_messages li").length > 100)
+      $$(message.chan + "_message li")[0].remove();
       
-      // pop off the oldest message
-      if ($$(message.channel + "_messages li").length > 100)
-        $$(message.channel + "_message li")[0].remove();
-        
-      // scroll to bottom or highlight the tab
-      if ($(message.channel).hasClassName('active'))
-        scrollToBottom();
-      else
-        $(message.channel + "_tab").addClassName("unread");
+    // scroll to bottom or highlight the tab
+    if ($(message.chan).hasClassName('active'))
+      scrollToBottom();
+    else
+      $(message.chan + "_tab").addClassName("unread");
+  }
+}
+
+function createTab (chan, html) {
+  chan = $(chan.replace("#", "chan_"));
+  if (! chan) {
+    $('container').insert(html.channel);
+    $('tabs').insert(html.tab);
+  }
+}
+
+function announceMsg (chan, str) {
+  chan = chan.replace("#", "chan_");
+  if ($(chan)) {
+    $(chan + "_messages").insert(
+      "<li><div class='msg announce'>"+str+'</div></li>');
+    scrollToBottom();
+  }
+}
+
+function closeTab (chan) {
+  chan = $(chan.replace("#", "chan_"));
+  if (chan) {
+    if (chan.hasClassName('active')) {
+      if (chan.previous())
+        showChannel(chan.previous().id);
+      else if (chan.next())
+        showChannel(chan.next().id);
     }
-  });
-  data.actions.each(function(action) {
-    if (action.type == "join") {
-      var chan = $(action.name.replace("#", "chan_"));
-      if (! chan) {
-        $('container').insert(action.html.channel);
-        $('tabs').insert(action.html.tab);
-      }
-    }
-    if (action.type == "part") {
-      var chan = $(action.name.replace("#", "chan_"));
-      if (chan) {
-        if (chan.hasClassName('active')) {
-          if (chan.previous())
-            showChannel(chan.previous().id);
-          else if (chan.next())
-            showChannel(chan.next().id);
-        }
-        chan.remove();
-        $(chan.id + "_tab").remove();
-      }
-    }
-    if (action.type == "announce") {
-      var chan = action.chan.replace("#", "chan_");
-      if (chan) {
-        $(chan + "_messages").insert("<li><div class='msg announce'>"+action.str+'</div></li>');
-        scrollToBottom();
-      }
-    }
-  });
-  console.timeEnd('inserting_html');
+    chan.remove();
+    $(chan.id + "_tab").remove();
+  }
 }
 
 function connect () {
   len = 0;
-  console.log("opening stream");
   req = new Ajax.Request('/stream', {
     method: 'get',
     onException: function (req, e) {
       console.log(e);
       isError = true;
     },
-    onInteractive: handle_update
+    onInteractive: handleUpdate
   });
 }
 
-document.observe('dom:loaded', setTimeout(connect, 2000));
+document.observe('dom:loaded', setTimeout(connect, 1000));
 window.onresize = scrollToBottom;

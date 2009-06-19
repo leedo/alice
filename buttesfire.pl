@@ -270,9 +270,9 @@ sub display_message {
   my $msg = {
     type      => "message",
     nick      => $nick,
-    channel   => $channel,
+    chan      => $channel,
     self      => $nick eq $config->{nick},
-    html       => $html,
+    html      => $html,
     timestamp => make_timestamp(),
   };
   add_outgoing($msg, "message");
@@ -282,7 +282,7 @@ sub create_tab {
   my ($name) = @_;
   my $action = {
     type      => "join",
-    name      => $name,
+    chan      => $name,
     timestamp => make_timestamp(),
   };
   my $chan_html = '';
@@ -299,7 +299,7 @@ sub close_tab {
   my ($name) = @_;
   my $action = {
     type      => "part",
-    name      => $name,
+    chan      => $name,
     timestamp => make_timestamp(),
   };
   log_debug("sending a request to close a tab: $name") if @open_responses;
@@ -316,18 +316,19 @@ sub add_outgoing {
 }
 
 sub show_nicks {
-  my $chan = $_;
+  my $chan = shift;
   push @{$_->{actions}}, {
     type  => "announce",
     chan  => $chan,
-    str   => format_names($irc->channel_list($chan))
+    str   => format_nicks($irc->channel_list($chan))
   } for @open_responses;
 }
 
-sub format_names {
+sub format_nicks {
   my @nicks = @_;
+  return "" unless @nicks;
   my $maxlen = 0;
-  for (@nicks) {
+  for (sort @nicks) {
     my $length = length $_;
     $maxlen = $length if $length > $maxlen;
   }

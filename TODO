@@ -2,7 +2,6 @@ Javascript
   - Profile performance
   - Handle disconnects
   - Username links to private messages
-  - FF weirdness (consecutive Shaniqua inserts?)
   - Topic support
 
 Perl
@@ -18,5 +17,4 @@ Perl
 HTML/CSS  
   - Fix bold spacing issue (currently -1px letter spacing on all bold, should just be Shaniqua)
   - Switchable themes?
-  - FF weirdness
   - Closing tabs
