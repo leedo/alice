@@ -189,6 +189,7 @@ ul.messages li.event {
 
 ul.messages li.event div.msg {
   background: none;
+  border-left: none;
 }
 
 ul.messages li.event div.left {

@@ -47,7 +47,7 @@ my $irc = POE::Component::IRC::State->spawn(
 POE::Session->create(
   package_states => [
     main => [qw/_start irc_public irc_001 irc_join irc_part
-                irc_quit irc_chan_sync irc_topic/]
+                irc_quit irc_chan_sync irc_topic irc_ctcp_action/]
   ],
 );
 $poe_kernel->run;
@@ -124,6 +124,10 @@ sub handle_message {
         my $topic = $irc->channel_topic($chan);
         send_topic($topic->{SetBy}, $chan, $topic->{Value});
       }
+    }
+    elsif ($msg =~ /^\/me (.+)/) {
+      display_message($config->{nick}, $chan, decode_utf8("• $1"));
+      $irc->yield(ctcp => $chan, "ACTION $1");
     }
     else {
       log_debug("sending message to $chan");
@@ -206,6 +210,14 @@ sub irc_public {
   my $nick = ( split /!/, $who )[0];
   my $channel = $where->[0];
   $what = decode("utf8", $what, Encode::FB_WARN);
+  display_message($nick, $channel, $what);
+}
+
+sub irc_ctcp_action {
+  my ($who, $where, $what) = @_[ARG0 .. ARG2];
+  my $nick = ( split /!/, $who )[0];
+  my $channel = $where->[0];
+  $what = decode("utf8", "• $what", Encode::FB_WARN);
   display_message($nick, $channel, $what);
 }
 

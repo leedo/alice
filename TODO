@@ -4,7 +4,6 @@ Javascript
 
 Perl
   - Support private messages
-  - Support /me actions
   - Send some sort of message on disconnect
   - Multiple servers
   - Configurable over HTTP request?
