@@ -11,7 +11,7 @@ use Template;
 use JSON;
 use Encode;
 use IRC::Formatting;
-use Time::HiRes qw/usleep/;
+use Time::HiRes qw/time/;
 use URI::QueryParam;
 use POE qw/Component::IRC::State Component::IRC::Plugin::Connector
            Component::Server::HTTP/;
@@ -34,6 +34,7 @@ my $http = POE::Component::Server::HTTP->new(
   },
   StreamHandler    => \&handle_stream,
 );
+
 my $irc = POE::Component::IRC::State->spawn(
   nick    => $config->{nick}    || 'nick',
   ircname => $config->{ircname} || 'nick',
@@ -71,12 +72,10 @@ sub setup_stream {
 
 sub handle_stream {
   my ($req, $res) = @_;
-  
-  usleep(20_000);
 
   if ($res->is_error) {
     log_debug("closing HTTP connection");
-    for (0 .. $#open_responses - 1) {
+    for (0 .. $#open_responses) {
       if ($res == $open_responses[$_]) {
         splice(@open_responses, $_, 1);
       }
@@ -91,7 +90,7 @@ sub handle_stream {
       $res->{started} = 1;
       $output .= "$seperator\n";
     }
-    $output .= to_json({msgs => $res->{msgs}, actions => $res->{actions}});
+    $output .= to_json({msgs => $res->{msgs}, actions => $res->{actions}, time => time});
     $res->send($output . "\n$seperator\n") if @{$res->{msgs}} or @{$res->{actions}};
     if (! $res->is_error) {
       $res->{msgs} = [];
@@ -116,10 +115,19 @@ sub handle_message {
     elsif ($msg =~ /^\/names/ and $chan) {
       show_nicks($chan);
     }
+    elsif ($msg =~ /^\/topic\s?(.+)?/) {
+      if ($1) {
+        $irc->yield(topic => $chan, $1);
+      }
+      else {
+        my $topic = $irc->channel_topic($chan);
+        send_topic($topic->{SetBy}, $chan, $topic->{Value});
+      }
+    }
     else {
       log_debug("sending message to $chan");
-      $irc->yield( privmsg => $chan => $msg);
       display_message($config->{nick}, $chan, decode_utf8($msg)); 
+      $irc->yield( privmsg => $chan => $msg);
     }
   }
   $res->code(200);
@@ -239,6 +247,11 @@ sub irc_quit {
 
 sub irc_topic {
   my ($who, $channel, $topic) = @_[ARG0 .. ARG2];
+  send_topic($who, $channel, $topic);
+}
+
+sub send_topic {
+  my ($who, $channel, $topic) = @_;
   my $nick = ( split /!/, $who)[0];
   display_event($nick, $channel, "topic", $topic);
 }
@@ -248,7 +261,7 @@ sub display_event {
   my $event = {
     type      => "event",
     nick      => $nick,
-    channel   => $channel,
+    chan      => $channel,
     event     => $event_type,
     message   => $msg,
     timestamp => make_timestamp(),

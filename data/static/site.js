@@ -17,13 +17,18 @@ document.onkeydown = function (e) {
   }
 };
 
+function linkFilter (content) {
+  var filtered = content;
+  // links
+  filtered = filtered.replace(
+    /(https?\:\/\/.+?)([\b\s<\[\]\{\}"'])/gi,
+    "<a href=\"$1\" target=\"blank\">$1</a>$2");
+  return filtered;
+}
 var filters = [
+  linkFilter,
   function (content) {
     var filtered = content;
-    // links
-    filtered = filtered.replace(
-      /(https?\:\/\/.+?)([\b\s<\[\]\{\}])/gi,
-      "<a href=\"$1\" target=\"blank\">$1</a>$2");
     // images
     filtered = filtered.replace(
       /(<a[^>]*?>)(.*?(:?jpg|jpeg|gif|png))/gi,
@@ -108,6 +113,8 @@ function stripNick (html) {
 }
 
 function handleUpdate (transport) {
+  var time = new Date();
+  console.time('slice_buffer');
   var data = transport.responseText.slice(len);
   var start, end;
   start = data.indexOf(seperator);
@@ -127,8 +134,15 @@ function handleUpdate (transport) {
     console.log(err);
     return;
   }
+  var lag = time / 1000 -  data.time;
+  console.log(lag);
+  console.timeEnd('slice_buffer');
+  console.time('insert_messages');
   data.msgs.each(function(message) {displayMessage(message)});
+  console.timeEnd('insert_messages');
+  console.time('insert_actions');
   data.actions.each(function(action) {displayAction(action)});
+  console.timeEnd('insert_actions');
 }
 
 function displayAction (action) {

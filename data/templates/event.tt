@@ -1,4 +1,10 @@
 <li class="event">
   <div class="left">[% timestamp %]</div>
-  <div class="msg">[% nick %] [% event %] the chat room.[% IF message %]([% message %])[% END %]</div>
+  <div class="msg">
+  [% IF event == "topic" %]
+    Topic changed to "[% message %]" by [% nick %].
+  [% ELSE %]
+    [% nick %] [% event %] the chat room.[% IF message %] ([% message %])[% END %]
+  [% END %]
+  </div>
 </li>

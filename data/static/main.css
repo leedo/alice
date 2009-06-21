@@ -176,6 +176,11 @@ div.msg.monospace, div.msg.announce {
   padding: 8px 5px;
 }
 
+div.msg.monospace span[style*="bold"],
+div.msg.announce span[style*="bold"] {
+  letter-spacing: -1px;
+}
+
 ul.messages li.event {
   font-size: 11px;
   background: #d9e7fb;

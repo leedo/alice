@@ -1,20 +1,14 @@
 Javascript
-  - Profile performance
   - Handle disconnects
   - Username links to private messages
-  - Topic support
 
 Perl
   - Support private messages
   - Support /me actions
   - Send some sort of message on disconnect
-  - Parting channels
   - Multiple servers
   - Configurable over HTTP request?
   - Fix cswas in IRC::Formatting
-  - Topic support
   
 HTML/CSS  
-  - Fix bold spacing issue (currently -1px letter spacing on all bold, should just be Shaniqua)
   - Switchable themes?
-  - Closing tabs
