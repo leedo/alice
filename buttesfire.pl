@@ -241,7 +241,7 @@ sub irc_quit {
   my ($who, $msg, $channels) = @_[ARG0 .. ARG2];
   my $nick = ( split /!/, $who)[0];
   for my $channel (@$channels) {
-    display_event($nick, $channel, "quit", $msg);
+    display_event($nick, $channel, "left", $msg);
   }
 }
 

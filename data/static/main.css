@@ -71,7 +71,7 @@ ul#tabs li {
   float: left;
   margin: 0;
   height: 14px;
-  padding: 1px 8px 8px 8px;
+  padding: 1px 8px 8px 4px;
   border: 1px solid #999;
   border-left: 1px solid transparent;
   border-bottom: none;

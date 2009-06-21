@@ -61,6 +61,7 @@ function scrollToBottom () {
 }
 
 function showChannel (channel) {
+  document.title = channel.replace("chan_", "#");
   channel = $(channel);
   if (! channel) return;
   var tab = $(channel.id + "_tab");
