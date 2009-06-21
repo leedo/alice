@@ -366,7 +366,7 @@ sub format_nick_table {
 }
 
 sub make_timestamp {
-  return sprintf("%02d:%02d", localtime[2,1])
+  return sprintf("%02d:%02d", (localtime)[2,1])
 }
 
 sub log_debug {
