@@ -1,7 +1,6 @@
 var len = 0;
 var req;
 var isCtrl = false;
-var isError = false;
 var seperator = "--xbuttesfirex\n";
 
 document.onkeyup = function (e) {
@@ -230,9 +229,12 @@ function connect () {
     method: 'get',
     onException: function (req, e) {
       console.log(e);
-      isError = true;
+      setTimeout(connect, 2000);
     },
-    onInteractive: handleUpdate
+    onInteractive: handleUpdate,
+    onComplete: function () {
+      setTimeout(connect, 2000);
+    }
   });
 }
 
