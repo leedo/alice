@@ -201,6 +201,15 @@ function closeTab (chan) {
   }
 }
 
+function partChannel (chan) {
+  chan = chan.replace("chan_", "#");
+  new Ajax.Request('/say', {
+    method: 'get',
+    parameters: {chan: chan, msg: "/part"},
+    onSuccess: function () {closeTab(chan)} 
+  });
+}
+
 function connect () {
   len = 0;
   req = new Ajax.Request('/stream', {

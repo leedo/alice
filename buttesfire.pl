@@ -39,6 +39,8 @@ my $irc = POE::Component::IRC::State->spawn(
   ircname => $config->{ircname} || 'nick',
   server  => $config->{server}  || 'irc.freenode.org',
   port    => $config->{port}    || 6667,
+  password => $config->{password},
+  username => $config->{username},
 );
 
 POE::Session->create(
@@ -183,6 +185,7 @@ sub _start {
 }
 
 sub irc_001 {
+  log_debug("joining channels");
   for (@{$config->{channels}}) {
     log_debug("joining $_");
     $irc->yield( join => $_ );

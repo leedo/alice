@@ -100,10 +100,6 @@ ul#tabs li:hover {
   cursor: default;
 }
 
-ul#tabs li.unread {
-  font-weight: bold;
-}
-
 ul#tabs li.leftof_active {
   border-right: 1px solid transparent;
 }
@@ -211,4 +207,20 @@ div.msg img.audio {
 a.nick {
   color: #000;
   text-decoration: none;
+}
+div.tab_button {
+  background: url(/static?f=roomTab.png);
+  width: 16px;
+  height: 16px;
+  float: left;
+  margin-right: 4px;
+}
+
+div.tab_button:hover {
+  background: url(/static?f=aquaTabClose.png) no-repeat center;
+}
+
+
+ul#tabs li.unread div.tab_button {
+  background: url(/static?f=roomTabNewMessage.png);
 }
