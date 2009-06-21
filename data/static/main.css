@@ -229,3 +229,7 @@ div.tab_button:hover {
 ul#tabs li.unread div.tab_button {
   background: url(/static?f=roomTabNewMessage.png);
 }
+
+ul#tabs li.highlight div.tab_button {
+  background: url(/static?f=roomTabNewHighlightMessage.png);
+}

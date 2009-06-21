@@ -58,6 +58,7 @@ sub setup_stream {
   $res->header(Connection => 'close');
   
   # XHR tries to reconnect again for some reason
+  # possibly a problem with multiple browsers viewing
   my $op = $req->header('operation');
   return 200 if $op and $op eq 'read';
   
@@ -272,12 +273,14 @@ sub display_event {
 sub display_message {
   my ($nick, $channel, $text) = @_;
   my $html = IRC::Formatting->formatted_string_to_html($text);
+  my $mynick = $config->{nick};
   my $msg = {
     type      => "message",
     nick      => $nick,
     chan      => $channel,
     self      => $nick eq $config->{nick},
     html      => $html,
+    highlight => $text =~ /$mynick/i || 0,
     timestamp => make_timestamp(),
   };
   add_outgoing($msg, "message");

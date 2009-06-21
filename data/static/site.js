@@ -73,6 +73,7 @@ function showChannel (channel) {
   }
   tab.addClassName('active');
   tab.removeClassName("unread");
+  tab.removeClassName("highlight");
   channel.addClassName('active');
   $$('#tabs li').invoke('removeClassName', 'leftof_active');
   if (tab.previous()) tab.previous().addClassName('leftof_active');
@@ -175,12 +176,15 @@ function displayMessage (message) {
     // pop off the oldest message
     if ($$(message.channel + "_messages li").length > 100)
       $$(message.chan + "_message li")[0].remove();
-      
+    
+    console.log(message);
     // scroll to bottom or highlight the tab
     if ($(message.chan).hasClassName('active'))
       scrollToBottom();
-    else
-      $(message.chan + "_tab").addClassName("unread");
+    else if (message.highlight)
+      $(message.chan + "_tab").className = "highlight";
+    else if (! $(message.chan + "_tab").className)
+      $(message.chan + "_tab").className = "unread";
   }
 }
 
