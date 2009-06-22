@@ -113,7 +113,7 @@ sub handle_message {
     elsif ($msg =~ /^\/part\s?(.+)?/) {
       $irc->yield( part => $1 || $chan);
     }
-    elsif ($msg =~ /^\/names/ and $chan) {
+    elsif ($msg =~ /^\/n(?:ames)?$/ and $chan) {
       show_nicks($chan);
     }
     elsif ($msg =~ /^\/topic\s?(.+)?/) {
@@ -348,13 +348,13 @@ sub format_nick_table {
   my @nicks = @_;
   return "" unless @nicks;
   my $maxlen = 0;
-  for (sort @nicks) {
+  for (@nicks) {
     my $length = length $_;
     $maxlen = $length if $length > $maxlen;
   }
   my $cols = int(74  / $maxlen + 2);
   my (@rows, @row);
-  for (@nicks) {
+  for (sort {lc $a cmp lc $b} @nicks) {
     push @row, $_ . " " x ($maxlen - length $_);
     if (@row >= $cols) {
       push @rows, [@row];

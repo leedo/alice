@@ -9,14 +9,16 @@
   </head>
   <body>
     <div id="container">
-    <ul id="tabs">
+      <ul id="tabs">
+        [% FOR channel IN channels %]
+        [% INCLUDE "tab.tt" %]
+        [% END %]
+      </ul>
+      <div id="channels">
       [% FOR channel IN channels %]
-      [% INCLUDE "tab.tt" %]
+      [% INCLUDE "channel.tt" %]
       [% END %]
-    </ul>
-    [% FOR channel IN channels %]
-    [% INCLUDE "channel.tt" %]
-    [% END %]
+      </div>
     </div>
   </body>
 </html>

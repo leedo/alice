@@ -7,11 +7,18 @@ document.onkeyup = function (e) {
   if (e.which == 17) isCtrl = false;
 };
 document.onkeydown = function (e) {
-  if (e.which == 17) {
+  if (e.which == 17)
     isCtrl = true;
-  }
-  if (isCtrl && e.which == 75) {
+  else if (isCtrl && e.which == 75) {
     $$('.channel.active .messages').first().innerHTML = '';
+    return false;
+  }
+  else if (isCtrl && e.which == 78) {
+    nextTab();
+    return false;
+  }
+  else if (isCtrl && e.which == 80) {
+    previousTab();
     return false;
   }
 };
@@ -80,6 +87,18 @@ function showChannel (channel) {
   scrollToBottom();
   input.focus();
 };
+
+function nextTab () {
+  var channel = $$('div#channels div.channel.active').first().next();
+  if (! channel) channel = $$('div#channels div.channel').first();
+  showChannel(channel.id);
+}
+
+function previousTab () {
+  var channel = $$('div#channels div.channel.active').first().previous();
+  if (! channel) var channel = $$('div#channels div.channel').last();
+  showChannel(channel.id);
+}
 
 function playAudio(image, audio) {
   image.src = '/static?f=pause.png'; 
