@@ -64,7 +64,11 @@ function loadInlineImage(image) {
 }
 
 function scrollToBottom () {
-  window.scrollTo(0, document.height);
+  var height = document.viewport.getHeight();
+  var offset = document.viewport.getScrollOffsets().top;
+  var scroll = $('container').getHeight();
+  if ((height + offset) >= scroll)
+    window.scrollTo(0, document.height);
 }
 
 function showChannel (channel) {
