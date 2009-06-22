@@ -210,7 +210,7 @@ function displayMessage (message) {
 function createTab (chan, html) {
   chan = $(chan.replace("#", "chan_"));
   if (! chan) {
-    $('container').insert(html.channel);
+    $('channels').insert(html.channel);
     $('tabs').insert(html.tab);
   }
 }

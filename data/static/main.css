@@ -152,6 +152,7 @@ div.left {
 }
 
 div.msg {
+  min-height: 1.2em;
   margin-left: 131px;
   padding: 5px;
   border-left: 1px solid #ccc;
