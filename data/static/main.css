@@ -55,7 +55,7 @@ ul#tabs {
   height: 22px;
   width: 100%;
   z-index: 999;
-  font-size: 12px;
+  font-size: 11px;
   border-top: 1px solid #999;
   background: #ddd;
 }
@@ -76,7 +76,7 @@ ul#tabs li {
   border: 1px solid #999;
   border-left: 1px solid transparent;
   border-bottom: none;
-  color: #000;
+  color: #333;
   margin-top: -1px;
   background: #ddd;
 }
