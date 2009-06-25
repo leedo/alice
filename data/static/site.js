@@ -60,14 +60,14 @@ function loadInlineImage(image) {
   image.style.visibility = 'hidden';
   if (image.width > maxWidth) image.style.width = maxWidth + 'px';
   image.style.visibility = 'visible';
-  setTimeout(scrollToBottom, 50);
+  setTimeout(function () {scrollToBottom(true)}, 50);
 }
 
-function scrollToBottom () {
+function scrollToBottom (force) {
   var height = document.viewport.getHeight();
   var offset = document.viewport.getScrollOffsets().top;
   var scroll = $('container').getHeight();
-  if ((height + offset) >= scroll)
+  if ((height + offset) >= scroll || force)
     window.scrollTo(0, document.height);
 }
 
@@ -88,7 +88,7 @@ function showChannel (channel) {
   channel.addClassName('active');
   $$('#tabs li').invoke('removeClassName', 'leftof_active');
   if (tab.previous()) tab.previous().addClassName('leftof_active');
-  scrollToBottom();
+  scrollToBottom(true);
   input.focus();
 };
 
@@ -266,5 +266,10 @@ function connect () {
   });
 }
 
-document.observe('dom:loaded', function () {setTimeout(connect, 1000)});
+document.observe('dom:loaded', function () {
+  $$('.topic').each(function(topic) {
+    topic.innerHTML = linkFilter(topic.innerHTML);
+  });
+  setTimeout(connect, 1000);
+});
 window.onresize = scrollToBottom;

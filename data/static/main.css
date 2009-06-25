@@ -42,6 +42,7 @@ div.input input {
   border-top: 1px solid #aaa;
   margin: 0;
   outline: 0 none;
+  font-size: 12px;
 }
 
 ul#tabs {
@@ -54,7 +55,7 @@ ul#tabs {
   height: 22px;
   width: 100%;
   z-index: 999;
-  font-size: 11px;
+  font-size: 12px;
   border-top: 1px solid #999;
   background: #ddd;
 }
@@ -75,7 +76,7 @@ ul#tabs li {
   border: 1px solid #999;
   border-left: 1px solid transparent;
   border-bottom: none;
-  color: #222;
+  color: #000;
   margin-top: -1px;
   background: #ddd;
 }
@@ -116,6 +117,12 @@ div.topic {
   border-bottom: 1px solid #aaa;
   padding: 1px 0;
   z-index: 998;
+  height: 1.2em;
+  overflow: hidden;
+}
+
+div.topic a {
+  text-decoration: none;
 }
 
 ul.messages {
