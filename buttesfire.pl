@@ -16,6 +16,8 @@ use URI::QueryParam;
 use POE qw/Component::IRC::State Component::IRC::Plugin::Connector
            Component::Server::HTTP/;
 
+$0 = 'buttesfire-web';
+system('renice', 20, "-p $$");
 my @open_responses;
 my $seperator = "--xbuttesfirex";
 my $config = LoadFile($ENV{HOME}.'/.buttesfire.yaml');

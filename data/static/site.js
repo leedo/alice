@@ -41,8 +41,8 @@ var filters = [
       "$1<img src=\"$2\" onload=\"loadInlineImage(this)\" width=\"0\" alt=\"Loading Image...\" /><");
     // audio
     filtered = filtered.replace(
-      /(<a href=\"(:?.*?\.(:?wav|mp3|ogg|aiff)))</gi,
-      "<img src=\"/static?f=play.png\" onclick=\"playAudio(this)\" class=\"audio\"/>$1<");
+      /(<a href=\"(:?.*?\.(:?wav|mp3|ogg|aiff))")/gi,
+      "<img src=\"/static?f=play.png\" onclick=\"playAudio(this)\" class=\"audio\"/>$1");
     return filtered;
   }
 ];
