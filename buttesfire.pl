@@ -4,8 +4,8 @@ use strict;
 use warnings;
 
 use lib 'lib';
-use lib 'extlib/lib/perl5';
-use local::lib 'extlib';
+#use lib 'extlib/lib/perl5';
+#use local::lib 'extlib';
 use YAML qw/LoadFile/;
 use Template;
 use JSON;
@@ -17,7 +17,7 @@ use POE qw/Component::IRC::State Component::IRC::Plugin::Connector
            Component::Server::HTTP/;
 
 $0 = 'buttesfire-web';
-system('renice', 20, "-p $$");
+system('renice', '+10', $$);
 my @open_responses;
 my $seperator = "--xbuttesfirex";
 my $config = LoadFile($ENV{HOME}.'/.buttesfire.yaml');
@@ -49,7 +49,8 @@ my $irc = POE::Component::IRC::State->spawn(
 POE::Session->create(
   package_states => [
     main => [qw/_start irc_public irc_001 irc_join irc_part
-                irc_quit irc_chan_sync irc_topic irc_ctcp_action/]
+                irc_quit irc_chan_sync irc_topic irc_ctcp_action
+                irc_nick/]
   ],
 );
 $poe_kernel->run;
@@ -221,6 +222,13 @@ sub irc_ctcp_action {
   my $channel = $where->[0];
   $what = decode("utf8", "• $what", Encode::FB_WARN);
   display_message($nick, $channel, $what);
+}
+
+sub irc_nick {
+  my ($who, $new_nick) = @_[ARG0, ARG1];
+  my $nick = ( split /!/, $who )[0];
+  display_event($nick, $_, "is now known as $new_nick")
+    for $irc->nick_channels($new_nick);
 }
 
 sub irc_join {
