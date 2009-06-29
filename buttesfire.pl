@@ -4,8 +4,8 @@ use strict;
 use warnings;
 
 use lib 'lib';
-#use lib 'extlib/lib/perl5';
-#use local::lib 'extlib';
+use lib 'extlib/lib/perl5';
+use local::lib 'extlib';
 use YAML qw/LoadFile/;
 use Template;
 use JSON;

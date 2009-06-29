@@ -5,8 +5,8 @@
   <ul class="messages" id="[% channel.name_clean %]_messages">
   </ul>
   <div class="input" id="[% channel.name_clean %]_input">
-    <form onsubmit="return sayMessage(this);" id="[% channel.name_clean %]_form">
-      <input type="hidden" name="chan" value="[% channel.name %]" />
+    <form onsubmit="return sayMessage(this);" id="[% channel.name_clean %]_form" autocomplete="off">
+      <input type="hidden" name="chan" value="[% channel.name %]" autocomplete="off"/>
       <input name="msg" id="[% channel.name_clean %]_msg"/>
     </form>
   </div>
