@@ -167,6 +167,11 @@ function handleUpdate (transport) {
   console.time('insert_actions');
   data.actions.each(function(action) {displayAction(action)});
   console.timeEnd('insert_actions');
+
+  /*var messages = $$("#" + message.chan + "_messages li");
+  while (messages.length > 100) {
+    messages.first().remove();
+  }*/
 }
 
 function displayAction (action) {
@@ -196,11 +201,6 @@ function displayMessage (message) {
       $(message.chan + '_messages').insert(html);
     }
     
-    // pop off the oldest message
-    if ($$(message.channel + "_messages li").length > 100)
-      $$(message.chan + "_message li")[0].remove();
-    
-    console.log(message);
     // scroll to bottom or highlight the tab
     if ($(message.chan).hasClassName('active'))
       scrollToBottom();

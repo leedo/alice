@@ -149,4 +149,6 @@ sub parse_formatted_string {
   return @segments;
 }
 
+__PACKAGE__->meta->make_immutable;
+
 1;

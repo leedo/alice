@@ -101,7 +101,7 @@ sub handle_stream {
       $res->{actions} = []; 
     }
   }
-  $res->continue;
+  $res->continue_delayed(0.5);
 }
 
 sub handle_message {
