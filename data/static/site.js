@@ -180,6 +180,7 @@ function displayAction (action) {
 
 function displayMessage (message) {
   message.chan = message.chan.replace('#', 'chan_');
+  if (! $(message.chan + "_messages")) createBlankTab(message.chan);
   if (message.html || message.full_html) {
     var last_message = $$('#' + message.chan + ' .'
       + message.nick + ':last-child .msg').first();
@@ -196,11 +197,12 @@ function displayMessage (message) {
       $(message.chan + '_messages').insert(html);
     }
     
-    // pop off the oldest message
-    if ($$(message.channel + "_messages li").length > 100)
-      $$(message.chan + "_message li")[0].remove();
+    if (message.event == "topic") $(message.chan + "_topic").innerHTML = message.message;
     
-    console.log(message);
+    // pop off the oldest message
+    if ($$("#" + message.chan + "_messages li").length > 100)
+      $$("#" + message.chan + "_messages li")[0].remove();
+    
     // scroll to bottom or highlight the tab
     if ($(message.chan).hasClassName('active'))
       scrollToBottom();
