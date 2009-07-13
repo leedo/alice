@@ -59,6 +59,8 @@ for my $server (@{$config->{servers}}) {
   );
 }
 
+log_info("You can view your IRC session at: http://localhost:8080/view");
+
 $poe_kernel->run;
 
 sub setup_stream {
@@ -84,14 +86,7 @@ sub handle_stream {
   my ($req, $res) = @_;
 
   if ($res->is_error) {
-    log_debug("closing HTTP connection");
-    for (0 .. $#open_responses) {
-      if ($res == $open_responses[$_]) {
-        splice(@open_responses, $_, 1);
-      }
-    }
-    $res->close;
-    $res->continue;
+    end_stream($res);
     return;
   }
   if (@{$res->{actions}} or @{$res->{msgs}}) {
@@ -102,7 +97,11 @@ sub handle_stream {
     }
     $output .= to_json({msgs => $res->{msgs}, actions => $res->{actions}, time => time});
     $res->send($output . "\n$seperator\n") if @{$res->{msgs}} or @{$res->{actions}};
-    if (! $res->is_error) {
+    if ($res->is_error) {
+      end_stream($res);
+      return;
+    }
+    else {
       $res->{msgs} = [];
       $res->{actions} = []; 
     }
@@ -110,13 +109,28 @@ sub handle_stream {
   $res->continue_delayed(0.5);
 }
 
+sub end_stream {
+  my $res = shift;
+  log_debug("closing HTTP connection");
+  for (0 .. $#open_responses) {
+    if ($res == $open_responses[$_]) {
+      splice(@open_responses, $_, 1);
+    }
+  }
+  $res->close;
+  $res->continue;
+}
+
 sub handle_message {
   my ($req, $res) = @_;
   $res->streaming(0);
+  $res->code(200);
   my $msg  = $req->uri->query_param('msg');
   my $chan = $req->uri->query_param('chan');
   my $session_id = $req->uri->query_param('session');
+  return 200 unless $session_id;
   my $irc = $ircs{$session_id};
+  return 200 unless $irc;
   if (length $msg) {
     if ($msg =~ /^\/join (.+)/) {
       $irc->yield( join => $1);
@@ -146,7 +160,7 @@ sub handle_message {
       $irc->yield( privmsg => $chan => $msg);
     }
   }
-  $res->code(200);
+
   return 200;
 }
 
@@ -213,7 +227,6 @@ sub _start {
   $irc->yield( register => 'all' );
   $irc->plugin_add('Connector' => POE::Component::IRC::Plugin::Connector->new);
   $irc->yield( connect => { } );
-  log_info("You can view your IRC session at: http://localhost:8080/view");
   log_debug("connected to irc server");
   return;
 }
@@ -250,7 +263,7 @@ sub irc_ctcp_action {
   my $nick = ( split /!/, $who )[0];
   my $channel = $where->[0];
   $what = decode("utf8", "• $what", Encode::FB_WARN);
-  display_message($nick, $channel, $what);
+  display_message($nick, $channel, $irc->session_id, $what);
 }
 
 sub irc_nick {
@@ -389,6 +402,7 @@ sub show_nicks {
   push @{$_->{actions}}, {
     type  => "announce",
     chan  => $chan,
+    session => $session,
     str   => format_nick_table($ircs{$session}->channel_list($chan))
   } for @open_responses;
 }

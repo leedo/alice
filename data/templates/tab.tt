@@ -2,5 +2,5 @@
 [% channel.name_clean = String.replace('#','chan_') _ channel.session %]
 <li id="[% channel.name_clean %]_tab"[% IF loop.first %] class="active"[% END %] onclick="showChannel('[% channel.name_clean %]', '[% channel.session %]')">
   <div onclick="partChannel('[% channel.name_clean %]', '[% channel.session %]')" class="tab_button"></div>
-  [% channel.name %]
+  [% channel.name | html %]
 </li>
