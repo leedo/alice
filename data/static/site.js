@@ -171,15 +171,15 @@ function handleUpdate (transport) {
 
 function displayAction (action) {
   if (action.type == "join")
-    createTab(action.chan, action.html);
+    createTab(action.chan + action.session, action.html);
   else if (action.type == "part")
-    closeTab(action.chan);
+    closeTab(action.chan + action.session);
   else if (action.type == "announce")
-    announceMsg(action.chan, action.str);
+    announceMsg(action.chan + action.session, action.str);
 }
 
 function displayMessage (message) {
-  message.chan = message.chan.replace('#', 'chan_');
+  message.chan = message.chan.replace('#', 'chan_') + message.session;
   if (! $(message.chan + "_messages")) createBlankTab(message.chan);
   if (message.html || message.full_html) {
     var last_message = $$('#' + message.chan + ' .'
@@ -198,10 +198,6 @@ function displayMessage (message) {
     }
     
     if (message.event == "topic") $(message.chan + "_topic").innerHTML = message.message;
-    
-    // pop off the oldest message
-    if ($$("#" + message.chan + "_messages li").length > 100)
-      $$("#" + message.chan + "_messages li")[0].remove();
     
     // scroll to bottom or highlight the tab
     if ($(message.chan).hasClassName('active'))

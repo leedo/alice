@@ -37,22 +37,28 @@ my $http = POE::Component::Server::HTTP->new(
   StreamHandler    => \&handle_stream,
 );
 
-my $irc = POE::Component::IRC::State->spawn(
-  nick    => $config->{nick}    || 'nick',
-  ircname => $config->{ircname} || 'nick',
-  server  => $config->{server}  || 'irc.freenode.org',
-  port    => $config->{port}    || 6667,
-  password => $config->{password},
-  username => $config->{username},
-);
+my %ircs;
 
-POE::Session->create(
-  package_states => [
-    main => [qw/_start irc_public irc_001 irc_join irc_part
-                irc_quit irc_chan_sync irc_topic irc_ctcp_action
-                irc_nick irc_msg/]
-  ],
-);
+for my $server (@{$config->{servers}}) {
+  my $irc = POE::Component::IRC::State->spawn(
+    nick    => $server->{nick}    || 'nick',
+    ircname => $server->{ircname} || 'nick',
+    server  => $server->{server}  || 'irc.freenode.org',
+    port    => $server->{port}    || 6667,
+    password => $server->{password},
+    username => $server->{username},
+  );
+  $ircs{$irc->session_id} = $irc;
+  POE::Session->create(
+    package_states => [
+      main => [qw/_start irc_public irc_001 irc_join irc_part
+                  irc_quit irc_chan_sync irc_topic irc_ctcp_action
+                  irc_nick irc_msg/]
+    ],
+    heap => {irc => $irc},
+  );
+}
+
 $poe_kernel->run;
 
 sub setup_stream {
@@ -101,7 +107,7 @@ sub handle_stream {
       $res->{actions} = []; 
     }
   }
-  $res->continue;
+  $res->continue_delayed(0.5);
 }
 
 sub handle_message {
@@ -109,6 +115,8 @@ sub handle_message {
   $res->streaming(0);
   my $msg  = $req->uri->query_param('msg');
   my $chan = $req->uri->query_param('chan');
+  my $session_id = $req->uri->query_param('session');
+  my $irc = $ircs{$session_id};
   if (length $msg) {
     if ($msg =~ /^\/join (.+)/) {
       $irc->yield( join => $1);
@@ -117,24 +125,24 @@ sub handle_message {
       $irc->yield( part => $1 || $chan);
     }
     elsif ($msg =~ /^\/n(?:ames)?$/ and $chan) {
-      show_nicks($chan);
+      show_nicks($chan, $irc->session_id);
     }
     elsif ($msg =~ /^\/topic\s?(.+)?/) {
       if ($1) {
         $irc->yield(topic => $chan, $1);
       }
       else {
-        my $topic = $irc->channel_topic($chan);
-        send_topic($topic->{SetBy}, $chan, $topic->{Value});
+        my $topic = $irc->channel_topic($chan, $irc->session_id);
+        send_topic($topic->{SetBy}, $chan, $irc->session_id, $topic->{Value});
       }
     }
     elsif ($msg =~ /^\/me (.+)/) {
-      display_message($config->{nick}, $chan, decode_utf8("• $1"));
+      display_message($irc->nick_name, $chan, $irc->session_id, decode_utf8("• $1"));
       $irc->yield(ctcp => $chan, "ACTION $1");
     }
     else {
       log_debug("sending message to $chan");
-      display_message($config->{nick}, $chan, decode_utf8($msg)); 
+      display_message($irc->nick_name, $chan, $irc->session_id, decode_utf8($msg)); 
       $irc->yield( privmsg => $chan => $msg);
     }
   }
@@ -174,10 +182,19 @@ sub send_index {
   $res->streaming(0);
   $res->content_type('text/html; charset=utf-8');
   my $output = '';
+  my $channels = [];
+  for my $irc (keys %ircs) {
+    for my $channel (keys %{$ircs{$irc}->channels}) {
+      push @$channels, {
+        name => $channel,
+        session => $ircs{$irc}->session_id,
+        topic => $ircs{$irc}->channel_topic($channel),
+        server => $ircs{$irc},
+      }
+    }
+  }
   $tt->process('index.tt', {
-    channels => [ map {
-      {name => $_, topic => $irc->channel_topic($_)}
-    } keys %{$irc->channels} ]
+    channels => $channels,
   }, \$output) or die $!;
   $res->content($output);
   return 200;
@@ -192,6 +209,7 @@ sub not_found {
 }
 
 sub _start {
+  my $irc = $_[HEAP]->{irc};
   $irc->yield( register => 'all' );
   $irc->plugin_add('Connector' => POE::Component::IRC::Plugin::Connector->new);
   $irc->yield( connect => { } );
@@ -201,6 +219,7 @@ sub _start {
 }
 
 sub irc_001 {
+  my $irc = $_[HEAP]->{irc};
   log_debug("joining channels");
   for (@{$config->{channels}}) {
     log_debug("joining $_");
@@ -210,21 +229,24 @@ sub irc_001 {
 
 sub irc_public {
   my ($who, $where, $what) = @_[ARG0 .. ARG2];
+  my $irc = $_[HEAP]->{irc};
   my $nick = ( split /!/, $who )[0];
   my $channel = $where->[0];
   $what = decode("utf8", $what, Encode::FB_WARN);
-  display_message($nick, $channel, $what);
+  display_message($nick, $channel, $irc->session_id, $what);
 }
 
 sub irc_msg {
   my ($who, $what) = @_[ARG0, ARG2];
+  my $irc = $_[HEAP]->{irc};
   my $nick = ( split /!/, $who)[0];
   $what = decode("utf8", $what, Encode::FB_WARN);
-  display_message($nick, $nick, $what);
+  display_message($nick, $nick, $irc->session_id, $what);
 }
 
 sub irc_ctcp_action {
   my ($who, $where, $what) = @_[ARG0 .. ARG2];
+  my $irc = $_[HEAP]->{irc};
   my $nick = ( split /!/, $who )[0];
   my $channel = $where->[0];
   $what = decode("utf8", "• $what", Encode::FB_WARN);
@@ -233,65 +255,72 @@ sub irc_ctcp_action {
 
 sub irc_nick {
   my ($who, $new_nick) = @_[ARG0, ARG1];
+  my $irc = $_[HEAP]->{irc};
   my $nick = ( split /!/, $who )[0];
-  display_event($nick, $_, "is now known as $new_nick")
+  display_event($nick, $_, $irc->session_id, "is now known as $new_nick")
     for $irc->nick_channels($new_nick);
 }
 
 sub irc_join {
   my ($who, $where) = @_[ARG0, ARG1];
+  my $irc = $_[HEAP]->{irc};
   my $nick = ( split /!/, $who)[0];
   my $channel = $where;
-  if ($nick ne $config->{nick}) {
-    display_event($nick, $channel, "joined");  
+  if ($nick ne $irc->nick_name) {
+    display_event($nick, $channel, $irc->session_id, "joined");  
   }
   else {
-    create_tab($channel);
+    create_tab($channel, $irc->session_id);
   }
 }
 
 sub irc_chan_sync {
   my ($channel) = @_;
-  create_tab($channel) if $channel ne "main";
+  my $irc = $_[HEAP]->{irc};
+  create_tab($channel, $irc->session_id) if $channel ne "main";
 }
 
 sub irc_part {
   my ($who, $where, $msg) = @_[ARG0 .. ARG2];
+  my $irc = $_[HEAP]->{irc};
   my $nick = ( split /!/, $who)[0];
   my $channel = $where;
-  if ($nick ne $config->{nick}) {
-    display_event($nick, $channel, "left", $msg);
+  if ($nick ne $irc->nick_name) {
+    display_event($nick, $channel, $irc->session_id, "left", $msg);
   }
   else {
-    close_tab($channel);
+    close_tab($channel, $irc->session_id);
   }
 }
 
 sub irc_quit {
   my ($who, $msg, $channels) = @_[ARG0 .. ARG2];
+  my $irc = $_[HEAP]->{irc};
   my $nick = ( split /!/, $who)[0];
   for my $channel (@$channels) {
-    display_event($nick, $channel, "left", $msg);
+    display_event($nick, $channel, $irc->session_id, "left", $msg);
   }
 }
 
 sub irc_topic {
   my ($who, $channel, $topic) = @_[ARG0 .. ARG2];
-  send_topic($who, $channel, $topic);
+  my $irc = $_[HEAP]->{irc};
+  send_topic($who, $channel, $irc->session_id, $topic);
 }
 
 sub send_topic {
-  my ($who, $channel, $topic) = @_;
+  my ($who, $channel, $session, $topic) = @_;
   my $nick = ( split /!/, $who)[0];
-  display_event($nick, $channel, "topic", $topic);
+  display_event($nick, $channel, $session, "topic", $topic);
 }
 
 sub display_event {
-  my ($nick, $channel, $event_type, $msg) = @_;
+  my ($nick, $channel, $session, $event_type, $msg) = @_;
   my $event = {
     type      => "event",
     nick      => $nick,
     chan      => $channel,
+    session   => $session,
     event     => $event_type,
     message   => $msg,
     timestamp => make_timestamp(),
@@ -300,14 +329,15 @@ sub display_event {
 }
 
 sub display_message {
-  my ($nick, $channel, $text) = @_;
+  my ($nick, $channel, $session, $text) = @_;
   my $html = IRC::Formatting->formatted_string_to_html($text);
-  my $mynick = $config->{nick};
+  my $mynick = $ircs{$session}->nick_name;
   my $msg = {
     type      => "message",
     nick      => $nick,
     chan      => $channel,
-    self      => $nick eq $config->{nick},
+    session   => $session,
+    self      => $nick eq $mynick,
     html      => $html,
     highlight => $text =~ /$mynick/i || 0,
     timestamp => make_timestamp(),
@@ -316,27 +346,29 @@ sub display_message {
 }
 
 sub create_tab {
-  my ($name) = @_;
+  my ($name, $session) = @_;
   my $action = {
     type      => "join",
     chan      => $name,
+    session   => $session,
     timestamp => make_timestamp(),
   };
   my $chan_html = '';
-  $tt->process("channel.tt", {channel => {name => $name}}, \$chan_html);
+  $tt->process("channel.tt", {channel => {name => $name, session => $session}}, \$chan_html);
   $action->{html}{channel} = $chan_html;
   my $tab_html = '';
-  $tt->process("tab.tt", {channel => {name => $name}}, \$tab_html);
+  $tt->process("tab.tt", {channel => {name => $name, session => $session}}, \$tab_html);
   $action->{html}{tab} = $tab_html;
   log_debug("sending a request for a new tab: $name") if @open_responses;
   push @{$_->{actions}}, $action for @open_responses;
 }
 
 sub close_tab {
-  my ($name) = @_;
+  my ($name, $session) = @_;
   my $action = {
     type      => "part",
     chan      => $name,
+    session   => $session,
     timestamp => make_timestamp(),
   };
   log_debug("sending a request to close a tab: $name") if @open_responses;
@@ -353,11 +385,11 @@ sub add_outgoing {
 }
 
 sub show_nicks {
-  my $chan = shift;
+  my ($chan, $session) = @_;
   push @{$_->{actions}}, {
     type  => "announce",
     chan  => $chan,
-    str   => format_nick_table($irc->channel_list($chan))
+    str   => format_nick_table($ircs{$session}->channel_list($chan))
   } for @open_responses;
 }
 
