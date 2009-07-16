@@ -72,7 +72,7 @@ function scrollToBottom (force) {
 }
 
 function showChannel (channel) {
-  document.title = channel.replace("chan_", "#");
+  document.title = cleanse_chan(channel);
   channel = $(channel);
   if (! channel) return;
   var tab = $(channel.id + "_tab");
@@ -178,8 +178,12 @@ function displayAction (action) {
     announceMsg(action.chan + action.session, action.str);
 }
 
+function cleanse_chan (chan) {
+  return chan.replace(/^[&#]/, 'chan_');
+}
+
 function displayMessage (message) {
-  message.chan = message.chan.replace('#', 'chan_') + message.session;
+  message.chan = cleanse_chan(message.chan) + message.session;
   if (! $(message.chan + "_messages")) createBlankTab(message.chan);
   if (message.html || message.full_html) {
     var last_message = $$('#' + message.chan + ' .'
@@ -210,7 +214,7 @@ function displayMessage (message) {
 }
 
 function createTab (chan, html) {
-  chan = $(chan.replace("#", "chan_"));
+  chan = $(cleanse_chan(chan));
   if (! chan) {
     $('channels').insert(html.channel);
     $('tabs').insert(html.tab);
@@ -218,7 +222,7 @@ function createTab (chan, html) {
 }
 
 function announceMsg (chan, str) {
-  chan = chan.replace("#", "chan_");
+  chan = cleanse_chan(chan);
   if ($(chan)) {
     $(chan + "_messages").insert(
       "<li><div class='msg announce'>"+str+'</div></li>');
@@ -227,7 +231,7 @@ function announceMsg (chan, str) {
 }
 
 function closeTab (chan) {
-  chan = $(chan.replace("#", "chan_"));
+  chan = $(cleanse_chan(chan));
   if (chan) {
     if (chan.hasClassName('active')) {
       if (chan.previous())
@@ -241,7 +245,7 @@ function closeTab (chan) {
 }
 
 function partChannel (chan) {
-  chan = chan.replace("chan_", "#");
+  chan = cleanse_chan(chan);
   new Ajax.Request('/say', {
     method: 'get',
     parameters: {chan: chan, msg: "/part"},
