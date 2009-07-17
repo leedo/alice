@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
   <head>
-    <title>[% channels.0.name %]</title>
+    <title>[% channels.0.name_orig %]</title>
     <script type="text/javascript" src="/static?f=prototype.js"></script>
     <script type="text/javascript" src="/static?f=site.js"></script>
     <link type="text/css" rel="stylesheet" href="/static?f=main.css" />

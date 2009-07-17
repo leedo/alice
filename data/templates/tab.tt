@@ -1,7 +1,4 @@
-[% USE String(channel.name) %]
-[% channel.name_clean = String.replace('#','chan_') _ channel.session %]
-[% channel.name_clean = channel.name_clean.replace('&', 'chan_') %]
-<li id="[% channel.name_clean %]_tab"[% IF loop.first %] class="active"[% END %] onclick="showChannel('[% channel.name_clean %]', '[% channel.session %]')">
-  <div onclick="partChannel('[% channel.name_clean %]', '[% channel.session %]')" class="tab_button"></div>
-  [% channel.name | html %]
+<li id="[% channel.name _ channel.session | html %]_tab"[% IF loop.first %] class="active"[% END %] onclick="showChannel('[% channel.name _ channel.session | html %]')">
+  <div onclick="partChannel('[% channel.name_orig | html %]', '[% channel.session | html %]', '[% channel.name _ channel.session | html %]')" class="tab_button"></div>
+  [% channel.name_orig | html %]
 </li>

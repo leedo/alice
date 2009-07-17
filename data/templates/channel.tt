@@ -1,14 +1,13 @@
-[% USE String(channel.name) %]
-[% channel.name_clean = String.replace('#','chan_') _ channel.session %]
-[% channel.name_clean = channel.name_clean.replace('&', 'chan_') %]
-<div class="channel[% IF loop.first %] active[% END %]" id="[% channel.name_clean %]">
-  <div class="topic" id="[% channel.name_clean %]_topic">[% channel.topic.Value || "(no topic set)" %]</div>
-  <ul class="messages" id="[% channel.name_clean %]_messages">
+<div class="channel[% IF loop.first %] active[% END %]" id="[% channel.name _ channel.session | html %]">
+  <div class="topic" id="[% channel.name _ channel.session | html %]_topic">
+    [% channel.topic.Value || "(no topic set)" | html %]
+  </div>
+  <ul class="messages" id="[% channel.name _ channel.session | html %]_messages">
   </ul>
-  <div class="input" id="[% channel.name_clean %]_input">
-    <form onsubmit="return sayMessage(this);" id="[% channel.name_clean %]_form" autocomplete="off">
-      <input type="hidden" name="chan" value="[% channel.name %]" />
-      <input name="msg" id="[% channel.name_clean %]_msg"/>
+  <div class="input" id="[% channel.name _ channel.session | html %]_input">
+    <form onsubmit="return sayMessage(this);" id="[% channel.name _ channel.session | html %]_form" autocomplete="off">
+      <input type="hidden" name="chan" value="[% channel.name_orig | html %]" />
+      <input name="msg" id="[% channel.name _ channel.session | html %]_msg"/>
       <input type="hidden" name="session" value="[% channel.session %]" />
     </form>
   </div>

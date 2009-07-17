@@ -25,6 +25,8 @@ my $tt = Template->new(
   INCLUDE_PATH => 'data/templates',
   ENCODING     => 'UTF8');
 
+log_info("You can view your IRC session at: http://localhost:8080/view");
+
 my $http = POE::Component::Server::HTTP->new(
   Port             => 8080,
   ContentHandler   => {
@@ -55,11 +57,9 @@ for my $server (@{$config->{servers}}) {
                   irc_quit irc_chan_sync irc_topic irc_ctcp_action
                   irc_nick irc_msg/]
     ],
-    heap => {irc => $irc},
+    heap => {irc => $irc, network => $server->{server}},
   );
 }
-
-log_info("You can view your IRC session at: http://localhost:8080/view");
 
 $poe_kernel->run;
 
@@ -138,6 +138,9 @@ sub handle_message {
     elsif ($msg =~ /^\/part\s?(.+)?/) {
       $irc->yield( part => $1 || $chan);
     }
+    elsif ($msg =~ /^\/window new/) {
+      create_tab($chan, $irc->session_id);
+    }
     elsif ($msg =~ /^\/n(?:ames)?$/ and $chan) {
       show_nicks($chan, $irc->session_id);
     }
@@ -200,7 +203,8 @@ sub send_index {
   for my $irc (keys %ircs) {
     for my $channel (keys %{$ircs{$irc}->channels}) {
       push @$channels, {
-        name => $channel,
+        name => cleanse_channel($channel),
+        name_orig => $channel,
         session => $ircs{$irc}->session_id,
         topic => $ircs{$irc}->channel_topic($channel),
         server => $ircs{$irc},
@@ -227,15 +231,14 @@ sub _start {
   $irc->yield( register => 'all' );
   $irc->plugin_add('Connector' => POE::Component::IRC::Plugin::Connector->new);
   $irc->yield( connect => { } );
-  log_debug("connected to irc server");
+  log_debug("connected to " . $_[HEAP]->{network});
   return;
 }
 
 sub irc_001 {
   my $irc = $_[HEAP]->{irc};
-  log_debug("joining channels");
   for (@{$config->{channels}}) {
-    log_debug("joining $_");
+    log_debug("joining $_ on " . $irc->server_name);
     $irc->yield( join => $_ );
   }
 }
@@ -332,7 +335,8 @@ sub display_event {
   my $event = {
     type      => "event",
     nick      => $nick,
-    chan      => $channel,
+    chan_full => $channel,
+    chan      => cleanse_channel($channel),
     session   => $session,
     event     => $event_type,
     message   => $msg,
@@ -348,7 +352,8 @@ sub display_message {
   my $msg = {
     type      => "message",
     nick      => $nick,
-    chan      => $channel,
+    chan_full => $channel,
+    chan      => cleanse_channel($channel),
     session   => $session,
     self      => $nick eq $mynick,
     html      => $html,
@@ -362,15 +367,20 @@ sub create_tab {
   my ($name, $session) = @_;
   my $action = {
     type      => "join",
-    chan      => $name,
+    chan_orig => $name,
+    chan      => cleanse_channel($name),
     session   => $session,
     timestamp => make_timestamp(),
   };
   my $chan_html = '';
-  $tt->process("channel.tt", {channel => {name => $name, session => $session}}, \$chan_html);
+  $tt->process("channel.tt", {channel => {
+    name => cleanse_channel($name), name_orig => $name, session => $session
+  }}, \$chan_html);
   $action->{html}{channel} = $chan_html;
   my $tab_html = '';
-  $tt->process("tab.tt", {channel => {name => $name, session => $session}}, \$tab_html);
+  $tt->process("tab.tt", {channel => {
+    name => cleanse_channel($name), name_orig => $name, session => $session
+  }}, \$tab_html);
   $action->{html}{tab} = $tab_html;
   log_debug("sending a request for a new tab: $name") if @open_responses;
   push @{$_->{actions}}, $action for @open_responses;
@@ -380,7 +390,7 @@ sub close_tab {
   my ($name, $session) = @_;
   my $action = {
     type      => "part",
-    chan      => $name,
+    chan      => cleanse_channel($name),
     session   => $session,
     timestamp => make_timestamp(),
   };
@@ -400,10 +410,10 @@ sub add_outgoing {
 sub show_nicks {
   my ($chan, $session) = @_;
   push @{$_->{actions}}, {
-    type  => "announce",
-    chan  => $chan,
+    type    => "announce",
+    chan    => cleanse_channel($chan),
     session => $session,
-    str   => format_nick_table($ircs{$session}->channel_list($chan))
+    str     => format_nick_table($ircs{$session}->channel_list($chan))
   } for @open_responses;
 }
 
@@ -426,6 +436,12 @@ sub format_nick_table {
   }
   push @rows, [@row] if @row;
   return join "\n", map {join " ", @$_} @rows;
+}
+
+sub cleanse_channel {
+  my $channel = shift;
+  $channel =~ s/[#&]/chan_/;
+  return $channel;
 }
 
 sub make_timestamp {
