@@ -57,7 +57,7 @@ for my $server (@{$config->{servers}}) {
                   irc_quit irc_chan_sync irc_topic irc_ctcp_action
                   irc_nick irc_msg/]
     ],
-    heap => {irc => $irc, network => $server->{server}},
+    heap => {irc => $irc, network => $server->{server} .":" . $server->{port}},
   );
 }
 

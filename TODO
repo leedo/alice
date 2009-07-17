@@ -2,11 +2,10 @@ Javascript
   - Username links to private messages
 
 Perl
-  - Support private messages
   - Send some sort of message on disconnect
-  - Multiple servers
   - Configurable over HTTP request?
   - Fix cswas in IRC::Formatting
+  - Clean up API parameter naming
   
 HTML/CSS  
   - Switchable themes?
