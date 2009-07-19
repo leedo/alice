@@ -1,3 +1,48 @@
+Buttescompleter = Class.create(Ajax.Autocompleter, {
+  onKeyPress: function (event) {
+    if(this.active)
+      switch(event.keyCode) {
+        case Event.KEY_TAB:
+          this.markNext();
+          this.render();
+          Event.stop(event);
+          return;
+        case Event.KEY_RETURN:
+          this.selectEntry();
+          Event.stop(event);
+        case Event.KEY_ESC:
+          this.hide();
+          this.active = false;
+          Event.stop(event);
+          return;
+        case Event.KEY_LEFT:
+          this.markPrevious();
+          this.render();
+          Event.stop(event);
+          return;
+        case Event.KEY_RIGHT:
+          this.markNext();
+          this.render();
+          Event.stop(event);
+          return;
+        case Event.KEY_UP:
+        case Event.KEY_DOWN:
+      }
+    else
+      if(event.keyCode==Event.KEY_TAB || event.keyCode==Event.KEY_RETURN ||
+        (Prototype.Browser.WebKit > 0 && event.keyCode == 0)) return;
+ 
+    this.changed = true;
+    this.hasFocus = true;
+ 
+    if(this.observer) clearTimeout(this.observer);
+    this.observer =
+      setTimeout(this.onObserverEvent.bind(this), this.options.frequency*1000);
+  }
+});
+
+console.log(Autocompleter.Base.onKeyPress);
+
 var len = 0;
 var req;
 var isCtrl = false;

@@ -26,7 +26,7 @@ my $tt = Template->new(
   INCLUDE_PATH => 'data/templates',
   ENCODING     => 'UTF8');
 
-my @commands = qw/join part names topic me/;
+my @commands = qw/join part names topic me query/;
 
 log_info("You can view your IRC session at: http://localhost:8080/view");
 
@@ -136,7 +136,10 @@ sub handle_message {
   my $irc = $ircs{$session_id};
   return 200 unless $irc;
   if (length $msg) {
-    if ($msg =~ /^\/join (.+)/) {
+    if ($msg =~ /^\/query (\S+)/) {
+      create_tab($1, $irc->session_id);
+    }
+    elsif ($msg =~ /^\/join (.+)/) {
       $irc->yield( join => $1);
     }
     elsif ($msg =~ /^\/part\s?(.+)?/) {
@@ -154,7 +157,7 @@ sub handle_message {
       }
       else {
         my $topic = $irc->channel_topic($chan, $irc->session_id);
-        send_topic($topic->{SetBy}, $chan, $irc->session_id, $topic->{Value});
+        send_topic($topic->{SetBy}, $chan, $irc->session_id, decode_utf8($topic->{Value}));
       }
     }
     elsif ($msg =~ /^\/me (.+)/) {
@@ -381,7 +384,7 @@ sub display_message {
     session   => $session,
     self      => $nick eq $mynick,
     html      => $html,
-    highlight => $text =~ /$mynick/i || 0,
+    highlight => $text =~ /\b$mynick\b/i || 0,
     timestamp => make_timestamp(),
   };
   add_outgoing($msg, "message");

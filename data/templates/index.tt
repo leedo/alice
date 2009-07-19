@@ -5,7 +5,7 @@
     <script type="text/javascript" 
         src="http://ajax.googleapis.com/ajax/libs/prototype/1.6.0.3/prototype.js"></script>
     <script type="text/javascript" 
-        src="http://ajax.googleapis.com/ajax/libs/scriptaculous/1.8.2/scriptaculous.js"></script>
+        src="http://ajax.googleapis.com/ajax/libs/scriptaculous/1.8.2/scriptaculous.js?load=effects,controls"></script>
     <script type="text/javascript" src="/static?f=site.js"></script>
     <link type="text/css" rel="stylesheet" href="/static?f=main.css" />
   </head>

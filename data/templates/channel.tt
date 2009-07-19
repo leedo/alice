@@ -4,15 +4,15 @@
   </div>
   <ul class="messages" id="[% channel.name _ channel.session | html %]_messages">
   </ul>
-  <div id="[% channel.name _ channel.session | html %]_autocomplete_choices" class="autocomplete"></div>
   <div class="input" id="[% channel.name _ channel.session | html %]_input">
+    <div id="[% channel.name _ channel.session | html %]_autocomplete_choices" class="autocomplete"></div>
     <form onsubmit="return sayMessage(this);" id="[% channel.name _ channel.session | html %]_form" autocomplete="off">
       <input type="hidden" name="chan" value="[% channel.name_orig | html %]" />
       <input name="msg" id="[% channel.name _ channel.session | html %]_msg"/>
       <input type="hidden" name="session" value="[% channel.session %]" />
     </form>
     <script type="text/javascript">
-      new Ajax.Autocompleter(
+      new Buttescompleter(
         "[% channel.name _ channel.session | html %]_msg",
         "[% channel.name _ channel.session | html %]_autocomplete_choices",
         "/autocomplete",
