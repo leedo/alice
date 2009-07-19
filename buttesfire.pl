@@ -13,6 +13,7 @@ use Encode;
 use IRC::Formatting;
 use Time::HiRes qw/time/;
 use URI::QueryParam;
+use bytes;
 use POE qw/Component::IRC::State Component::IRC::Plugin::Connector
            Component::Server::HTTP/;
 
@@ -25,6 +26,8 @@ my $tt = Template->new(
   INCLUDE_PATH => 'data/templates',
   ENCODING     => 'UTF8');
 
+my @commands = qw/join part names topic me/;
+
 log_info("You can view your IRC session at: http://localhost:8080/view");
 
 my $http = POE::Component::Server::HTTP->new(
@@ -35,6 +38,7 @@ my $http = POE::Component::Server::HTTP->new(
     '/favicon.ico' => \&not_found,
     '/say'         => \&handle_message,
     '/static'      => \&handle_static,
+    '/autocomplete' => \&handle_autocomplete,
   },
   StreamHandler    => \&handle_stream,
 );
@@ -68,8 +72,7 @@ sub setup_stream {
   $res->code(200);
   $res->header(Connection => 'close');
   
-  # XHR tries to reconnect again for some reason
-  # possibly a problem with multiple browsers viewing
+  # XHR tries to reconnect again with this header for some reason
   my $op = $req->header('operation');
   return 200 if $op and $op eq 'read';
   
@@ -96,7 +99,8 @@ sub handle_stream {
       $output .= "$seperator\n";
     }
     $output .= to_json({msgs => $res->{msgs}, actions => $res->{actions}, time => time});
-    $res->send($output . "\n$seperator\n") if @{$res->{msgs}} or @{$res->{actions}};
+    my $padding = " " x (1024 - bytes::length $output);
+    $res->send($output . $padding . "\n$seperator\n") if @{$res->{msgs}} or @{$res->{actions}};
     if ($res->is_error) {
       end_stream($res);
       return;
@@ -141,7 +145,7 @@ sub handle_message {
     elsif ($msg =~ /^\/window new/) {
       create_tab($chan, $irc->session_id);
     }
-    elsif ($msg =~ /^\/n(?:ames)?$/ and $chan) {
+    elsif ($msg =~ /^\/n(?:ames)?/ and $chan) {
       show_nicks($chan, $irc->session_id);
     }
     elsif ($msg =~ /^\/topic\s?(.+)?/) {
@@ -215,6 +219,26 @@ sub send_index {
     channels => $channels,
   }, \$output) or die $!;
   $res->content($output);
+  return 200;
+}
+
+sub handle_autocomplete {
+  my ($req, $res) = @_;
+  $res->code(200);
+  $res->streaming(0);
+  $res->content_type('text/html; charset=utf-8');
+  my $query = $req->uri->query_param('msg');
+  my $chan = $req->uri->query_param('chan');
+  my $session_id = $req->uri->query_param('session');
+  ($query) = $query =~ /((?:^\/)?[\d\w]*)$/;
+  return 200 unless $query;
+  log_debug("handling autocomplete for $query");
+  my $irc = $ircs{$session_id};
+  my @matches = grep {/^\Q$query\E/i} $irc->channel_list($chan);
+  push @matches, grep {/^\Q$query\E/i} map {"/$_"} @commands;
+  my $html = '';
+  $tt->process('autocomplete.tt',{matches => \@matches}, \$html) or die $!;
+  $res->content($html);
   return 200;
 }
 
