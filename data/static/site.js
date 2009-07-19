@@ -161,6 +161,10 @@ function handleUpdate (transport) {
   data.msgs.each(function(message) {displayMessage(message)});
   var lag = time / 1000 -  data.time;
   console.log(lag);
+  if (lag > 10) {
+    req.stop();
+    connect();
+  }
 }
 
 function displayAction (action) {
@@ -203,9 +207,9 @@ function displayMessage (message) {
     // scroll to bottom or highlight the tab
     if ($(message.chan).hasClassName('active'))
       scrollToBottom();
-    else if (message.highlight)
+    else if (message.type == "message" && message.highlight)
       $(message.chan + "_tab").className = "highlight";
-    else if (! $(message.chan + "_tab").className)
+    else if (message.type == "message" && ! $(message.chan + "_tab").className)
       $(message.chan + "_tab").className = "unread";
   }
 }
