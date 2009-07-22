@@ -26,10 +26,19 @@ Buttescompleter = Class.create(Ajax.Autocompleter, {
           Event.stop(event);
           return;
         case Event.KEY_UP:
+          Event.stop(event);
+          return;
         case Event.KEY_DOWN:
+          Event.stop(event);
+          return;
       }
+    else if (event.keyCode==Event.KEY_TAB) {
+      this.active = true;
+      this.show();
+      Event.stop(event);
+    }
     else
-      if(event.keyCode==Event.KEY_TAB || event.keyCode==Event.KEY_RETURN ||
+      if(event.keyCode==Event.KEY_RETURN ||
         (Prototype.Browser.WebKit > 0 && event.keyCode == 0)) return;
  
     this.changed = true;
@@ -38,10 +47,25 @@ Buttescompleter = Class.create(Ajax.Autocompleter, {
     if(this.observer) clearTimeout(this.observer);
     this.observer =
       setTimeout(this.onObserverEvent.bind(this), this.options.frequency*1000);
+  },
+  render: function() {
+    console.log(this.active);
+    if(this.entryCount > 0) {
+      for (var i = 0; i < this.entryCount; i++)
+        this.index==i ?
+          Element.addClassName(this.getEntry(i),"selected") :
+          Element.removeClassName(this.getEntry(i),"selected");
+      if(this.hasFocus) {
+      // this is triggered by TAB in onKeyPress
+      //this.show();
+      //this.active = true;
+      }
+    } else {
+      this.active = false;
+      this.hide();
+    }
   }
 });
-
-console.log(Autocompleter.Base.onKeyPress);
 
 var len = 0;
 var req;
@@ -207,7 +231,7 @@ function handleUpdate (transport) {
   var lag = time / 1000 -  data.time;
   console.log(lag);
   if (lag > 10) {
-    req.stop();
+    console.log("reconnecting...");
     connect();
   }
 }
@@ -310,6 +334,7 @@ function partChannel (chan, session, chanid) {
 
 function connect () {
   len = 0;
+  if (req && req.transport) req.transport.stop();
   req = new Ajax.Request('/stream', {
     method: 'get',
     onException: function (req, e) {

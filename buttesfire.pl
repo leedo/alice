@@ -73,8 +73,12 @@ sub setup_stream {
   $res->header(Connection => 'close');
   
   # XHR tries to reconnect again with this header for some reason
+  use Data::Dumper;
+  log_debug(Dumper $req->{_headers});
   my $op = $req->header('operation');
   return 200 if $op and $op eq 'read';
+  my $err = $req->header('error');
+  return 200 if $err and $err eq 'Broken pipe';
   
   log_debug("opening a streaming http connection");
   $res->streaming(1);
