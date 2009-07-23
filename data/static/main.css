@@ -156,6 +156,8 @@ div.left {
   font-weight: bold;
   text-align: right;
   padding: 5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 div.msg {
