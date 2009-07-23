@@ -18,7 +18,6 @@ use POE qw/Component::IRC::State Component::IRC::Plugin::Connector
            Component::Server::HTTP/;
 
 $0 = 'buttesfire-web';
-system('renice', '+10', $$);
 my @open_responses;
 my $seperator = "--xbuttesfirex";
 my $config = LoadFile($ENV{HOME}.'/.buttesfire.yaml');
@@ -73,12 +72,10 @@ sub setup_stream {
   $res->header(Connection => 'close');
   
   # XHR tries to reconnect again with this header for some reason
-  use Data::Dumper;
-  log_debug(Dumper $req->{_headers});
-  my $op = $req->header('operation');
-  return 200 if $op and $op eq 'read';
-  my $err = $req->header('error');
-  return 200 if $err and $err eq 'Broken pipe';
+  #if (defined $req->header('error')) {
+  #  $res->streaming(0);
+  #  return 200;
+  #}
   
   log_debug("opening a streaming http connection");
   $res->streaming(1);
@@ -91,7 +88,6 @@ sub setup_stream {
 
 sub handle_stream {
   my ($req, $res) = @_;
-
   if ($res->is_error) {
     end_stream($res);
     return;
@@ -114,7 +110,7 @@ sub handle_stream {
       $res->{actions} = []; 
     }
   }
-  $res->continue_delayed(0.5);
+  #$res->continue_delayed(0.5);
 }
 
 sub end_stream {
@@ -415,6 +411,7 @@ sub create_tab {
   $action->{html}{tab} = $tab_html;
   log_debug("sending a request for a new tab: $name") if @open_responses;
   push @{$_->{actions}}, $action for @open_responses;
+  $_->continue for @open_responses;
 }
 
 sub close_tab {
@@ -427,6 +424,7 @@ sub close_tab {
   };
   log_debug("sending a request to close a tab: $name") if @open_responses;
   push @{$_->{actions}}, $action for @open_responses;
+  $_->continue for @open_responses;
 }
 
 sub add_outgoing {
@@ -436,6 +434,7 @@ sub add_outgoing {
   $hashref->{full_html} = $html;
   log_debug("adding $type to response queues") if @open_responses;
   push @{$_->{msgs}}, $hashref for @open_responses;
+  $_->continue for @open_responses;
 }
 
 sub show_nicks {
@@ -446,6 +445,7 @@ sub show_nicks {
     session => $session,
     str     => format_nick_table($ircs{$session}->channel_list($chan))
   } for @open_responses;
+  $_->continue for @open_responses;
 }
 
 sub format_nick_table {

@@ -49,7 +49,6 @@ Buttescompleter = Class.create(Ajax.Autocompleter, {
       setTimeout(this.onObserverEvent.bind(this), this.options.frequency*1000);
   },
   render: function() {
-    console.log(this.active);
     if(this.entryCount > 0) {
       for (var i = 0; i < this.entryCount; i++)
         this.index==i ?
@@ -271,7 +270,7 @@ function displayMessage (message) {
       $(message.chan + '_messages').insert(html);
     }
     
-    if (message.event == "topic") $(message.chan + "_topic").innerHTML = message.message;
+    if (message.event == "topic") $(message.chan + "_topic").innerHTML = linkFilter(message.message);
     
     // scroll to bottom or highlight the tab
     if ($(message.chan).hasClassName('active'))
@@ -334,7 +333,8 @@ function partChannel (chan, session, chanid) {
 
 function connect () {
   len = 0;
-  if (req && req.transport) req.transport.stop();
+  if (req && req.transport) req.transport.abort();
+  req = null;
   req = new Ajax.Request('/stream', {
     method: 'get',
     onException: function (req, e) {
