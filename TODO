@@ -1,6 +1,3 @@
-Javascript
-  - Username links to private messages
-
 Perl
   - Send some sort of message on disconnect
   - Configurable over HTTP request?
