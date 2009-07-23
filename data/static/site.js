@@ -277,7 +277,7 @@ function displayMessage (message) {
       scrollToBottom();
     else if (message.type == "message" && message.highlight)
       $(message.chan + "_tab").className = "highlight";
-    else if (message.type == "message" && ! $(message.chan + "_tab").className)
+    else if (message.type == "message")
       $(message.chan + "_tab").className = "unread";
   }
 }
