@@ -338,7 +338,7 @@ function connect () {
   req = new Ajax.Request('/stream', {
     method: 'get',
     onException: function (req, e) {
-      console.log(e);
+      console.log("connection got an error...");
       setTimeout(connect, 2000);
     },
     onInteractive: handleUpdate,

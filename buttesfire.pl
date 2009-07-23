@@ -72,10 +72,10 @@ sub setup_stream {
   $res->header(Connection => 'close');
   
   # XHR tries to reconnect again with this header for some reason
-  #if (defined $req->header('error')) {
-  #  $res->streaming(0);
-  #  return 200;
-  #}
+  if (defined $req->header('error')) {
+    $res->streaming(0);
+    return 200;
+  }
   
   log_debug("opening a streaming http connection");
   $res->streaming(1);
@@ -300,7 +300,7 @@ sub irc_nick {
   my ($who, $new_nick) = @_[ARG0, ARG1];
   my $irc = $_[HEAP]->{irc};
   my $nick = ( split /!/, $who )[0];
-  display_event($nick, $_, $irc->session_id, "is now known as $new_nick")
+  display_event($nick, $_, $irc->session_id, "nick", $new_nick)
     for $irc->nick_channels($new_nick);
 }
 

@@ -3,8 +3,10 @@
   <div class="msg">
   [% IF event == "topic" %]
     Topic changed to "[% message %]" by [% nick %].
-  [% ELSE %]
+  [% ELSIF event == "joined" || event == "left" %]
     [% nick %] [% event %] the chat room.[% IF message %] ([% message %])[% END %]
+  [% ELSIF event == "nick" %]
+    [% nick %] is now known as [% message %].
   [% END %]
   </div>
 </li>
