@@ -97,8 +97,8 @@ function linkFilter (content) {
   var filtered = content;
   // links
   filtered = filtered.replace(
-    /(https?\:\/\/[\w\d\$\-_\.\+!\*'\(\)\,%\/\?=]*)($|\.|\,|\s)/gi,
-    "<a href=\"$1\" target=\"blank\">$1</a>$2");
+    /(https?\:\/\/[\w\d$\-_.+!*'(),%\/?=]*)/gi,
+    "<a href=\"$1\" target=\"blank\">$1</a>");
   return filtered;
 }
 var filters = [
@@ -230,9 +230,8 @@ function handleUpdate (transport) {
   data.actions.each(function(action) {displayAction(action)});
   data.msgs.each(function(message) {displayMessage(message)});
   var lag = time / 1000 -  data.time;
-  console.log(lag);
   if (lag > 10) {
-    console.log("reconnecting...");
+    console.log("lag is " + lag + "s, reconnecting...");
     connect();
   }
 }

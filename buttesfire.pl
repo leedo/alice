@@ -133,7 +133,7 @@ sub handle_message {
   $res->header(Connection => 'close');
   $req->header(Connection => 'close');
   my $msg  = $req->uri->query_param('msg');
-  my $chan = $req->uri->query_param('chan');
+  my $chan = lc $req->uri->query_param('chan');
   my $session_id = $req->uri->query_param('session');
   return 200 unless $session_id;
   my $irc = $ircs{$session_id};
@@ -481,7 +481,7 @@ sub format_nick_table {
 sub cleanse_channel {
   my $channel = shift;
   $channel =~ s/[#&]/chan_/;
-  return $channel;
+  return lc $channel;
 }
 
 sub make_timestamp {
