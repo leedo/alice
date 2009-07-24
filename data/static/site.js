@@ -1,4 +1,4 @@
-Buttescompleter = Class.create(Ajax.Autocompleter, {
+var Buttescompleter = Class.create(Ajax.Autocompleter, {
   onKeyPress: function (event) {
     if(this.active)
       switch(event.keyCode) {
@@ -67,62 +67,73 @@ Buttescompleter = Class.create(Ajax.Autocompleter, {
   }
 });
 
-var len = 0;
-var aborting = false;
-var req;
-var isCtrl = false;
-var seperator = "--xbuttesfirex\n";
+var Buttesfire = Class.create({
+    initialize: function () {
+      this.len = 0;
+      this.aborting = false;
+      this.req = null;
+      this.isCtrl = false;
+      this.seperator = "--xbuttesfirex\n";
 
-document.onkeyup = function (e) {
-  if (e.which == 17) isCtrl = false;
-};
-document.onkeydown = function (e) {
-  if (e.which == 17)
-    isCtrl = true;
-  else if (isCtrl && e.which == 75) {
-    $$('.channel.active .messages').first().innerHTML = '';
-    return false;
-  }
-  else if (isCtrl && e.which == 78) {
-    nextTab();
-    return false;
-  }
-  else if (isCtrl && e.which == 80) {
-    previousTab();
-    return false;
-  }
-};
+      this. filters = [
+      linkFilter,
+      imageFilter,
+      audioFilter
+      ];
 
-function linkFilter (content) {
-  var filtered = content;
-  // links
-  filtered = filtered.replace(
-    /(https?\:\/\/[\w\d$\-_.+!*'(),%\/?=&;]*)/gi,
-    "<a href=\"$1\" target=\"blank\">$1</a>");
-  return filtered;
-}
-var filters = [
-  linkFilter,
-  function (content) {
-    var filtered = content;
-    // images
-    filtered = filtered.replace(
-      /(<a[^>]*?>)(.*?\.(:?jpg|jpeg|gif|png))</gi,
-      "$1<img src=\"$2\" onload=\"loadInlineImage(this)\" width=\"0\" alt=\"Loading Image...\" /><");
-    // audio
-    filtered = filtered.replace(
-      /(<a href=\"(:?.*?\.(:?wav|mp3|ogg|aiff))")/gi,
-      "<img src=\"/static?f=play.png\" onclick=\"playAudio(this)\" class=\"audio\"/>$1");
-    return filtered;
-  }
-];
+      document.onkeyup = function (e) {
+        if (e.which == 17) isCtrl = false;
+      };
 
-function applyFilters (content) {
-  filters.each(function(filter) {
-    content = filter(content);
-  });
-  return content;
-};
+      document.onkeydown = function (e) {
+        if (e.which == 17)
+          isCtrl = true;
+        else if (isCtrl && e.which == 75) {
+          $$('.channel.active .messages').first().innerHTML = '';
+          return false;
+        }
+        else if (isCtrl && e.which == 78) {
+          nextTab();
+          return false;
+        }
+        else if (isCtrl && e.which == 80) {
+          previousTab();
+          return false;
+        }
+      };
+    },
+
+    linkFilter: function (content) {
+      var filtered = content;
+      filtered = filtered.replace(
+        /(https?\:\/\/[\w\d$\-_.+!*'(),%\/?=&;]*)/gi,
+        "<a href=\"$1\" target=\"blank\">$1</a>");
+      return filtered;
+    },
+
+    audioFilter: function (content) {
+      var filtered = content;
+      filtered = filtered.replace(
+        /(<a href=\"(:?.*?\.(:?wav|mp3|ogg|aiff))")/gi,
+        "<img src=\"/static?f=play.png\" onclick=\"playAudio(this)\" class=\"audio\"/>$1");
+      return filtered;
+    },
+
+    imageFilter: function (content) {
+      var filtered = content;
+      filtered = filtered.replace(
+        /(<a[^>]*?>)(.*?\.(:?jpg|jpeg|gif|png))</gi,
+        "$1<img src=\"$2\" onload=\"loadInlineImage(this)\" width=\"0\" alt=\"Loading Image...\" /><");
+      return filtered;
+    },
+
+    applyFilters: function (content) {
+      this.filters.each(function(filter) {
+          content = filter(content);
+        });
+      return content;
+    },
+});
 
 function loadInlineImage(image) {
   var maxWidth = arguments.callee.maxWidth || 400;
