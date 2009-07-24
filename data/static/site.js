@@ -278,16 +278,16 @@ function displayMessage (message) {
     if ($(message.chan).hasClassName('active'))
       scrollToBottom();
     else if (message.type == "message" && message.highlight) {
-      $(message.chan + "_tab").className = "highlight";
+      $(message.chan + "_tab").addClassName("highlight");
       growlNotify(message);
     }
     else if (message.type == "message")
-      $(message.chan + "_tab").className = "unread";
+      $(message.chan + "_tab").addClassName("unread");
   }
 }
 
 function growlNotify (message) {
-  return unless window.fluid;
+  if (! window.fluid) return;
   window.fluid.showGrowlNotification({
       title: message.channel, 
       description: message.nick, 

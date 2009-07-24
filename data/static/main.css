@@ -232,7 +232,10 @@ div.tab_button {
   margin-right: 4px;
 }
 
-div.tab_button:hover {
+ul#tabs li div.tab_button:hover,
+ul#tabs li.unread div.tab_button:hover,
+ul#tabs li.highlight div.tab_button:hover
+{
   background: url(/static?f=aquaTabClose.png) no-repeat center;
 }
 
