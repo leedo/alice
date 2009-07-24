@@ -69,44 +69,40 @@ var Buttescompleter = Class.create(Ajax.Autocompleter, {
 
 var Buttesfire = Class.create({
     initialize: function () {
-      this.len = 0;
-      this.aborting = false;
-      this.req = null;
       this.isCtrl = false;
-      this.seperator = "--xbuttesfirex\n";
+      this.channels = [];
+      this.connection = new Buttesfire.Connection;
+      this.filters = [linkFilter,imageFilter,audioFilter];
+      document.onkeyup = this.onKeyUp;
+      document.onkeydown = this.onKeyDown;
 
-      this. filters = [
-      linkFilter,
-      imageFilter,
-      audioFilter
-      ];
+    },
 
-      document.onkeyup = function (e) {
-        if (e.which == 17) isCtrl = false;
-      };
+    onKeyUp: function (e) {
+      if (e.which == 17) isCtrl = false;
+    },
 
-      document.onkeydown = function (e) {
-        if (e.which == 17)
-          isCtrl = true;
-        else if (isCtrl && e.which == 75) {
-          $$('.channel.active .messages').first().innerHTML = '';
-          return false;
-        }
-        else if (isCtrl && e.which == 78) {
-          nextTab();
-          return false;
-        }
-        else if (isCtrl && e.which == 80) {
-          previousTab();
-          return false;
-        }
-      };
+    onKeyDown: function (e) {
+      if (e.which == 17)
+        this.isCtrl = true;
+      else if (isCtrl && e.which == 75) {
+        $$('.channel.active .messages').first().innerHTML = '';
+        return false;
+      }
+      else if (isCtrl && e.which == 78) {
+        this.nextTab();
+        return false;
+      }
+      else if (isCtrl && e.which == 80) {
+        this.previousTab();
+        return false;
+      }
     },
 
     linkFilter: function (content) {
       var filtered = content;
       filtered = filtered.replace(
-        /(https?\:\/\/[\w\d$\-_.+!*'(),%\/?=&;]*)/gi,
+        /(https?\:\/\/[\w\d$\-_.+!*'(),%\/?=&;~]*)/gi,
         "<a href=\"$1\" target=\"blank\">$1</a>");
       return filtered;
     },
@@ -133,6 +129,129 @@ var Buttesfire = Class.create({
         });
       return content;
     },
+
+    nextTab: function () {
+      var channel = $$('div#channels div.channel.active').first().next();
+      if (! channel) channel = $$('div#channels div.channel').first();
+      showChannel(channel.id);
+    },
+
+    closeTab: function (chan) {
+      chan = $(chan);
+      if (chan) {
+        if (chan.hasClassName('active')) {
+          if (chan.previous())
+            showChannel(chan.previous().id);
+          else if (chan.next())
+            showChannel(chan.next().id);
+        }
+        chan.remove();
+        $(chan.id + "_tab").remove();
+      }
+    },
+
+});
+
+var Buttesfire.Channel = Class.create({
+  initialize: function (name, session) {
+    this.name = name;
+    this.session = session;
+    this.active = false;
+    this.elem = $(this.id);
+  },
+
+  id: function () {
+    var clean = this.name.replace(/[#&]/chan_/);
+    return clean + this.session;
+  },
+});
+
+var Buttesfire.Connection = Class.create({
+    initialize: function () {
+      this.len = 0;
+      this.aborting = false;
+      this.req = null;
+      this.seperator = "--xbuttesfirex\n";
+
+    },
+
+    cancel: function () {
+      this.aborting = true;
+      if (this.req && this.req.transport)
+        this.req.transport.abort();
+      this.aborting = false;
+    },
+
+    connect: function () {
+      this.cancel();
+      this.len = 0;
+      var connection = this;
+      this.req = new Ajax.Request('/stream', {
+        method: 'get',
+        onException: function (req, e) {
+          console.log(e);
+          if (! connection.aborting)
+            setTimeout(connection.connect, 2000);
+        },
+        onInteractive: this.handleUpdate,
+        onComplete: function () {
+          if (! connection.aborting)
+            setTimeout(connection.connect, 2000);
+        }
+      });
+    },
+
+    handleUpdate: function (transport) {
+      var time = new Date();
+      var data = transport.responseText.slice(len);
+      var start, end;
+      start = data.indexOf(seperator);
+      if (start > -1) {
+        start += seperator.length;
+        end = data.indexOf(seperator, start);
+        if (end == -1) return;
+      }
+      else return;
+      len += (end + seperator.length) - start;
+      data = data.slice(start, end);
+
+      try {
+        data = data.evalJSON();
+      }
+      catch (err) {
+        console.log(err);
+        return;
+      }
+      data.actions.each(function(action) {displayAction(action)});
+      data.msgs.each(function(message) {displayMessage(message)});
+
+      // reconnect if lag is over 5 seconds... not a good way to do this.
+      var lag = time / 1000 -  data.time;
+      if (lag > 5) {
+        console.log("lag is " + Math.round(lag) + "s, reconnecting...");
+        connect();
+      }
+    },
+
+    requestTab: function (chan, session, callback) {
+      new Ajax.Request('/say', {
+          method: 'get',
+          parameters: {chan: chan, session: session, msg: "/window new"},
+          onSuccess: function (trans) {
+            handleUpdate(trans);
+            callback();
+          }
+      });
+    },
+
+    partChannel: function (chan, session, chanid) {
+      new Ajax.Request('/say', {
+          method: 'get',
+          parameters: {chan: chan, session: session, msg: "/part"},
+          onSuccess: function () {closeTab(chanid)}
+        });
+    },
+
 });
 
 function loadInlineImage(image) {
@@ -173,11 +292,6 @@ function showChannel (channel) {
   input.focus();
 };
 
-function nextTab () {
-  var channel = $$('div#channels div.channel.active').first().next();
-  if (! channel) channel = $$('div#channels div.channel').first();
-  showChannel(channel.id);
-}
 
 function previousTab () {
   var channel = $$('div#channels div.channel.active').first().previous();
@@ -215,38 +329,6 @@ function sayMessage (form) {
 function stripNick (html) {
   html = html.replace(/<div class="left">.*<\/div>/,'');
   return html;
-}
-
-function handleUpdate (transport) {
-  var time = new Date();
-  var data = transport.responseText.slice(len);
-  var start, end;
-  start = data.indexOf(seperator);
-  if (start > -1) {
-    start += seperator.length;
-    end = data.indexOf(seperator, start);
-    if (end == -1) return;
-  }
-  else return;
-  len += (end + seperator.length) - start;
-  data = data.slice(start, end);
-
-  try {
-    data = data.evalJSON();
-  }
-  catch (err) {
-    console.log(err);
-    return;
-  }
-  data.actions.each(function(action) {displayAction(action)});
-  data.msgs.each(function(message) {displayMessage(message)});
-
-  // reconnect if lag is over 5 seconds... not a good way to do this.
-  var lag = time / 1000 -  data.time;
-  if (lag > 5) {
-    console.log("lag is " + Math.round(lag) + "s, reconnecting...");
-    connect();
-  }
 }
 
 function displayAction (action) {
@@ -325,60 +407,6 @@ function announceMsg (chan, str) {
   }
 }
 
-function closeTab (chan) {
-  chan = $(chan);
-  if (chan) {
-    if (chan.hasClassName('active')) {
-      if (chan.previous())
-        showChannel(chan.previous().id);
-      else if (chan.next())
-        showChannel(chan.next().id);
-    }
-    chan.remove();
-    $(chan.id + "_tab").remove();
-  }
-}
-
-function requestTab (chan, session, callback) {
-  new Ajax.Request('/say', {
-    method: 'get',
-    parameters: {chan: chan, session: session, msg: "/window new"},
-    onSuccess: function (trans) {
-      handleUpdate(trans);
-      callback();
-    }
-  });
-}
-
-function partChannel (chan, session, chanid) {
-  new Ajax.Request('/say', {
-    method: 'get',
-    parameters: {chan: chan, session: session, msg: "/part"},
-    onSuccess: function () {closeTab(chanid)}
-  });
-}
-
-function cancel () {
-  aborting = true;
-  if (req && req.transport) req.transport.abort();
-  aborting = false;
-}
-
-function connect () {
-  len = 0;
-  cancel();
-  req = new Ajax.Request('/stream', {
-    method: 'get',
-    onException: function (req, e) {
-      console.log(e);
-      if (! aborting) setTimeout(connect, 2000);
-    },
-    onInteractive: handleUpdate,
-    onComplete: function () {
-      if (! aborting) setTimeout(connect, 2000);
-    }
-  });
-}
 
 document.observe('dom:loaded', function () {
   $$('.topic').each(function(topic) {

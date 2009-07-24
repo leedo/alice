@@ -1,6 +1,6 @@
 Javascript
-  - Polish tab completion
-  - Feedback on disconnect from IRC/daemon
+  - Polish nick/command completion
+  - Feedback on disconnect from IRC or perl daemon
 
 Perl
   - Send some sort of message on disconnect
