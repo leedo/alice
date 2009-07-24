@@ -70,6 +70,7 @@ sub setup_stream {
   my ($req, $res) = @_;
   $res->code(200);
   $res->header(Connection => 'close');
+  $req->header(Connection => 'close');
   
   # XHR tries to reconnect again with this header for some reason
   if (defined $req->header('error')) {
@@ -129,6 +130,8 @@ sub handle_message {
   my ($req, $res) = @_;
   $res->streaming(0);
   $res->code(200);
+  $res->header(Connection => 'close');
+  $req->header(Connection => 'close');
   my $msg  = $req->uri->query_param('msg');
   my $chan = $req->uri->query_param('chan');
   my $session_id = $req->uri->query_param('session');
@@ -177,6 +180,8 @@ sub handle_message {
 sub handle_static {
   my ($req, $res) = @_;
   $res->streaming(0);
+  $res->header(Connection => 'close');
+  $req->header(Connection => 'close');
   my $file = $req->uri->query_param("f");
   my ($ext) = ($file =~ /[^\.]\.(.+)$/);
   if (-e "data/static/$file") {
@@ -228,6 +233,8 @@ sub send_index {
 sub handle_autocomplete {
   my ($req, $res) = @_;
   $res->code(200);
+  $res->header(Connection => 'close');
+  $req->header(Connection => 'close');
   $res->streaming(0);
   $res->content_type('text/html; charset=utf-8');
   my $query = $req->uri->query_param('msg');
@@ -249,6 +256,8 @@ sub not_found {
   my ($req, $res) = @_;
   log_debug("serving 404:", $req->uri->path);
   $res->streaming(0);
+  $res->header(Connection => 'close');
+  $req->header(Connection => 'close');
   $res->code(404);
   return 404;
 }

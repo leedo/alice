@@ -68,6 +68,7 @@ Buttescompleter = Class.create(Ajax.Autocompleter, {
 });
 
 var len = 0;
+var aborting = false;
 var req;
 var isCtrl = false;
 var seperator = "--xbuttesfirex\n";
@@ -96,7 +97,7 @@ function linkFilter (content) {
   var filtered = content;
   // links
   filtered = filtered.replace(
-    /(https?\:\/\/.+?)([\b\s<\[\]\{\}"'])/gi,
+    /(https?\:\/\/[\w\d\$\-_\.\+!\*'\(\)\,%\/\?]*)(\b|\.\b|\,\b)/gi,
     "<a href=\"$1\" target=\"blank\">$1</a>$2");
   return filtered;
 }
@@ -332,19 +333,24 @@ function partChannel (chan, session, chanid) {
   });
 }
 
+function cancel () {
+  aborting = true;
+  if (req && req.transport) req.transport.abort();
+  aborting = false;
+}
+
 function connect () {
   len = 0;
-  if (req && req.transport) req.transport.abort();
-  req = null;
+  cancel();
   req = new Ajax.Request('/stream', {
     method: 'get',
     onException: function (req, e) {
-      console.log("connection got an error...");
-      setTimeout(connect, 2000);
+      console.log(e);
+      if (! aborting) setTimeout(connect, 2000);
     },
     onInteractive: handleUpdate,
     onComplete: function () {
-      setTimeout(connect, 2000);
+      if (! aborting) setTimeout(connect, 2000);
     }
   });
 }
