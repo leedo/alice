@@ -1,8 +1,13 @@
+Javascript
+  - Polish tab completion
+  - Feedback on disconnect from IRC/daemon
+
 Perl
   - Send some sort of message on disconnect
-  - Configurable over HTTP request?
+  - Configurable over HTTP request
   - Fix cswas in IRC::Formatting
   - Clean up API parameter naming
+  - Switch to IRC::Formatting::HTML
   
 HTML/CSS  
   - Switchable themes?

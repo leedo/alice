@@ -97,7 +97,7 @@ function linkFilter (content) {
   var filtered = content;
   // links
   filtered = filtered.replace(
-    /(https?\:\/\/[\w\d$\-_.+!*'(),%\/?=]*)/gi,
+    /(https?\:\/\/[\w\d$\-_.+!*'(),%\/?=&;]*)/gi,
     "<a href=\"$1\" target=\"blank\">$1</a>");
   return filtered;
 }
@@ -229,9 +229,11 @@ function handleUpdate (transport) {
   }
   data.actions.each(function(action) {displayAction(action)});
   data.msgs.each(function(message) {displayMessage(message)});
+
+  // reconnect if lag is over 5 seconds... not a good way to do this.
   var lag = time / 1000 -  data.time;
-  if (lag > 10) {
-    console.log("lag is " + lag + "s, reconnecting...");
+  if (lag > 5) {
+    console.log("lag is " + Math.round(lag) + "s, reconnecting...");
     connect();
   }
 }
