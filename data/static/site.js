@@ -97,7 +97,7 @@ function linkFilter (content) {
   var filtered = content;
   // links
   filtered = filtered.replace(
-    /(https?\:\/\/[\w\d\$\-_\.\+!\*'\(\)\,%\/\?]*)(\b|\.\b|\,\b)/gi,
+    /(https?\:\/\/[\w\d\$\-_\.\+!\*'\(\)\,%\/\?=]*)(\b|\.\b|\,\b)/gi,
     "<a href=\"$1\" target=\"blank\">$1</a>$2");
   return filtered;
 }
@@ -277,11 +277,24 @@ function displayMessage (message) {
     // scroll to bottom or highlight the tab
     if ($(message.chan).hasClassName('active'))
       scrollToBottom();
-    else if (message.type == "message" && message.highlight)
+    else if (message.type == "message" && message.highlight) {
       $(message.chan + "_tab").className = "highlight";
+      growlNotify(message);
+    }
     else if (message.type == "message")
       $(message.chan + "_tab").className = "unread";
   }
+}
+
+function growlNotify (message) {
+  return unless window.fluid;
+  window.fluid.showGrowlNotification({
+      title: message.channel, 
+      description: message.nick, 
+      priority: 1, 
+      sticky: false,
+      identifier: message.session+message.channel+message.nick
+  })
 }
 
 function createTab (chan, html) {
