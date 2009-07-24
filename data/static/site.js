@@ -97,7 +97,7 @@ function linkFilter (content) {
   var filtered = content;
   // links
   filtered = filtered.replace(
-    /(https?\:\/\/[\w\d\$\-_\.\+!\*'\(\)\,%\/\?=]*)(\b|\.\b|\,\b)/gi,
+    /(https?\:\/\/[\w\d\$\-_\.\+!\*'\(\)\,%\/\?=]*)($|\.|\,|\s)/gi,
     "<a href=\"$1\" target=\"blank\">$1</a>$2");
   return filtered;
 }
