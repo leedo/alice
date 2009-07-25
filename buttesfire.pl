@@ -24,6 +24,8 @@ my $config = LoadFile($ENV{HOME}.'/.buttesfire.yaml');
 my $tt = Template->new(
   INCLUDE_PATH => 'data/templates',
   ENCODING     => 'UTF8');
+  
+BEGIN { $SIG{__WARN__} = sub { warn $_[0] if $config->{debug} } };
 
 my @commands = qw/join part names topic me query/;
 
