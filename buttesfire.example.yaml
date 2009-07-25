@@ -1,6 +1,17 @@
 debug: 0
-nick: nick
-ircname: name
-server: irc.freenode.org
-channels:
-  - "#test1"
+servers:
+  - server: irc.freenode.net
+    port: 6667
+    nick: lee
+    ircname: lee
+    channels:
+      - "#perl"
+      - "#perl6"
+  - server: irc.perl.org
+    port: 6667
+    username: leedo
+    password: dongues
+    nick: lee
+    ircname: lee
+    channels:
+      - "#moose"

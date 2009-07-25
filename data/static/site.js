@@ -6958,7 +6958,7 @@ var Buttesfire = Class.create({
   },
 
   removeChannel: function (channel) {
-    buttesfire.focusLast();
+    if (channel.active) buttesfire.focusLast();
     buttesfire.channels.splice(buttesfire.channelLookup[channel.id], 1);
     buttesfire.channelLookup[channel.id] = null;
     buttesfire.connection.partChannel(channel);
