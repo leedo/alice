@@ -6999,7 +6999,7 @@ var Buttesfire = Class.create({
   linkFilter: function (content) {
     var filtered = content;
     filtered = filtered.replace(
-      /(https?\:\/\/[\w\d$\-_.+!*'(),%\/?=&;~]*)/gi,
+      /(https?\:\/\/[\w\d$\-_.+!*'(),%\/?=&;~#]*)/gi,
       "<a href=\"$1\" target=\"blank\">$1</a>");
     return filtered;
   },
@@ -7150,6 +7150,7 @@ Buttesfire.Channel = Class.create({
 
   unFocus: function () {
     this.active = false;
+    buttesfire.previousFocus = buttesfire.channelLookup[this.id];
     this.elem.removeClassName('active');
     this.tab.removeClassName('active');
     if (this.tab.previous()) this.tab.previous().removeClassName("leftof_active");
@@ -7197,7 +7198,7 @@ Buttesfire.Channel = Class.create({
         this.messages.insert(html);
       }
 
-      if (message.event == "topic") this.displayTopic(linkFilter(message.message));
+      if (message.event == "topic") this.displayTopic(message.message);
 
       if (this.elem.hasClassName('active'))
         scrollToBottom();

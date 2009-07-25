@@ -1,13 +1,15 @@
 debug: 0
 servers:
-  - server: irc.freenode.net
+  freenode:
+    host: irc.freenode.net
     port: 6667
     nick: lee
     ircname: lee
     channels:
       - "#perl"
       - "#perl6"
-  - server: irc.perl.org
+  perl:
+    host: irc.perl.org
     port: 6667
     username: leedo
     password: dongues

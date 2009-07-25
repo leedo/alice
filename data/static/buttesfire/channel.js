@@ -38,6 +38,7 @@ Buttesfire.Channel = Class.create({
   
   unFocus: function () {
     this.active = false;
+    buttesfire.previousFocus = buttesfire.channelLookup[this.id];
     this.elem.removeClassName('active');
     this.tab.removeClassName('active');
     if (this.tab.previous()) this.tab.previous().removeClassName("leftof_active");
@@ -85,7 +86,7 @@ Buttesfire.Channel = Class.create({
         this.messages.insert(html);
       }
 
-      if (message.event == "topic") this.displayTopic(linkFilter(message.message));
+      if (message.event == "topic") this.displayTopic(message.message);
 
       // scroll to bottom or highlight the tab
       if (this.elem.hasClassName('active'))
