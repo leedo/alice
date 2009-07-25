@@ -6999,7 +6999,7 @@ var Buttesfire = Class.create({
   linkFilter: function (content) {
     var filtered = content;
     filtered = filtered.replace(
-      /(https?\:\/\/[\w\d$\-_.+!*'(),%\/?=&;~#]*)/gi,
+      /(https?\:\/\/[\w\d$\-_.+!*'(),%\/?=&;~#:]*)/gi,
       "<a href=\"$1\" target=\"blank\">$1</a>");
     return filtered;
   },
