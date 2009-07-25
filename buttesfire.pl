@@ -93,25 +93,24 @@ sub handle_stream {
     end_stream($res);
     return;
   }
-  if (@{$res->{actions}} or @{$res->{msgs}}) {
+  if (@{$res->{msgs}} or @{$res->{actions}}) {
     my $output;
     if (! $res->{started}) {
       $res->{started} = 1;
       $output .= "$seperator\n";
     }
-    $output .= to_json({msgs => $res->{msgs}, actions => $res->{actions}, time => time});
+    $output .= to_json({msgs => $res->{msgs}, actions => $res->{actions}});
     my $padding = " " x (1024 - bytes::length $output);
-    $res->send($output . $padding . "\n$seperator\n") if @{$res->{msgs}} or @{$res->{actions}};
+    $res->send($output . $padding . "\n$seperator\n");
     if ($res->is_error) {
       end_stream($res);
       return;
     }
     else {
       $res->{msgs} = [];
-      $res->{actions} = []; 
+      $res->{actions} = [];
     }
   }
-  #$res->continue_delayed(0.5);
 }
 
 sub end_stream {
@@ -148,8 +147,8 @@ sub handle_message {
     elsif ($msg =~ /^\/part\s?(.+)?/) {
       $irc->yield( part => $1 || $chan);
     }
-    elsif ($msg =~ /^\/window new/) {
-      create_tab($chan, $irc->session_id);
+    elsif ($msg =~ /^\/window new (.+)/) {
+      create_tab($1, $irc->session_id);
     }
     elsif ($msg =~ /^\/n(?:ames)?/ and $chan) {
       show_nicks($chan, $irc->session_id);
@@ -213,11 +212,12 @@ sub send_index {
   my $output = '';
   my $channels = [];
   for my $irc (keys %ircs) {
+    my $session = $ircs{$irc}->session_id;
     for my $channel (keys %{$ircs{$irc}->channels}) {
       push @$channels, {
-        name => cleanse_channel($channel),
-        name_orig => $channel,
-        session => $ircs{$irc}->session_id,
+        chanid => channel_id($channel, $session),
+        chan => $channel,
+        session => $session,
         topic => $ircs{$irc}->channel_topic($channel),
         server => $ircs{$irc},
       }
@@ -244,8 +244,8 @@ sub handle_autocomplete {
   return 200 unless $query;
   log_debug("handling autocomplete for $query");
   my $irc = $ircs{$session_id};
-  my @matches = grep {/^\Q$query\E/i} $irc->channel_list($chan);
-  push @matches, grep {/^\Q$query\E/i} map {"/$_"} @commands;
+  my @matches = sort {lc $a cmp lc $b} grep {/^\Q$query\E/i} $irc->channel_list($chan);
+  push @matches, sort grep {/^\Q$query\E/i} map {"/$_"} @commands;
   my $html = '';
   $tt->process('autocomplete.tt',{matches => \@matches}, \$html) or die $!;
   $res->content($html);
@@ -369,16 +369,20 @@ sub send_topic {
 sub display_event {
   my ($nick, $channel, $session, $event_type, $msg) = @_;
   my $event = {
-    type      => "event",
-    nick      => $nick,
-    chan_full => $channel,
-    chan      => cleanse_channel($channel),
-    session   => $session,
+    type      => "message",
     event     => $event_type,
+    nick      => $nick,
+    chan      => $channel,
+    chanid    => channel_id($channel, $session),
+    session   => $session,
     message   => $msg,
     timestamp => make_timestamp(),
   };
-  add_outgoing($event, "event");
+  my $html = '';
+  $tt->process("event.tt", $event, \$html);
+  $event->{full_html} = $html;
+  send_data($event);
+  log_debug("sending $event_type event to $channel");
 }
 
 sub display_message {
@@ -387,74 +391,79 @@ sub display_message {
   my $mynick = $ircs{$session}->nick_name;
   my $msg = {
     type      => "message",
+    event     => "say",
     nick      => $nick,
-    chan_full => $channel,
-    chan      => cleanse_channel($channel),
+    chan      => $channel,
+    chanid    => channel_id($channel, $session),
     session   => $session,
     self      => $nick eq $mynick,
     html      => $html,
     highlight => $text =~ /\b$mynick\b/i || 0,
     timestamp => make_timestamp(),
   };
-  add_outgoing($msg, "message");
+  $html = '';
+  $tt->process("message.tt", $msg, \$html);
+  $msg->{full_html} = $html;
+  send_data($msg);
+  log_debug("sending message to $channel");
 }
 
 sub create_tab {
   my ($name, $session) = @_;
   my $action = {
-    type      => "join",
-    chan_orig => $name,
-    chan      => cleanse_channel($name),
+    type      => "action",
+    event     => "join",
+    chan      => $name,
+    chanid    => channel_id($name, $session),
     session   => $session,
     timestamp => make_timestamp(),
   };
   my $chan_html = '';
-  $tt->process("channel.tt", {channel => {
-    name => cleanse_channel($name), name_orig => $name, session => $session
-  }}, \$chan_html);
+  $tt->process("channel.tt", $action, \$chan_html);
   $action->{html}{channel} = $chan_html;
   my $tab_html = '';
-  $tt->process("tab.tt", {channel => {
-    name => cleanse_channel($name), name_orig => $name, session => $session
-  }}, \$tab_html);
+  $tt->process("tab.tt", $action, \$tab_html);
   $action->{html}{tab} = $tab_html;
+  send_data($action);
   log_debug("sending a request for a new tab: $name") if @open_responses;
-  push @{$_->{actions}}, $action for @open_responses;
-  $_->continue for @open_responses;
 }
 
 sub close_tab {
   my ($name, $session) = @_;
-  my $action = {
-    type      => "part",
-    chan      => cleanse_channel($name),
+  send_data({
+    type      => "action",
+    event     => "part",
+    chanid    => channel_id($name, $session),
+    chan      => $name,
     session   => $session,
     timestamp => make_timestamp(),
-  };
+  });
   log_debug("sending a request to close a tab: $name") if @open_responses;
-  push @{$_->{actions}}, $action for @open_responses;
-  $_->continue for @open_responses;
 }
 
-sub add_outgoing {
-  my ($hashref, $type) = @_;
-  my $html = '';
-  $tt->process("$type.tt", $hashref, \$html);
-  $hashref->{full_html} = $html;
-  log_debug("adding $type to response queues") if @open_responses;
-  push @{$_->{msgs}}, $hashref for @open_responses;
-  $_->continue for @open_responses;
+sub send_data {
+  my $data = shift;
+  for my $res (@open_responses) {
+    if ($data->{type} eq "message") {
+      push @{$res->{msgs}}, $data;
+    }
+    elsif ($data->{type} eq "action") {
+      push @{$res->{actions}}, $data;
+    }
+    $res->continue;
+  }
 }
 
 sub show_nicks {
   my ($chan, $session) = @_;
-  push @{$_->{actions}}, {
-    type    => "announce",
-    chan    => cleanse_channel($chan),
+  send_data({
+    type    => "message",
+    event   => "announce",
+    chanid  => channel_id($chan, $session),
+    chan    => $chan,
     session => $session,
     str     => format_nick_table($ircs{$session}->channel_list($chan))
-  } for @open_responses;
-  $_->continue for @open_responses;
+  });
 }
 
 sub format_nick_table {
@@ -478,10 +487,10 @@ sub format_nick_table {
   return join "\n", map {join " ", @$_} @rows;
 }
 
-sub cleanse_channel {
-  my $channel = shift;
-  $channel =~ s/[#&]/chan_/;
-  return lc $channel;
+sub channel_id {
+  my $id = join "_", @_;
+  $id =~ s/[#&]/chan_/;
+  return lc $id;
 }
 
 sub make_timestamp {

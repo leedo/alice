@@ -1,4 +1,4 @@
-<li id="[% channel.name _ channel.session | html %]_tab"[% IF loop.first %] class="active"[% END %] onclick="showChannel('[% channel.name _ channel.session | html %]')">
-  <div onclick="partChannel('[% channel.name_orig | html %]', '[% channel.session | html %]', '[% channel.name _ channel.session | html %]')" class="tab_button"></div>
-  [% channel.name_orig | html %]
+<li id="[% chanid %]_tab"[% IF loop.first %] class="active"[% END %]>
+  <div class="tab_button" id="[% chanid %]_tab_button"></div>
+  [% chan | html %]
 </li>

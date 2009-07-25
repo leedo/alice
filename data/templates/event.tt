@@ -2,11 +2,11 @@
   <div class="left">[% timestamp %]</div>
   <div class="msg">
   [% IF event == "topic" %]
-    Topic changed to "[% message %]" by <a href="javascript:requestTab('[% nick %]','[% session %]')" class="nick">[% nick %]</a>.
+    Topic changed to "[% message %]" by <a href="javascript:buttesfire.connection.requestTab('[% nick %]',[% session %])" class="nick">[% nick %]</a>.
   [% ELSIF event == "joined" || event == "left" %]
-    <a href="javascript:requestTab('[% nick %]','[% session %]')" class="nick">[% nick %]</a> [% event %] the chat room.[% IF message %] ([% message %])[% END %]
+    <a href="javascript:buttesfire.connection.requestTab('[% nick %]',[% session %])" class="nick">[% nick %]</a> [% event %] the chat room.[% IF message %] ([% message %])[% END %]
   [% ELSIF event == "nick" %]
-    <a href="javascript:requestTab('[% nick %]','[% session %]')" class="nick">[% nick %]</a> is now known as [% message %].
+    <a href="javascript:buttesfire.connection.requestTab('[% nick %]',[% session %])" class="nick">[% nick %]</a> is now known as [% message %].
   [% END %]
   </div>
 </li>
