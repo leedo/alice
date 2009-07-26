@@ -38,7 +38,7 @@ my $http = POE::Component::Server::HTTP->new(
     '/stream'      => \&setup_stream,
     '/favicon.ico' => \&not_found,
     '/say'         => \&handle_message,
-    '/static'      => \&handle_static,
+    '/static/'      => \&handle_static,
     '/autocomplete' => \&handle_autocomplete,
   },
   StreamHandler    => \&handle_stream,
@@ -186,19 +186,24 @@ sub handle_static {
   $res->streaming(0);
   $res->header(Connection => 'close');
   $req->header(Connection => 'close');
-  my $file = $req->uri->query_param("f");
+  my $file = $req->uri->path;
   my ($ext) = ($file =~ /[^\.]\.(.+)$/);
-  if (-e "data/static/$file") {
-    open my $fh, '<', "data/static/$file";
+  if (-e "data$file") {
+    open my $fh, '<', "data$file";
     log_debug("serving static file: $file");
     if ($ext =~ /png|gif|jpg|jpeg/i) {
       $res->content_type("image/$ext"); 
     }
     elsif ($ext =~ /js/) {
+      $res->header("Cache-control" => "no-cache");
       $res->content_type("text/javascript");
     }
     elsif ($ext =~ /css/) {
+      $res->header("Cache-control" => "no-cache");
       $res->content_type("text/css");
+    }
+    else {
+      no_found($req, $res);
     }
     my @file = <$fh>;
     $res->code(200);
@@ -229,7 +234,8 @@ sub send_index {
     }
   }
   $tt->process('index.tt', {
-    channels => $channels,
+    channels  => $channels,
+    style     => $config->{style} || "default",
   }, \$output) or die $!;
   $res->content($output);
   return 200;

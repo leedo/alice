@@ -6946,7 +6946,7 @@ var Buttesfire = Class.create({
     this.channelLookup = [];
     this.previousFocus = 0;
     this.connection = new Buttesfire.Connection;
-    this.filters = [ this.linkFilter,this.imageFilter,this.audioFilter ];
+    this.filters = [ this.linkFilter ];
     document.onkeyup = this.onKeyUp.bind(this);
     document.onkeydown = this.onKeyDown.bind(this);
     setTimeout(this.connection.connect.bind(this.connection), 1000);
@@ -6973,11 +6973,6 @@ var Buttesfire = Class.create({
       if (this.channels[i].active) return this.channels[i];
     }
     return this.channels[0];
-  },
-
-  scrollImageChannelToBottom: function (image, force) {
-    console.log(image.ancestors()[5]);
-    image.ancestors()[5].scrollTop = image.ancestors()[5].scrollHeight;
   },
 
   onKeyUp: function (e) {
@@ -7009,20 +7004,8 @@ var Buttesfire = Class.create({
     return filtered;
   },
 
-  audioFilter: function (content) {
-    var filtered = content;
-    filtered = filtered.replace(
-      /(<a href=\"(:?.*?\.(:?wav|mp3|ogg|aiff))")/gi,
-      "<img src=\"/static?f=play.png\" onclick=\"playAudio(this)\" class=\"audio\"/>$1");
-    return filtered;
-  },
-
-  imageFilter: function (content) {
-    var filtered = content;
-    filtered = filtered.replace(
-      /(<a[^>]*?>)(.*?\.(:?jpg|jpeg|gif|png))</gi,
-      "$1<img src=\"$2\" onload=\"loadInlineImage(this)\" width=\"0\" alt=\"Loading Image...\" /><");
-    return filtered;
+  addFilters: function (list) {
+    this.filters = this.filters.concat(list);
   },
 
   applyFilters: function (content) {
@@ -7384,33 +7367,6 @@ Buttesfire.Autocompleter = Class.create(Ajax.Autocompleter, {
     }
   }
 });
-function loadInlineImage(image) {
-  var maxWidth = arguments.callee.maxWidth || 400;
-  image.style.width = 'auto';
-  image.style.visibility = 'hidden';
-  if (image.width > maxWidth) image.style.width = maxWidth + 'px';
-  image.style.visibility = 'visible';
-  setTimeout(function () {buttesfire.scrollImageChannelToBottom(image, true)}, 50);
-}
-
-function playAudio(image, audio) {
-  image.src = '/static?f=pause.png';
-  if (! audio) {
-    var url = image.nextSibling.href;
-    audio = new Audio(url);
-    audio.addEventListener('ended', function () {
-      image.src = '/static?f=play.png';
-      image.onclick = function () { playAudio(image, audio) };
-    });
-  }
-  audio.play();
-  image.onclick = function() {
-    audio.pause();
-    this.src = '/static?f=play.png';
-    this.onclick = function () { playAudio(this, audio) };
-  };
-}
-
 function stripNick (html) {
   html = html.replace(/<div class="left">.*<\/div>/,'');
   return html;
@@ -7428,4 +7384,9 @@ function growlNotify (message) {
 }
 
 var buttesfire = new Buttesfire();
-window.onresize = function () {buttesfire.activeChannel().scrollToBottom()};
+document.observe("dom:loaded", function () {
+  $$("div.topic").each(function (topic){
+    topic.innerHTML = buttesfire.linkFilter(topic.innerHTML)});
+})
+window.onresize = function () {
+  buttesfire.activeChannel().scrollToBottom()};

@@ -1,4 +1,5 @@
 debug: 0
+style: default
 servers:
   freenode:
     host: irc.freenode.net

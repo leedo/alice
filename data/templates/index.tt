@@ -2,8 +2,9 @@
 <html>
   <head>
     <title>[% channels.0.name_orig %]</title>
-    <script type="text/javascript" src="/static?f=site.js"></script>
-    <link type="text/css" rel="stylesheet" href="/static?f=main.css" />
+    <script type="text/javascript" src="/static/site.js"></script>
+    <script type="text/javascript" src="/static/styles/[% style %]/default.js"></script>
+    <link type="text/css" rel="stylesheet" href="/static/styles/[% style %]/default.css" />
   </head>
   <body>
     <div id="container">
