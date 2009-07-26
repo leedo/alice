@@ -23,7 +23,7 @@ Buttesfire.Connection = Class.create({
       onException: function (req, e) {
         console.log(e);
         if (! connection.aborting)
-          setTimeout(connection.connect, 2000);
+          setTimeout(connection.connect.bind(connection), 2000);
       },
       onInteractive: connection.handleUpdate.bind(connection),
       onComplete: function () {
