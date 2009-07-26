@@ -4,15 +4,7 @@ function loadInlineImage(image) {
   image.style.visibility = 'hidden';
   if (image.width > maxWidth) image.style.width = maxWidth + 'px';
   image.style.visibility = 'visible';
-  setTimeout(function () {scrollToBottom(true)}, 50);
-}
-
-function scrollToBottom (force) {
-  var height = document.viewport.getHeight();
-  var offset = document.viewport.getScrollOffsets().top;
-  var scroll = $('container').getHeight();
-  if ((height + offset) >= scroll || force)
-    window.scrollTo(0, document.height);
+  setTimeout(function () {buttesfire.scrollImageChannelToBottom(image, true)}, 50);
 }
 
 function playAudio(image, audio) {

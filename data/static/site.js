@@ -6975,6 +6975,11 @@ var Buttesfire = Class.create({
     return this.channels[0];
   },
 
+  scrollImageChannelToBottom: function (image, force) {
+    console.log(image.ancestors()[5]);
+    image.ancestors()[5].scrollTop = image.ancestors()[5].scrollHeight;
+  },
+
   onKeyUp: function (e) {
     if (e.which == 17) this.isCtrl = false;
   },
@@ -7165,7 +7170,7 @@ Buttesfire.Channel = Class.create({
     this.tab.removeClassName("unread");
     this.tab.removeClassName("highlight");
     if (this.tab.previous()) this.tab.previous().addClassName("leftof_active");
-    scrollToBottom(true);
+    this.scrollToBottom(true);
     this.input.focus();
   },
 
@@ -7201,7 +7206,7 @@ Buttesfire.Channel = Class.create({
       if (message.event == "topic") this.displayTopic(message.message);
 
       if (this.elem.hasClassName('active'))
-        scrollToBottom();
+        this.scrollToBottom();
       else if (message.event == "say" && message.highlight) {
         this.tab.addClassName("highlight");
         growlNotify(message);
@@ -7212,6 +7217,10 @@ Buttesfire.Channel = Class.create({
     else if (message.event == "announce") {
       this.messages.insert("<li class='message'><div class='msg announce'>"+message.str+"</div></li>");
     }
+  },
+
+  scrollToBottom: function (force) {
+    this.elem.scrollTop = this.elem.scrollHeight;
   }
 });
 Buttesfire.Connection = Class.create({
@@ -7239,7 +7248,7 @@ Buttesfire.Connection = Class.create({
       onException: function (req, e) {
         console.log(e);
         if (! connection.aborting)
-          setTimeout(connection.connect, 2000);
+          setTimeout(connection.connect.bind(connection), 2000);
       },
       onInteractive: connection.handleUpdate.bind(connection),
       onComplete: function () {
@@ -7381,15 +7390,7 @@ function loadInlineImage(image) {
   image.style.visibility = 'hidden';
   if (image.width > maxWidth) image.style.width = maxWidth + 'px';
   image.style.visibility = 'visible';
-  setTimeout(function () {scrollToBottom(true)}, 50);
-}
-
-function scrollToBottom (force) {
-  var height = document.viewport.getHeight();
-  var offset = document.viewport.getScrollOffsets().top;
-  var scroll = $('container').getHeight();
-  if ((height + offset) >= scroll || force)
-    window.scrollTo(0, document.height);
+  setTimeout(function () {buttesfire.scrollImageChannelToBottom(image, true)}, 50);
 }
 
 function playAudio(image, audio) {
@@ -7427,4 +7428,4 @@ function growlNotify (message) {
 }
 
 var buttesfire = new Buttesfire();
-window.onresize = scrollToBottom;
+window.onresize = function () {buttesfire.activeChannel().scrollToBottom()};

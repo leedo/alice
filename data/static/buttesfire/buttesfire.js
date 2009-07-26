@@ -39,6 +39,11 @@ var Buttesfire = Class.create({
     return this.channels[0];
   },
   
+  scrollImageChannelToBottom: function (image, force) {
+    console.log(image.ancestors()[5]);
+    image.ancestors()[5].scrollTop = image.ancestors()[5].scrollHeight;
+  },
+  
   onKeyUp: function (e) {
     if (e.which == 17) this.isCtrl = false;
   },
@@ -181,4 +186,4 @@ var Buttesfire = Class.create({
 //= require <buttesfire/util>
 
 var buttesfire = new Buttesfire();
-window.onresize = scrollToBottom;
+window.onresize = function () {buttesfire.activeChannel().scrollToBottom()};

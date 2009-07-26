@@ -53,7 +53,7 @@ Buttesfire.Channel = Class.create({
     this.tab.removeClassName("unread");
     this.tab.removeClassName("highlight");
     if (this.tab.previous()) this.tab.previous().addClassName("leftof_active");
-    scrollToBottom(true);
+    this.scrollToBottom(true);
     this.input.focus();
   },
   
@@ -90,7 +90,7 @@ Buttesfire.Channel = Class.create({
 
       // scroll to bottom or highlight the tab
       if (this.elem.hasClassName('active'))
-        scrollToBottom();
+        this.scrollToBottom();
       else if (message.event == "say" && message.highlight) {
         this.tab.addClassName("highlight");
         growlNotify(message);
@@ -101,5 +101,9 @@ Buttesfire.Channel = Class.create({
     else if (message.event == "announce") {
       this.messages.insert("<li class='message'><div class='msg announce'>"+message.str+"</div></li>");
     }
+  },
+  
+  scrollToBottom: function (force) {
+    this.elem.scrollTop = this.elem.scrollHeight;
   }
 });
