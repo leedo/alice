@@ -115,7 +115,7 @@ ul#tabs li.leftof_active {
 ul#controls {
   position: fixed;
   bottom: 0px;
-  right: 0px;
+  right: 18px;
   height: 22px;
   margin: 0;
   padding: 0;

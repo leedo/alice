@@ -1,10 +1,10 @@
 div#config {
   position: absolute;
-  width: 500px;
+  width: 480px;
   left: 50%;
-  margin-left: -250px;
+  margin-left: -240px;
   top: 50px;
-  bottom: 80px;
+  bottom: 85px;
   background: #efefef;
   padding: 10px 10px;
   z-index: 999;
@@ -17,6 +17,7 @@ div#config div#buttons {
 }
 
 div#config div.setting {
+  margin-top: 0.5em;
   margin-left: 160px;
   display: none;
 }
@@ -128,10 +129,10 @@ div.overlay {
   top: 35px;
   -moz-border-radius: 5px;
   -webkit-border-radius: 5px;
-  bottom: 65px;
-  width: 550px;
+  bottom: 70px;
+  width: 530px;
   left: 50%;
-  margin-left: -265px;
+  margin-left: -255px;
   background: #000;
   opacity: 0.4;
   z-index: 998;
