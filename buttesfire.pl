@@ -6,7 +6,7 @@ use warnings;
 use lib 'lib';
 use lib 'extlib/lib/perl5';
 use local::lib 'extlib';
-use YAML qw/LoadFile/;
+use YAML qw/LoadFile DumpFile/;
 use Template;
 use JSON;
 use Encode;
@@ -32,12 +32,14 @@ my @commands = qw/join part names topic me query/;
 log_info("You can view your IRC session at: http://localhost:8080/view");
 
 my $http = POE::Component::Server::HTTP->new(
-  Port             => 8080,
-  ContentHandler   => {
-    '/view'        => \&send_index,
-    '/stream'      => \&setup_stream,
-    '/favicon.ico' => \&not_found,
-    '/say'         => \&handle_message,
+  Port            => 8080,
+  ContentHandler  => {
+    '/config'       => \&send_config,
+    '/save'         => \&save_config,
+    '/view'         => \&send_index,
+    '/stream'       => \&setup_stream,
+    '/favicon.ico'  => \&not_found,
+    '/say'          => \&handle_message,
     '/static/'      => \&handle_static,
     '/autocomplete' => \&handle_autocomplete,
   },
@@ -215,7 +217,7 @@ sub handle_static {
 
 sub send_index {
   my ($req, $res) = @_;
-  log_debug("server index");
+  log_debug("servering index");
   $res->code(200);
   $res->streaming(0);
   $res->content_type('text/html; charset=utf-8');
@@ -239,6 +241,49 @@ sub send_index {
   }, \$output) or die $!;
   $res->content($output);
   return 200;
+}
+
+sub send_config {
+  my ($req, $res) = @_;
+  log_debug("serving config");
+  $res->code(200);
+  $res->streaming(0);
+  $res->header(Connection => 'close');
+  $req->header(Connection => 'close');
+  $res->header("Cache-control" => "no-cache");
+  my $output = '';
+  $tt->process('config.tt', {connections => \%ircs, config => $config}, \$output);
+  $res->content($output);
+  return 200;
+}
+
+sub save_config {
+  my ($req, $res) = @_;
+  log_debug("saving config");
+  $res->code(200);
+  $res->streaming(0);
+  $res->header(Connection => 'close');
+  $req->header(Connection => 'close');
+  my $new_config = {};
+  my $servers;
+  for my $name ($req->uri->query_param) {
+    if ($name =~ /^(\d+)_(.+)/) {
+      if ($2 eq "channels") {
+        $new_config->{$1}{$2} = [$req->uri->query_param($name)];
+      }
+      else {
+        $new_config->{$1}{$2} = $req->uri->query_param($name);
+      }
+    }
+  }
+  for my $newserver (values %$new_config) {
+    if (my $oldserver = $config->{servers}{$newserver->{name}}) {
+      for my $field (keys %$newserver) {
+        $oldserver->{$field} = $newserver->{$field};
+      }
+    }
+  }
+  DumpFile($ENV{HOME}.'/.buttesfire.yaml', $config);
 }
 
 sub handle_autocomplete {

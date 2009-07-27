@@ -5,9 +5,14 @@
     <script type="text/javascript" src="/static/site.js"></script>
     <script type="text/javascript" src="/static/styles/[% style %]/default.js"></script>
     <link type="text/css" rel="stylesheet" href="/static/styles/[% style %]/default.css" />
+    <link type="text/css" rel="stylesheet" href="/static/config.css" />
   </head>
   <body>
     <div id="container">
+      <ul id="controls">
+        <li id="config_button"><img src="/static/styles/[% style %]/image/config.png" /></li>
+        <li id="status" class="disabled"></li>
+      </ul>
       <ul id="tabs">
         [% FOR channels %]
         [% INCLUDE "tab.tt" %]

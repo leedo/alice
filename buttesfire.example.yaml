@@ -12,8 +12,6 @@ servers:
   perl:
     host: irc.perl.org
     port: 6667
-    username: leedo
-    password: dongues
     nick: lee
     ircname: lee
     channels:
