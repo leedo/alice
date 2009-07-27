@@ -7114,8 +7114,7 @@ var Buttesfire = Class.create({
   displayMessage: function (message) {
     var channel = buttesfire.getChannel(message.chanid);
     if (! channel) {
-      this.connection.requestTab(message.chan, function () {
-      });
+      this.connection.requestTab(message.chan, message.session, message);
       return;
     }
     channel.addMessage(message);
@@ -7286,7 +7285,6 @@ Buttesfire.Connection = Class.create({
       console.log(err);
       return;
     }
-
     buttesfire.handleActions(data.actions);
     buttesfire.displayMessages(data.msgs);
 
@@ -7297,14 +7295,14 @@ Buttesfire.Connection = Class.create({
     }
   },
 
-  requestTab: function (name, session, callback) {
-    var connection;
+  requestTab: function (name, session, message) {
+    var connection = this;
     new Ajax.Request('/say', {
       method: 'get',
       parameters: {session: session, msg: "/window new " + name},
       onSuccess: function (trans) {
         connection.handleUpdate(trans);
-        callback();
+        buttesfire.displayMessage(message);
       }
     });
   },

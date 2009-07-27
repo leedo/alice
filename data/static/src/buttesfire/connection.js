@@ -54,10 +54,9 @@ Buttesfire.Connection = Class.create({
       console.log(err);
       return;
     }
-    
     buttesfire.handleActions(data.actions);
     buttesfire.displayMessages(data.msgs);
-  
+    
     // reconnect if lag is over 5 seconds... not a good way to do this.
     var lag = time / 1000 -  data.time;
     if (lag > 5) {
@@ -66,14 +65,14 @@ Buttesfire.Connection = Class.create({
     }
   },
   
-  requestTab: function (name, session, callback) {
-    var connection;
+  requestTab: function (name, session, message) {
+    var connection = this;
     new Ajax.Request('/say', {
       method: 'get',
       parameters: {session: session, msg: "/window new " + name},
       onSuccess: function (trans) {
         connection.handleUpdate(trans);
-        callback();
+        if (message) buttesfire.displayMessage(message);
       }
     });
   },

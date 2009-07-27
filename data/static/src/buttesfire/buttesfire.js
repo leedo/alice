@@ -178,9 +178,7 @@ var Buttesfire = Class.create({
   displayMessage: function (message) {
     var channel = buttesfire.getChannel(message.chanid);
     if (! channel) {
-      this.connection.requestTab(message.chan, function () {
-        //displayMessage(message);
-      });
+      this.connection.requestTab(message.chan, message.session, message);
       return;
     }
     channel.addMessage(message);
