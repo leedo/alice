@@ -40,6 +40,10 @@ div#config label, input {
   font-size: 0.8em;
 }
 
+div#config span {
+  font-size: 0.8em;
+}
+
 div#config select {
   width: 135px;
   height: 100px;

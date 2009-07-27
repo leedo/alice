@@ -11,6 +11,10 @@ a:hover {
   text-shadow: rgba( 0, 0, 0, .3 ) 0 1px 1px;
 }
 
+input[type="hidden"] {
+  display: none;
+}
+
 div.channel {
   display: none;
   position:fixed;
