@@ -1,0 +1,475 @@
+package Buttes::HTTPD;
+
+use Moose;
+use bytes;
+use Encode;
+use Time::HiRes qw/time/;
+use POE::Component::Server::HTTP;
+use JSON;
+use Template;
+use URI::QueryParam;
+use IRC::Formatting;
+
+has 'config' => (
+  is  => 'ro',
+  isa => 'HashRef',
+  required => 1,
+  trigger => sub {
+    my $self = shift;
+    POE::Component::Server::HTTP->new(
+      Port            => $self->config->{port},
+      ContentHandler  => {
+        '/config'       => sub{$self->send_config(@_)},
+        '/save'         => sub{$self->save_config(@_)},
+        '/view'         => sub{$self->send_index(@_)},
+        '/stream'       => sub{$self->setup_stream(@_)},
+        '/favicon.ico'  => sub{$self->not_found(@_)},
+        '/say'          => sub{$self->handle_message(@_)},
+        '/static/'      => sub{$self->handle_static(@_)},
+        '/autocomplete' => sub{$self->handle_autocomplete(@_)},
+      },
+      StreamHandler    => sub{$self->handle_stream(@_)},
+    );
+  },
+);
+
+has 'ircs' => (
+  is  => 'rw',
+  isa => 'HashRef[POE::Component::IRC::State]',
+  default => sub {{}},
+  weak_ref => 1,
+);
+
+has 'streams' => (
+  is  => 'rw',
+  isa => 'ArrayRef[POE::Component::Server::HTTP::Response]',
+  default => sub {[]},
+);
+
+has 'seperator' => (
+  is  => 'ro',
+  isa => 'Str',
+  default => '--xbuttesfirex',
+);
+
+has 'commands' => (
+  is => 'ro',
+  isa => 'ArrayRef[Str]',
+  default => sub {
+    [qw/join part names topic me query/];
+  },
+);
+
+has 'tt' => (
+  is => 'ro',
+  isa => 'Template',
+  default => sub {
+    Template->new(
+      INCLUDE_PATH => 'data/templates',
+      ENCODING     => 'UTF8'
+    );
+  },
+);
+
+sub setup_stream {
+  my ($self, $req, $res) = @_;
+  $res->code(200);
+  $res->header(Connection => 'close');
+  $req->header(Connection => 'close');
+  
+  # XHR tries to reconnect again with this header for some reason
+  if (defined $req->header('error')) {
+    $res->streaming(0);
+    return 200;
+  }
+  
+  log_debug("opening a streaming http connection");
+  $res->streaming(1);
+  $res->content_type('multipart/mixed; boundary=xbuttesfirex; charset=utf-8');
+  $res->{msgs} = [];
+  $res->{actions} = [];
+  push @{$self->streams}, $res;
+  return 200;
+}
+
+sub handle_stream {
+  my ($self, $req, $res) = @_;
+  if ($res->is_error) {
+    $self->end_stream($res);
+    return;
+  }
+  if (@{$res->{msgs}} or @{$res->{actions}}) {
+    my $output;
+    if (! $res->{started}) {
+      $res->{started} = 1;
+      $output .= $self->seperator."\n";
+    }
+    $output .= to_json({msgs => $res->{msgs}, actions => $res->{actions}, time => time});
+    my $padding = " " x (1024 - bytes::length $output);
+    $res->send($output . $padding . "\n".$self->seperator."\n");
+    if ($res->is_error) {
+      $self->end_stream($res);
+      return;
+    }
+    else {
+      $res->{msgs} = [];
+      $res->{actions} = [];
+    }
+  }
+}
+
+sub end_stream {
+  my ($self, $res) = @_;
+  log_debug("closing HTTP connection");
+  for (0 .. scalar @{$self->streams}) {
+    if ($res == ($self->streams)[$_]) {
+      splice(@{$self->streams}, $_, 1);
+    }
+  }
+  $res->close;
+  $res->continue;
+}
+
+sub handle_message {
+  my ($self, $req, $res) = @_;
+  $res->streaming(0);
+  $res->code(200);
+  $res->header(Connection => 'close');
+  $req->header(Connection => 'close');
+  my $msg  = $req->uri->query_param('msg');
+  my $chan = lc $req->uri->query_param('chan');
+  my $session = $req->uri->query_param('session');
+  return 200 unless $session;
+  if (length $msg) {
+    if ($msg =~ /^\/query (\S+)/) {
+      $self->create_tab($1, $session);
+    }
+    elsif ($msg =~ /^\/join (.+)/) {
+      POE::Kernel->post($session, "join", $1);
+    }
+    elsif ($msg =~ /^\/part\s?(.+)?/) {
+      POE::Kernel->post($session, "part", $1 || $chan);
+    }
+    elsif ($msg =~ /^\/window new (.+)/) {
+      $self->create_tab($1, $session);
+    }
+    elsif ($msg =~ /^\/n(?:ames)?/ and $chan) {
+      $self->show_nicks($chan, $session);
+    }
+    elsif ($msg =~ /^\/topic\s?(.+)?/) {
+      if ($1) {
+        POE::Kernel->post($session, "topic", $chan, $1);
+      }
+      else {
+        my $topic = POE::Kernel->call($session, "channel_topic", $chan);
+        $self->send_topic(
+          $topic->{SetBy}, $chan, $session, decode_utf8($topic->{Value})
+        );
+      }
+    }
+    elsif ($msg =~ /^\/me (.+)/) {
+      my $nick = POE::Kernel->call($session, "nick_name");
+      $self->display_message($nick, $chan, $session, decode_utf8("• $1"));
+      POE::Kernel->post($session, "ctcp", $chan, "ACTION $1");
+    }
+    else {
+      log_debug("sending message to $chan");
+      my $nick = POE::Kernel->call($session, "nick_name");
+      $self->display_message($nick, $chan, $session, decode_utf8($msg)); 
+      POE::Kernel->post($session, "privmsg", $chan, $msg);
+    }
+  }
+
+  return 200;
+}
+
+sub handle_static {
+  my ($self, $req, $res) = @_;
+  $res->streaming(0);
+  $res->header(Connection => 'close');
+  $req->header(Connection => 'close');
+  my $file = $req->uri->path;
+  my ($ext) = ($file =~ /[^\.]\.(.+)$/);
+  if (-e "data$file") {
+    open my $fh, '<', "data$file";
+    log_debug("serving static file: $file");
+    if ($ext =~ /png|gif|jpg|jpeg/i) {
+      $res->content_type("image/$ext"); 
+    }
+    elsif ($ext =~ /js/) {
+      $res->header("Cache-control" => "no-cache");
+      $res->content_type("text/javascript");
+    }
+    elsif ($ext =~ /css/) {
+      $res->header("Cache-control" => "no-cache");
+      $res->content_type("text/css");
+    }
+    else {
+      $self->not_found($req, $res);
+    }
+    my @file = <$fh>;
+    $res->code(200);
+    $res->content(join "", @file);
+    return 200;
+  }
+  $self->not_found($req, $res);
+}
+
+sub send_index {
+  my ($self, $req, $res) = @_;
+  log_debug("servering index");
+  $res->code(200);
+  $res->streaming(0);
+  $res->content_type('text/html; charset=utf-8');
+  my $output = '';
+  my $channels = [];
+  for my $irc (keys %{$self->ircs}) {
+    my $session = $self->ircs->{$irc}->session_id;
+    for my $channel (keys %{$self->ircs->{$irc}->channels}) {
+      push @$channels, {
+        chanid => channel_id($channel, $session),
+        chan => $channel,
+        session => $session,
+        topic => $self->ircs->{$irc}->channel_topic($channel),
+        server => $self->ircs->{$irc},
+      }
+    }
+  }
+  $self->tt->process('index.tt', {
+    channels  => $channels,
+    style     => $self->config->{style} || "default",
+  }, \$output) or die $!;
+  $res->content($output);
+  return 200;
+}
+
+sub send_config {
+  my ($self, $req, $res) = @_;
+  log_debug("serving config");
+  $res->code(200);
+  $res->streaming(0);
+  $res->header(Connection => 'close');
+  $req->header(Connection => 'close');
+  $res->header("Cache-control" => "no-cache");
+  my $output = '';
+  $self->tt->process('config.tt', {
+    connections => $self->ircs,
+    config      => $self->config
+  }, \$output);
+  $res->content($output);
+  return 200;
+}
+
+sub save_config {
+  my ($self, $req, $res) = @_;
+  log_debug("saving config");
+  $res->code(200);
+  $res->streaming(0);
+  $res->header(Connection => 'close');
+  $req->header(Connection => 'close');
+  my $new_config = {};
+  my $servers;
+  for my $name ($req->uri->query_param) {
+    if ($name =~ /^(\d+)_(.+)/) {
+      if ($2 eq "channels") {
+        $new_config->{$1}{$2} = [$req->uri->query_param($name)];
+      }
+      else {
+        $new_config->{$1}{$2} = $req->uri->query_param($name);
+      }
+    }
+  }
+  for my $newserver (values %$new_config) {
+    if (my $oldserver = $self->config->{servers}{$newserver->{name}}) {
+      for my $field (keys %$newserver) {
+        $oldserver->{$field} = $newserver->{$field};
+      }
+    }
+  }
+  DumpFile($ENV{HOME}.'/.buttesfire.yaml', $self->config);
+}
+
+sub handle_autocomplete {
+  my ($self, $req, $res) = @_;
+  $res->code(200);
+  $res->header(Connection => 'close');
+  $req->header(Connection => 'close');
+  $res->streaming(0);
+  $res->content_type('text/html; charset=utf-8');
+  my $query = $req->uri->query_param('msg');
+  my $chan = $req->uri->query_param('chan');
+  my $session_id = $req->uri->query_param('session');
+  ($query) = $query =~ /((?:^\/)?[\d\w]*)$/;
+  return 200 unless $query;
+  log_debug("handling autocomplete for $query");
+  my @members = POE::Kernel->call($session_id, "channel_list", $chan);
+  my @matches = sort {lc $a cmp lc $b} grep {/^\Q$query\E/i} @members;
+  push @matches, sort grep {/^\Q$query\E/i} map {"/$_"} @{$self->commands};
+  my $html = '';
+  $self->tt->process('autocomplete.tt',{matches => \@matches}, \$html) or die $!;
+  $res->content($html);
+  return 200;
+}
+
+sub not_found {
+  my ($self, $req, $res) = @_;
+  log_debug("serving 404:", $req->uri->path);
+  $res->streaming(0);
+  $res->header(Connection => 'close');
+  $req->header(Connection => 'close');
+  $res->code(404);
+  return 404;
+}
+
+sub send_topic {
+  my ($self, $who, $channel, $session, $topic) = @_;
+  my $nick = ( split /!/, $who)[0];
+  $self->display_event($nick, $channel, $session, "topic", $topic);
+}
+
+sub display_event {
+  my ($self, $nick, $channel, $session, $event_type, $msg) = @_;
+  my $event = {
+    type      => "message",
+    event     => $event_type,
+    nick      => $nick,
+    chan      => $channel,
+    chanid    => channel_id($channel, $session),
+    session   => $session,
+    message   => $msg,
+    timestamp => make_timestamp(),
+  };
+  my $html = '';
+  $self->tt->process("event.tt", $event, \$html);
+  $event->{full_html} = $html;
+  $self->send_data($event);
+}
+
+sub display_message {
+  my ($self, $nick, $channel, $session, $text) = @_;
+  my $html = IRC::Formatting->formatted_string_to_html($text);
+  my $mynick = POE::Kernel->call($session, "nick_name");
+  my $msg = {
+    type      => "message",
+    event     => "say",
+    nick      => $nick,
+    chan      => $channel,
+    chanid    => channel_id($channel, $session),
+    session   => $session,
+    self      => $nick eq $mynick,
+    html      => $html,
+    highlight => $text =~ /\b$mynick\b/i || 0,
+    timestamp => make_timestamp(),
+  };
+  $html = '';
+  $self->tt->process("message.tt", $msg, \$html);
+  $msg->{full_html} = $html;
+  $self->send_data($msg);
+  log_debug("sending message to $channel") if $self->clients;
+}
+
+sub clients {
+  my $self = shift;
+  return scalar @{$self->streams};
+}
+
+sub create_tab {
+  my ($self, $name, $session) = @_;
+  my $action = {
+    type      => "action",
+    event     => "join",
+    chan      => $name,
+    chanid    => channel_id($name, $session),
+    session   => $session,
+    timestamp => make_timestamp(),
+  };
+  my $chan_html = '';
+  $self->tt->process("channel.tt", $action, \$chan_html);
+  $action->{html}{channel} = $chan_html;
+  my $tab_html = '';
+  $self->tt->process("tab.tt", $action, \$tab_html);
+  $action->{html}{tab} = $tab_html;
+  $self->send_data($action);
+  log_debug("sending a request for a new tab: $name") if $self->clients;
+}
+
+sub close_tab {
+  my ($self, $name, $session) = @_;
+  $self->send_data({
+    type      => "action",
+    event     => "part",
+    chanid    => channel_id($name, $session),
+    chan      => $name,
+    session   => $session,
+    timestamp => make_timestamp(),
+  });
+  log_debug("sending a request to close a tab: $name") if $self->clients;
+}
+
+sub send_data {
+  my ($self, $data) = @_;
+  for my $res (@{$self->streams}) {
+    if ($data->{type} eq "message") {
+      push @{$res->{msgs}}, $data;
+    }
+    elsif ($data->{type} eq "action") {
+      push @{$res->{actions}}, $data;
+    }
+    $res->continue;
+  }
+}
+
+sub show_nicks {
+  my ($self, $chan, $session) = @_;
+  my @nicks = POE::Kernel->call($session, "channel_list", $chan);
+  $self->send_data({
+    type    => "message",
+    event   => "announce",
+    chanid  => channel_id($chan, $session),
+    chan    => $chan,
+    session => $session,
+    str     => format_nick_table(@nicks)
+  });
+}
+
+sub format_nick_table {
+  my @nicks = @_;
+  return "" unless @nicks;
+  my $maxlen = 0;
+  for (@nicks) {
+    my $length = length $_;
+    $maxlen = $length if $length > $maxlen;
+  }
+  my $cols = int(74  / $maxlen + 2);
+  my (@rows, @row);
+  for (sort {lc $a cmp lc $b} @nicks) {
+    push @row, $_ . " " x ($maxlen - length $_);
+    if (@row >= $cols) {
+      push @rows, [@row];
+      @row = ();
+    }
+  }
+  push @rows, [@row] if @row;
+  return join "\n", map {join " ", @$_} @rows;
+}
+
+sub channel_id {
+  my $id = join "_", @_;
+  $id =~ s/[#&]/chan_/;
+  return lc $id;
+}
+
+sub make_timestamp {
+  return sprintf("%02d:%02d", (localtime)[2,1])
+}
+
+sub log_debug {
+  print STDERR join " ", @_, "\n";
+}
+
+sub log_info {
+  print STDERR join " ", @_, "\n";
+}
+
+__PACKAGE__->meta->make_immutable;
+1;
