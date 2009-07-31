@@ -88,7 +88,7 @@ var Buttesfire = Class.create({
     var filtered = content;
     filtered = filtered.replace(
       /(https?\:\/\/[\w\d$\-_.+!*'(),%\/?=&;~#:]*)/gi,
-      "<a href=\"$1\" target=\"blank\">$1</a>");
+      "<a href=\"$1\">$1</a>");
     return filtered;
   },
   

@@ -7024,7 +7024,7 @@ var Buttesfire = Class.create({
     var filtered = content;
     filtered = filtered.replace(
       /(https?\:\/\/[\w\d$\-_.+!*'(),%\/?=&;~#:]*)/gi,
-      "<a href=\"$1\" target=\"blank\">$1</a>");
+      "<a href=\"$1\">$1</a>");
     return filtered;
   },
 
@@ -7262,6 +7262,7 @@ Buttesfire.Connection = Class.create({
           setTimeout(connection.connect.bind(connection), 2000);
       }
     });
+    setTimeout(this.connect.bind(this), 10 * 60 * 1000)
   },
 
   handleUpdate: function (transport) {
@@ -7302,7 +7303,7 @@ Buttesfire.Connection = Class.create({
       parameters: {session: session, msg: "/window new " + name},
       onSuccess: function (trans) {
         connection.handleUpdate(trans);
-        buttesfire.displayMessage(message);
+        if (message) buttesfire.displayMessage(message);
       }
     });
   },

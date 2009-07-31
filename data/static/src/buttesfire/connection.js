@@ -31,6 +31,8 @@ Buttesfire.Connection = Class.create({
           setTimeout(connection.connect.bind(connection), 2000);
       }
     });
+    // reconnect in 10 minutes
+    setTimeout(this.connect.bind(this), 10 * 60 * 1000)
   },
   
   handleUpdate: function (transport) {

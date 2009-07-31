@@ -3,7 +3,6 @@
 <div id="config">
   <script type="text/javascript">
     showConnection = function (sessionid) {
-      console.log($("setting_" + sessionid));
       $$("div#config .active").invoke("removeClassName","active");
       $("setting_" + sessionid).addClassName("active");
       $("menu_" + sessionid).addClassName("active");
@@ -23,8 +22,8 @@
   
   <ul id="connections">
     <li class="header">Connections</li>
-    [% FOR sessionid IN connections.keys.sort %]
-      [% connection = connections.${sessionid} %]
+    [% FOR connection IN connections %]
+      [% sessionid = connection.session_id %]
     <li class="[% connection.connected ? "connected" : "disconnected" %][% IF loop.first %] active[% END %]"
         onclick="showConnection([% sessionid %])" id="menu_[% sessionid %]">
       [% connection.alias %]
@@ -37,9 +36,9 @@
   </div>
   
   <form id="config_data" onsubmit="return buttesfire.submitConfig(this)">
-  [% FOR sessionid IN connections.keys.sort %]
+  [% FOR connection IN connections %]
+    [% sessionid = connection.session_id %]
   <div class="setting[% IF loop.first %] active[% END %]" id="setting_[% sessionid %]">
-      [% connection = connections.${sessionid} %]
       [% connection.config = config.servers.${connection.alias} %]
     <div class="field" style="width:138px">
       <label>Name</label>

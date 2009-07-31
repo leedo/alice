@@ -9,7 +9,7 @@ use POE::Component::IRC::State;
 use Encode;
 use Moose;
 
-has 'connections' => (
+has 'connection_map' => (
   isa => 'HashRef[POE::Component::IRC::State]',
   is  => 'rw',
   default => sub {{}},
@@ -28,7 +28,7 @@ has 'httpd' => (
   required => 1,
   trigger => sub {
     my $self = shift;
-    $self->httpd->ircs($self->connections);
+    $self->httpd->irc($self);
   },
 );
 
@@ -54,6 +54,16 @@ sub BUILD {
   );
 }
 
+sub connection {
+  my ($self, $session_id) = @_;
+  return $self->connection_map->{$session_id};
+}
+
+sub connections {
+  my $self = shift;
+  return values %{$self->connection_map};
+}
+
 sub add_server {
   my ($self, $name, $server) = @_;
   my $irc = POE::Component::IRC::State->spawn(
@@ -65,7 +75,7 @@ sub add_server {
     password => $server->{password},
     username => $server->{username},
   );
-  $self->connections->{$irc->session_id} = $irc;
+  $self->connection_map->{$irc->session_id} = $irc;
 }
 
 sub start {
@@ -75,24 +85,24 @@ sub start {
 }
 
 sub registered {
-  my $irc = $_[OBJECT]->connections->{$_[SENDER]->ID};
+  my $irc = $_[OBJECT]->connection($_[SENDER]->ID);
   $irc->yield(connect => {});
   return;
 }
 
 sub connected {
   my $self = $_[OBJECT];
-  my $irc = $self->connections->{$_[SENDER]->ID};
-  log_debug("connected to " . $irc->{alias});
+  my $irc = $self->connection($_[SENDER]->ID);
+  $self->log_debug("connected to " . $irc->{alias});
   for (@{$self->config->{servers}{$irc->{alias}}{channels}}) {
-    log_debug("joining $_");
+    $self->log_debug("joining $_");
     $irc->yield( join => $_ );
   }
 }
 
 sub public {
   my ($self, $who, $where, $what) = @_[OBJECT, ARG0 .. ARG2];
-  my $irc = $self->connections->{$_[SENDER]->ID};
+  my $irc = $self->connection($_[SENDER]->ID);
   my $nick = ( split /!/, $who )[0];
   my $channel = $where->[0];
   $what = decode("utf8", $what, Encode::FB_WARN);
@@ -101,7 +111,7 @@ sub public {
 
 sub msg {
   my ($self, $who, $what) = @_[OBJECT, ARG0, ARG2];
-  my $irc = $self->connections->{$_[SENDER]->ID};
+  my $irc = $self->connection($_[SENDER]->ID);
   my $nick = ( split /!/, $who)[0];
   $what = decode("utf8", $what, Encode::FB_WARN);
   $self->httpd->display_message($nick, $nick, $irc->session_id, $what);
@@ -109,7 +119,7 @@ sub msg {
 
 sub action {
   my ($self, $who, $where, $what) = @_[OBJECT, ARG0 .. ARG2];
-  my $irc = $self->connections->{$_[SENDER]->ID};
+  my $irc = $self->connection($_[SENDER]->ID);
   my $nick = ( split /!/, $who )[0];
   my $channel = $where->[0];
   $what = decode("utf8", "• $what", Encode::FB_WARN);
@@ -118,7 +128,7 @@ sub action {
 
 sub nick {
   my ($self, $who, $new_nick) = @_[OBJECT, ARG0, ARG1];
-  my $irc = $self->connections->{$_[SENDER]->ID};
+  my $irc = $self->connection($_[SENDER]->ID);
   my $nick = ( split /!/, $who )[0];
   $self->httpd->display_event($nick, $_, $irc->session_id, "nick", $new_nick)
     for $irc->nick_channels($new_nick);
@@ -126,7 +136,7 @@ sub nick {
 
 sub joined {
   my ($self, $who, $where) = @_[OBJECT, ARG0, ARG1];
-  my $irc = $self->connections->{$_[SENDER]->ID};
+  my $irc = $self->connection($_[SENDER]->ID);
   my $nick = ( split /!/, $who)[0];
   my $channel = $where;
   if ($nick ne $irc->nick_name) {
@@ -139,13 +149,13 @@ sub joined {
 
 sub chan_sync {
   my ($self, $channel) = @_[OBJECT, ARG0];
-  my $irc = $self->connections->{$_[SENDER]->ID};
+  my $irc = $self->connection($_[SENDER]->ID);
   $self->httpd->create_tab($channel, $irc->session_id) if $channel ne "main";
 }
 
 sub part {
   my ($self, $who, $where, $msg) = @_[OBJECT, ARG0 .. ARG2];
-  my $irc = $self->connections->{$_[SENDER]->ID};
+  my $irc = $self->connection($_[SENDER]->ID);
   my $nick = ( split /!/, $who)[0];
   my $channel = $where;
   if ($nick ne $irc->nick_name) {
@@ -158,7 +168,7 @@ sub part {
 
 sub quit {
   my ($self, $who, $msg, $channels) = @_[OBJECT, ARG0 .. ARG2];
-  my $irc = $self->connections->{$_[SENDER]->ID};
+  my $irc = $self->connection($_[SENDER]->ID);
   my $nick = ( split /!/, $who)[0];
   for my $channel (@$channels) {
     $self->httpd->display_event($nick, $channel, $irc->session_id, "left", $msg);
@@ -167,12 +177,13 @@ sub quit {
 
 sub topic {
   my ($self, $who, $channel, $topic) = @_[OBJECT, ARG0 .. ARG2];
-  my $irc = $self->connections->{$_[SENDER]->ID};
+  my $irc = $self->connection($_[SENDER]->ID);
   $self->httpd->send_topic($who, $channel, $irc->session_id, $topic);
 }
 
 sub log_debug {
-  print STDERR join " ", @_, "\n";
+  my $self = shift;
+  print STDERR join " ", @_, "\n" if $self->config->{debug};
 }
 
 __PACKAGE__->meta->make_immutable;

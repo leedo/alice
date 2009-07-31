@@ -38,10 +38,9 @@ has 'config' => (
   },
 );
 
-has 'ircs' => (
+has 'irc' => (
   is  => 'rw',
-  isa => 'HashRef[POE::Component::IRC::State]',
-  default => sub {{}},
+  isa => 'Buttes::IRC',
   weak_ref => 1,
 );
 
@@ -87,7 +86,7 @@ sub setup_stream {
     return 200;
   }
   
-  log_debug("opening a streaming http connection");
+  $self->log_debug("opening a streaming http connection");
   $res->streaming(1);
   $res->content_type('multipart/mixed; boundary=xbuttesfirex; charset=utf-8');
   $res->{msgs} = [];
@@ -124,9 +123,9 @@ sub handle_stream {
 
 sub end_stream {
   my ($self, $res) = @_;
-  log_debug("closing HTTP connection");
-  for (0 .. scalar @{$self->streams}) {
-    if ($res == ($self->streams)[$_]) {
+  $self->log_debug("closing a streaming http connection");
+  for (0 .. scalar @{$self->streams} - 1) {
+    if ($res and $res == $self->streams->[$_]) {
       splice(@{$self->streams}, $_, 1);
     }
   }
@@ -143,7 +142,7 @@ sub handle_message {
   my $msg  = $req->uri->query_param('msg');
   my $chan = lc $req->uri->query_param('chan');
   my $session = $req->uri->query_param('session');
-  my $irc = $self->ircs->{$session};
+  my $irc = $self->irc->connection($session);
   return 200 unless $session;
   if (length $msg) {
     if ($msg =~ /^\/query (\S+)/) {
@@ -173,13 +172,13 @@ sub handle_message {
       }
     }
     elsif ($msg =~ /^\/me (.+)/) {
-      my $nick = $self->ircs->{$session}->nick_name;
+      my $nick = $irc->nick_name;
       $self->display_message($nick, $chan, $session, decode_utf8("• $1"));
       $irc->yield("ctcp", $chan, "ACTION $1");
     }
     else {
-      log_debug("sending message to $chan");
-      my $nick = $self->ircs->{$session}->nick_name;
+      $self->log_debug("sending message to $chan");
+      my $nick = $irc->nick_name;
       $self->display_message($nick, $chan, $session, decode_utf8($msg)); 
       $irc->yield("privmsg", $chan, $msg);
     }
@@ -197,7 +196,7 @@ sub handle_static {
   my ($ext) = ($file =~ /[^\.]\.(.+)$/);
   if (-e "data$file") {
     open my $fh, '<', "data$file";
-    log_debug("serving static file: $file");
+    $self->log_debug("serving static file: $file");
     if ($ext =~ /png|gif|jpg|jpeg/i) {
       $res->content_type("image/$ext"); 
     }
@@ -222,21 +221,21 @@ sub handle_static {
 
 sub send_index {
   my ($self, $req, $res) = @_;
-  log_debug("servering index");
+  $self->log_debug("serving index");
   $res->code(200);
   $res->streaming(0);
   $res->content_type('text/html; charset=utf-8');
   my $output = '';
   my $channels = [];
-  for my $irc (keys %{$self->ircs}) {
-    my $session = $self->ircs->{$irc}->session_id;
-    for my $channel (keys %{$self->ircs->{$irc}->channels}) {
+  for my $irc ($self->irc->connections) {
+    my $session = $irc->session_id;
+    for my $channel (keys %{$irc->channels}) {
       push @$channels, {
-        chanid => channel_id($channel, $session),
-        chan => $channel,
+        chanid  => channel_id($channel, $session),
+        chan    => $channel,
         session => $session,
-        topic => $self->ircs->{$irc}->channel_topic($channel),
-        server => $self->ircs->{$irc},
+        topic   => $irc->channel_topic($channel),
+        server  => $irc,
       }
     }
   }
@@ -250,7 +249,7 @@ sub send_index {
 
 sub send_config {
   my ($self, $req, $res) = @_;
-  log_debug("serving config");
+  $self->log_debug("serving config");
   $res->code(200);
   $res->streaming(0);
   $res->header(Connection => 'close');
@@ -258,7 +257,7 @@ sub send_config {
   $res->header("Cache-control" => "no-cache");
   my $output = '';
   $self->tt->process('config.tt', {
-    connections => $self->ircs,
+    connections => [ sort {$a->{alias} cmp $b->{alias}} $self->irc->connections ],
     config      => $self->config
   }, \$output);
   $res->content($output);
@@ -267,7 +266,7 @@ sub send_config {
 
 sub save_config {
   my ($self, $req, $res) = @_;
-  log_debug("saving config");
+  $self->log_debug("saving config");
   $res->code(200);
   $res->streaming(0);
   $res->header(Connection => 'close');
@@ -304,10 +303,10 @@ sub handle_autocomplete {
   my $query = $req->uri->query_param('msg');
   my $chan = $req->uri->query_param('chan');
   my $session_id = $req->uri->query_param('session');
-  my $irc = $self->ircs->{$session_id};
+  my $irc = $self->irc->connection($session_id);
   ($query) = $query =~ /((?:^\/)?[\d\w]*)$/;
   return 200 unless $query;
-  log_debug("handling autocomplete for $query");
+  $self->log_debug("handling autocomplete for $query");
   my @matches = sort {lc $a cmp lc $b} grep {/^\Q$query\E/i} $irc->channel_list($chan);
   push @matches, sort grep {/^\Q$query\E/i} map {"/$_"} @{$self->commands};
   my $html = '';
@@ -318,7 +317,7 @@ sub handle_autocomplete {
 
 sub not_found {
   my ($self, $req, $res) = @_;
-  log_debug("serving 404:", $req->uri->path);
+  $self->log_debug("serving 404:", $req->uri->path);
   $res->streaming(0);
   $res->header(Connection => 'close');
   $req->header(Connection => 'close');
@@ -353,7 +352,7 @@ sub display_event {
 sub display_message {
   my ($self, $nick, $channel, $session, $text) = @_;
   my $html = IRC::Formatting::HTML->formatted_string_to_html($text);
-  my $mynick = $self->ircs->{$session}->nick_name;
+  my $mynick = $self->irc->connection($session)->nick_name;
   my $msg = {
     type      => "message",
     event     => "say",
@@ -370,7 +369,6 @@ sub display_message {
   $self->tt->process("message.tt", $msg, \$html);
   $msg->{full_html} = $html;
   $self->send_data($msg);
-  log_debug("sending message to $channel") if $self->clients;
 }
 
 sub clients {
@@ -395,7 +393,7 @@ sub create_tab {
   $self->tt->process("tab.tt", $action, \$tab_html);
   $action->{html}{tab} = $tab_html;
   $self->send_data($action);
-  log_debug("sending a request for a new tab: $name") if $self->clients;
+  $self->log_debug("sending a request for a new tab: $name") if $self->clients;
 }
 
 sub close_tab {
@@ -408,11 +406,12 @@ sub close_tab {
     session   => $session,
     timestamp => make_timestamp(),
   });
-  log_debug("sending a request to close a tab: $name") if $self->clients;
+  $self->log_debug("sending a request to close a tab: $name") if $self->clients;
 }
 
 sub send_data {
   my ($self, $data) = @_;
+  return unless $self->clients;
   for my $res (@{$self->streams}) {
     if ($data->{type} eq "message") {
       push @{$res->{msgs}}, $data;
@@ -426,7 +425,7 @@ sub send_data {
 
 sub show_nicks {
   my ($self, $chan, $session) = @_;
-  my $irc = $self->ircs->{$session};
+  my $irc = $self->irc->connection($session);
   $self->send_data({
     type    => "message",
     event   => "announce",
@@ -469,7 +468,8 @@ sub make_timestamp {
 }
 
 sub log_debug {
-  print STDERR join " ", @_, "\n";
+  my $self = shift;
+  print STDERR join " ", @_, "\n" if $self->config->{debug};
 }
 
 sub log_info {
