@@ -52,17 +52,23 @@ div#config select {
     outline: 0 none;
 }
 
-div#config div.channel_controls {
+div#config div#server_controls {
+  position: absolute;
+  bottom: 18px;
+  left: 6px;
+}
+
+div#config div.controls {
   clear: both;
   font-size: 0.7em;
 }
 
-div#config div.channel_controls a {
+div#config div.controls a {
   text-decoration: none;
   margin: 0 5px 0 0;
 }
 
-div#config div.channel_controls a:hover {
+div#config div.controls a:hover {
   text-shadow: none;
   text-decoration: underline;
 }

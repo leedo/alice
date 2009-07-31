@@ -33,14 +33,14 @@ function playAudio(image, audio) {
     var url = image.nextSibling.href;
     audio = new Audio(url);
     audio.addEventListener('ended', function () {
-      image.src = '/static/style/default/image/play.png';
+      image.src = '/static/styles/default/image/play.png';
       image.onclick = function () { playAudio(image, audio) };
     });
   }
   audio.play();
   image.onclick = function() {
     audio.pause();
-    this.src = '/static/style/default/image/play.png';
+    this.src = '/static/styles/default/image/play.png';
     this.onclick = function () { playAudio(this, audio) };
   };
 }

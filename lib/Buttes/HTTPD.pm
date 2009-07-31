@@ -1,14 +1,19 @@
 package Buttes::HTTPD;
 
+use strict;
+use warnings;
+
 use Moose;
 use bytes;
 use Encode;
 use Time::HiRes qw/time/;
+use POE;
 use POE::Component::Server::HTTP;
 use JSON;
 use Template;
 use URI::QueryParam;
-use IRC::Formatting;
+use IRC::Formatting::HTML;
+use YAML qw/DumpFile/;
 
 has 'config' => (
   is  => 'ro',
@@ -55,9 +60,8 @@ has 'seperator' => (
 has 'commands' => (
   is => 'ro',
   isa => 'ArrayRef[Str]',
-  default => sub {
-    [qw/join part names topic me query/];
-  },
+  default => sub { [qw/join part names topic me query/] },
+  lazy => 1,
 );
 
 has 'tt' => (
@@ -139,16 +143,17 @@ sub handle_message {
   my $msg  = $req->uri->query_param('msg');
   my $chan = lc $req->uri->query_param('chan');
   my $session = $req->uri->query_param('session');
+  my $irc = $self->ircs->{$session};
   return 200 unless $session;
   if (length $msg) {
     if ($msg =~ /^\/query (\S+)/) {
       $self->create_tab($1, $session);
     }
     elsif ($msg =~ /^\/join (.+)/) {
-      POE::Kernel->post($session, "join", $1);
+      $irc->yield("join", $1);
     }
     elsif ($msg =~ /^\/part\s?(.+)?/) {
-      POE::Kernel->post($session, "part", $1 || $chan);
+      $irc->yield("part", $1 || $chan);
     }
     elsif ($msg =~ /^\/window new (.+)/) {
       $self->create_tab($1, $session);
@@ -158,25 +163,25 @@ sub handle_message {
     }
     elsif ($msg =~ /^\/topic\s?(.+)?/) {
       if ($1) {
-        POE::Kernel->post($session, "topic", $chan, $1);
+        $irc->yield("topic", $chan, $1);
       }
       else {
-        my $topic = POE::Kernel->call($session, "channel_topic", $chan);
+        my $topic = $irc->channel_topic;
         $self->send_topic(
           $topic->{SetBy}, $chan, $session, decode_utf8($topic->{Value})
         );
       }
     }
     elsif ($msg =~ /^\/me (.+)/) {
-      my $nick = POE::Kernel->call($session, "nick_name");
+      my $nick = $self->ircs->{$session}->nick_name;
       $self->display_message($nick, $chan, $session, decode_utf8("• $1"));
-      POE::Kernel->post($session, "ctcp", $chan, "ACTION $1");
+      $irc->yield("ctcp", $chan, "ACTION $1");
     }
     else {
       log_debug("sending message to $chan");
-      my $nick = POE::Kernel->call($session, "nick_name");
+      my $nick = $self->ircs->{$session}->nick_name;
       $self->display_message($nick, $chan, $session, decode_utf8($msg)); 
-      POE::Kernel->post($session, "privmsg", $chan, $msg);
+      $irc->yield("privmsg", $chan, $msg);
     }
   }
 
@@ -299,11 +304,11 @@ sub handle_autocomplete {
   my $query = $req->uri->query_param('msg');
   my $chan = $req->uri->query_param('chan');
   my $session_id = $req->uri->query_param('session');
+  my $irc = $self->ircs->{$session_id};
   ($query) = $query =~ /((?:^\/)?[\d\w]*)$/;
   return 200 unless $query;
   log_debug("handling autocomplete for $query");
-  my @members = POE::Kernel->call($session_id, "channel_list", $chan);
-  my @matches = sort {lc $a cmp lc $b} grep {/^\Q$query\E/i} @members;
+  my @matches = sort {lc $a cmp lc $b} grep {/^\Q$query\E/i} $irc->channel_list($chan);
   push @matches, sort grep {/^\Q$query\E/i} map {"/$_"} @{$self->commands};
   my $html = '';
   $self->tt->process('autocomplete.tt',{matches => \@matches}, \$html) or die $!;
@@ -347,8 +352,8 @@ sub display_event {
 
 sub display_message {
   my ($self, $nick, $channel, $session, $text) = @_;
-  my $html = IRC::Formatting->formatted_string_to_html($text);
-  my $mynick = POE::Kernel->call($session, "nick_name");
+  my $html = IRC::Formatting::HTML->formatted_string_to_html($text);
+  my $mynick = $self->ircs->{$session}->nick_name;
   my $msg = {
     type      => "message",
     event     => "say",
@@ -421,14 +426,14 @@ sub send_data {
 
 sub show_nicks {
   my ($self, $chan, $session) = @_;
-  my @nicks = POE::Kernel->call($session, "channel_list", $chan);
+  my $irc = $self->ircs->{$session};
   $self->send_data({
     type    => "message",
     event   => "announce",
     chanid  => channel_id($chan, $session),
     chan    => $chan,
     session => $session,
-    str     => format_nick_table(@nicks)
+    str     => format_nick_table($irc->channel_list($chan))
   });
 }
 
@@ -472,4 +477,5 @@ sub log_info {
 }
 
 __PACKAGE__->meta->make_immutable;
+no Moose;
 1;

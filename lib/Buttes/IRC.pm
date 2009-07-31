@@ -1,5 +1,8 @@
 package Buttes::IRC;
 
+use strict;
+use warnings;
+
 use POE;
 use POE::Component::IRC;
 use POE::Component::IRC::State;
@@ -23,6 +26,10 @@ has 'httpd' => (
   is  => 'ro',
   weak_ref => 1,
   required => 1,
+  trigger => sub {
+    my $self = shift;
+    $self->httpd->ircs($self->connections);
+  },
 );
 
 sub BUILD {
@@ -50,11 +57,11 @@ sub BUILD {
 sub add_server {
   my ($self, $name, $server) = @_;
   my $irc = POE::Component::IRC::State->spawn(
-    alias   => $name,
-    nick    => $server->{nick},
-    ircname => $server->{ircname},
-    server  => $server->{host},
-    port    => $server->{port},
+    alias    => $name,
+    nick     => $server->{nick},
+    ircname  => $server->{ircname},
+    server   => $server->{host},
+    port     => $server->{port},
     password => $server->{password},
     username => $server->{username},
   );
@@ -168,9 +175,6 @@ sub log_debug {
   print STDERR join " ", @_, "\n";
 }
 
-sub log_info {
-  print STDERR join " ", @_, "\n";
-}
-
 __PACKAGE__->meta->make_immutable;
+no Moose;
 1;

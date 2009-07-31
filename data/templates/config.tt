@@ -31,6 +31,10 @@
     </li>
     [% END %]
   </ul>
+  <div class="controls" id="server_controls">
+     <a href="#" onclick="return addServer()">Add</a>
+     <a href="#" onclick="return removeServer()">Remove</a>
+  </div>
   
   <form id="config_data" onsubmit="return buttesfire.submitConfig(this)">
   [% FOR sessionid IN connections.keys.sort %]
@@ -78,7 +82,7 @@
         <option value="[% channel %]">[% channel %]</option>
         [% END %]
       </select>
-      <div class="channel_controls">
+      <div class="controls">
         <a href="#" onclick="return addChannel([% sessionid %])">New</a>
         <a href="#" onclick="return removeChannels([% sessionid %])">Remove</a>
       </div>
