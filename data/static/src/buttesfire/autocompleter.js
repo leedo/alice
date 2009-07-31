@@ -6,7 +6,7 @@ Buttesfire.Autocompleter = Class.create(Ajax.Autocompleter, {
           this.markNext();
           this.render();
           Event.stop(event);
-          scrollToBottom(true);
+          buttesfire.activeChannel.scrollToBottom(true);
           return;
         case Event.KEY_RETURN:
           this.selectEntry();

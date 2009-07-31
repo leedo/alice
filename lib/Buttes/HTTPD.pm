@@ -38,6 +38,14 @@ has 'config' => (
   },
 );
 
+before qw/send_config save_config send_index setup_stream not_found
+          handle_message handle_static handle_autocomplete/ => sub {
+  $_[1]->header(Connection => 'close');
+  $_[2]->header(Connection => 'close');
+  $_[2]->streaming(0);
+  $_[2]->code(200);
+};
+
 has 'irc' => (
   is  => 'rw',
   isa => 'Buttes::IRC',
@@ -76,15 +84,9 @@ has 'tt' => (
 
 sub setup_stream {
   my ($self, $req, $res) = @_;
-  $res->code(200);
-  $res->header(Connection => 'close');
-  $req->header(Connection => 'close');
   
   # XHR tries to reconnect again with this header for some reason
-  if (defined $req->header('error')) {
-    $res->streaming(0);
-    return 200;
-  }
+  return 200 if defined $req->header('error');
   
   $self->log_debug("opening a streaming http connection");
   $res->streaming(1);
@@ -135,10 +137,6 @@ sub end_stream {
 
 sub handle_message {
   my ($self, $req, $res) = @_;
-  $res->streaming(0);
-  $res->code(200);
-  $res->header(Connection => 'close');
-  $req->header(Connection => 'close');
   my $msg  = $req->uri->query_param('msg');
   my $chan = lc $req->uri->query_param('chan');
   my $session = $req->uri->query_param('session');
@@ -189,9 +187,6 @@ sub handle_message {
 
 sub handle_static {
   my ($self, $req, $res) = @_;
-  $res->streaming(0);
-  $res->header(Connection => 'close');
-  $req->header(Connection => 'close');
   my $file = $req->uri->path;
   my ($ext) = ($file =~ /[^\.]\.(.+)$/);
   if (-e "data$file") {
@@ -212,7 +207,6 @@ sub handle_static {
       $self->not_found($req, $res);
     }
     my @file = <$fh>;
-    $res->code(200);
     $res->content(join "", @file);
     return 200;
   }
@@ -222,8 +216,6 @@ sub handle_static {
 sub send_index {
   my ($self, $req, $res) = @_;
   $self->log_debug("serving index");
-  $res->code(200);
-  $res->streaming(0);
   $res->content_type('text/html; charset=utf-8');
   my $output = '';
   my $channels = [];
@@ -250,15 +242,12 @@ sub send_index {
 sub send_config {
   my ($self, $req, $res) = @_;
   $self->log_debug("serving config");
-  $res->code(200);
-  $res->streaming(0);
-  $res->header(Connection => 'close');
-  $req->header(Connection => 'close');
   $res->header("Cache-control" => "no-cache");
   my $output = '';
   $self->tt->process('config.tt', {
-    connections => [ sort {$a->{alias} cmp $b->{alias}} $self->irc->connections ],
-    config      => $self->config
+    config      => $self->config,
+    connections => [ sort {$a->{alias} cmp $b->{alias}}
+                     $self->irc->connections ],
   }, \$output);
   $res->content($output);
   return 200;
@@ -267,10 +256,6 @@ sub send_config {
 sub save_config {
   my ($self, $req, $res) = @_;
   $self->log_debug("saving config");
-  $res->code(200);
-  $res->streaming(0);
-  $res->header(Connection => 'close');
-  $req->header(Connection => 'close');
   my $new_config = {};
   my $servers;
   for my $name ($req->uri->query_param) {
@@ -295,10 +280,6 @@ sub save_config {
 
 sub handle_autocomplete {
   my ($self, $req, $res) = @_;
-  $res->code(200);
-  $res->header(Connection => 'close');
-  $req->header(Connection => 'close');
-  $res->streaming(0);
   $res->content_type('text/html; charset=utf-8');
   my $query = $req->uri->query_param('msg');
   my $chan = $req->uri->query_param('chan');
@@ -318,9 +299,6 @@ sub handle_autocomplete {
 sub not_found {
   my ($self, $req, $res) = @_;
   $self->log_debug("serving 404:", $req->uri->path);
-  $res->streaming(0);
-  $res->header(Connection => 'close');
-  $req->header(Connection => 'close');
   $res->code(404);
   return 404;
 }
