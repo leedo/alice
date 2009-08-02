@@ -28,7 +28,7 @@ function loadInlineImage(image) {
 }
 
 function playAudio(image, audio) {
-  image.src = '/static/style/default/image/pause.png'; 
+  image.src = '/static/styles/default/image/pause.png'; 
   if (! audio) {
     var url = image.nextSibling.href;
     audio = new Audio(url);
