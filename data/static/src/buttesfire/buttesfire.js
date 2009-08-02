@@ -198,3 +198,4 @@ document.observe("dom:loaded", function () {
 })
 window.onresize = function () {
   buttesfire.activeChannel().scrollToBottom()};
+window.status = " ";

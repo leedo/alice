@@ -1,0 +1,3 @@
+[submodule "data/static/src/prototype"]
+	path = data/static/src/prototype
+	url = git://github.com/sstephenson/prototype.git
