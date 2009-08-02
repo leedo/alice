@@ -6,6 +6,7 @@ use warnings;
 use POE;
 use POE::Component::IRC;
 use POE::Component::IRC::State;
+use POE::Component::IRC::Plugin::Connector;
 use Encode;
 use Moose;
 
@@ -86,6 +87,7 @@ sub start {
 
 sub registered {
   my $irc = $_[OBJECT]->connection($_[SENDER]->ID);
+  $irc->plugin_add('Connector' => POE::Component::IRC::Plugin::Connector->new());
   $irc->yield(connect => {});
   return;
 }

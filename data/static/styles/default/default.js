@@ -3,7 +3,7 @@ buttesfire.addFilters([
     var filtered = content;
     filtered = filtered.replace(
       /(<a href=\"(:?.*?\.(:?wav|mp3|ogg|aiff))")/gi,
-      "<img src=\"/static?f=play.png\" onclick=\"playAudio(this)\" class=\"audio\"/>$1");
+      "<img src=\"/static/styles/default/image/play.png\" onclick=\"playAudio(this)\" class=\"audio\"/>$1");
     return filtered;
   },
   function (content) {

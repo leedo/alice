@@ -111,7 +111,7 @@ sub handle_stream {
     }
     $output .= to_json({msgs => $res->{msgs}, actions => $res->{actions}, time => time});
     my $padding = " " x (1024 - bytes::length $output);
-    $res->send($output . $padding . "\n".$self->seperator."\n");
+    $res->send($output . $padding . "\n" . $self->seperator . "\n");
     if ($res->is_error) {
       $self->end_stream($res);
       return;
