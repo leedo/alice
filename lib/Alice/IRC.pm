@@ -76,6 +76,7 @@ sub add_server {
     port     => $server->{port},
     password => $server->{password},
     username => $server->{username},
+    UseSSL   => $server->{ssl},
   );
   $self->connection_map->{$irc->session_id} = $irc;
 }

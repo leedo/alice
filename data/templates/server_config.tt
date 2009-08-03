@@ -1,0 +1,49 @@
+<div class="setting active" id="setting_[% name %]">
+    [% connection.config = config.servers.${connection.alias} %]
+  <div class="field" style="width:138px">
+    <label>Name</label>
+    <span>[% name %]</span>
+    <input type="hidden" name="[% name %]_name" value="[% name %]" />
+  </div>
+  <div class="field" style="width:138px">
+    <label>Status</label>
+    <span>unsaved</span>
+    </div>
+  <div class="field clear">
+    <label>Server address</label>
+    <input type="text" name="[% name %]_host" value="" size="24"/>
+  </div>
+  <div class="field" style="width:50px">
+    <label>Port</label>
+    <input type="text" name="[% name %]_port" value="" size="6" />
+    <input type="checkbox" name="[% name %]_ssl" />
+  </div>
+  <div class="field clear">
+    <label>Nick</label>
+    <input type="text" name="[% name %]_nick" value="" size="15" />
+  </div>
+  <div class="field">
+    <label>Ircname</label>
+    <input type="text" name="[% name %]_ircname" value="" size="15" />
+  </div>
+  <div class="field clear">
+    <label>Username</label>
+    <input type="text" name="[% name %]_username" value="" size="15" />
+  </div>
+  <div class="field">
+    <label>Password</label>
+    <input type="text" name="[% name %]_password" value="" size="15" />
+  </div>
+  <div class="field clear">
+    <label>Channels</label>
+    <select name="[% name %]_channels" multiple="multiple" id="channels_[% name %]" class="channelselect">
+      [% FOR channel IN connection.config.channels %]
+      <option value="">[% channel %]</option>
+      [% END %]
+    </select>
+    <div class="controls">
+      <a href="#" onclick="return addChannel('[% name %]')">New</a>
+      <a href="#" onclick="return removeChannels('[% name %]')">Remove</a>
+    </div>
+  </div>
+</div>

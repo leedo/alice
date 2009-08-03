@@ -13,8 +13,15 @@ use Sys::Hostname;
 use POE;
 
 $0 = 'Alice';
-my $config = LoadFile($ENV{HOME}.'/.alice.yaml');
-$config->{port} ||= 8080;
+
+my $config = {
+  port  => 8080,
+  debug => 1,
+  style => 'default',
+};
+if (-e $ENV{HOME}.'/.alice.yaml') {
+  eval { $config = LoadFile($ENV{HOME}.'/.alice.yaml') };
+}
   
 BEGIN { $SIG{__WARN__} = sub { warn $_[0] if $config->{debug} } };
 

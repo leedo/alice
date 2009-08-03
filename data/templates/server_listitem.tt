@@ -1,0 +1,4 @@
+<li class="disconnected active"
+    onclick="showConnection('[% name %]')" id="menu_[% name %]">
+  [% name %]
+</li>

@@ -18,6 +18,21 @@
         if (option.selected) option.remove()});
       return false;
     };
+    addServer = function () {
+      var name = prompt("Please enter a name for this server.");
+      // TODO: test if this server is already being used ...
+      new Ajax.Request("/serverconfig", {
+        parameters: {name: name},
+        method: 'get',
+        onSuccess: function (trans) {
+          var data = trans.responseText.evalJSON();
+          $$('#config_data div.setting').invoke('removeClassName',"active");
+          $$('#connections li').invoke('removeClassName',"active");
+          $('config_data').insert(data.config);
+          $('connections').insert(data.listitem);
+        }
+      })
+    };
   </script>
   
   <ul id="connections">
@@ -52,11 +67,15 @@
       </div>
     <div class="field clear">
       <label>Server address</label>
-      <input type="text" name="[% sessionid %]_host" value="[% connection.config.host %]" size="24"/>
+      <input type="text" name="[% sessionid %]_host" value="[% connection.config.host %]" size="15"/>
     </div>
-    <div class="field" style="width:50px">
+    <div class="field">
       <label>Port</label>
-      <input type="text" name="[% sessionid %]_port" value="[% connection.config.port %]" size="6" />
+      <input type="text" name="[% sessionid %]_port" value="[% connection.config.port %]" size="6" style="float:left"/>
+      <div style="float:left">
+      <input type="checkbox" name="[% sessionid %]_ssl"[% IF connection.config.ssl %] checked="checked"[% END %] style="display:inline;margin-right:0px"/>
+      <span style="font-size:0.7em">SSL</span>
+      </div>
     </div>
     <div class="field clear">
       <label>Nick</label>

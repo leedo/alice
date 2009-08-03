@@ -24,6 +24,7 @@ has 'config' => (
     POE::Component::Server::HTTP->new(
       Port            => $self->config->{port},
       ContentHandler  => {
+        '/serverconfig' => sub{$self->server_config(@_)},
         '/config'       => sub{$self->send_config(@_)},
         '/save'         => sub{$self->save_config(@_)},
         '/view'         => sub{$self->send_index(@_)},
@@ -39,7 +40,7 @@ has 'config' => (
 );
 
 before qw/send_config save_config send_index setup_stream not_found
-          handle_message handle_static handle_autocomplete/ => sub {
+          handle_message handle_static handle_autocomplete server_config/ => sub {
   $_[1]->header(Connection => 'close');
   $_[2]->header(Connection => 'close');
   $_[2]->streaming(0);
@@ -253,13 +254,28 @@ sub send_config {
   return 200;
 }
 
+sub server_config {
+  my ($self, $req, $res) = @_;
+  $self->log_debug("serving blank server config");
+  $res->header("Cache-control" => "no-cache");
+  my $name = $req->uri->query_param('name');
+  $self->log_debug($name);
+  my $config = '';
+  $self->tt->process('server_config.tt', {name => $name}, \$config);
+  my $listitem = '';
+  $self->tt->process('server_listitem.tt', {name => $name}, \$listitem);
+  $res->content(to_json({config => $config, listitem => $listitem}));
+  return 200;
+}
+
 sub save_config {
   my ($self, $req, $res) = @_;
   $self->log_debug("saving config");
   my $new_config = {};
   my $servers;
   for my $name ($req->uri->query_param) {
-    if ($name =~ /^(\d+)_(.+)/) {
+    next unless $req->uri->query_param($name);
+    if ($name =~ /^(.+)_(.+)/) {
       if ($2 eq "channels") {
         $new_config->{$1}{$2} = [$req->uri->query_param($name)];
       }
@@ -269,11 +285,7 @@ sub save_config {
     }
   }
   for my $newserver (values %$new_config) {
-    if (my $oldserver = $self->config->{servers}{$newserver->{name}}) {
-      for my $field (keys %$newserver) {
-        $oldserver->{$field} = $newserver->{$field};
-      }
-    }
+    $self->config->{servers}{$newserver->{name}} = $newserver;
   }
   DumpFile($ENV{HOME}.'/.alice.yaml', $self->config);
 }

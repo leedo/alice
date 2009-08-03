@@ -12,10 +12,11 @@ requires:
   Moose: 0
   POE::Component::IRC: 0
   POE::Component::Server::HTTP: 0
+  POE::Component::SSLify: 0
   Template: 0
   HTML::Entities: 0
-  List::MoreUtils: 0.25_01
-  IRC::Formatting::HTML: 0
+  List::MoreUtils: 0.22
+  IRC::Formatting::HTML: 0.2
   local::lib: 0
 urls:
   license: http://dev.perl.org/licenses/

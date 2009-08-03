@@ -93,7 +93,6 @@ ul#tabs li.active:hover {
 
 ul#tabs li:hover {
   background: #ccc;
-  cursor: default;
 }
 
 ul#tabs li.leftof_active {
@@ -122,10 +121,6 @@ ul#controls li {
 
 ul#controls li:hover {
   background: #ccc;
-}
-
-ul#controls li.disabled {
-  display: none;
 }
 
 div.topic {
@@ -244,6 +239,7 @@ a.nick {
   color: #000;
   text-decoration: none;
 }
+
 div.tab_button {
   background: url(image/roomTab.png);
   width: 16px;
