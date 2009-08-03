@@ -18,7 +18,7 @@ $config->{port} ||= 8080;
   
 BEGIN { $SIG{__WARN__} = sub { warn $_[0] if $config->{debug} } };
 
-print STDERR "You can view your IRC session at: http://".hostname.":".$config->{port}."/view";
+print STDERR "You can view your IRC session at: http://".hostname.":".$config->{port}."/view\n";
 
 my $httpd = Alice::HTTPD->new(config => $config);
 my $irc = Alice::IRC->new(config => $config, httpd => $httpd);

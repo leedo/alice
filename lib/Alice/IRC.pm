@@ -43,6 +43,7 @@ sub BUILD {
       $self => {irc_public      => "public"},
       $self => {irc_001         => "connected"},
       $self => {irc_registered  => "registered"},
+      $self => {irc_disconnected => "disconnected"},
       $self => {irc_join        => "joined"},
       $self => {irc_part        => "part"},
       $self => {irc_quit        => "quit"},
@@ -87,7 +88,8 @@ sub start {
 
 sub registered {
   my $irc = $_[OBJECT]->connection($_[SENDER]->ID);
-  $irc->plugin_add('Connector' => POE::Component::IRC::Plugin::Connector->new());
+  $irc->{connector} = POE::Component::IRC::Plugin::Connector->new();
+  $irc->plugin_add('Connector' => $irc->{connector});
   $irc->yield(connect => {});
   return;
 }
@@ -95,11 +97,17 @@ sub registered {
 sub connected {
   my $self = $_[OBJECT];
   my $irc = $self->connection($_[SENDER]->ID);
-  $self->log_debug("connected to " . $irc->{alias});
+  $self->log_info("connected to " . $irc->{alias});
   for (@{$self->config->{servers}{$irc->{alias}}{channels}}) {
     $self->log_debug("joining $_");
     $irc->yield( join => $_ );
   }
+}
+
+sub disconnected {
+  my $self = $_[OBJECT];
+  my $irc = $self->connection($_[SENDER]->ID);
+  $self->log_info("disconnected from " . $irc->{alias});
 }
 
 sub public {
@@ -186,6 +194,11 @@ sub topic {
 sub log_debug {
   my $self = shift;
   print STDERR join " ", @_, "\n" if $self->config->{debug};
+}
+
+sub log_info {
+  my $self = shift;
+  print STDERR join " ", @_, "\n";
 }
 
 __PACKAGE__->meta->make_immutable;
