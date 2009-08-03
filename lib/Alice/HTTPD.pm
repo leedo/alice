@@ -285,6 +285,9 @@ sub save_config {
     }
   }
   for my $newserver (values %$new_config) {
+    if (! exists $self->config->{servers}{$newserver->{name}}) {
+      $self->irc->add_server($newserver->{name}, $newserver);
+    }
     $self->config->{servers}{$newserver->{name}} = $newserver;
   }
   DumpFile($ENV{HOME}.'/.alice.yaml', $self->config);

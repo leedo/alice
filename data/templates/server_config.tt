@@ -11,13 +11,16 @@
     </div>
   <div class="field clear">
     <label>Server address</label>
-    <input type="text" name="[% name %]_host" value="" size="24"/>
+    <input type="text" name="[% name %]_host" value="" size="15"/>
   </div>
-  <div class="field" style="width:50px">
+  <div class="field">
     <label>Port</label>
-    <input type="text" name="[% name %]_port" value="" size="6" />
-    <input type="checkbox" name="[% name %]_ssl" />
-  </div>
+    <input type="text" name="[% name %]_port" value="" size="6" style="float:left"/>
+    <div style="float:left">
+    <input type="checkbox" name="[% name %]_ssl"[% IF connection.config.ssl %] checked="checked"[% END %] style="display:inline;margin-right:0px"/>
+    <span style="font-size:0.7em">SSL</span>
+    </div>
+  </div
   <div class="field clear">
     <label>Nick</label>
     <input type="text" name="[% name %]_nick" value="" size="15" />

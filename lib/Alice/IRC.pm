@@ -33,27 +33,12 @@ has 'httpd' => (
   },
 );
 
+has session => is => 'rw';
+
 sub BUILD {
   my $self = shift;
   $self->add_server($_, $self->config->{servers}{$_})
     for keys %{$self->config->{servers}};
-  POE::Session->create(
-    object_states => [
-      $self => {_start          => "start"},
-      $self => {irc_public      => "public"},
-      $self => {irc_001         => "connected"},
-      $self => {irc_registered  => "registered"},
-      $self => {irc_disconnected => "disconnected"},
-      $self => {irc_join        => "joined"},
-      $self => {irc_part        => "part"},
-      $self => {irc_quit        => "quit"},
-      $self => {irc_chan_sync   => "chan_sync"},
-      $self => {irc_topic       => "topic"},
-      $self => {irc_ctcp_action => "action"},
-      $self => {irc_nick        => "nick"},
-      $self => {irc_msg         => "msg"},
-    ],
-  );
 }
 
 sub connection {
@@ -78,21 +63,35 @@ sub add_server {
     username => $server->{username},
     UseSSL   => $server->{ssl},
   );
+  POE::Session->create(
+    object_states => [
+      $self => {_start          => "start"},
+      $self => {irc_public      => "public"},
+      $self => {irc_001         => "connected"},
+      $self => {irc_disconnected => "disconnected"},
+      $self => {irc_join        => "joined"},
+      $self => {irc_part        => "part"},
+      $self => {irc_quit        => "quit"},
+      $self => {irc_chan_sync   => "chan_sync"},
+      $self => {irc_topic       => "topic"},
+      $self => {irc_ctcp_action => "action"},
+      $self => {irc_nick        => "nick"},
+      $self => {irc_msg         => "msg"},
+    ],
+    heap => {irc => $irc}
+  );
   $self->connection_map->{$irc->session_id} = $irc;
+  return $irc;
 }
 
 sub start {
-  my ($kernel, $session) = @_[KERNEL, SESSION];
-  $kernel->signal($kernel, 'POCOIRC_REGISTER', $session->ID, 'all');
-  return:
-}
-
-sub registered {
-  my $irc = $_[OBJECT]->connection($_[SENDER]->ID);
+  my $self = $_[OBJECT];
+  my $irc = $_[HEAP]->{irc};
   $irc->{connector} = POE::Component::IRC::Plugin::Connector->new();
   $irc->plugin_add('Connector' => $irc->{connector});
+  $irc->yield(register => 'all');
   $irc->yield(connect => {});
-  return;
+  $_[HEAP] = undef;
 }
 
 sub connected {
