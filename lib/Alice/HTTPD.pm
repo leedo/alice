@@ -1,4 +1,4 @@
-package Buttes::HTTPD;
+package Alice::HTTPD;
 
 use strict;
 use warnings;
@@ -48,7 +48,7 @@ before qw/send_config save_config send_index setup_stream not_found
 
 has 'irc' => (
   is  => 'rw',
-  isa => 'Buttes::IRC',
+  isa => 'Alice::IRC',
   weak_ref => 1,
 );
 
@@ -61,7 +61,7 @@ has 'streams' => (
 has 'seperator' => (
   is  => 'ro',
   isa => 'Str',
-  default => '--xbuttesfirex',
+  default => '--xalicex',
 );
 
 has 'commands' => (
@@ -90,7 +90,7 @@ sub setup_stream {
   
   $self->log_debug("opening a streaming http connection");
   $res->streaming(1);
-  $res->content_type('multipart/mixed; boundary=xbuttesfirex; charset=utf-8');
+  $res->content_type('multipart/mixed; boundary=xalicex; charset=utf-8');
   $res->{msgs} = [];
   $res->{actions} = [];
   push @{$self->streams}, $res;
@@ -275,7 +275,7 @@ sub save_config {
       }
     }
   }
-  DumpFile($ENV{HOME}.'/.buttesfire.yaml', $self->config);
+  DumpFile($ENV{HOME}.'/.alice.yaml', $self->config);
 }
 
 sub handle_autocomplete {

@@ -35,7 +35,7 @@
      <a href="#" onclick="return removeServer()">Remove</a>
   </div>
   
-  <form id="config_data" onsubmit="return buttesfire.submitConfig(this)">
+  <form id="config_data" onsubmit="return alice.submitConfig(this)">
   [% FOR connection IN connections %]
     [% sessionid = connection.session_id %]
   <div class="setting[% IF loop.first %] active[% END %]" id="setting_[% sessionid %]">
@@ -89,7 +89,7 @@
   </div>  
   [% END %]
   <div id="buttons">
-    <button onclick="buttesfire.toggleConfig(); return false;">Cancel</button>
+    <button onclick="alice.toggleConfig(); return false;">Cancel</button>
     <button type="submit">Save</button>
   </div>
   </form>

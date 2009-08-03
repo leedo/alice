@@ -3,13 +3,13 @@
 //= require <scriptaculous/effects>
 //= require <scriptaculous/controls>
 
-var Buttesfire = Class.create({
+var Alice = Class.create({
   initialize: function () {
     this.isCtrl = false;
     this.channels = [];
     this.channelLookup = [];
     this.previousFocus = 0;
-    this.connection = new Buttesfire.Connection;
+    this.connection = new Alice.Connection;
     this.filters = [ this.linkFilter ];
     document.onkeyup = this.onKeyUp.bind(this);
     document.onkeydown = this.onKeyDown.bind(this);
@@ -46,10 +46,10 @@ var Buttesfire = Class.create({
   },
   
   removeChannel: function (channel) {
-    if (channel.active) buttesfire.focusLast();
-    buttesfire.channels.splice(buttesfire.channelLookup[channel.id], 1);
-    buttesfire.channelLookup[channel.id] = null;
-    buttesfire.connection.partChannel(channel);
+    if (channel.active) alice.focusLast();
+    alice.channels.splice(alice.channelLookup[channel.id], 1);
+    alice.channelLookup[channel.id] = null;
+    alice.connection.partChannel(channel);
   },
   
   getChannel: function (channelId) {
@@ -176,7 +176,7 @@ var Buttesfire = Class.create({
   },
   
   displayMessage: function (message) {
-    var channel = buttesfire.getChannel(message.chanid);
+    var channel = alice.getChannel(message.chanid);
     if (! channel) {
       this.connection.requestTab(message.chan, message.session, message);
       return;
@@ -185,17 +185,17 @@ var Buttesfire = Class.create({
   }
 });
 
-//= require <buttesfire/channel>
-//= require <buttesfire/connection>
-//= require <buttesfire/autocompleter>
-//= require <buttesfire/util>
+//= require <alice/channel>
+//= require <alice/connection>
+//= require <alice/autocompleter>
+//= require <alice/util>
 
-var buttesfire = new Buttesfire();
+var alice = new Alice();
 document.observe("dom:loaded", function () {
   $$("div.topic").each(function (topic){
-    topic.innerHTML = buttesfire.linkFilter(topic.innerHTML)});
-  $('config_button').observe("click", buttesfire.toggleConfig.bind(buttesfire));
+    topic.innerHTML = alice.linkFilter(topic.innerHTML)});
+  $('config_button').observe("click", alice.toggleConfig.bind(alice));
 })
 window.onresize = function () {
-  buttesfire.activeChannel().scrollToBottom()};
+  alice.activeChannel().scrollToBottom()};
 window.status = " ";

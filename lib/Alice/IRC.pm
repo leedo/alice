@@ -1,4 +1,4 @@
-package Buttes::IRC;
+package Alice::IRC;
 
 use strict;
 use warnings;
@@ -23,7 +23,7 @@ has 'config' => (
 );
 
 has 'httpd' => (
-  isa => 'Buttes::HTTPD',
+  isa => 'Alice::HTTPD',
   is  => 'ro',
   weak_ref => 1,
   required => 1,

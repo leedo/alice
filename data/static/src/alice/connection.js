@@ -1,9 +1,9 @@
-Buttesfire.Connection = Class.create({
+Alice.Connection = Class.create({
   initialize: function () {
     this.len = 0;
     this.aborting = false;
     this.req = null;
-    this.seperator = "--xbuttesfirex\n";
+    this.seperator = "--xalicex\n";
   
   },
   
@@ -56,8 +56,8 @@ Buttesfire.Connection = Class.create({
       console.log(err);
       return;
     }
-    buttesfire.handleActions(data.actions);
-    buttesfire.displayMessages(data.msgs);
+    alice.handleActions(data.actions);
+    alice.displayMessages(data.msgs);
     
     // reconnect if lag is over 5 seconds... not a good way to do this.
     var lag = time / 1000 -  data.time;
@@ -74,7 +74,7 @@ Buttesfire.Connection = Class.create({
       parameters: {session: session, msg: "/window new " + name},
       onSuccess: function (trans) {
         connection.handleUpdate(trans);
-        if (message) buttesfire.displayMessage(message);
+        if (message) alice.displayMessage(message);
       }
     });
   },

@@ -1,4 +1,4 @@
-buttesfire.addFilters([
+alice.addFilters([
   function (content) {
     var filtered = content;
     filtered = filtered.replace(

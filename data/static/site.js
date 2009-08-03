@@ -6925,13 +6925,13 @@ Form.Element.DelayedObserver = Class.create({
   }
 });
 
-var Buttesfire = Class.create({
+var Alice = Class.create({
   initialize: function () {
     this.isCtrl = false;
     this.channels = [];
     this.channelLookup = [];
     this.previousFocus = 0;
-    this.connection = new Buttesfire.Connection;
+    this.connection = new Alice.Connection;
     this.filters = [ this.linkFilter ];
     document.onkeyup = this.onKeyUp.bind(this);
     document.onkeydown = this.onKeyDown.bind(this);
@@ -6968,10 +6968,10 @@ var Buttesfire = Class.create({
   },
 
   removeChannel: function (channel) {
-    if (channel.active) buttesfire.focusLast();
-    buttesfire.channels.splice(buttesfire.channelLookup[channel.id], 1);
-    buttesfire.channelLookup[channel.id] = null;
-    buttesfire.connection.partChannel(channel);
+    if (channel.active) alice.focusLast();
+    alice.channels.splice(alice.channelLookup[channel.id], 1);
+    alice.channelLookup[channel.id] = null;
+    alice.connection.partChannel(channel);
   },
 
   getChannel: function (channelId) {
@@ -7098,7 +7098,7 @@ var Buttesfire = Class.create({
   },
 
   displayMessage: function (message) {
-    var channel = buttesfire.getChannel(message.chanid);
+    var channel = alice.getChannel(message.chanid);
     if (! channel) {
       this.connection.requestTab(message.chan, message.session, message);
       return;
@@ -7107,7 +7107,7 @@ var Buttesfire = Class.create({
   }
 });
 
-Buttesfire.Channel = Class.create({
+Alice.Channel = Class.create({
   initialize: function (name, id, active, session) {
     this.name = name;
     this.id = id;
@@ -7125,11 +7125,11 @@ Buttesfire.Channel = Class.create({
 
     var self = this;
 
-    this.form.observe("submit", buttesfire.connection.sayMessage);
+    this.form.observe("submit", alice.connection.sayMessage);
     this.tab.observe("click", this.focus.bind(this));
     this.tabButton.observe("click", this.close.bind(this));
 
-    this.autocompleter = new Buttesfire.Autocompleter(
+    this.autocompleter = new Alice.Autocompleter(
       this.input, this.id + "_autocomplete_choices",
       "/autocomplete",
       {
@@ -7147,7 +7147,7 @@ Buttesfire.Channel = Class.create({
 
   unFocus: function () {
     this.active = false;
-    buttesfire.previousFocus = buttesfire.channelLookup[this.id];
+    alice.previousFocus = alice.channelLookup[this.id];
     this.elem.removeClassName('active');
     this.tab.removeClassName('active');
     if (this.tab.previous()) this.tab.previous().removeClassName("leftof_active");
@@ -7155,7 +7155,7 @@ Buttesfire.Channel = Class.create({
 
   focus: function () {
     document.title = this.name;
-    buttesfire.activeChannel().unFocus();
+    alice.activeChannel().unFocus();
     this.active = true;
     this.tab.addClassName('active');
     this.elem.addClassName('active');
@@ -7167,14 +7167,14 @@ Buttesfire.Channel = Class.create({
   },
 
   close: function (event) {
-    buttesfire.removeChannel(this);
+    alice.removeChannel(this);
     this.tab.remove();
     this.elem.remove();
     Event.stop(event);
   },
 
   displayTopic: function(topic) {
-    this.topic.innerHTML = buttesfire.linkFilter(topic);
+    this.topic.innerHTML = alice.linkFilter(topic);
   },
 
   addMessage: function(message) {
@@ -7183,15 +7183,15 @@ Buttesfire.Channel = Class.create({
         + message.nick + ':last-child .msg').first();
       if ((message.nick == "Shaniqua" || message.nick == "root" || message.nick == "p6eval")
         && last_message) {
-        var html = buttesfire.applyFilters(message.html);
+        var html = alice.applyFilters(message.html);
         last_message.insert("<br />" + html);
       }
       else if (message.event == "say" && last_message) {
-        var html = stripNick(buttesfire.applyFilters(message.full_html));
+        var html = stripNick(alice.applyFilters(message.full_html));
         this.messages.insert(html);
       }
       else {
-        var html = buttesfire.applyFilters(message.full_html);
+        var html = alice.applyFilters(message.full_html);
         this.messages.insert(html);
       }
 
@@ -7215,12 +7215,12 @@ Buttesfire.Channel = Class.create({
     this.elem.scrollTop = this.elem.scrollHeight;
   }
 });
-Buttesfire.Connection = Class.create({
+Alice.Connection = Class.create({
   initialize: function () {
     this.len = 0;
     this.aborting = false;
     this.req = null;
-    this.seperator = "--xbuttesfirex\n";
+    this.seperator = "--xalicex\n";
 
   },
 
@@ -7272,8 +7272,8 @@ Buttesfire.Connection = Class.create({
       console.log(err);
       return;
     }
-    buttesfire.handleActions(data.actions);
-    buttesfire.displayMessages(data.msgs);
+    alice.handleActions(data.actions);
+    alice.displayMessages(data.msgs);
 
     var lag = time / 1000 -  data.time;
     if (lag > 5) {
@@ -7289,7 +7289,7 @@ Buttesfire.Connection = Class.create({
       parameters: {session: session, msg: "/window new " + name},
       onSuccess: function (trans) {
         connection.handleUpdate(trans);
-        if (message) buttesfire.displayMessage(message);
+        if (message) alice.displayMessage(message);
       }
     });
   },
@@ -7325,7 +7325,7 @@ Buttesfire.Connection = Class.create({
     });
   }
 });
-Buttesfire.Autocompleter = Class.create(Ajax.Autocompleter, {
+Alice.Autocompleter = Class.create(Ajax.Autocompleter, {
   onKeyPress: function (event) {
     if(this.active)
       switch(event.keyCode) {
@@ -7333,7 +7333,7 @@ Buttesfire.Autocompleter = Class.create(Ajax.Autocompleter, {
           this.markNext();
           this.render();
           Event.stop(event);
-          buttesfire.activeChannel.scrollToBottom(true);
+          alice.activeChannel.scrollToBottom(true);
           return;
         case Event.KEY_RETURN:
           this.selectEntry();
@@ -7406,12 +7406,12 @@ function growlNotify (message) {
   })
 }
 
-var buttesfire = new Buttesfire();
+var alice = new Alice();
 document.observe("dom:loaded", function () {
   $$("div.topic").each(function (topic){
-    topic.innerHTML = buttesfire.linkFilter(topic.innerHTML)});
-  $('config_button').observe("click", buttesfire.toggleConfig.bind(buttesfire));
+    topic.innerHTML = alice.linkFilter(topic.innerHTML)});
+  $('config_button').observe("click", alice.toggleConfig.bind(alice));
 })
 window.onresize = function () {
-  buttesfire.activeChannel().scrollToBottom()};
+  alice.activeChannel().scrollToBottom()};
 window.status = " ";

@@ -1,4 +1,4 @@
-Buttesfire.Autocompleter = Class.create(Ajax.Autocompleter, {
+Alice.Autocompleter = Class.create(Ajax.Autocompleter, {
   onKeyPress: function (event) {
     if(this.active)
       switch(event.keyCode) {
@@ -6,7 +6,7 @@ Buttesfire.Autocompleter = Class.create(Ajax.Autocompleter, {
           this.markNext();
           this.render();
           Event.stop(event);
-          buttesfire.activeChannel.scrollToBottom(true);
+          alice.activeChannel.scrollToBottom(true);
           return;
         case Event.KEY_RETURN:
           this.selectEntry();

@@ -1,4 +1,4 @@
-Buttesfire.Channel = Class.create({
+Alice.Channel = Class.create({
   initialize: function (name, id, active, session) {
     this.name = name;
     this.id = id;
@@ -16,11 +16,11 @@ Buttesfire.Channel = Class.create({
     
     var self = this;
     
-    this.form.observe("submit", buttesfire.connection.sayMessage);
+    this.form.observe("submit", alice.connection.sayMessage);
     this.tab.observe("click", this.focus.bind(this));
     this.tabButton.observe("click", this.close.bind(this));
     
-    this.autocompleter = new Buttesfire.Autocompleter(
+    this.autocompleter = new Alice.Autocompleter(
       this.input, this.id + "_autocomplete_choices",
       "/autocomplete",
       {
@@ -38,7 +38,7 @@ Buttesfire.Channel = Class.create({
   
   unFocus: function () {
     this.active = false;
-    buttesfire.previousFocus = buttesfire.channelLookup[this.id];
+    alice.previousFocus = alice.channelLookup[this.id];
     this.elem.removeClassName('active');
     this.tab.removeClassName('active');
     if (this.tab.previous()) this.tab.previous().removeClassName("leftof_active");
@@ -46,7 +46,7 @@ Buttesfire.Channel = Class.create({
   
   focus: function () {
     document.title = this.name;
-    buttesfire.activeChannel().unFocus();
+    alice.activeChannel().unFocus();
     this.active = true;
     this.tab.addClassName('active');
     this.elem.addClassName('active');
@@ -58,14 +58,14 @@ Buttesfire.Channel = Class.create({
   },
   
   close: function (event) {
-    buttesfire.removeChannel(this);
+    alice.removeChannel(this);
     this.tab.remove();
     this.elem.remove();
     Event.stop(event);
   },
   
   displayTopic: function(topic) {
-    this.topic.innerHTML = buttesfire.linkFilter(topic);
+    this.topic.innerHTML = alice.linkFilter(topic);
   },
   
   addMessage: function(message) {
@@ -74,15 +74,15 @@ Buttesfire.Channel = Class.create({
         + message.nick + ':last-child .msg').first();
       if ((message.nick == "Shaniqua" || message.nick == "root" || message.nick == "p6eval")
         && last_message) {
-        var html = buttesfire.applyFilters(message.html);
+        var html = alice.applyFilters(message.html);
         last_message.insert("<br />" + html);
       }
       else if (message.event == "say" && last_message) {
-        var html = stripNick(buttesfire.applyFilters(message.full_html));
+        var html = stripNick(alice.applyFilters(message.full_html));
         this.messages.insert(html);
       }
       else {
-        var html = buttesfire.applyFilters(message.full_html);
+        var html = alice.applyFilters(message.full_html);
         this.messages.insert(html);
       }
 
