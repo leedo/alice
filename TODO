@@ -1,6 +1,7 @@
 Javascript
   - Polish nick/command completion
   - Feedback on disconnect from IRC or perl daemon
+  - Pass message ID on reconnect so server can send any missing lines
 
 Perl
   - Send some sort of message on disconnect
@@ -8,6 +9,8 @@ Perl
   - Fix cswas in IRC::Formatting
   - Clean up API parameter naming
   - Switch to IRC::Formatting::HTML
+  - Keep message buffer
+  - Add ID to outgoing messages
   
 HTML/CSS  
   - Switchable themes?
