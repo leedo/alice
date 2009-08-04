@@ -9,7 +9,7 @@ alice.addFilters([
   function (content) {
     var filtered = content;
     filtered = filtered.replace(
-      /(<a[^>]*?>)(.*?\.(:?jpg|jpeg|gif|png))</gi,
+      /(<a[^>]*?>)(.*?\.(:?jpg|jpeg|gif|png)(:?\?v=0)?)</gi,
       "$1<img src=\"$2\" onload=\"loadInlineImage(this)\" width=\"0\" alt=\"Loading Image...\" /><");
     return filtered;
   }

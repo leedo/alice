@@ -83,6 +83,30 @@ has 'tt' => (
   },
 );
 
+has 'msgbuffer' => (
+  is => 'rw',
+  isa => 'ArrayRef[HashRef]',
+  default => sub {[]},
+);
+
+after 'msgbuffer' => sub {
+  my $self = shift;
+  while (@{$self->{msgbuffer}} >= 100) {
+    shift @{$self->{msgbuffer}};
+  }
+};
+
+has 'msgid' => (
+  is => 'rw',
+  isa => 'Int',
+  default => 0,
+);
+
+after 'msgid' => sub {
+  my $self = shift;
+  $self->{msgid} = $self->{msgid} + 1;
+};
+
 sub setup_stream {
   my ($self, $req, $res) = @_;
   
@@ -94,6 +118,12 @@ sub setup_stream {
   $res->content_type('multipart/mixed; boundary=xalicex; charset=utf-8');
   $res->{msgs} = [];
   $res->{actions} = [];
+  
+  # populate the msg queue with any buffered messages that are newer
+  # than the provided msgid
+  if (defined (my $msgid = $req->uri->query_param('msgid'))) {
+    $res->{msgs} = [ grep {$_->{msgid} >= $msgid} @{$self->{msgbuffer}} ];
+  }
   push @{$self->streams}, $res;
   return 200;
 }
@@ -122,6 +152,7 @@ sub handle_stream {
       $res->{actions} = [];
     }
   }
+  #$res->continue_delayed(0.5);
 }
 
 sub end_stream {
@@ -178,7 +209,7 @@ sub handle_message {
     else {
       $self->log_debug("sending message to $chan");
       my $nick = $irc->nick_name;
-      $self->display_message($nick, $chan, $session, decode_utf8($msg)); 
+      $self->display_message($nick, $chan, $session, decode_utf8($msg));
       $irc->yield("privmsg", $chan, $msg);
     }
   }
@@ -407,13 +438,15 @@ sub send_data {
   return unless $self->clients;
   for my $res (@{$self->streams}) {
     if ($data->{type} eq "message") {
+      $data->{msgid} = $self->msgid;
       push @{$res->{msgs}}, $data;
+      push @{$self->msgbuffer}, $data;
     }
     elsif ($data->{type} eq "action") {
       push @{$res->{actions}}, $data;
     }
-    $res->continue;
   }
+  $_->continue for @{$self->streams};
 }
 
 sub show_nicks {

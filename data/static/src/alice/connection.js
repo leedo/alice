@@ -4,7 +4,7 @@ Alice.Connection = Class.create({
     this.aborting = false;
     this.req = null;
     this.seperator = "--xalicex\n";
-  
+    this.msgid = 0;
   },
   
   closeConnection: function () {
@@ -20,6 +20,7 @@ Alice.Connection = Class.create({
     var connection = this;
     this.req = new Ajax.Request('/stream', {
       method: 'get',
+      parameters: {msgid: connection.msgid},
       onException: function (req, e) {
         console.log(e);
         if (! connection.aborting)
@@ -56,6 +57,8 @@ Alice.Connection = Class.create({
       console.log(err);
       return;
     }
+    if (data.msgs.length)
+      this.msgid = data.msgs[data.msgs.length - 1].msgid;
     alice.handleActions(data.actions);
     alice.displayMessages(data.msgs);
     
