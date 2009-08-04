@@ -7415,6 +7415,7 @@ document.observe("dom:loaded", function () {
     topic.innerHTML = alice.linkFilter(topic.innerHTML)});
   $('config_button').observe("click", alice.toggleConfig.bind(alice));
 })
+document.observe("keydown", function () {alice.activeChannel().input.focus()});
 window.onresize = function () {
   alice.activeChannel().scrollToBottom()};
 window.status = " ";
