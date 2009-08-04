@@ -6,6 +6,8 @@
 var Alice = Class.create({
   initialize: function () {
     this.isCtrl = false;
+    this.isCommand = false;
+    this.isAlt = false;
     this.channels = [];
     this.channelLookup = [];
     this.previousFocus = 0;
@@ -64,12 +66,26 @@ var Alice = Class.create({
   },
   
   onKeyUp: function (e) {
-    if (e.which == 17) this.isCtrl = false;
+    switch (e.which) {
+      case 17:
+        this.isCtrl = false;
+        break;
+      case 91:
+        this.isCommand = false;
+        break;
+      case 18:
+        this.isAlt = false;
+        break;
+    }
   },
   
   onKeyDown: function (e) {
     if (e.which == 17)
       this.isCtrl = true;
+    else if (e.which == 91)
+      this.isCommand = true;
+    else if (e.which == 18)
+      this.isAlt = true;
     else if (this.isCtrl && e.which == 75) {
       $$('.channel.active .messages').first().innerHTML = '';
       return false;
@@ -87,7 +103,7 @@ var Alice = Class.create({
   linkFilter: function (content) {
     var filtered = content;
     filtered = filtered.replace(
-      /(https?\:\/\/[\w\d$\-_.+!*'(),%\/?=&;~#:]*)/gi,
+      /(https?\:\/\/[\w\d$\-_.+!*'(),%\/?=&;~#:@]*)/gi,
       "<a href=\"$1\">$1</a>");
     return filtered;
   },
@@ -196,7 +212,9 @@ document.observe("dom:loaded", function () {
     topic.innerHTML = alice.linkFilter(topic.innerHTML)});
   $('config_button').observe("click", alice.toggleConfig.bind(alice));
 })
-document.observe("keydown", function () {alice.activeChannel().input.focus()});
+document.observe("keydown", function () {
+  if (! alice.isCtrl && ! alice.isCommand && ! alice.isAlt)
+    alice.activeChannel().input.focus()});
 window.onresize = function () {
   alice.activeChannel().scrollToBottom()};
 window.status = " ";

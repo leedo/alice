@@ -122,7 +122,7 @@ sub setup_stream {
   # populate the msg queue with any buffered messages that are newer
   # than the provided msgid
   if (defined (my $msgid = $req->uri->query_param('msgid'))) {
-    $res->{msgs} = [ grep {$_->{msgid} >= $msgid} @{$self->{msgbuffer}} ];
+    $res->{msgs} = [ grep {$_->{msgid} > $msgid} @{$self->{msgbuffer}} ];
   }
   push @{$self->streams}, $res;
   return 200;
