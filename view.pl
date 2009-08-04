@@ -14,7 +14,7 @@ $view->open("http://127.0.0.1:8080/view");
 $view->signal_connect('navigation-requested' => sub {
   my (undef, undef, $req) = @_;
   my $uri = $req->get_uri;
-  return if $uri !~ /^http:\/\//;
+  return if $uri !~ /^https?:\/\//;
   my $pid = fork();
   if ($pid == 0) {
     exec('x-www-browser', $uri);

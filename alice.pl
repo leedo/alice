@@ -3,9 +3,10 @@
 use strict;
 use warnings;
 
-use lib 'lib';
-use lib 'extlib/lib/perl5';
-use local::lib 'extlib';
+use FindBin;
+use lib "$FindBin::Bin/lib";
+use lib "$FindBin::Bin/extlib/lib/perl5";
+use local::lib "$FindBin::Bin/extlib";
 use YAML qw/LoadFile/;
 use Alice::HTTPD;
 use Alice::IRC;
