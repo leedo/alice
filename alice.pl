@@ -30,4 +30,15 @@ print STDERR "You can view your IRC session at: http://localhost:".$config->{por
 my $httpd = Alice::HTTPD->new(config => $config);
 my $irc = Alice::IRC->new(config => $config, httpd => $httpd);
 
+$SIG{INT} = sub {
+  if (! @connections) {
+    exit(0);
+  }
+  print STDERR "closing connections, ^C again to quit\n";
+  for ($irc->connections) {
+    $_->call(quit => "alice.");
+  }
+  print STDERR "Bye!\n";
+};
+
 POE::Kernel->run;
