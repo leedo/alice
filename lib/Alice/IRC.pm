@@ -161,6 +161,12 @@ sub chan_sync {
   my ($self, $channel) = @_[OBJECT, ARG0];
   my $irc = $self->connection($_[SENDER]->ID);
   $self->httpd->create_tab($channel, $irc->session_id) if $channel ne "main";
+  my $topic = $irc->channel_topic($channel);
+  if ($topic->{Value} and $topic->{SetBy}) {
+    $self->httpd->send_topic(
+      $topic->{SetBy}, $channel, $irc->session_id, decode_utf8($topic->{Value})
+    );
+  }
 }
 
 sub part {

@@ -195,7 +195,7 @@ sub handle_message {
         $irc->yield("topic", $chan, $1);
       }
       else {
-        my $topic = $irc->channel_topic;
+        my $topic = $irc->channel_topic($chan);
         $self->send_topic(
           $topic->{SetBy}, $chan, $session, decode_utf8($topic->{Value})
         );
@@ -365,11 +365,13 @@ sub display_event {
     chanid    => $self->channel_id($channel, $session),
     session   => $session,
     message   => $msg,
+    msgid     => $self->msgid,
     timestamp => make_timestamp(),
   };
   my $html = '';
   $self->tt->process("event.tt", $event, \$html);
   $event->{full_html} = $html;
+  push @{$self->msgbuffer}, $event;
   $self->send_data($event);
 }
 
@@ -384,6 +386,7 @@ sub display_message {
     chan      => $channel,
     chanid    => $self->channel_id($channel, $session),
     session   => $session,
+    msgid     => $self->msgid,
     self      => $nick eq $mynick,
     html      => $html,
     highlight => $text =~ /\b$mynick\b/i || 0,
@@ -392,6 +395,7 @@ sub display_message {
   $html = '';
   $self->tt->process("message.tt", $msg, \$html);
   $msg->{full_html} = $html;
+  push @{$self->msgbuffer}, $msg;
   $self->send_data($msg);
 }
 
@@ -438,9 +442,7 @@ sub send_data {
   return unless $self->clients;
   for my $res (@{$self->streams}) {
     if ($data->{type} eq "message") {
-      $data->{msgid} = $self->msgid;
       push @{$res->{msgs}}, $data;
-      push @{$self->msgbuffer}, $data;
     }
     elsif ($data->{type} eq "action") {
       push @{$res->{actions}}, $data;
