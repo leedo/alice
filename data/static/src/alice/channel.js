@@ -81,12 +81,14 @@ Alice.Channel = Class.create({
         var html = stripNick(alice.applyFilters(message.full_html));
         this.messages.insert(html);
       }
+      else if (message.event == "topic") {
+        this.messages.insert(alice.linkFilter(message.full_html));
+        this.displayTopic(message.message);
+      }
       else {
         var html = alice.applyFilters(message.full_html);
         this.messages.insert(html);
       }
-
-      if (message.event == "topic") this.displayTopic(message.message);
 
       // scroll to bottom or highlight the tab
       if (this.elem.hasClassName('active'))
