@@ -2,6 +2,7 @@
 //= require <scriptaculous>
 //= require <scriptaculous/effects>
 //= require <scriptaculous/controls>
+//= require <scriptaculous/dragdrop>
 
 var Alice = Class.create({
   initialize: function () {
