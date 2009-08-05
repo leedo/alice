@@ -213,9 +213,9 @@ document.observe("dom:loaded", function () {
     topic.innerHTML = alice.linkFilter(topic.innerHTML)});
   $('config_button').observe("click", alice.toggleConfig.bind(alice));
 })
-window.onkeydown = function () {
-  if (! alice.isCtrl && ! alice.isCommand && ! alice.isAlt)
-    alice.activeChannel().input.focus()};
-window.onresize = function () {
-  alice.activeChannel().scrollToBottom()};
+//window.onkeydown = function () {
+//  if (! alice.isCtrl && ! alice.isCommand && ! alice.isAlt)
+//    alice.activeChannel().input.focus()};
+//window.onresize = function () {
+//  alice.activeChannel().scrollToBottom()};
 window.status = " ";
