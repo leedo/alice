@@ -19,6 +19,9 @@
         [% INCLUDE "tab.tt" %]
         [% END %]
       </ul>
+      <script type="text/javascript">
+        Sortable.create('tabs', {format:/^.+_\d+_tab$/});
+      </script>
       <div id="channels">
       [% FOR channels %]
       [% INCLUDE "channel.tt" %]

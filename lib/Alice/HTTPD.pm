@@ -255,7 +255,7 @@ sub send_index {
     my $session = $irc->session_id;
     for my $channel (keys %{$irc->channels}) {
       push @$channels, {
-        chanid  => channel_id($channel, $session),
+        chanid  => $self->channel_id($channel, $session),
         chan    => $channel,
         session => $session,
         topic   => $irc->channel_topic($channel),
@@ -362,7 +362,7 @@ sub display_event {
     event     => $event_type,
     nick      => $nick,
     chan      => $channel,
-    chanid    => channel_id($channel, $session),
+    chanid    => $self->channel_id($channel, $session),
     session   => $session,
     message   => $msg,
     timestamp => make_timestamp(),
@@ -382,7 +382,7 @@ sub display_message {
     event     => "say",
     nick      => $nick,
     chan      => $channel,
-    chanid    => channel_id($channel, $session),
+    chanid    => $self->channel_id($channel, $session),
     session   => $session,
     self      => $nick eq $mynick,
     html      => $html,
@@ -406,7 +406,7 @@ sub create_tab {
     type      => "action",
     event     => "join",
     chan      => $name,
-    chanid    => channel_id($name, $session),
+    chanid    => $self->channel_id($name, $session),
     session   => $session,
     timestamp => make_timestamp(),
   };
@@ -425,7 +425,7 @@ sub close_tab {
   $self->send_data({
     type      => "action",
     event     => "part",
-    chanid    => channel_id($name, $session),
+    chanid    => $self->channel_id($name, $session),
     chan      => $name,
     session   => $session,
     timestamp => make_timestamp(),
@@ -455,7 +455,7 @@ sub show_nicks {
   $self->send_data({
     type    => "message",
     event   => "announce",
-    chanid  => channel_id($chan, $session),
+    chanid  => $self->channel_id($chan, $session),
     chan    => $chan,
     session => $session,
     str     => format_nick_table($irc->channel_list($chan))
@@ -483,8 +483,15 @@ sub format_nick_table {
   return join "\n", map {join " ", @$_} @rows;
 }
 
+sub array_index {
+  while (@_) { return @_-1  if $_[0] eq pop }
+}
+
 sub channel_id {
-  my $id = join "_", @_;
+  my ($self, $chan, $session) = @_;
+  my $irc = $self->irc->connection($session);
+  my $index = array_index($chan, keys %{$irc->channels});
+  my $id = join "_", $chan, $session, $index;
   $id =~ s/[#&]/chan_/;
   return lc $id;
 }
