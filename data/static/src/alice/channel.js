@@ -101,6 +101,9 @@ Alice.Channel = Class.create({
     else if (message.event == "announce") {
       this.messages.insert("<li class='message'><div class='msg announce'>"+message.str+"</div></li>");
     }
+
+    var messages = $$('#' + message.chanid + ' li');
+    if (messages.length > 250) messages.first().remove();
   },
   
   scrollToBottom: function (force) {
