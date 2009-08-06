@@ -87,7 +87,7 @@ var Alice = Class.create({
     else if (e.which == 18)
       this.isAlt = true;
     else if (this.isCtrl && e.which == 75) {
-      $$('.channel.active .messages').first().innerHTML = '';
+      this.activeChannel().innerHTML = '';
       return false;
     }
     else if (this.isCtrl && e.which == 78) {
@@ -97,6 +97,12 @@ var Alice = Class.create({
     else if (this.isCtrl && e.which == 80) {
       this.previousTab();
       return false;
+    }
+    else if (this.isCtrl && e.which == 38) {
+      this.activeChannel().previousMessage();
+    }
+    else if (this.isCtrl && e.which == 40) {
+      this.activeChannel().nextMessage();
     }
   },
   

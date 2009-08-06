@@ -7009,7 +7009,7 @@ var Alice = Class.create({
     else if (e.which == 18)
       this.isAlt = true;
     else if (this.isCtrl && e.which == 75) {
-      $$('.channel.active .messages').first().innerHTML = '';
+      this.activeChannel().innerHTML = '';
       return false;
     }
     else if (this.isCtrl && e.which == 78) {
@@ -7019,6 +7019,12 @@ var Alice = Class.create({
     else if (this.isCtrl && e.which == 80) {
       this.previousTab();
       return false;
+    }
+    else if (this.isCtrl && e.which == 38) {
+      this.activeChannel().previousMessage();
+    }
+    else if (this.isCtrl && e.which == 40) {
+      this.activeChannel().nextMessage();
     }
   },
 
@@ -7139,9 +7145,12 @@ Alice.Channel = Class.create({
     this.messages = $(id + "_messages");
     this.lastnick = "";
 
+    this.msgHistory = [""];
+    this.currentMsg = 0;
+
     var self = this;
 
-    this.form.observe("submit", alice.connection.sayMessage);
+    this.form.observe("submit", this.sayMessage.bind(this));
     this.tab.observe("click", this.focus.bind(this));
     this.tabButton.observe("click", this.close.bind(this));
 
@@ -7159,6 +7168,33 @@ Alice.Channel = Class.create({
         }
       }
     );
+  },
+
+  nextMessage: function () {
+    if (this.msgHistory.length <= 1) return;
+    this.currentMsg++;
+    if (this.currentMsg >= this.msgHistory.length)
+      this.currentMsg = 0;
+    console.log(this.currentMsg);
+    this.input.value = this.msgHistory[this.currentMsg];
+  },
+
+  previousMessage: function () {
+    if (this.msgHistory.length <= 1) return;
+    this.currentMsg--;
+    if (this.currentMsg < 0)
+      this.currentMsg = this.msgHistory.length - 1;
+    console.log(this.currentMsg);
+    this.input.value = this.msgHistory[this.currentMsg];
+  },
+
+  sayMessage: function () {
+    alice.connection.sendMessage(this.form);
+    this.currentMsg = 0;
+    this.msgHistory.push(this.input.value);
+    this.input.value = '';
+    Event.stop(event);
+    return false;
   },
 
   unFocus: function () {
@@ -7325,14 +7361,11 @@ Alice.Connection = Class.create({
     });
   },
 
-  sayMessage: function (event) {
-    var form = event.element();
+  sendMessage: function (form) {
     new Ajax.Request('/say', {
       method: 'get',
       parameters: form.serialize(),
     });
-    form.childNodes[3].value = '';
-    Event.stop(event);
   },
 
   getConfig: function (callback) {

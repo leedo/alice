@@ -89,14 +89,11 @@ Alice.Connection = Class.create({
     });
   },
   
-  sayMessage: function (event) {
-    var form = event.element();
+  sendMessage: function (form) {
     new Ajax.Request('/say', {
       method: 'get',
       parameters: form.serialize(),
     });
-    form.childNodes[3].value = '';
-    Event.stop(event);
   },
   
   getConfig: function (callback) {
