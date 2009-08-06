@@ -7187,13 +7187,12 @@ Alice.Channel = Class.create({
     this.input.value = this.msgHistory[this.currentMsg];
   },
 
-  sayMessage: function () {
+  sayMessage: function (event) {
     alice.connection.sendMessage(this.form);
     this.currentMsg = 0;
     this.msgHistory.push(this.input.value);
     this.input.value = '';
     Event.stop(event);
-    return false;
   },
 
   unFocus: function () {
@@ -7255,14 +7254,15 @@ Alice.Channel = Class.create({
 
       if (this.elem.hasClassName('active'))
         this.scrollToBottom();
-      else if (message.event == "say" && message.highlight) {
+      else if (message.event == "say" && message.highlight)
         this.tab.addClassName("highlight");
-      }
       else if (message.event == "say")
         this.tab.addClassName("unread");
     }
     else if (message.event == "announce") {
-      this.messages.insert("<li class='message'><div class='msg announce'>"+message.str+"</div></li>");
+      this.messages.insert("<li class='message'><div class='msg announce'>"
+        +message.str+"</div></li>");
+      this.scrollToBottom();
     }
 
     var messages = $$('#' + message.chanid + ' li');
@@ -7270,7 +7270,13 @@ Alice.Channel = Class.create({
   },
 
   scrollToBottom: function (force) {
-    this.elem.scrollTop = this.elem.scrollHeight;
+    if (! force) {
+      var bottom = this.elem.scrollTop + this.elem.offsetHeight;
+      var height = this.elem.scrollHeight;
+      var msgheight = $$('#' + this.id + ' li:last-child').first().offsetHeight;
+    }
+    if (force || bottom + msgheight >= height)
+      this.elem.scrollTop = this.elem.scrollHeight;
   }
 });
 Alice.Connection = Class.create({
