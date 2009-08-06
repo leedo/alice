@@ -7,6 +7,7 @@ use POE;
 use POE::Component::IRC;
 use POE::Component::IRC::State;
 use POE::Component::IRC::Plugin::Connector;
+use POE::Component::IRC::Plugin::CTCP;
 use Encode;
 use Moose;
 
@@ -102,6 +103,10 @@ sub start {
   my $irc = $_[HEAP]->{irc};
   $irc->{connector} = POE::Component::IRC::Plugin::Connector->new();
   $irc->plugin_add('Connector' => $irc->{connector});
+  $irc->plugin_add('CTCP' => POE::Component::IRC::Plugin::CTCP->new(
+    version => 'alice',
+    userinfo => $irc->nick_name
+  ));
   $irc->yield(register => 'all');
   $irc->yield(connect => {});
   $_[HEAP] = undef;

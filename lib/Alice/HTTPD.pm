@@ -159,7 +159,7 @@ sub end_stream {
   my ($self, $res) = @_;
   $self->log_debug("closing a streaming http connection");
   for (0 .. scalar @{$self->streams} - 1) {
-    if ($res and $res == $self->streams->[$_]) {
+    if (! $self->streams->[$_] or ($res and $res == $self->streams->[$_])) {
       splice(@{$self->streams}, $_, 1);
     }
   }
