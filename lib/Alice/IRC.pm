@@ -212,7 +212,7 @@ sub quit {
 sub topic {
   my ($self, $who, $channel, $topic) = @_[OBJECT, ARG0 .. ARG2];
   my $irc = $self->connection($_[SENDER]->ID);
-  $self->httpd->send_topic($who, $channel, $irc->session_alias, $topic);
+  $self->httpd->send_topic($who, $channel, $irc->session_alias, decode_utf8($topic));
 }
 
 sub log_debug {
