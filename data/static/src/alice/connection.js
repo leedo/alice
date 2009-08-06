@@ -39,7 +39,7 @@ Alice.Connection = Class.create({
     // reconnect in 10 minutes
     this.timer = setTimeout(function () {
       console.log("10 minutes since connection opened, reconnecting.")
-      connection.timer = connection.connect.bind(connection);
+      connection.connect();
     }, 10 * 60 * 1000)
   },
   
