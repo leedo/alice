@@ -140,9 +140,11 @@ Alice.Channel = Class.create({
   
   scrollToBottom: function (force) {
     if (! force) {
+      var lastmsg = $$('#' + this.id + ' li:last-child').first();
+      if (! lastmsg) return;
+      var msgheight = lastmsg.offsetHeight; 
       var bottom = this.elem.scrollTop + this.elem.offsetHeight;
       var height = this.elem.scrollHeight;
-      var msgheight = $$('#' + this.id + ' li:last-child').first().offsetHeight;
     }
     if (force || bottom + msgheight >= height)
       this.elem.scrollTop = this.elem.scrollHeight;
