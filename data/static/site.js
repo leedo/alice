@@ -6930,6 +6930,7 @@ var Alice = Class.create({
     this.isCtrl = false;
     this.isCommand = false;
     this.isAlt = false;
+    this.isFocused = true;
     this.channels = [];
     this.channelLookup = [];
     this.previousFocus = 0;
@@ -7009,7 +7010,8 @@ var Alice = Class.create({
     else if (e.which == 18)
       this.isAlt = true;
     else if (this.isCtrl && e.which == 75) {
-      this.activeChannel().innerHTML = '';
+      console.log(this.activeChannel());
+      this.activeChannel().messages.innerHTML = '';
       return false;
     }
     else if (this.isCtrl && e.which == 78) {
@@ -7020,10 +7022,10 @@ var Alice = Class.create({
       this.previousTab();
       return false;
     }
-    else if (this.isCtrl && e.which == 38) {
+    else if (this.isCtrl && e.which == Event.KEY_UP) {
       this.activeChannel().previousMessage();
     }
-    else if (this.isCtrl && e.which == 40) {
+    else if (this.isCtrl && e.which == Event.KEY_DOWN) {
       this.activeChannel().nextMessage();
     }
   },
@@ -7175,7 +7177,6 @@ Alice.Channel = Class.create({
     this.currentMsg++;
     if (this.currentMsg >= this.msgHistory.length)
       this.currentMsg = 0;
-    console.log(this.currentMsg);
     this.input.value = this.msgHistory[this.currentMsg];
   },
 
@@ -7184,7 +7185,6 @@ Alice.Channel = Class.create({
     this.currentMsg--;
     if (this.currentMsg < 0)
       this.currentMsg = this.msgHistory.length - 1;
-    console.log(this.currentMsg);
     this.input.value = this.msgHistory[this.currentMsg];
   },
 
@@ -7251,11 +7251,13 @@ Alice.Channel = Class.create({
         this.messages.insert(html);
       }
 
+      if (! alice.isFocused && message.highlight)
+        growlNotify(message);
+
       if (this.elem.hasClassName('active'))
         this.scrollToBottom();
       else if (message.event == "say" && message.highlight) {
         this.tab.addClassName("highlight");
-        growlNotify(message);
       }
       else if (message.event == "say")
         this.tab.addClassName("unread");
@@ -7292,21 +7294,26 @@ Alice.Connection = Class.create({
     this.closeConnection();
     this.len = 0;
     var connection = this;
+    console.log("opening new connection.");
     this.req = new Ajax.Request('/stream', {
       method: 'get',
       parameters: {msgid: connection.msgid},
       onException: function (req, e) {
-        console.log(e);
+        console.log("encountered an error with stream.");
         if (! connection.aborting)
           setTimeout(connection.connect.bind(connection), 2000);
       },
       onInteractive: connection.handleUpdate.bind(connection),
       onComplete: function () {
+        console.log("connection was closed cleanly.")
         if (! connection.aborting)
           setTimeout(connection.connect.bind(connection), 2000);
       }
     });
-    setTimeout(this.connect.bind(this), 10 * 60 * 1000)
+    setTimeout(function () {
+      console.log("10 minutes since connection opened, reconnecting.")
+      connection.connect.bind(connection);
+    }, 10 * 60 * 1000)
   },
 
   handleUpdate: function (transport) {
@@ -7337,7 +7344,7 @@ Alice.Connection = Class.create({
 
     var lag = time / 1000 -  data.time;
     if (lag > 5) {
-      console.log("lag is " + Math.round(lag) + "s, reconnecting...");
+      console.log("lag is " + Math.round(lag) + "s, reconnecting.");
       this.connect();
     }
   },
@@ -7390,7 +7397,7 @@ Alice.Autocompleter = Class.create(Ajax.Autocompleter, {
           this.markNext();
           this.render();
           Event.stop(event);
-          alice.activeChannel.scrollToBottom(true);
+          alice.activeChannel().scrollToBottom(true);
           return;
         case Event.KEY_RETURN:
           this.selectEntry();
@@ -7455,11 +7462,11 @@ function stripNick (html) {
 function growlNotify (message) {
   if (! window.fluid) return;
   window.fluid.showGrowlNotification({
-      title: message.channel,
-      description: message.nick,
+      title: message.chan + ": " + message.nick,
+      description: message.message,
       priority: 1,
       sticky: false,
-      identifier: message.session+message.channel+message.nick
+      identifier: message.msgid
   })
 }
 
@@ -7469,4 +7476,12 @@ document.observe("dom:loaded", function () {
     topic.innerHTML = alice.linkFilter(topic.innerHTML)});
   $('config_button').observe("click", alice.toggleConfig.bind(alice));
 })
+
+window.onkeydown = function () {
+  if (! $('config') && ! alice.isCtrl && ! alice.isCommand && ! alice.isAlt)
+    alice.activeChannel().input.focus()};
+window.onresize = function () {
+  alice.activeChannel().scrollToBottom()};
 window.status = " ";
+window.onfocus = function () {alice.isFocused = true};
+window.onblur = function () {alice.isFocused = false};

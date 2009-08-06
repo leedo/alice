@@ -172,7 +172,7 @@ sub handle_message {
   my $msg  = $req->uri->query_param('msg');
   my $chan = lc $req->uri->query_param('chan');
   my $session = $req->uri->query_param('session');
-  my $irc = $self->irc->connection($session);
+  my $irc = $self->irc->connection_from_alias($session);
   return 200 unless $session;
   if (length $msg) {
     if ($msg =~ /^\/query (\S+)/) {
@@ -252,7 +252,7 @@ sub send_index {
   my $output = '';
   my $channels = [];
   for my $irc ($self->irc->connections) {
-    my $session = $irc->session_id;
+    my $session = $irc->session_alias;
     for my $channel (keys %{$irc->channels}) {
       push @$channels, {
         chanid  => channel_id($channel, $session),
@@ -329,8 +329,8 @@ sub handle_autocomplete {
   $res->content_type('text/html; charset=utf-8');
   my $query = $req->uri->query_param('msg');
   my $chan = $req->uri->query_param('chan');
-  my $session_id = $req->uri->query_param('session');
-  my $irc = $self->irc->connection($session_id);
+  my $session_alias = $req->uri->query_param('session');
+  my $irc = $self->irc->connection_from_alias($session_alias);
   ($query) = $query =~ /((?:^\/)?[\d\w]*)$/;
   return 200 unless $query;
   $self->log_debug("handling autocomplete for $query");
@@ -378,7 +378,7 @@ sub display_event {
 sub display_message {
   my ($self, $nick, $channel, $session, $text) = @_;
   my $html = IRC::Formatting::HTML->formatted_string_to_html($text);
-  my $mynick = $self->irc->connection($session)->nick_name;
+  my $mynick = $self->irc->connection_from_alias($session)->nick_name;
   my $msg = {
     type      => "message",
     event     => "say",
@@ -389,6 +389,7 @@ sub display_message {
     msgid     => $self->msgid,
     self      => $nick eq $mynick,
     html      => $html,
+    message   => $text,
     highlight => $text =~ /\b$mynick\b/i || 0,
     timestamp => make_timestamp(),
   };
@@ -421,7 +422,7 @@ sub create_tab {
   $self->tt->process("tab.tt", $action, \$tab_html);
   $action->{html}{tab} = $tab_html;
   $self->send_data($action);
-  $self->log_debug("sending a request for a new tab: $name") if $self->clients;
+  $self->log_debug("sending a request for a new tab: $name " . $action->{chanid}) if $self->clients;
 }
 
 sub close_tab {
@@ -453,7 +454,7 @@ sub send_data {
 
 sub show_nicks {
   my ($self, $chan, $session) = @_;
-  my $irc = $self->irc->connection($session);
+  my $irc = $self->irc->connection_from_alias($session);
   $self->send_data({
     type    => "message",
     event   => "announce",

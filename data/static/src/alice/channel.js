@@ -44,7 +44,6 @@ Alice.Channel = Class.create({
     this.currentMsg++;
     if (this.currentMsg >= this.msgHistory.length)
       this.currentMsg = 0;
-    console.log(this.currentMsg);
     this.input.value = this.msgHistory[this.currentMsg];
   },
   
@@ -53,7 +52,6 @@ Alice.Channel = Class.create({
     this.currentMsg--;
     if (this.currentMsg < 0)
       this.currentMsg = this.msgHistory.length - 1;
-    console.log(this.currentMsg);
     this.input.value = this.msgHistory[this.currentMsg];
   },
   
@@ -119,13 +117,15 @@ Alice.Channel = Class.create({
         var html = alice.applyFilters(message.full_html);
         this.messages.insert(html);
       }
+      
+      if (! alice.isFocused && message.highlight)
+        growlNotify(message);
 
       // scroll to bottom or highlight the tab
       if (this.elem.hasClassName('active'))
         this.scrollToBottom();
       else if (message.event == "say" && message.highlight) {
         this.tab.addClassName("highlight");
-        growlNotify(message);
       }
       else if (message.event == "say")
         this.tab.addClassName("unread");

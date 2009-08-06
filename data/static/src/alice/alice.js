@@ -8,6 +8,7 @@ var Alice = Class.create({
     this.isCtrl = false;
     this.isCommand = false;
     this.isAlt = false;
+    this.isFocused = true;
     this.channels = [];
     this.channelLookup = [];
     this.previousFocus = 0;
@@ -87,7 +88,7 @@ var Alice = Class.create({
     else if (e.which == 18)
       this.isAlt = true;
     else if (this.isCtrl && e.which == 75) {
-      this.activeChannel().innerHTML = '';
+      this.activeChannel().messages.innerHTML = '';
       return false;
     }
     else if (this.isCtrl && e.which == 78) {
@@ -98,10 +99,10 @@ var Alice = Class.create({
       this.previousTab();
       return false;
     }
-    else if (this.isCtrl && e.which == 38) {
+    else if (this.isCtrl && e.which == Event.KEY_UP) {
       this.activeChannel().previousMessage();
     }
-    else if (this.isCtrl && e.which == 40) {
+    else if (this.isCtrl && e.which == Event.KEY_DOWN) {
       this.activeChannel().nextMessage();
     }
   },
@@ -218,9 +219,12 @@ document.observe("dom:loaded", function () {
     topic.innerHTML = alice.linkFilter(topic.innerHTML)});
   $('config_button').observe("click", alice.toggleConfig.bind(alice));
 })
-//window.onkeydown = function () {
-//  if (! alice.isCtrl && ! alice.isCommand && ! alice.isAlt)
-//    alice.activeChannel().input.focus()};
-//window.onresize = function () {
-//  alice.activeChannel().scrollToBottom()};
-window.status = " ";
+
+window.onkeydown = function () {
+  if (! $('config') && ! alice.isCtrl && ! alice.isCommand && ! alice.isAlt)
+    alice.activeChannel().input.focus()};
+window.onresize = function () {
+  alice.activeChannel().scrollToBottom()};
+window.status = " ";  
+window.onfocus = function () {alice.isFocused = true};
+window.onblur = function () {alice.isFocused = false};
