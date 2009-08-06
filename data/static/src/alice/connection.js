@@ -5,6 +5,7 @@ Alice.Connection = Class.create({
     this.req = null;
     this.seperator = "--xalicex\n";
     this.msgid = 0;
+    this.timer = null;
   },
   
   closeConnection: function () {
@@ -17,6 +18,7 @@ Alice.Connection = Class.create({
   connect: function () {
     this.closeConnection();
     this.len = 0;
+    clearTimeout(this.timer);
     var connection = this;
     console.log("opening new connection.");
     this.req = new Ajax.Request('/stream', {
@@ -25,19 +27,19 @@ Alice.Connection = Class.create({
       onException: function (req, e) {
         console.log("encountered an error with stream.");
         if (! connection.aborting)
-          setTimeout(connection.connect.bind(connection), 2000);
+          connection.connect();
       },
       onInteractive: connection.handleUpdate.bind(connection),
       onComplete: function () {
-        console.log("connection was closed cleanly.")
+        console.log("connection was closed cleanly.");
         if (! connection.aborting)
-          setTimeout(connection.connect.bind(connection), 2000);
+          connection.connect();
       }
     });
     // reconnect in 10 minutes
-    setTimeout(function () {
+    this.timer = setTimeout(function () {
       console.log("10 minutes since connection opened, reconnecting.")
-      connection.connect.bind(connection);
+      connection.timer = connection.connect.bind(connection);
     }, 10 * 60 * 1000)
   },
   

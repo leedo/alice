@@ -38,7 +38,7 @@ $SIG{INT} = sub {
   }
   print STDERR "closing connections, ^C again to quit\n";
   for ($irc->connections) {
-    $_->call(quit => "alice.");
+    $_->call(quit => "I'll be in my lab.");
   }
 };
 
