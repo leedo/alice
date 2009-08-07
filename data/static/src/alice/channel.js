@@ -21,7 +21,8 @@ Alice.Channel = Class.create({
     
     this.form.observe("submit", this.sayMessage.bind(this));
     this.tab.observe("mousedown", this.focus.bind(this));
-    this.tabButton.observe("click", this.close.bind(this));
+    this.tabButton.observe("click", function (e) {self.close(); Event.stop(e);});
+    this.tabButton.observe("mousedown", function (e) {Event.stop(e)});
     /*
     this.autocompleter = new Alice.Autocompleter(
       this.input, this.id + "_autocomplete_choices",
@@ -72,9 +73,9 @@ Alice.Channel = Class.create({
     if (this.tab.previous()) this.tab.previous().removeClassName("leftof_active");
   },
   
-  focus: function () {
+  focus: function (event) {
     document.title = this.name;
-    alice.activeChannel().unFocus();
+    if (alice.activeChannel()) alice.activeChannel().unFocus();
     this.active = true;
     this.tab.addClassName('active');
     this.elem.addClassName('active');
@@ -90,7 +91,6 @@ Alice.Channel = Class.create({
     alice.removeChannel(this);
     this.tab.remove();
     this.elem.remove();
-    Event.stop(event);
   },
   
   displayTopic: function(topic) {

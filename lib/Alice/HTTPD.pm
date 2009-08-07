@@ -158,9 +158,9 @@ sub handle_stream {
     else {
       $res->{msgs} = [];
       $res->{actions} = [];
+      $res->continue;
     }
   }
-  #$res->continue_delayed(0.5);
 }
 
 sub end_stream {

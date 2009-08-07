@@ -50,6 +50,8 @@ var Alice = Class.create({
   removeChannel: function (channel) {
     if (channel.active) this.focusLast();
     this.channels.unset(channel.id);
+    this.connection.partChannel(channel);
+    channel = null;
   },
   
   getChannel: function (channelId) {
@@ -132,7 +134,10 @@ var Alice = Class.create({
   },
   
   focusLast: function () {
-    this.previousFocus.focus();
+    if (this.previousFocus)
+      this.previousFocus.focus();
+    else if (this.channels.values().length)
+      this.channels.values().first().focus();
   },
   
   previousTab: function () {
