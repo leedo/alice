@@ -7969,10 +7969,10 @@ var Alice = Class.create({
       this.previousTab();
       return false;
     }
-    else if (this.isCtrl && e.which == Event.KEY_UP) {
+    else if (e.which == Event.KEY_UP) {
       this.activeChannel().previousMessage();
     }
-    else if (this.isCtrl && e.which == Event.KEY_DOWN) {
+    else if (e.which == Event.KEY_DOWN) {
       this.activeChannel().nextMessage();
     }
   },
