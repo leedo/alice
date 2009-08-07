@@ -235,7 +235,7 @@ sub handle_message {
     if ($msg =~ /^\/query (\S+)/) {
       $self->create_tab($1, $session);
     }
-    elsif ($msg =~ /^\/j(?:oin) (.+)/) {
+    elsif ($msg =~ /^\/j(?:oin)? (.+)/) {
       $irc->yield("join", $1);
     }
     elsif ($is_channel and $msg =~ /^\/part\s?(.+)?/) {
