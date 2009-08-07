@@ -27,20 +27,15 @@ Alice.Connection = Class.create({
       onException: function (req, e) {
         console.log("encountered an error with stream.");
         if (! connection.aborting)
-          connection.connect();
+          setTimeout(connection.connect.bind(connection), 2000);
       },
       onInteractive: connection.handleUpdate.bind(connection),
       onComplete: function () {
         console.log("connection was closed cleanly.");
         if (! connection.aborting)
-          connection.connect();
+          setTimeout(connection.connect.bind(connection), 2000);
       }
     });
-    // reconnect in 10 minutes
-    this.timer = setTimeout(function () {
-      console.log("10 minutes since connection opened, reconnecting.")
-      connection.timer = connection.connect.bind(connection);
-    }, 10 * 60 * 1000)
   },
   
   handleUpdate: function (transport) {
@@ -68,13 +63,6 @@ Alice.Connection = Class.create({
       this.msgid = data.msgs[data.msgs.length - 1].msgid;
     alice.handleActions(data.actions);
     alice.displayMessages(data.msgs);
-    
-    // reconnect if lag is over 5 seconds... not a good way to do this.
-    var lag = time / 1000 -  data.time;
-    if (lag > 5) {
-      console.log("lag is " + Math.round(lag) + "s, reconnecting.");
-      this.connect();
-    }
   },
   
   requestTab: function (name, session, message) {
@@ -115,5 +103,9 @@ Alice.Connection = Class.create({
       method: 'get',
       parameters: params
     });
+  },
+  
+  sendPing: function () {
+    new Ajax.Request('/ping');
   }
 });

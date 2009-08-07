@@ -41,6 +41,14 @@ has 'config' => (
       },
       StreamHandler    => sub{$self->handle_stream(@_)},
     );
+    POE::Session->create(
+      object_states => [
+        $self => {
+          _start => 'start_ping',
+          ping   => 'ping',
+        }
+      ],
+    );
   },
 );
 
@@ -181,9 +189,9 @@ sub handle_stream {
     else {
       $res->{msgs} = [];
       $res->{actions} = [];
+      $res->continue;
     }
   }
-  #$res->continue_delayed(0.5);
 }
 
 sub end_stream {
@@ -196,6 +204,21 @@ sub end_stream {
   }
   $res->close;
   $res->continue;
+}
+
+sub start_ping {
+  $_[KERNEL]->delay(ping => 30);
+}
+
+sub ping {
+  my $self = $_[OBJECT];
+  my $data = {
+    type  => "action",
+    event => "ping",
+  };
+  push @{$_->{actions}}, $data for @{$self->streams};
+  $_->continue for @{$self->streams};
+  $_[KERNEL]->delay(ping => 15);
 }
 
 sub handle_message {
