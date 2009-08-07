@@ -7,10 +7,18 @@ use POE;
 use POE::Component::IRC;
 use POE::Component::IRC::State;
 use POE::Component::IRC::Plugin::Connector;
+use POE::Component::IRC::Plugin::CTCP;
+use POE::Component::IRC::Plugin::NickReclaim;
 use Encode;
 use Moose;
 
-has 'connection_map' => (
+has 'connection_alias_map' => (
+  isa => 'HashRef[POE::Component::IRC::State]',
+  is  => 'rw',
+  default => sub {{}},
+);
+
+has 'connection_id_map' => (
   isa => 'HashRef[POE::Component::IRC::State]',
   is  => 'rw',
   default => sub {{}},
@@ -43,12 +51,17 @@ sub BUILD {
 
 sub connection {
   my ($self, $session_id) = @_;
-  return $self->connection_map->{$session_id};
+  return $self->connection_id_map->{$session_id};
+}
+
+sub connection_from_alias {
+  my ($self, $session_alias) = @_;
+  return $self->connection_alias_map->{$session_alias};
 }
 
 sub connections {
   my $self = shift;
-  return values %{$self->connection_map};
+  return values %{$self->connection_id_map};
 }
 
 sub add_server {
@@ -62,6 +75,7 @@ sub add_server {
     password => $server->{password},
     username => $server->{username},
     UseSSL   => $server->{ssl},
+    msg_length => 1024,
   );
   POE::Session->create(
     object_states => [
@@ -80,7 +94,8 @@ sub add_server {
     ],
     heap => {irc => $irc}
   );
-  $self->connection_map->{$irc->session_id} = $irc;
+  $self->connection_alias_map->{$name} = $irc;
+  $self->connection_id_map->{$irc->session_id} = $irc;
   return $irc;
 }
 
@@ -89,6 +104,11 @@ sub start {
   my $irc = $_[HEAP]->{irc};
   $irc->{connector} = POE::Component::IRC::Plugin::Connector->new();
   $irc->plugin_add('Connector' => $irc->{connector});
+  $irc->plugin_add('CTCP' => POE::Component::IRC::Plugin::CTCP->new(
+    version => 'alice',
+    userinfo => $irc->nick_name
+  ));
+  $irc->plugin_add('NickReclaim' => POE::Component::IRC::Plugin::NickReclaim->new());
   $irc->yield(register => 'all');
   $irc->yield(connect => {});
   $_[HEAP] = undef;
@@ -97,17 +117,22 @@ sub start {
 sub connected {
   my $self = $_[OBJECT];
   my $irc = $self->connection($_[SENDER]->ID);
-  $self->log_info("connected to " . $irc->{alias});
-  for (@{$self->config->{servers}{$irc->{alias}}{channels}}) {
+  my $session_alias = $irc->session_alias;
+  $self->log_info("connected to $session_alias");
+  for (@{$self->config->{servers}{$session_alias}{channels}}) {
     $self->log_debug("joining $_");
     $irc->yield( join => $_ );
+  }
+  for (@{$self->config->{servers}{$session_alias}{on_connect}}) {
+    $self->log_debug("sending $_");
+    $irc->yield( quote => $_ );
   }
 }
 
 sub disconnected {
   my $self = $_[OBJECT];
   my $irc = $self->connection($_[SENDER]->ID);
-  $self->log_info("disconnected from " . $irc->{alias});
+  $self->log_info("disconnected from " . $irc->session_alias);
 }
 
 sub public {
@@ -116,7 +141,7 @@ sub public {
   my $nick = ( split /!/, $who )[0];
   my $channel = $where->[0];
   $what = decode("utf8", $what, Encode::FB_WARN);
-  $self->httpd->display_message($nick, $channel, $irc->session_id, $what);
+  $self->httpd->display_message($nick, $channel, $irc->session_alias, $what);
 }
 
 sub msg {
@@ -124,7 +149,7 @@ sub msg {
   my $irc = $self->connection($_[SENDER]->ID);
   my $nick = ( split /!/, $who)[0];
   $what = decode("utf8", $what, Encode::FB_WARN);
-  $self->httpd->display_message($nick, $nick, $irc->session_id, $what);
+  $self->httpd->display_message($nick, $nick, $irc->session_alias, $what);
 }
 
 sub action {
@@ -133,14 +158,14 @@ sub action {
   my $nick = ( split /!/, $who )[0];
   my $channel = $where->[0];
   $what = decode("utf8", "• $what", Encode::FB_WARN);
-  $self->httpd->display_message($nick, $channel, $irc->session_id, $what);
+  $self->httpd->display_message($nick, $channel, $irc->session_alias, $what);
 }
 
 sub nick {
   my ($self, $who, $new_nick) = @_[OBJECT, ARG0, ARG1];
   my $irc = $self->connection($_[SENDER]->ID);
   my $nick = ( split /!/, $who )[0];
-  $self->httpd->display_event($nick, $_, $irc->session_id, "nick", $new_nick)
+  $self->httpd->display_event($nick, $_, $irc->session_alias, "nick", $new_nick)
     for $irc->nick_channels($new_nick);
 }
 
@@ -150,21 +175,20 @@ sub joined {
   my $nick = ( split /!/, $who)[0];
   my $channel = $where;
   if ($nick ne $irc->nick_name) {
-    $self->httpd->display_event($nick, $channel, $irc->session_id, "joined");  
+    $self->httpd->display_event($nick, $channel, $irc->session_alias, "joined");  
   }
   else {
-    $self->httpd->create_tab($channel, $irc->session_id);
+    $self->httpd->create_tab($channel, $irc->session_alias);
   }
 }
 
 sub chan_sync {
   my ($self, $channel) = @_[OBJECT, ARG0];
   my $irc = $self->connection($_[SENDER]->ID);
-  $self->httpd->create_tab($channel, $irc->session_id) if $channel ne "main";
   my $topic = $irc->channel_topic($channel);
   if ($topic->{Value} and $topic->{SetBy}) {
     $self->httpd->send_topic(
-      $topic->{SetBy}, $channel, $irc->session_id, decode_utf8($topic->{Value})
+      $topic->{SetBy}, $channel, $irc->session_alias, decode_utf8($topic->{Value}), $topic->{SetAt}
     );
   }
 }
@@ -175,10 +199,10 @@ sub part {
   my $nick = ( split /!/, $who)[0];
   my $channel = $where;
   if ($nick ne $irc->nick_name) {
-    $self->httpd->display_event($nick, $channel, $irc->session_id, "left", $msg);
+    $self->httpd->display_event($nick, $channel, $irc->session_alias, "left", $msg);
   }
   else {
-    $self->httpd->close_tab($channel, $irc->session_id);
+    $self->httpd->close_tab($channel, $irc->session_alias);
   }
 }
 
@@ -187,14 +211,14 @@ sub quit {
   my $irc = $self->connection($_[SENDER]->ID);
   my $nick = ( split /!/, $who)[0];
   for my $channel (@$channels) {
-    $self->httpd->display_event($nick, $channel, $irc->session_id, "left", $msg);
+    $self->httpd->display_event($nick, $channel, $irc->session_alias, "left", $msg);
   }
 }
 
 sub topic {
   my ($self, $who, $channel, $topic) = @_[OBJECT, ARG0 .. ARG2];
   my $irc = $self->connection($_[SENDER]->ID);
-  $self->httpd->send_topic($who, $channel, $irc->session_id, $topic);
+  $self->httpd->send_topic($who, $channel, $irc->session_alias, decode_utf8($topic));
 }
 
 sub log_debug {

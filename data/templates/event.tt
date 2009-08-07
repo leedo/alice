@@ -1,12 +1,13 @@
 <li class="event">
-  <div class="left">[% timestamp %]</div>
-  <div class="msg">
+    <div class="left">[% timestamp %]</div>
+    <div class="msg">
+
   [% IF event == "topic" %]
-    Topic changed to "[% message %]" by <a href="javascript:alice.connection.requestTab('[% nick %]',[% session %])" class="nick">[% nick %]</a>.
+    Topic changed to "[% message %]" by <a href="javascript:alice.connection.requestTab('[% nick %]','[% session %]')" class="nick">[% nick %]</a>.
   [% ELSIF event == "joined" || event == "left" %]
-    <a href="javascript:alice.connection.requestTab('[% nick %]',[% session %])" class="nick">[% nick %]</a> [% event %] the chat room.[% IF message %] ([% message %])[% END %]
+    <a href="javascript:alice.connection.requestTab('[% nick %]','[% session %]')" class="nick">[% nick %]</a> [% event %] the chat room.[% IF message %] ([% message %])[% END %]
   [% ELSIF event == "nick" %]
-    [% nick %] is now known as <a href="javascript:alice.connection.requestTab('[% nick %]',[% session %])" class="nick">[% message %]</a>.
+    [% nick %] is now known as <a href="javascript:alice.connection.requestTab('[% nick %]','[% session %]')" class="nick">[% message %]</a>.
   [% END %]
   </div>
 </li>

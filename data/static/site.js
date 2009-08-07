@@ -7882,8 +7882,8 @@ var Alice = Class.create({
     this.isCtrl = false;
     this.isCommand = false;
     this.isAlt = false;
-    this.channels = [];
-    this.channelLookup = [];
+    this.isFocused = true;
+    this.channels = new Hash();
     this.previousFocus = 0;
     this.connection = new Alice.Connection;
     this.filters = [ this.linkFilter ];
@@ -7917,26 +7917,25 @@ var Alice = Class.create({
   },
 
   addChannel: function (channel) {
-    this.channelLookup[channel.id] = this.channels.length;
-    this.channels.push(channel);
+    this.channels.set(channel.id, channel);
   },
 
   removeChannel: function (channel) {
-    if (channel.active) alice.focusLast();
-    alice.channels.splice(alice.channelLookup[channel.id], 1);
-    alice.channelLookup[channel.id] = null;
-    alice.connection.partChannel(channel);
+    if (channel.active) this.focusLast();
+    this.channels.unset(channel.id);
+    this.connection.partChannel(channel);
+    channel = null;
   },
 
   getChannel: function (channelId) {
-    return this.channels[this.channelLookup[channelId]];
+    return this.channels.get(channelId);
   },
 
   activeChannel: function () {
-    for (var i=0; i < this.channels.length; i++) {
-      if (this.channels[i].active) return this.channels[i];
+    var channels = this.channels.values();
+    for (var i=0; i < channels.length; i++) {
+      if (channels[i].active) return channels[i];
     }
-    return this.channels[0];
   },
 
   onKeyUp: function (e) {
@@ -7961,7 +7960,7 @@ var Alice = Class.create({
     else if (e.which == 18)
       this.isAlt = true;
     else if (this.isCtrl && e.which == 75) {
-      $$('.channel.active .messages').first().innerHTML = '';
+      this.activeChannel().messages.innerHTML = '';
       return false;
     }
     else if (this.isCtrl && e.which == 78) {
@@ -7971,6 +7970,12 @@ var Alice = Class.create({
     else if (this.isCtrl && e.which == 80) {
       this.previousTab();
       return false;
+    }
+    else if (e.which == Event.KEY_UP) {
+      this.activeChannel().previousMessage();
+    }
+    else if (e.which == Event.KEY_DOWN) {
+      this.activeChannel().nextMessage();
     }
   },
 
@@ -7994,37 +7999,28 @@ var Alice = Class.create({
   },
 
   nextTab: function () {
-    for (var i=0; i < this.channels.length; i++) {
-      if (i + 1 < this.channels.length && this.channels[i].active) {
-        this.previousFocus = i;
-        this.channels[i + 1].focus();
-        return;
-      }
-      else if (i + 1 >= this.channels.length) {
-        this.previousFocus = i;
-        this.channels[0].focus();
-        return;
-      }
-    }
+    var nextChan = this.activeChannel().tab.next();
+    if (! nextChan)
+      nextChan = $$('.channel').first();
+    if (! nextChan) return;
+    nextChan = nextChan.id.replace('_tab','');
+    this.getChannel(nextChan).focus();
   },
 
   focusLast: function () {
-    this.channels[this.previousFocus].focus();
+    if (this.previousFocus)
+      this.previousFocus.focus();
+    else if (this.channels.values().length)
+      this.channels.values().first().focus();
   },
 
   previousTab: function () {
-    for (var i=this.channels.length - 1; i >= 0; i--) {
-      if (i > 0 && this.channels[i].active) {
-        this.previousFocus = i;
-        this.channels[i - 1].focus();
-        return;
-      }
-      else if (i <= 0) {
-        this.previousFocus = i;
-        this.channels[this.channels.length - 1].focus();
-        return;
-      }
-    }
+    var prevChan = this.activeChannel().tab.previous();
+    if (! prevChan)
+      prevChan = $$('.channel').last();
+    if (! prevChan) return;
+    prevChan = prevChan.id.replace('_tab','');
+    this.getChannel(prevChan).focus();
   },
 
   closeTab: function (chanid) {
@@ -8091,12 +8087,16 @@ Alice.Channel = Class.create({
     this.messages = $(id + "_messages");
     this.lastnick = "";
 
+    this.msgHistory = [""];
+    this.currentMsg = 0;
+
     var self = this;
 
-    this.form.observe("submit", alice.connection.sayMessage);
-    this.tab.observe("click", this.focus.bind(this));
-    this.tabButton.observe("click", this.close.bind(this));
-
+    this.form.observe("submit", this.sayMessage.bind(this));
+    this.tab.observe("mousedown", this.focus.bind(this));
+    this.tabButton.observe("click", function (e) {self.close(); Event.stop(e);});
+    this.tabButton.observe("mousedown", function (e) {Event.stop(e)});
+    /*
     this.autocompleter = new Alice.Autocompleter(
       this.input, this.id + "_autocomplete_choices",
       "/autocomplete",
@@ -8111,24 +8111,50 @@ Alice.Channel = Class.create({
         }
       }
     );
+    */
+  },
+
+  nextMessage: function () {
+    if (this.msgHistory.length <= 1) return;
+    this.currentMsg++;
+    if (this.currentMsg >= this.msgHistory.length)
+      this.currentMsg = 0;
+    this.input.value = this.msgHistory[this.currentMsg];
+  },
+
+  previousMessage: function () {
+    if (this.msgHistory.length <= 1) return;
+    this.currentMsg--;
+    if (this.currentMsg < 0)
+      this.currentMsg = this.msgHistory.length - 1;
+    this.input.value = this.msgHistory[this.currentMsg];
+  },
+
+  sayMessage: function (event) {
+    alice.connection.sendMessage(this.form);
+    this.currentMsg = 0;
+    this.msgHistory.push(this.input.value);
+    this.input.value = '';
+    Event.stop(event);
   },
 
   unFocus: function () {
     this.active = false;
-    alice.previousFocus = alice.channelLookup[this.id];
+    alice.previousFocus = this;
     this.elem.removeClassName('active');
     this.tab.removeClassName('active');
     if (this.tab.previous()) this.tab.previous().removeClassName("leftof_active");
   },
 
-  focus: function () {
+  focus: function (event) {
     document.title = this.name;
-    alice.activeChannel().unFocus();
+    if (alice.activeChannel()) alice.activeChannel().unFocus();
     this.active = true;
     this.tab.addClassName('active');
     this.elem.addClassName('active');
     this.tab.removeClassName("unread");
     this.tab.removeClassName("highlight");
+    this.tab.removeClassName("leftof_active");
     if (this.tab.previous()) this.tab.previous().addClassName("leftof_active");
     this.scrollToBottom(true);
     this.input.focus();
@@ -8138,7 +8164,6 @@ Alice.Channel = Class.create({
     alice.removeChannel(this);
     this.tab.remove();
     this.elem.remove();
-    Event.stop(event);
   },
 
   displayTopic: function(topic) {
@@ -8158,29 +8183,45 @@ Alice.Channel = Class.create({
         var html = stripNick(alice.applyFilters(message.full_html));
         this.messages.insert(html);
       }
+      else if (message.event == "topic") {
+        this.messages.insert(alice.linkFilter(message.full_html));
+        this.displayTopic(message.message);
+      }
       else {
         var html = alice.applyFilters(message.full_html);
         this.messages.insert(html);
       }
 
-      if (message.event == "topic") this.displayTopic(message.message);
+      if (! alice.isFocused && message.highlight)
+        growlNotify(message);
 
       if (this.elem.hasClassName('active'))
         this.scrollToBottom();
-      else if (message.event == "say" && message.highlight) {
+      else if (message.event == "say" && message.highlight)
         this.tab.addClassName("highlight");
-        growlNotify(message);
-      }
       else if (message.event == "say")
         this.tab.addClassName("unread");
     }
     else if (message.event == "announce") {
-      this.messages.insert("<li class='message'><div class='msg announce'>"+message.str+"</div></li>");
+      this.messages.insert("<li class='message'><div class='msg announce'>"
+        +message.str+"</div></li>");
+      this.scrollToBottom();
     }
+
+    var messages = $$('#' + message.chanid + ' li');
+    if (messages.length > 250) messages.first().remove();
   },
 
   scrollToBottom: function (force) {
-    this.elem.scrollTop = this.elem.scrollHeight;
+    if (! force) {
+      var lastmsg = $$('#' + this.id + ' li:last-child').first();
+      if (! lastmsg) return;
+      var msgheight = lastmsg.offsetHeight;
+      var bottom = this.elem.scrollTop + this.elem.offsetHeight;
+      var height = this.elem.scrollHeight;
+    }
+    if (force || bottom + msgheight >= height)
+      this.elem.scrollTop = this.elem.scrollHeight;
   }
 });
 Alice.Connection = Class.create({
@@ -8190,6 +8231,7 @@ Alice.Connection = Class.create({
     this.req = null;
     this.seperator = "--xalicex\n";
     this.msgid = 0;
+    this.timer = null;
   },
 
   closeConnection: function () {
@@ -8202,26 +8244,29 @@ Alice.Connection = Class.create({
   connect: function () {
     this.closeConnection();
     this.len = 0;
+    clearTimeout(this.timer);
     var connection = this;
+    console.log("opening new connection.");
     this.req = new Ajax.Request('/stream', {
       method: 'get',
       parameters: {msgid: connection.msgid},
       onException: function (req, e) {
-        console.log(e);
+        console.log("encountered an error with stream.");
         if (! connection.aborting)
           setTimeout(connection.connect.bind(connection), 2000);
       },
       onInteractive: connection.handleUpdate.bind(connection),
       onComplete: function () {
+        console.log("connection was closed cleanly.");
         if (! connection.aborting)
           setTimeout(connection.connect.bind(connection), 2000);
       }
     });
-    setTimeout(this.connect.bind(this), 10 * 60 * 1000)
   },
 
   handleUpdate: function (transport) {
     var time = new Date();
+    console.time('slicing');
     var data = transport.responseText.slice(this.len);
     var start, end;
     start = data.indexOf(this.seperator);
@@ -8233,9 +8278,12 @@ Alice.Connection = Class.create({
     else return;
     this.len += (end + this.seperator.length) - start;
     data = data.slice(start, end);
+    console.timeEnd('slicing');
 
     try {
+      console.time('evaling');
       data = data.evalJSON();
+      console.timeEnd('evaling');
     }
     catch (err) {
       console.log(err);
@@ -8243,14 +8291,19 @@ Alice.Connection = Class.create({
     }
     if (data.msgs.length)
       this.msgid = data.msgs[data.msgs.length - 1].msgid;
+    console.time('msgs');
     alice.handleActions(data.actions);
+    console.timeEnd('msgs');
+    console.time('actions');
     alice.displayMessages(data.msgs);
+    console.timeEnd('actions');
 
     var lag = time / 1000 -  data.time;
     if (lag > 5) {
-      console.log("lag is " + Math.round(lag) + "s, reconnecting...");
+      console.log("lag is " + Math.round(lag) + "s, reconnecting.");
       this.connect();
     }
+
   },
 
   requestTab: function (name, session, message) {
@@ -8272,14 +8325,11 @@ Alice.Connection = Class.create({
     });
   },
 
-  sayMessage: function (event) {
-    var form = event.element();
+  sendMessage: function (form) {
     new Ajax.Request('/say', {
       method: 'get',
       parameters: form.serialize(),
     });
-    form.childNodes[3].value = '';
-    Event.stop(event);
   },
 
   getConfig: function (callback) {
@@ -8294,6 +8344,10 @@ Alice.Connection = Class.create({
       method: 'get',
       parameters: params
     });
+  },
+
+  sendPing: function () {
+    new Ajax.Request('/ping');
   }
 });
 Alice.Autocompleter = Class.create(Ajax.Autocompleter, {
@@ -8304,7 +8358,7 @@ Alice.Autocompleter = Class.create(Ajax.Autocompleter, {
           this.markNext();
           this.render();
           Event.stop(event);
-          alice.activeChannel.scrollToBottom(true);
+          alice.activeChannel().scrollToBottom(true);
           return;
         case Event.KEY_RETURN:
           this.selectEntry();
@@ -8369,18 +8423,26 @@ function stripNick (html) {
 function growlNotify (message) {
   if (! window.fluid) return;
   window.fluid.showGrowlNotification({
-      title: message.channel,
-      description: message.nick,
+      title: message.chan + ": " + message.nick,
+      description: message.message,
       priority: 1,
       sticky: false,
-      identifier: message.session+message.channel+message.nick
+      identifier: message.msgid
   })
 }
 
 var alice = new Alice();
+
 document.observe("dom:loaded", function () {
   $$("div.topic").each(function (topic){
     topic.innerHTML = alice.linkFilter(topic.innerHTML)});
   $('config_button').observe("click", alice.toggleConfig.bind(alice));
-})
-window.status = " ";
+  window.onkeydown = function () {
+    if (! $('config') && ! alice.isCtrl && ! alice.isCommand && ! alice.isAlt)
+      alice.activeChannel().input.focus()};
+  window.onresize = function () {
+    alice.activeChannel().scrollToBottom()};
+  window.status = " ";
+  window.onfocus = function () {alice.isFocused = true};
+  window.onblur = function () {alice.isFocused = false};
+});

@@ -6,6 +6,7 @@ use warnings;
 use Moose;
 use bytes;
 use Encode;
+use MIME::Base64;
 use Time::HiRes qw/time/;
 use POE;
 use POE::Component::Server::HTTP;
@@ -23,6 +24,9 @@ has 'config' => (
     my $self = shift;
     POE::Component::Server::HTTP->new(
       Port            => $self->config->{port},
+      PreHandler      => {
+        '/'             => sub{$self->check_authentication(@_)},
+      },
       ContentHandler  => {
         '/serverconfig' => sub{$self->server_config(@_)},
         '/config'       => sub{$self->send_config(@_)},
@@ -35,6 +39,14 @@ has 'config' => (
         '/autocomplete' => sub{$self->handle_autocomplete(@_)},
       },
       StreamHandler    => sub{$self->handle_stream(@_)},
+    );
+    POE::Session->create(
+      object_states => [
+        $self => {
+          _start => 'start_ping',
+          ping   => 'ping',
+        }
+      ],
     );
   },
 );
@@ -107,6 +119,35 @@ after 'msgid' => sub {
   $self->{msgid} = $self->{msgid} + 1;
 };
 
+sub check_authentication {
+  my ($self, $req, $res)  = @_;
+
+  return RC_OK unless ($self->config->{auth}
+      and ref $self->config->{auth} eq 'HASH'
+      and $self->config->{auth}{username}
+      and $self->config->{auth}{password});
+
+  if (my $auth  = $req->header('authorization')) {
+    $self->log_debug("Auth handler called");
+
+    $auth     =~ s/^Basic //;
+    $auth     = decode_base64($auth);
+    my ($user,$password)  = split(/:/, $auth);
+
+    if ($self->{config}->{auth}->{username} eq $user &&
+        $self->{config}->{auth}->{password} eq $password) {
+      $self->log_debug("Authenticated");
+      return RC_OK;
+    }
+  }
+
+  $self->log_debug("Authentication handler called");
+  $res->code(401);
+  $res->header('WWW-Authenticate' => 'Basic realm="Alice"');
+  $res->close();
+  return RC_DENY;
+}
+
 sub setup_stream {
   my ($self, $req, $res) = @_;
   
@@ -150,16 +191,16 @@ sub handle_stream {
     else {
       $res->{msgs} = [];
       $res->{actions} = [];
+      $res->continue;
     }
   }
-  #$res->continue_delayed(0.5);
 }
 
 sub end_stream {
   my ($self, $res) = @_;
   $self->log_debug("closing a streaming http connection");
   for (0 .. scalar @{$self->streams} - 1) {
-    if ($res and $res == $self->streams->[$_]) {
+    if (! $self->streams->[$_] or ($res and $res == $self->streams->[$_])) {
       splice(@{$self->streams}, $_, 1);
     }
   }
@@ -167,30 +208,46 @@ sub end_stream {
   $res->continue;
 }
 
+sub start_ping {
+  $_[KERNEL]->delay(ping => 30);
+}
+
+sub ping {
+  my $self = $_[OBJECT];
+  my $data = {
+    type  => "action",
+    event => "ping",
+  };
+  push @{$_->{actions}}, $data for @{$self->streams};
+  $_->continue for @{$self->streams};
+  $_[KERNEL]->delay(ping => 15);
+}
+
 sub handle_message {
   my ($self, $req, $res) = @_;
   my $msg  = $req->uri->query_param('msg');
   my $chan = lc $req->uri->query_param('chan');
   my $session = $req->uri->query_param('session');
-  my $irc = $self->irc->connection($session);
+  my $irc = $self->irc->connection_from_alias($session);
+  my $is_channel = 1 if ($chan =~ /^#/);
   return 200 unless $session;
   if (length $msg) {
     if ($msg =~ /^\/query (\S+)/) {
       $self->create_tab($1, $session);
     }
-    elsif ($msg =~ /^\/join (.+)/) {
+    elsif ($msg =~ /^\/j(?:oin) (.+)/) {
       $irc->yield("join", $1);
     }
-    elsif ($msg =~ /^\/part\s?(.+)?/) {
+    elsif ($is_channel and $msg =~ /^\/part\s?(.+)?/) {
       $irc->yield("part", $1 || $chan);
     }
     elsif ($msg =~ /^\/window new (.+)/) {
       $self->create_tab($1, $session);
     }
-    elsif ($msg =~ /^\/n(?:ames)?/ and $chan) {
+    elsif ($is_channel and $msg =~ /^\/n(?:ames)?/ and $chan) {
       $self->show_nicks($chan, $session);
     }
-    elsif ($msg =~ /^\/topic\s?(.+)?/) {
+    elsif ($is_channel and $msg =~ /^\/topic\s?(.+)?/) {
       if ($1) {
         $irc->yield("topic", $chan, $1);
       }
@@ -205,6 +262,9 @@ sub handle_message {
       my $nick = $irc->nick_name;
       $self->display_message($nick, $chan, $session, decode_utf8("• $1"));
       $irc->yield("ctcp", $chan, "ACTION $1");
+    }
+    elsif ($msg =~ /^\/(?:quote|raw) (.+)/) {
+      $irc->yield("quote", $1);
     }
     else {
       $self->log_debug("sending message to $chan");
@@ -252,7 +312,7 @@ sub send_index {
   my $output = '';
   my $channels = [];
   for my $irc ($self->irc->connections) {
-    my $session = $irc->session_id;
+    my $session = $irc->session_alias;
     for my $channel (keys %{$irc->channels}) {
       push @$channels, {
         chanid  => $self->channel_id($channel, $session),
@@ -329,8 +389,8 @@ sub handle_autocomplete {
   $res->content_type('text/html; charset=utf-8');
   my $query = $req->uri->query_param('msg');
   my $chan = $req->uri->query_param('chan');
-  my $session_id = $req->uri->query_param('session');
-  my $irc = $self->irc->connection($session_id);
+  my $session_alias = $req->uri->query_param('session');
+  my $irc = $self->irc->connection_from_alias($session_alias);
   ($query) = $query =~ /((?:^\/)?[\d\w]*)$/;
   return 200 unless $query;
   $self->log_debug("handling autocomplete for $query");
@@ -350,13 +410,14 @@ sub not_found {
 }
 
 sub send_topic {
-  my ($self, $who, $channel, $session, $topic) = @_;
+  my ($self, $who, $channel, $session, $topic, $time) = @_;
   my $nick = ( split /!/, $who)[0];
-  $self->display_event($nick, $channel, $session, "topic", $topic);
+  $self->display_event($nick, $channel, $session, "topic", $topic, $time);
 }
 
 sub display_event {
-  my ($self, $nick, $channel, $session, $event_type, $msg) = @_;
+  my ($self, $nick, $channel, $session, $event_type, $msg, $event_time) = @_;
+
   my $event = {
     type      => "message",
     event     => $event_type,
@@ -368,6 +429,7 @@ sub display_event {
     msgid     => $self->msgid,
     timestamp => make_timestamp(),
   };
+
   my $html = '';
   $self->tt->process("event.tt", $event, \$html);
   $event->{full_html} = $html;
@@ -378,7 +440,7 @@ sub display_event {
 sub display_message {
   my ($self, $nick, $channel, $session, $text) = @_;
   my $html = IRC::Formatting::HTML->formatted_string_to_html($text);
-  my $mynick = $self->irc->connection($session)->nick_name;
+  my $mynick = $self->irc->connection_from_alias($session)->nick_name;
   my $msg = {
     type      => "message",
     event     => "say",
@@ -389,6 +451,7 @@ sub display_message {
     msgid     => $self->msgid,
     self      => $nick eq $mynick,
     html      => $html,
+    message   => $text,
     highlight => $text =~ /\b$mynick\b/i || 0,
     timestamp => make_timestamp(),
   };
@@ -414,6 +477,14 @@ sub create_tab {
     session   => $session,
     timestamp => make_timestamp(),
   };
+
+  my $irc = $self->irc->connection_from_alias($session);
+  if ($name !~ /^#/ and my $user = $irc->nick_info($name)) {
+    $action->{topic}  = {
+      Value => $user->{Userhost}
+    };
+  }
+
   my $chan_html = '';
   $self->tt->process("channel.tt", $action, \$chan_html);
   $action->{html}{channel} = $chan_html;
@@ -421,7 +492,7 @@ sub create_tab {
   $self->tt->process("tab.tt", $action, \$tab_html);
   $action->{html}{tab} = $tab_html;
   $self->send_data($action);
-  $self->log_debug("sending a request for a new tab: $name") if $self->clients;
+  $self->log_debug("sending a request for a new tab: $name " . $action->{chanid}) if $self->clients;
 }
 
 sub close_tab {
@@ -453,7 +524,7 @@ sub send_data {
 
 sub show_nicks {
   my ($self, $chan, $session) = @_;
-  my $irc = $self->irc->connection($session);
+  my $irc = $self->irc->connection_from_alias($session);
   $self->send_data({
     type    => "message",
     event   => "announce",

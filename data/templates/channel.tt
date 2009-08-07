@@ -13,7 +13,7 @@
     </form>
     <script type="text/javascript">
       alice.addChannel(
-        new Alice.Channel('[% chan %]','[% chanid %]',[% loop.first ? "true" : "false" %],[% session %])
+        new Alice.Channel('[% chan %]','[% chanid %]',[% loop.first ? "true" : "false" %],'[% session %]')
       );
     </script>
   </div>

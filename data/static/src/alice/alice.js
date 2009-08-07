@@ -9,8 +9,8 @@ var Alice = Class.create({
     this.isCtrl = false;
     this.isCommand = false;
     this.isAlt = false;
-    this.channels = [];
-    this.channelLookup = [];
+    this.isFocused = true;
+    this.channels = new Hash();
     this.previousFocus = 0;
     this.connection = new Alice.Connection;
     this.filters = [ this.linkFilter ];
@@ -44,26 +44,25 @@ var Alice = Class.create({
   },
   
   addChannel: function (channel) {
-    this.channelLookup[channel.id] = this.channels.length;
-    this.channels.push(channel);
+    this.channels.set(channel.id, channel);
   },
   
   removeChannel: function (channel) {
-    if (channel.active) alice.focusLast();
-    alice.channels.splice(alice.channelLookup[channel.id], 1);
-    alice.channelLookup[channel.id] = null;
-    alice.connection.partChannel(channel);
+    if (channel.active) this.focusLast();
+    this.channels.unset(channel.id);
+    this.connection.partChannel(channel);
+    channel = null;
   },
   
   getChannel: function (channelId) {
-    return this.channels[this.channelLookup[channelId]];
+    return this.channels.get(channelId);
   },
   
   activeChannel: function () {
-    for (var i=0; i < this.channels.length; i++) {
-      if (this.channels[i].active) return this.channels[i];
+    var channels = this.channels.values();
+    for (var i=0; i < channels.length; i++) {
+      if (channels[i].active) return channels[i];
     }
-    return this.channels[0];
   },
   
   onKeyUp: function (e) {
@@ -88,7 +87,7 @@ var Alice = Class.create({
     else if (e.which == 18)
       this.isAlt = true;
     else if (this.isCtrl && e.which == 75) {
-      $$('.channel.active .messages').first().innerHTML = '';
+      this.activeChannel().messages.innerHTML = '';
       return false;
     }
     else if (this.isCtrl && e.which == 78) {
@@ -98,6 +97,12 @@ var Alice = Class.create({
     else if (this.isCtrl && e.which == 80) {
       this.previousTab();
       return false;
+    }
+    else if (e.which == Event.KEY_UP) {
+      this.activeChannel().previousMessage();
+    }
+    else if (e.which == Event.KEY_DOWN) {
+      this.activeChannel().nextMessage();
     }
   },
   
@@ -121,37 +126,28 @@ var Alice = Class.create({
   },
   
   nextTab: function () {
-    for (var i=0; i < this.channels.length; i++) {
-      if (i + 1 < this.channels.length && this.channels[i].active) {
-        this.previousFocus = i;
-        this.channels[i + 1].focus();
-        return;
-      }
-      else if (i + 1 >= this.channels.length) {
-        this.previousFocus = i;
-        this.channels[0].focus();
-        return;
-      }
-    }
+    var nextChan = this.activeChannel().tab.next();
+    if (! nextChan)
+      nextChan = $$('.channel').first();
+    if (! nextChan) return;
+    nextChan = nextChan.id.replace('_tab','');
+    this.getChannel(nextChan).focus();
   },
   
   focusLast: function () {
-    this.channels[this.previousFocus].focus();
+    if (this.previousFocus)
+      this.previousFocus.focus();
+    else if (this.channels.values().length)
+      this.channels.values().first().focus();
   },
   
   previousTab: function () {
-    for (var i=this.channels.length - 1; i >= 0; i--) {
-      if (i > 0 && this.channels[i].active) {
-        this.previousFocus = i;
-        this.channels[i - 1].focus();
-        return;
-      }
-      else if (i <= 0) {
-        this.previousFocus = i;
-        this.channels[this.channels.length - 1].focus();
-        return;
-      }
-    }
+    var prevChan = this.activeChannel().tab.previous();
+    if (! prevChan)
+      prevChan = $$('.channel').last();
+    if (! prevChan) return;
+    prevChan = prevChan.id.replace('_tab','');
+    this.getChannel(prevChan).focus();
   },
   
   closeTab: function (chanid) {
@@ -208,14 +204,17 @@ var Alice = Class.create({
 //= require <alice/util>
 
 var alice = new Alice();
+
 document.observe("dom:loaded", function () {
   $$("div.topic").each(function (topic){
     topic.innerHTML = alice.linkFilter(topic.innerHTML)});
   $('config_button').observe("click", alice.toggleConfig.bind(alice));
-})
-//window.onkeydown = function () {
-//  if (! alice.isCtrl && ! alice.isCommand && ! alice.isAlt)
-//    alice.activeChannel().input.focus()};
-//window.onresize = function () {
-//  alice.activeChannel().scrollToBottom()};
-window.status = " ";
+  window.onkeydown = function () {
+    if (! $('config') && ! alice.isCtrl && ! alice.isCommand && ! alice.isAlt)
+      alice.activeChannel().input.focus()};
+  window.onresize = function () {
+    alice.activeChannel().scrollToBottom()};
+  window.status = " ";  
+  window.onfocus = function () {alice.isFocused = true};
+  window.onblur = function () {alice.isFocused = false};
+});

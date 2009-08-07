@@ -6,10 +6,10 @@ function stripNick (html) {
 function growlNotify (message) {
   if (! window.fluid) return;
   window.fluid.showGrowlNotification({
-      title: message.channel, 
-      description: message.nick, 
+      title: message.chan + ": " + message.nick,
+      description: message.message, 
       priority: 1, 
       sticky: false,
-      identifier: message.session+message.channel+message.nick
+      identifier: message.msgid
   })
 }
