@@ -8266,6 +8266,7 @@ Alice.Connection = Class.create({
 
   handleUpdate: function (transport) {
     var time = new Date();
+    console.time('slicing');
     var data = transport.responseText.slice(this.len);
     var start, end;
     start = data.indexOf(this.seperator);
@@ -8277,9 +8278,12 @@ Alice.Connection = Class.create({
     else return;
     this.len += (end + this.seperator.length) - start;
     data = data.slice(start, end);
+    console.timeEnd('slicing');
 
     try {
+      console.time('evaling');
       data = data.evalJSON();
+      console.timeEnd('evaling');
     }
     catch (err) {
       console.log(err);
@@ -8287,8 +8291,12 @@ Alice.Connection = Class.create({
     }
     if (data.msgs.length)
       this.msgid = data.msgs[data.msgs.length - 1].msgid;
+    console.time('msgs');
     alice.handleActions(data.actions);
+    console.timeEnd('msgs');
+    console.time('actions');
     alice.displayMessages(data.msgs);
+    console.timeEnd('actions');
 
     var lag = time / 1000 -  data.time;
     if (lag > 5) {
