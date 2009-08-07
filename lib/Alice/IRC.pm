@@ -123,6 +123,10 @@ sub connected {
     $self->log_debug("joining $_");
     $irc->yield( join => $_ );
   }
+  for (@{$self->config->{servers}{$session_alias}{on_connect}}) {
+    $self->log_debug("sending $_");
+    $irc->yield( quote => $_ );
+  }
 }
 
 sub disconnected {
