@@ -476,6 +476,14 @@ sub create_tab {
     session   => $session,
     timestamp => make_timestamp(),
   };
+
+  my $irc = $self->irc->connection_from_alias($session);
+  if ($name !~ /^#/ and my $user = $irc->nick_info($name)) {
+    $action->{topic}  = {
+      Value => $user->{Userhost}
+    };
+  }
+
   my $chan_html = '';
   $self->tt->process("channel.tt", $action, \$chan_html);
   $action->{html}{channel} = $chan_html;
