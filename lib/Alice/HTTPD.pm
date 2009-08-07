@@ -229,6 +229,7 @@ sub handle_message {
   my $chan = lc $req->uri->query_param('chan');
   my $session = $req->uri->query_param('session');
   my $irc = $self->irc->connection_from_alias($session);
+  my $channel = 1 if ($chan =~ /^#/);
   return 200 unless $session;
   if (length $msg) {
     if ($msg =~ /^\/query (\S+)/) {
@@ -237,16 +238,16 @@ sub handle_message {
     elsif ($msg =~ /^\/j(?:oin) (.+)/) {
       $irc->yield("join", $1);
     }
-    elsif ($msg =~ /^\/part\s?(.+)?/) {
+    elsif ($channel and $msg =~ /^\/part\s?(.+)?/) {
       $irc->yield("part", $1 || $chan);
     }
     elsif ($msg =~ /^\/window new (.+)/) {
       $self->create_tab($1, $session);
     }
-    elsif ($msg =~ /^\/n(?:ames)?/ and $chan) {
+    elsif ($channel and $msg =~ /^\/n(?:ames)?/ and $chan) {
       $self->show_nicks($chan, $session);
     }
-    elsif ($msg =~ /^\/topic\s?(.+)?/) {
+    elsif ($channel and $msg =~ /^\/topic\s?(.+)?/) {
       if ($1) {
         $irc->yield("topic", $chan, $1);
       }
