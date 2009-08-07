@@ -7999,11 +7999,12 @@ var Alice = Class.create({
   },
 
   nextTab: function () {
-    var nextChan = this.activeChannel().elem.next();
+    var nextChan = this.activeChannel().tab.next();
     if (! nextChan)
       nextChan = $$('.channel').first();
     if (! nextChan) return;
-    this.getChannel(nextChan.id).focus();
+    nextChan = nextChan.id.replace('_tab','');
+    this.getChannel(nextChan).focus();
   },
 
   focusLast: function () {
@@ -8014,11 +8015,12 @@ var Alice = Class.create({
   },
 
   previousTab: function () {
-    var prevChan = this.activeChannel().elem.previous();
+    var prevChan = this.activeChannel().tab.previous();
     if (! prevChan)
       prevChan = $$('.channel').last();
     if (! prevChan) return;
-    this.getChannel(prevChan.id).focus();
+    prevChan = prevChan.id.replace('_tab','');
+    this.getChannel(prevChan).focus();
   },
 
   closeTab: function (chanid) {
