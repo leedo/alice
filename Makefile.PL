@@ -15,4 +15,6 @@ requires    'IRC::Formatting::HTML';
 requires    'DateTime';
 
 auto_install(force => 1);
+install_share  'share';
+install_script 'script/alice';
 WriteAll;

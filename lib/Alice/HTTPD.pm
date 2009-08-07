@@ -15,6 +15,7 @@ use Template;
 use URI::QueryParam;
 use IRC::Formatting::HTML;
 use YAML qw/DumpFile/;
+use File::ShareDir qw/dist_dir/;
 
 has 'config' => (
   is  => 'ro',
@@ -49,6 +50,12 @@ has 'config' => (
       ],
     );
   },
+);
+
+has 'assetdir' => (
+  is      => 'ro',
+  isa     => 'Str',
+  default => sub { dist_dir('Alice') },
 );
 
 before qw/send_config save_config send_index setup_stream not_found
@@ -87,9 +94,11 @@ has 'commands' => (
 has 'tt' => (
   is => 'ro',
   isa => 'Template',
+  lazy => 1,
   default => sub {
+    my $self = shift;
     Template->new(
-      INCLUDE_PATH => 'data/templates',
+      INCLUDE_PATH => $self->assetdir . '/templates',
       ENCODING     => 'UTF8'
     );
   },
@@ -122,11 +131,11 @@ after 'msgid' => sub {
 sub check_authentication {
   my ($self, $req, $res)  = @_;
 
-  unless ($self->config->{auth}
+  return RC_OK unless ($self->config->{auth}
       and ref $self->config->{auth} eq 'HASH'
       and $self->config->{auth}{username}
-      and $self->config->{auth}{password})
-    return RC_OK;
+      and $self->config->{auth}{password});
+    
 
   if (my $auth  = $req->header('authorization')) {
     $self->log_debug("Auth handler called");
@@ -278,8 +287,9 @@ sub handle_static {
   my ($self, $req, $res) = @_;
   my $file = $req->uri->path;
   my ($ext) = ($file =~ /[^\.]\.(.+)$/);
-  if (-e "data$file") {
-    open my $fh, '<', "data$file";
+  if (-e $self->assetdir . $file) {
+    print STDERR $self->assetdir . $file;
+    open my $fh, '<', $self->assetdir . $file;
     $self->log_debug("serving static file: $file");
     if ($ext =~ /png|gif|jpg|jpeg/i) {
       $res->content_type("image/$ext"); 

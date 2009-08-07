@@ -15,11 +15,14 @@ $0 = 'Alice';
 my $config = {
   port  => 8080,
   debug => 1,
-  style => 'default',
+  style => 'campfire',
 };
 if (-e $ENV{HOME}.'/.alice.yaml') {
   eval { $config = LoadFile($ENV{HOME}.'/.alice.yaml') };
 }
+
+$config->{style} = 'campfire'
+  if ! $config->{style} or $config->{style} eq 'default';
   
 BEGIN { $SIG{__WARN__} = sub { warn $_[0] if $config->{debug} } };
 
