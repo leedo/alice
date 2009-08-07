@@ -1,6 +1,6 @@
 <li class="event">
   [% IF eventtime %]
-    <div class="left">-</div>
+    <div class="left">&nbsp;</div>
     <div class="msg">
   [% ELSE %]
     <div class="left">[% timestamp %]</div>

@@ -1,5 +1,8 @@
 debug: 0
 style: default
+#auth:
+# username: lee
+# password: mypass  
 servers:
   freenode:
     host: irc.freenode.net

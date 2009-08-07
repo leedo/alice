@@ -37,7 +37,7 @@ Alice.Connection = Class.create({
       }
     });
   },
-  
+
   handleUpdate: function (transport) {
     var time = new Date();
     var data = transport.responseText.slice(this.len);
