@@ -133,8 +133,10 @@ sub check_authentication {
 
     $auth     =~ s/^Basic //;
     $auth     = decode_base64($auth);
+    my ($user,$password)  = split(/:/, $auth);
 
-    if ($auth eq $self->{config}->{auth}) {
+    if ($self->{config}->{auth}->{username} eq $user &&
+        $self->{config}->{auth}->{password} eq $password) {
       $self->log_debug("Authenticated");
       return RC_OK;
     }
