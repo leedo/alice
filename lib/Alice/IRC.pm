@@ -65,6 +65,13 @@ sub connections {
 
 sub add_server {
   my ($self, $name, $server) = @_;
+
+  if ($server->{ssl}) {
+      eval {
+        require POE::Component::SSLify
+      };
+      die "Missing module POE::Component::SSLify" if ($@);
+  }
   my $irc = POE::Component::IRC::State->spawn(
     alias    => $name,
     nick     => $server->{nick},
