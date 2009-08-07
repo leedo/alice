@@ -483,7 +483,7 @@ sub create_tab {
   my $irc = $self->irc->connection_from_alias($session);
   if ($name !~ /^#/ and my $user = $irc->nick_info($name)) {
     $action->{topic}  = {
-      Value => $user->{Userhost}
+      Value => $user->{Userhost} . " ($session)"
     };
   }
 
