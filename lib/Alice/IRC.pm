@@ -8,6 +8,7 @@ use POE::Component::IRC;
 use POE::Component::IRC::State;
 use POE::Component::IRC::Plugin::Connector;
 use POE::Component::IRC::Plugin::CTCP;
+use POE::Component::IRC::Plugin::NickReclaim;
 use Encode;
 use Moose;
 
@@ -107,6 +108,7 @@ sub start {
     version => 'alice',
     userinfo => $irc->nick_name
   ));
+  $irc->plugin_add('NickReclaim' => POE::Component::IRC::Plugin::NickReclaim->new());
   $irc->yield(register => 'all');
   $irc->yield(connect => {});
   $_[HEAP] = undef;
