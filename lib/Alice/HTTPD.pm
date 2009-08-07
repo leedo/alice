@@ -6,11 +6,14 @@ use warnings;
 use Moose;
 use bytes;
 use Encode;
+use MIME::Base64;
 use Time::HiRes qw/time/;
+use DateTime;
 use POE;
 use POE::Component::Server::HTTP;
 use JSON;
 use Template;
+use Data::Dump qw/ddx/;
 use URI::QueryParam;
 use IRC::Formatting::HTML;
 use YAML qw/DumpFile/;
@@ -23,6 +26,9 @@ has 'config' => (
     my $self = shift;
     POE::Component::Server::HTTP->new(
       Port            => $self->config->{port},
+      PreHandler      => {
+        '/'             => sub{$self->check_authentication(@_)},
+      },
       ContentHandler  => {
         '/serverconfig' => sub{$self->server_config(@_)},
         '/config'       => sub{$self->send_config(@_)},
@@ -114,6 +120,32 @@ after 'msgid' => sub {
   my $self = shift;
   $self->{msgid} = $self->{msgid} + 1;
 };
+
+sub check_authentication {
+  my ($self, $req, $res)  = @_;
+
+  unless ($self->{config}->{auth}) {
+    return RC_OK;
+  }
+
+  if (my $auth  = $req->header('authorization')) {
+    $self->log_debug("Auth handler called");
+
+    $auth     =~ s/^Basic //;
+    $auth     = decode_base64($auth);
+
+    if ($auth eq $self->{config}->{auth}) {
+      $self->log_debug("Authenticated");
+      return RC_OK;
+    }
+  }
+
+  $self->log_debug("Authentication handler called");
+  $res->code(401);
+  $res->header('WWW-Authenticate' => 'Basic realm="Alice"');
+  $res->close();
+  return RC_DENY;
+}
 
 sub setup_stream {
   my ($self, $req, $res) = @_;
@@ -373,13 +405,14 @@ sub not_found {
 }
 
 sub send_topic {
-  my ($self, $who, $channel, $session, $topic) = @_;
+  my ($self, $who, $channel, $session, $topic, $time) = @_;
   my $nick = ( split /!/, $who)[0];
-  $self->display_event($nick, $channel, $session, "topic", $topic);
+  $self->display_event($nick, $channel, $session, "topic", $topic, $time);
 }
 
 sub display_event {
-  my ($self, $nick, $channel, $session, $event_type, $msg) = @_;
+  my ($self, $nick, $channel, $session, $event_type, $msg, $event_time) = @_;
+
   my $event = {
     type      => "message",
     event     => $event_type,
@@ -391,6 +424,12 @@ sub display_event {
     msgid     => $self->msgid,
     timestamp => make_timestamp(),
   };
+
+  if ($event_time) {
+    my $datetime        = DateTime->from_epoch( epoch  => $event_time );
+    $event->{eventtime} = $datetime->strftime('%T, %A %d %B, %Y');
+  }
+
   my $html = '';
   $self->tt->process("event.tt", $event, \$html);
   $event->{full_html} = $html;
