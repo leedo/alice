@@ -5,16 +5,8 @@ use warnings;
 
 use FindBin;
 use lib "$FindBin::Bin/lib";
-
-if ($^O eq 'darwin') {
-    lib->import("$FindBin::Bin/extlib/lib/perl5");
-
-    eval {
-        require local::lib;
-    };
-    die "Failed to load local::lib" if ($@);
-    local::lib->import("$FindBin::Bin/extlib");
-}
+use lib "$FindBin::Bin/extlib/lib/perl5";
+use local::lib "$FindBin::Bin/extlib";
 use YAML qw/LoadFile/;
 use Alice::HTTPD;
 use Alice::IRC;
