@@ -1,5 +1,5 @@
-BUILD := data/static
-SOURCE := $(BUILD)/src
+BUILD := .
+SOURCE := src
 INCLUDES := $(SOURCE) $(SOURCE)/alice $(SOURCE)/scriptaculous
 INCLUDE := $(foreach dir,$(INCLUDES),-I $(dir))
 JAVASCRIPT_SOURCES := $(foreach dir,$(INCLUDES),$(wildcard $(dir)/*.js))
