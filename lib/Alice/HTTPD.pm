@@ -113,21 +113,24 @@ after 'msgid' => sub {
 sub check_authentication {
   my ($self, $req, $res)  = @_;
 
+  unless ($self->{config}->{auth}) {
+    return RC_OK;
+  }
+
   if (my $auth  = $req->header('authorization')) {
     $self->log_debug("Auth handler called");
 
     $auth     =~ s/^Basic //;
     $auth     = decode_base64($auth);
 
-    if ($auth eq 'haha:dix') {
+    if ($auth eq $self->{config}->{auth}) {
       $self->log_debug("Authenticated");
       return RC_OK;
     } else {
       $self->log_debug("Failed authentication");
-      my $uri   = $req->uri();
-      $uri->path('authfail');
-      $req->uri($uri);
-      return RC_OK;
+      $res->code(403);
+      $res->content("Failed authentication");
+      $res->close();
     }
   }
 
