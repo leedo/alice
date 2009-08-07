@@ -266,6 +266,9 @@ sub handle_message {
     elsif ($msg =~ /^\/(?:quote|raw) (.+)/) {
       $irc->yield("quote", $1);
     }
+    elsif ($msg =~ /^\/(.+?)(?:\s|$)/) {
+      $self->display_announcement($chan, $session, "Invalid command $1");
+    }
     else {
       $self->log_debug("sending message to $chan");
       my $nick = $irc->nick_name;
@@ -462,6 +465,18 @@ sub display_message {
   $self->send_data($msg);
 }
 
+sub display_announcement {
+  my ($self, $channel, $session, $str) = @_;
+  $self->send_data({
+    type    => "message",
+    event   => "announce",
+    chan    => $channel,
+    chanid  => channel_id($channel, $session),
+    session => $session,
+    str     => $str
+  });
+}
+
 sub clients {
   my $self = shift;
   return scalar @{$self->streams};
@@ -523,16 +538,9 @@ sub send_data {
 }
 
 sub show_nicks {
-  my ($self, $chan, $session) = @_;
+  my ($self, $channel, $session) = @_;
   my $irc = $self->irc->connection_from_alias($session);
-  $self->send_data({
-    type    => "message",
-    event   => "announce",
-    chanid  => $self->channel_id($chan, $session),
-    chan    => $chan,
-    session => $session,
-    str     => format_nick_table($irc->channel_list($chan))
-  });
+  $self->display_announcement($channel, $session, format_nick_table($irc->channel_list($channel)));
 }
 
 sub format_nick_table {
