@@ -65,12 +65,12 @@ Alice.Connection = Class.create({
     }
     if (data.msgs.length)
       this.msgid = data.msgs[data.msgs.length - 1].msgid;
-    console.time('msgs');
-    alice.handleActions(data.actions);
-    console.timeEnd('msgs');
     console.time('actions');
-    alice.displayMessages(data.msgs);
+    alice.handleActions(data.actions);
     console.timeEnd('actions');
+    console.time('msgs');
+    alice.displayMessages(data.msgs);
+    console.timeEnd('msgs');
 
     // reconnect if lag is over 5 seconds... not a good way to do this.
     var lag = time / 1000 -  data.time;
