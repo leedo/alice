@@ -8,7 +8,6 @@ use bytes;
 use Encode;
 use MIME::Base64;
 use Time::HiRes qw/time/;
-use DateTime;
 use POE;
 use POE::Component::Server::HTTP;
 use JSON;
@@ -426,11 +425,6 @@ sub display_event {
     msgid     => $self->msgid,
     timestamp => make_timestamp(),
   };
-
-  if ($event_time) {
-    my $datetime        = DateTime->from_epoch( epoch  => $event_time );
-    $event->{eventtime} = $datetime->strftime('%T, %A %d %B, %Y');
-  }
 
   my $html = '';
   $self->tt->process("event.tt", $event, \$html);
