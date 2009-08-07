@@ -27,13 +27,13 @@ Alice.Connection = Class.create({
       onException: function (req, e) {
         console.log("encountered an error with stream.");
         if (! connection.aborting)
-          connection.connect();
+          setTimeout(connection.connect.bind(connection), 2000);
       },
       onInteractive: connection.handleUpdate.bind(connection),
       onComplete: function () {
         console.log("connection was closed cleanly.");
         if (! connection.aborting)
-          connection.connect();
+          setTimeout(connection.connect.bind(connection), 2000);
       }
     });
   },

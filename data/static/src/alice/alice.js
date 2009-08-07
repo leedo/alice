@@ -2,6 +2,7 @@
 //= require <scriptaculous>
 //= require <scriptaculous/effects>
 //= require <scriptaculous/controls>
+//= require <scriptaculous/dragdrop>
 
 var Alice = Class.create({
   initialize: function () {
@@ -9,8 +10,7 @@ var Alice = Class.create({
     this.isCommand = false;
     this.isAlt = false;
     this.isFocused = true;
-    this.channels = [];
-    this.channelLookup = [];
+    this.channels = new Hash();
     this.previousFocus = 0;
     this.connection = new Alice.Connection;
     this.filters = [ this.linkFilter ];
@@ -44,26 +44,23 @@ var Alice = Class.create({
   },
   
   addChannel: function (channel) {
-    this.channelLookup[channel.id] = this.channels.length;
-    this.channels.push(channel);
+    this.channels.set(channel.id, channel);
   },
   
   removeChannel: function (channel) {
-    if (channel.active) alice.focusLast();
-    alice.channels.splice(alice.channelLookup[channel.id], 1);
-    alice.channelLookup[channel.id] = null;
-    alice.connection.partChannel(channel);
+    if (channel.active) this.focusLast();
+    this.channels.unset(channel.id);
   },
   
   getChannel: function (channelId) {
-    return this.channels[this.channelLookup[channelId]];
+    return this.channels.get(channelId);
   },
   
   activeChannel: function () {
-    for (var i=0; i < this.channels.length; i++) {
-      if (this.channels[i].active) return this.channels[i];
+    var channels = this.channels.values();
+    for (var i=0; i < channels.length; i++) {
+      if (channels[i].active) return channels[i];
     }
-    return this.channels[0];
   },
   
   onKeyUp: function (e) {
@@ -127,37 +124,23 @@ var Alice = Class.create({
   },
   
   nextTab: function () {
-    for (var i=0; i < this.channels.length; i++) {
-      if (i + 1 < this.channels.length && this.channels[i].active) {
-        this.previousFocus = i;
-        this.channels[i + 1].focus();
-        return;
-      }
-      else if (i + 1 >= this.channels.length) {
-        this.previousFocus = i;
-        this.channels[0].focus();
-        return;
-      }
-    }
+    var nextChan = this.activeChannel().elem.next();
+    if (! nextChan)
+      nextChan = $$('.channel').first();
+    if (! nextChan) return;
+    this.getChannel(nextChan.id).focus();
   },
   
   focusLast: function () {
-    this.channels[this.previousFocus].focus();
+    this.previousFocus.focus();
   },
   
   previousTab: function () {
-    for (var i=this.channels.length - 1; i >= 0; i--) {
-      if (i > 0 && this.channels[i].active) {
-        this.previousFocus = i;
-        this.channels[i - 1].focus();
-        return;
-      }
-      else if (i <= 0) {
-        this.previousFocus = i;
-        this.channels[this.channels.length - 1].focus();
-        return;
-      }
-    }
+    var prevChan = this.activeChannel().elem.previous();
+    if (! prevChan)
+      prevChan = $$('.channel').last();
+    if (! prevChan) return;
+    this.getChannel(prevChan.id).focus();
   },
   
   closeTab: function (chanid) {
@@ -201,7 +184,6 @@ var Alice = Class.create({
   displayMessage: function (message) {
     var channel = alice.getChannel(message.chanid);
     if (! channel) {
-      console.log(message.chanid, alice.channels);
       this.connection.requestTab(message.chan, message.session, message);
       return;
     }

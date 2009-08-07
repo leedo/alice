@@ -1,4 +1,4 @@
 <li id="[% chanid %]_tab"[% IF loop.first %] class="active"[% END %]>
   <div class="tab_button" id="[% chanid %]_tab_button"></div>
-  [% chan | html %]
+  <div style="float:left">[% chan | html %]</div>
 </li>

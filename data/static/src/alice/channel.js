@@ -20,7 +20,7 @@ Alice.Channel = Class.create({
     var self = this;
     
     this.form.observe("submit", this.sayMessage.bind(this));
-    this.tab.observe("click", this.focus.bind(this));
+    this.tab.observe("mousedown", this.focus.bind(this));
     this.tabButton.observe("click", this.close.bind(this));
     /*
     this.autocompleter = new Alice.Autocompleter(
@@ -66,7 +66,7 @@ Alice.Channel = Class.create({
   
   unFocus: function () {
     this.active = false;
-    alice.previousFocus = alice.channelLookup[this.id];
+    alice.previousFocus = this;
     this.elem.removeClassName('active');
     this.tab.removeClassName('active');
     if (this.tab.previous()) this.tab.previous().removeClassName("leftof_active");
@@ -80,6 +80,7 @@ Alice.Channel = Class.create({
     this.elem.addClassName('active');
     this.tab.removeClassName("unread");
     this.tab.removeClassName("highlight");
+    this.tab.removeClassName("leftof_active");
     if (this.tab.previous()) this.tab.previous().addClassName("leftof_active");
     this.scrollToBottom(true);
     this.input.focus();
