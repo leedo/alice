@@ -233,7 +233,7 @@ sub handle_message {
     if ($msg =~ /^\/query (\S+)/) {
       $self->create_tab($1, $session);
     }
-    elsif ($msg =~ /^\/join (.+)/) {
+    elsif ($msg =~ /^\/j(?:oin) (.+)/) {
       $irc->yield("join", $1);
     }
     elsif ($msg =~ /^\/part\s?(.+)?/) {
