@@ -266,6 +266,9 @@ sub handle_message {
     elsif ($msg =~ /^\/(?:quote|raw) (.+)/) {
       $irc->yield("quote", $1);
     }
+    elsif ($msg =~ /^\/(.+?)(?:\s|$)/) {
+      $self->display_announcement($chan, $session, "Invalid command $1");
+    }
     else {
       $self->log_debug("sending message to $chan");
       my $nick = $irc->nick_name;
