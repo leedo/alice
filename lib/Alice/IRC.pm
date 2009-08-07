@@ -182,7 +182,7 @@ sub chan_sync {
   my $topic = $irc->channel_topic($channel);
   if ($topic->{Value} and $topic->{SetBy}) {
     $self->httpd->send_topic(
-      $topic->{SetBy}, $channel, $irc->session_alias, decode_utf8($topic->{Value})
+      $topic->{SetBy}, $channel, $irc->session_alias, decode_utf8($topic->{Value}), $topic->{SetAt}
     );
   }
 }

@@ -8,6 +8,7 @@ use bytes;
 use Encode;
 use MIME::Base64;
 use Time::HiRes qw/time/;
+use DateTime;
 use POE;
 use POE::Component::Server::HTTP;
 use JSON;
@@ -404,13 +405,14 @@ sub not_found {
 }
 
 sub send_topic {
-  my ($self, $who, $channel, $session, $topic) = @_;
+  my ($self, $who, $channel, $session, $topic, $time) = @_;
   my $nick = ( split /!/, $who)[0];
-  $self->display_event($nick, $channel, $session, "topic", $topic);
+  $self->display_event($nick, $channel, $session, "topic", $topic, $time);
 }
 
 sub display_event {
-  my ($self, $nick, $channel, $session, $event_type, $msg) = @_;
+  my ($self, $nick, $channel, $session, $event_type, $msg, $event_time) = @_;
+
   my $event = {
     type      => "message",
     event     => $event_type,
@@ -422,6 +424,12 @@ sub display_event {
     msgid     => $self->msgid,
     timestamp => make_timestamp(),
   };
+
+  if ($event_time) {
+    my $datetime        = DateTime->from_epoch( epoch  => $event_time );
+    $event->{eventtime} = $datetime->strftime('%T, %A %d %B, %Y');
+  }
+
   my $html = '';
   $self->tt->process("event.tt", $event, \$html);
   $event->{full_html} = $html;
