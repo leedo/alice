@@ -6,7 +6,7 @@ use warnings;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 
-if ($^O eq 'Darwin') {
+if ($^O eq 'darwin') {
     lib->import("$FindBin::Bin/extlib/lib/perl5");
 
     eval {
