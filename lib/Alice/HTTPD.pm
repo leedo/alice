@@ -25,7 +25,9 @@ has 'config' => (
     my $self = shift;
     POE::Component::Server::HTTP->new(
       Port            => $self->config->{port},
-      TransHandler    => [ sub{$self->check_authentication(@_)} ],
+      PreHandler      => {
+        '/'             => sub{$self->check_authentication(@_)},
+      },
       ContentHandler  => {
         '/serverconfig' => sub{$self->server_config(@_)},
         '/config'       => sub{$self->send_config(@_)},
@@ -126,11 +128,6 @@ sub check_authentication {
     if ($auth eq $self->{config}->{auth}) {
       $self->log_debug("Authenticated");
       return RC_OK;
-    } else {
-      $self->log_debug("Failed authentication");
-      $res->code(403);
-      $res->content("Failed authentication");
-      $res->close();
     }
   }
 
@@ -138,6 +135,7 @@ sub check_authentication {
   $res->code(401);
   $res->header('WWW-Authenticate' => 'Basic realm="Alice"');
   $res->close();
+  return RC_DENY;
 }
 
 sub setup_stream {
