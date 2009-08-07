@@ -36,11 +36,6 @@ Alice.Connection = Class.create({
           connection.connect();
       }
     });
-    // reconnect in 10 minutes
-    this.timer = setTimeout(function () {
-      console.log("10 minutes since connection opened, reconnecting.")
-      connection.connect();
-    }, 10 * 60 * 1000)
   },
   
   handleUpdate: function (transport) {
@@ -68,13 +63,6 @@ Alice.Connection = Class.create({
       this.msgid = data.msgs[data.msgs.length - 1].msgid;
     alice.handleActions(data.actions);
     alice.displayMessages(data.msgs);
-    
-    // reconnect if lag is over 5 seconds... not a good way to do this.
-    var lag = time / 1000 -  data.time;
-    if (lag > 5) {
-      console.log("lag is " + Math.round(lag) + "s, reconnecting.");
-      this.connect();
-    }
   },
   
   requestTab: function (name, session, message) {
@@ -115,5 +103,9 @@ Alice.Connection = Class.create({
       method: 'get',
       parameters: params
     });
+  },
+  
+  sendPing: function () {
+    new Ajax.Request('/ping');
   }
 });

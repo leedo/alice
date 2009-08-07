@@ -22,7 +22,7 @@ Alice.Channel = Class.create({
     this.form.observe("submit", this.sayMessage.bind(this));
     this.tab.observe("click", this.focus.bind(this));
     this.tabButton.observe("click", this.close.bind(this));
-    
+    /*
     this.autocompleter = new Alice.Autocompleter(
       this.input, this.id + "_autocomplete_choices",
       "/autocomplete",
@@ -37,6 +37,7 @@ Alice.Channel = Class.create({
         }
       }
     );
+    */
   },
   
   nextMessage: function () {

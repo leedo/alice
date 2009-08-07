@@ -201,6 +201,7 @@ var Alice = Class.create({
   displayMessage: function (message) {
     var channel = alice.getChannel(message.chanid);
     if (! channel) {
+      console.log(message.chanid, alice.channels);
       this.connection.requestTab(message.chan, message.session, message);
       return;
     }

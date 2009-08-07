@@ -7123,6 +7123,7 @@ var Alice = Class.create({
   displayMessage: function (message) {
     var channel = alice.getChannel(message.chanid);
     if (! channel) {
+      console.log(message.chanid, alice.channels);
       this.connection.requestTab(message.chan, message.session, message);
       return;
     }
@@ -7154,7 +7155,7 @@ Alice.Channel = Class.create({
     this.form.observe("submit", this.sayMessage.bind(this));
     this.tab.observe("click", this.focus.bind(this));
     this.tabButton.observe("click", this.close.bind(this));
-
+    /*
     this.autocompleter = new Alice.Autocompleter(
       this.input, this.id + "_autocomplete_choices",
       "/autocomplete",
@@ -7169,6 +7170,7 @@ Alice.Channel = Class.create({
         }
       }
     );
+    */
   },
 
   nextMessage: function () {
@@ -7319,10 +7321,6 @@ Alice.Connection = Class.create({
           connection.connect();
       }
     });
-    this.timer = setTimeout(function () {
-      console.log("10 minutes since connection opened, reconnecting.")
-      connection.connect();
-    }, 10 * 60 * 1000)
   },
 
   handleUpdate: function (transport) {
@@ -7350,12 +7348,6 @@ Alice.Connection = Class.create({
       this.msgid = data.msgs[data.msgs.length - 1].msgid;
     alice.handleActions(data.actions);
     alice.displayMessages(data.msgs);
-
-    var lag = time / 1000 -  data.time;
-    if (lag > 5) {
-      console.log("lag is " + Math.round(lag) + "s, reconnecting.");
-      this.connect();
-    }
   },
 
   requestTab: function (name, session, message) {
@@ -7396,6 +7388,10 @@ Alice.Connection = Class.create({
       method: 'get',
       parameters: params
     });
+  },
+
+  sendPing: function () {
+    new Ajax.Request('/ping');
   }
 });
 Alice.Autocompleter = Class.create(Ajax.Autocompleter, {
