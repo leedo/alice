@@ -122,9 +122,11 @@ after 'msgid' => sub {
 sub check_authentication {
   my ($self, $req, $res)  = @_;
 
-  unless ($self->{config}->{auth}) {
+  unless ($self->config->{auth}
+      and ref $self->config->{auth} eq 'HASH'
+      and $self->config->{auth}{username}
+      and $self->config->{auth}{password})
     return RC_OK;
-  }
 
   if (my $auth  = $req->header('authorization')) {
     $self->log_debug("Auth handler called");
