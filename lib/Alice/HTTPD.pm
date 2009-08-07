@@ -12,7 +12,6 @@ use POE;
 use POE::Component::Server::HTTP;
 use JSON;
 use Template;
-use Data::Dump qw/ddx/;
 use URI::QueryParam;
 use IRC::Formatting::HTML;
 use YAML qw/DumpFile/;
