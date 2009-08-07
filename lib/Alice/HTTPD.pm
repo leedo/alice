@@ -6,11 +6,13 @@ use warnings;
 use Moose;
 use bytes;
 use Encode;
+use MIME::Base64;
 use Time::HiRes qw/time/;
 use POE;
 use POE::Component::Server::HTTP;
 use JSON;
 use Template;
+use Data::Dump qw/ddx/;
 use URI::QueryParam;
 use IRC::Formatting::HTML;
 use YAML qw/DumpFile/;
@@ -23,6 +25,7 @@ has 'config' => (
     my $self = shift;
     POE::Component::Server::HTTP->new(
       Port            => $self->config->{port},
+      TransHandler    => [ sub{$self->check_authentication(@_)} ],
       ContentHandler  => {
         '/serverconfig' => sub{$self->server_config(@_)},
         '/config'       => sub{$self->send_config(@_)},
@@ -106,6 +109,33 @@ after 'msgid' => sub {
   my $self = shift;
   $self->{msgid} = $self->{msgid} + 1;
 };
+
+sub check_authentication {
+  my ($self, $req, $res)  = @_;
+
+  if (my $auth  = $req->header('authorization')) {
+    $self->log_debug("Auth handler called");
+
+    $auth     =~ s/^Basic //;
+    $auth     = decode_base64($auth);
+
+    if ($auth eq 'haha:dix') {
+      $self->log_debug("Authenticated");
+      return RC_OK;
+    } else {
+      $self->log_debug("Failed authentication");
+      my $uri   = $req->uri();
+      $uri->path('authfail');
+      $req->uri($uri);
+      return RC_OK;
+    }
+  }
+
+  $self->log_debug("Authentication handler called");
+  $res->code(401);
+  $res->header('WWW-Authenticate' => 'Basic realm="Alice"');
+  $res->close();
+}
 
 sub setup_stream {
   my ($self, $req, $res) = @_;
