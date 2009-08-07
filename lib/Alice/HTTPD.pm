@@ -262,6 +262,9 @@ sub handle_message {
       $self->display_message($nick, $chan, $session, decode_utf8("• $1"));
       $irc->yield("ctcp", $chan, "ACTION $1");
     }
+    elsif ($msg =~ /^\/(?:quote|raw) (.+)/) {
+      $irc->yield("quote", $1);
+    }
     else {
       $self->log_debug("sending message to $chan");
       my $nick = $irc->nick_name;
