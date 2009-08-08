@@ -103,7 +103,7 @@ has 'dispatch' => (
   is => 'ro',
   isa => 'Alice::CommandDispatch',
   default => sub {
-    Alice::CommandDispatch->new;
+    Alice::CommandDispatch->new(http => shift);
   }
 );
 
@@ -237,55 +237,10 @@ sub handle_message {
   my $msg  = $req->uri->query_param('msg');
   my $chan = lc $req->uri->query_param('chan');
   my $session = $req->uri->query_param('session');
-  my $irc = $self->irc->connection_from_alias($session);
-  my $is_channel = 1 if ($chan =~ /^#/);
   return 200 unless $session;
-  if (length $msg) {
-    if ($msg =~ /^\/query (\S+)/) {
-      $self->create_tab($1, $session);
-    }
-    elsif ($msg =~ /^\/j(?:oin)? (.+)/) {
-      $irc->yield("join", $1);
-    }
-    elsif ($is_channel and $msg =~ /^\/part\s?(.+)?/) {
-      $irc->yield("part", $1 || $chan);
-    }
-    elsif ($msg =~ /^\/window new (.+)/) {
-      $self->create_tab($1, $session);
-    }
-    elsif ($is_channel and $msg =~ /^\/n(?:ames)?/ and $chan) {
-      $self->show_nicks($chan, $session);
-    }
-    elsif ($is_channel and $msg =~ /^\/topic\s?(.+)?/) {
-      if ($1) {
-        $irc->yield("topic", $chan, $1);
-      }
-      else {
-        my $topic = $irc->channel_topic($chan);
-        $self->send_topic(
-          $topic->{SetBy}, $chan, $session, decode_utf8($topic->{Value})
-        );
-      }
-    }
-    elsif ($msg =~ /^\/me (.+)/) {
-      my $nick = $irc->nick_name;
-      $self->display_message($nick, $chan, $session, decode_utf8("• $1"));
-      $irc->yield("ctcp", $chan, "ACTION $1");
-    }
-    elsif ($msg =~ /^\/(?:quote|raw) (.+)/) {
-      $irc->yield("quote", $1);
-    }
-    elsif ($msg =~ /^\/(.+?)(?:\s|$)/) {
-      $self->display_announcement($chan, $session, "Invalid command $1");
-    }
-    else {
-      $self->log_debug("sending message to $chan");
-      my $nick = $irc->nick_name;
-      $self->display_message($nick, $chan, $session, decode_utf8($msg));
-      $irc->yield("privmsg", $chan, $msg);
-    }
-  }
-
+  my $irc = $self->irc->connection_from_alias($session);
+  return 200 unless $irc;
+  $self->dispatch->handle($msg, $chan, $irc) if length $msg;
   return 200;
 }
 
