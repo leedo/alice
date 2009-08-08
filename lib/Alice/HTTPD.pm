@@ -450,7 +450,7 @@ sub display_announcement {
   $self->send_data($announcement);
 }
 
-sub clients {
+sub has_clients {
   my $self = shift;
   return scalar @{$self->streams};
 }
@@ -480,7 +480,7 @@ sub create_tab {
   $self->tt->process("tab.tt", $action, \$tab_html);
   $action->{html}{tab} = $tab_html;
   $self->send_data($action);
-  $self->log_debug("sending a request for a new tab: $name " . $action->{chanid}) if $self->clients;
+  $self->log_debug("sending a request for a new tab: $name " . $action->{chanid}) if $self->has_clients;
 }
 
 sub close_tab {
@@ -493,12 +493,12 @@ sub close_tab {
     session   => $session,
     timestamp => make_timestamp(),
   });
-  $self->log_debug("sending a request to close a tab: $name") if $self->clients;
+  $self->log_debug("sending a request to close a tab: $name") if $self->has_clients;
 }
 
 sub send_data {
   my ($self, $data) = @_;
-  return unless $self->clients;
+  return unless $self->has_clients;
   for my $res (@{$self->streams}) {
     if ($data->{type} eq "message") {
       push @{$res->{msgs}}, $data;
