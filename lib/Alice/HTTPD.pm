@@ -297,7 +297,6 @@ sub handle_static {
   my $file = $req->uri->path;
   my ($ext) = ($file =~ /[^\.]\.(.+)$/);
   if (-e $self->assetdir . $file) {
-    print STDERR $self->assetdir . $file;
     open my $fh, '<', $self->assetdir . $file;
     $self->log_debug("serving static file: $file");
     if ($ext =~ /png|gif|jpg|jpeg/i) {

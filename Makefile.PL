@@ -13,8 +13,12 @@ requires    'HTML::Entities';
 requires    'List::MoreUtils';
 requires    'IRC::Formatting::HTML';
 requires    'DateTime';
+requires    'File::ShareDir';
+requires    'MIME::Base64';
 
-auto_install(force => 1);
+auto_install(
+  force => 1,
+);
 install_share  'share';
 install_script 'script/alice';
 WriteAll;
