@@ -4,6 +4,7 @@ use strict;
 use warnings;
 
 use Alice::AsyncGet;
+use Alice::CommandDispatch;
 use Moose;
 use bytes;
 use Encode;
@@ -96,6 +97,14 @@ has 'tt' => (
       ENCODING     => 'UTF8'
     );
   },
+);
+
+has 'dispatch' => (
+  is => 'ro',
+  isa => 'Alice::CommandDispatch',
+  default => sub {
+    Alice::CommandDispatch->new;
+  }
 );
 
 has 'msgbuffer' => (
