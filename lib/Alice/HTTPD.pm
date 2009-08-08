@@ -475,14 +475,18 @@ sub display_message {
 
 sub display_announcement {
   my ($self, $channel, $session, $str) = @_;
-  $self->send_data({
+  my $announcement = {
     type    => "message",
     event   => "announce",
     chan    => $channel,
     chanid  => channel_id($channel, $session),
     session => $session,
-    str     => $str
-  });
+    message => $str
+  };
+  my $html = '';
+  $self->tt->process("announcement.tt", $announcement, \$html);
+  $announcement->{full_html} = $html;
+  $self->send_data($announcement);
 }
 
 sub clients {

@@ -86,18 +86,20 @@ sub add_server {
   );
   POE::Session->create(
     object_states => [
-      $self => {_start          => "start"},
-      $self => {irc_public      => "public"},
-      $self => {irc_001         => "connected"},
-      $self => {irc_disconnected => "disconnected"},
-      $self => {irc_join        => "joined"},
-      $self => {irc_part        => "part"},
-      $self => {irc_quit        => "quit"},
-      $self => {irc_chan_sync   => "chan_sync"},
-      $self => {irc_topic       => "topic"},
-      $self => {irc_ctcp_action => "action"},
-      $self => {irc_nick        => "nick"},
-      $self => {irc_msg         => "msg"},
+      $self => {
+        _start          => "start",
+        irc_public      => "public",
+        irc_001         => "connected",
+        irc_disconnected => "disconnected",
+        irc_join        => "joined",
+        irc_part        => "part",
+        irc_quit        => "quit",
+        irc_chan_sync   => "chan_sync",
+        irc_topic       => "topic",
+        irc_ctcp_action => "action",
+        irc_nick        => "nick",
+        irc_msg         => "msg"
+      },
     ],
     heap => {irc => $irc}
   );
