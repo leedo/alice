@@ -45,6 +45,11 @@ sub handle {
   }
 }
 
+sub names {
+  my ($self, $chan, $connection, $arg) = @_;
+  $self->http->show_nicks($chan, $connection->session_alias);
+}
+
 sub query {
   my ($self, $chan, $connection, $arg) = @_;
   $self->http->create_tab($arg, $connection->session_alias);
