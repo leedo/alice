@@ -125,9 +125,10 @@ after 'msgid' => sub {
 sub check_authentication {
   my ($self, $req, $res)  = @_;
 
-  unless ($self->{config}->{auth}) {
-    return RC_OK;
-  }
+  return RC_OK unless ($self->config->{auth}
+      and ref $self->config->{auth} eq 'HASH'
+      and $self->config->{auth}{username}
+      and $self->config->{auth}{password});
 
   if (my $auth  = $req->header('authorization')) {
     $self->log_debug("Auth handler called");
@@ -231,25 +232,25 @@ sub handle_message {
   my $chan = lc $req->uri->query_param('chan');
   my $session = $req->uri->query_param('session');
   my $irc = $self->irc->connection_from_alias($session);
-  my $channel = 1 if ($chan =~ /^#/);
+  my $is_channel = 1 if ($chan =~ /^#/);
   return 200 unless $session;
   if (length $msg) {
     if ($msg =~ /^\/query (\S+)/) {
       $self->create_tab($1, $session);
     }
-    elsif ($msg =~ /^\/j(?:oin) (.+)/) {
+    elsif ($msg =~ /^\/j(?:oin)? (.+)/) {
       $irc->yield("join", $1);
     }
-    elsif ($channel and $msg =~ /^\/part\s?(.+)?/) {
+    elsif ($is_channel and $msg =~ /^\/part\s?(.+)?/) {
       $irc->yield("part", $1 || $chan);
     }
     elsif ($msg =~ /^\/window new (.+)/) {
       $self->create_tab($1, $session);
     }
-    elsif ($channel and $msg =~ /^\/n(?:ames)?/ and $chan) {
+    elsif ($is_channel and $msg =~ /^\/n(?:ames)?/ and $chan) {
       $self->show_nicks($chan, $session);
     }
-    elsif ($channel and $msg =~ /^\/topic\s?(.+)?/) {
+    elsif ($is_channel and $msg =~ /^\/topic\s?(.+)?/) {
       if ($1) {
         $irc->yield("topic", $chan, $1);
       }
@@ -264,6 +265,12 @@ sub handle_message {
       my $nick = $irc->nick_name;
       $self->display_message($nick, $chan, $session, decode_utf8("• $1"));
       $irc->yield("ctcp", $chan, "ACTION $1");
+    }
+    elsif ($msg =~ /^\/(?:quote|raw) (.+)/) {
+      $irc->yield("quote", $1);
+    }
+    elsif ($msg =~ /^\/(.+?)(?:\s|$)/) {
+      $self->display_announcement($chan, $session, "Invalid command $1");
     }
     else {
       $self->log_debug("sending message to $chan");
@@ -466,6 +473,18 @@ sub display_message {
   $self->send_data($msg);
 }
 
+sub display_announcement {
+  my ($self, $channel, $session, $str) = @_;
+  $self->send_data({
+    type    => "message",
+    event   => "announce",
+    chan    => $channel,
+    chanid  => channel_id($channel, $session),
+    session => $session,
+    str     => $str
+  });
+}
+
 sub clients {
   my $self = shift;
   return scalar @{$self->streams};
@@ -527,16 +546,9 @@ sub send_data {
 }
 
 sub show_nicks {
-  my ($self, $chan, $session) = @_;
+  my ($self, $channel, $session) = @_;
   my $irc = $self->irc->connection_from_alias($session);
-  $self->send_data({
-    type    => "message",
-    event   => "announce",
-    chanid  => channel_id($chan, $session),
-    chan    => $chan,
-    session => $session,
-    str     => format_nick_table($irc->channel_list($chan))
-  });
+  $self->display_announcement($channel, $session, format_nick_table($irc->channel_list($channel)));
 }
 
 sub format_nick_table {
