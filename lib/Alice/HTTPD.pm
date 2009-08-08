@@ -3,6 +3,7 @@ package Alice::HTTPD;
 use strict;
 use warnings;
 
+use Alice::AsyncGet;
 use Moose;
 use bytes;
 use Encode;
@@ -38,6 +39,7 @@ has 'config' => (
         '/say'          => sub{$self->handle_message(@_)},
         '/static/'      => sub{$self->handle_static(@_)},
         '/autocomplete' => sub{$self->handle_autocomplete(@_)},
+        '/get/'         => sub{async_fetch($_[1],$_[0]->uri); return RC_WAIT;},
       },
       StreamHandler    => sub{$self->handle_stream(@_)},
     );
