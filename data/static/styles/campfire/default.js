@@ -16,7 +16,7 @@ alice.addFilters([
 ]);
 
 function loadInlineImage(image) {
-  var maxWidth = arguments.callee.maxWidth || 400;
+  var maxWidth = arguments.callee.maxWidth || 300;
   image.style.height = 'auto';
   image.style.visibility = 'hidden';
   if (image.width > maxWidth) image.style.width = maxWidth + 'px';
