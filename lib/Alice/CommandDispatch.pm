@@ -8,20 +8,21 @@ use warnings;
 
 has 'handlers' => (
   is => 'rw',
-  isa => 'HashRef',
+  isa => 'ArrayRef',
   default => sub {
     my $self = shift;
-    {
-      '_join'      => qr{^/j(?:oin)? (.+)},
-      'part'       => qr{^/part},
-      'query'      => qr{^/query},
-      'new_window' => qr{^/window new (.+)},
-      'names'      => qr{^/n(?:ames)?},
-      'topic'      => qr{^/topic (.+)},
-      'me'         => qr{^/me (.+)},
-      'quote'      => qr{^/(?:quote|raw) (.+)},
-      '_say'       => qr{^([^/].+)}
-    }
+    [
+      {method => '_say',   re => qr{^([^/].+)}},
+      {method => 'query',  re => qr{^/query (.+)}},
+      {method => 'names',  re => qr{^/n(?:ames)?}, in_channel => 1},
+      {method => '_join',  re => qr{^/j(?:oin)? (.+)}},
+      {method => 'part',   re => qr{^/part}, in_channel => 1},
+      {method => 'window', re => qr{^/window new (.+)}},
+      {method => 'names',  re => qr{^/n(?:ames)?}, in_channel => 1},
+      {method => 'topic',  re => qr{^/topic (.+)}, in_channel => 1},
+      {method => 'me',     re => qr{^/me (.+)}},
+      {method => 'quote',  re => qr{^/(?:quote|raw) (.+)}},
+    ]
   }
 );
 
@@ -33,11 +34,13 @@ has 'http' => (
 
 sub handle {
   my ($self, $command, $channel, $connection) = @_;
-  for my $method (keys %{$self->handlers}) {
-    my $re = $self->handlers->{$method};
+  for my $handler (@{$self->handlers}) {
+    my $re = $handler->{re};
     if ($command =~ /$re/) {
+      my $method = $handler->{method};
+      return if ($handler->{in_channel} and $channel !~ /^[#&]/);
       $self->$method($channel, $connection, $1);
-      last;
+      return;
     }
   }
 }
@@ -57,7 +60,7 @@ sub part {
   $connection->yield("part", $arg || $chan);
 }
 
-sub new_window {
+sub window {
   my ($self, $chan, $connection, $arg) = @_;
   $self->http->create_tab($arg, $connection->session_alias);
 }
