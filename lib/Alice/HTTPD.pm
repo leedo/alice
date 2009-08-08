@@ -131,20 +131,17 @@ sub check_authentication {
       and $self->config->{auth}{password});
 
   if (my $auth  = $req->header('authorization')) {
-    $self->log_debug("Auth handler called");
-
-    $auth     =~ s/^Basic //;
-    $auth     = decode_base64($auth);
+    $auth =~ s/^Basic //;
+    $auth = decode_base64($auth);
     my ($user,$password)  = split(/:/, $auth);
-
     if ($self->{config}->{auth}->{username} eq $user &&
         $self->{config}->{auth}->{password} eq $password) {
-      $self->log_debug("Authenticated");
       return RC_OK;
     }
+    else {
+      $self->log_debug("auth failed");
+    }
   }
-
-  $self->log_debug("Authentication handler called");
   $res->code(401);
   $res->header('WWW-Authenticate' => 'Basic realm="Alice"');
   $res->close();
