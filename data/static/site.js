@@ -8176,7 +8176,7 @@ Alice.Channel = Class.create({
       if (message.nick == this.lastNick) {
         if (alice.monospaceNicks.indexOf(message.nick) > -1)
           this.messages.down('li:last-child div.msg').insert(
-            "<br />" + alice.applyFilters(message.html));
+            "<br>" + alice.applyFilters(message.html));
         else if (message.event == "say")
           this.messages.insert(
             stripNick(alice.applyFilters(message.full_html)));
@@ -8202,19 +8202,16 @@ Alice.Channel = Class.create({
         this.tab.addClassName("unread");
     }
 
-    var messages = $$('#' + message.chanid + ' li');
+    var messages = this.messages.childElements();
     if (messages.length > 250) messages.first().remove();
   },
 
   scrollToBottom: function (force) {
     if (! force) {
-      var lastmsg = $$('#' + this.id + ' li:last-child').first();
-      if (! lastmsg) return;
-      var msgheight = lastmsg.offsetHeight;
       var bottom = this.elem.scrollTop + this.elem.offsetHeight;
       var height = this.elem.scrollHeight;
     }
-    if (force || bottom + msgheight >= height)
+    if (force || bottom + 100 >= height)
       this.elem.scrollTop = this.elem.scrollHeight;
   }
 });
@@ -8274,12 +8271,6 @@ Alice.Connection = Class.create({
 
     try {
       data = data.evalJSON();
-    }
-    catch (err) {
-      console.log(err);
-      return;
-    }
-    try {
       if (data.msgs.length)
         this.msgid = data.msgs[data.msgs.length - 1].msgid;
       alice.handleActions(data.actions);
