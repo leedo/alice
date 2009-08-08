@@ -1,0 +1,3 @@
+<li class="message">
+  <div class="msg announce">[% message %]</div>
+</li>

@@ -14,6 +14,7 @@ var Alice = Class.create({
     this.previousFocus = 0;
     this.connection = new Alice.Connection;
     this.filters = [ this.linkFilter ];
+    this.monospaceNicks = ['Shaniqua', 'root', 'p6eval'];
     document.onkeyup = this.onKeyUp.bind(this);
     document.onkeydown = this.onKeyDown.bind(this);
     setTimeout(this.connection.connect.bind(this.connection), 1000);

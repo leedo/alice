@@ -54,15 +54,14 @@ Alice.Connection = Class.create({
   
     try {
       data = data.evalJSON();
+      if (data.msgs.length)
+        this.msgid = data.msgs[data.msgs.length - 1].msgid;
+      alice.handleActions(data.actions);
+      alice.displayMessages(data.msgs);
     }
-    catch (err) {
-      console.log(err);
-      return;
+    catch (e) {
+      console.log(e);
     }
-    if (data.msgs.length)
-      this.msgid = data.msgs[data.msgs.length - 1].msgid;
-    alice.handleActions(data.actions);
-    alice.displayMessages(data.msgs);
 
     // reconnect if lag is over 5 seconds... not a good way to do this.
     var lag = time / 1000 -  data.time;
@@ -70,7 +69,6 @@ Alice.Connection = Class.create({
       console.log("lag is " + Math.round(lag) + "s, reconnecting.");
       this.connect();
     }
-
   },
   
   requestTab: function (name, session, message) {

@@ -8,6 +8,7 @@ use POE::Component::IRC;
 use POE::Component::IRC::State;
 use POE::Component::IRC::Plugin::Connector;
 use POE::Component::IRC::Plugin::CTCP;
+use POE::Component::IRC::Plugin::NickReclaim;
 use Encode;
 use Moose;
 
@@ -65,6 +66,13 @@ sub connections {
 
 sub add_server {
   my ($self, $name, $server) = @_;
+
+  if ($server->{ssl}) {
+      eval {
+        require POE::Component::SSLify
+      };
+      die "Missing module POE::Component::SSLify" if ($@);
+  }
   my $irc = POE::Component::IRC::State->spawn(
     alias    => $name,
     nick     => $server->{nick},
@@ -78,18 +86,20 @@ sub add_server {
   );
   POE::Session->create(
     object_states => [
-      $self => {_start          => "start"},
-      $self => {irc_public      => "public"},
-      $self => {irc_001         => "connected"},
-      $self => {irc_disconnected => "disconnected"},
-      $self => {irc_join        => "joined"},
-      $self => {irc_part        => "part"},
-      $self => {irc_quit        => "quit"},
-      $self => {irc_chan_sync   => "chan_sync"},
-      $self => {irc_topic       => "topic"},
-      $self => {irc_ctcp_action => "action"},
-      $self => {irc_nick        => "nick"},
-      $self => {irc_msg         => "msg"},
+      $self => {
+        _start          => "start",
+        irc_public      => "public",
+        irc_001         => "connected",
+        irc_disconnected => "disconnected",
+        irc_join        => "joined",
+        irc_part        => "part",
+        irc_quit        => "quit",
+        irc_chan_sync   => "chan_sync",
+        irc_topic       => "topic",
+        irc_ctcp_action => "action",
+        irc_nick        => "nick",
+        irc_msg         => "msg"
+      },
     ],
     heap => {irc => $irc}
   );
@@ -107,6 +117,7 @@ sub start {
     version => 'alice',
     userinfo => $irc->nick_name
   ));
+  $irc->plugin_add('NickReclaim' => POE::Component::IRC::Plugin::NickReclaim->new());
   $irc->yield(register => 'all');
   $irc->yield(connect => {});
   $_[HEAP] = undef;
@@ -120,6 +131,10 @@ sub connected {
   for (@{$self->config->{servers}{$session_alias}{channels}}) {
     $self->log_debug("joining $_");
     $irc->yield( join => $_ );
+  }
+  for (@{$self->config->{servers}{$session_alias}{on_connect}}) {
+    $self->log_debug("sending $_");
+    $irc->yield( quote => $_ );
   }
 }
 

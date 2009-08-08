@@ -3,11 +3,13 @@ package Alice::HTTPD;
 use strict;
 use warnings;
 
+use Alice::AsyncGet;
 use Moose;
 use bytes;
 use Encode;
 use MIME::Base64;
 use Time::HiRes qw/time/;
+use DateTime;
 use POE;
 use POE::Component::Server::HTTP;
 use JSON;
@@ -38,6 +40,7 @@ has 'config' => (
         '/say'          => sub{$self->handle_message(@_)},
         '/static/'      => sub{$self->handle_static(@_)},
         '/autocomplete' => sub{$self->handle_autocomplete(@_)},
+        '/get/'         => sub{async_fetch($_[1],$_[0]->uri); return RC_WAIT;},
       },
       StreamHandler    => sub{$self->handle_stream(@_)},
     );
@@ -135,7 +138,6 @@ sub check_authentication {
       and ref $self->config->{auth} eq 'HASH'
       and $self->config->{auth}{username}
       and $self->config->{auth}{password});
-    
 
   if (my $auth  = $req->header('authorization')) {
     $self->log_debug("Auth handler called");
@@ -239,24 +241,25 @@ sub handle_message {
   my $chan = lc $req->uri->query_param('chan');
   my $session = $req->uri->query_param('session');
   my $irc = $self->irc->connection_from_alias($session);
+  my $is_channel = 1 if ($chan =~ /^#/);
   return 200 unless $session;
   if (length $msg) {
     if ($msg =~ /^\/query (\S+)/) {
       $self->create_tab($1, $session);
     }
-    elsif ($msg =~ /^\/j(?:oin) (.+)/) {
+    elsif ($msg =~ /^\/j(?:oin)? (.+)/) {
       $irc->yield("join", $1);
     }
-    elsif ($msg =~ /^\/part\s?(.+)?/) {
+    elsif ($is_channel and $msg =~ /^\/part\s?(.+)?/) {
       $irc->yield("part", $1 || $chan);
     }
     elsif ($msg =~ /^\/window new (.+)/) {
       $self->create_tab($1, $session);
     }
-    elsif ($msg =~ /^\/n(?:ames)?/ and $chan) {
+    elsif ($is_channel and $msg =~ /^\/n(?:ames)?/ and $chan) {
       $self->show_nicks($chan, $session);
     }
-    elsif ($msg =~ /^\/topic\s?(.+)?/) {
+    elsif ($is_channel and $msg =~ /^\/topic\s?(.+)?/) {
       if ($1) {
         $irc->yield("topic", $chan, $1);
       }
@@ -271,6 +274,12 @@ sub handle_message {
       my $nick = $irc->nick_name;
       $self->display_message($nick, $chan, $session, decode_utf8("• $1"));
       $irc->yield("ctcp", $chan, "ACTION $1");
+    }
+    elsif ($msg =~ /^\/(?:quote|raw) (.+)/) {
+      $irc->yield("quote", $1);
+    }
+    elsif ($msg =~ /^\/(.+?)(?:\s|$)/) {
+      $self->display_announcement($chan, $session, "Invalid command $1");
     }
     else {
       $self->log_debug("sending message to $chan");
@@ -437,6 +446,11 @@ sub display_event {
     timestamp => make_timestamp(),
   };
 
+  if ($event_time) {
+    my $datetime        = DateTime->from_epoch( epoch  => $event_time );
+    $event->{eventtime} = $datetime->strftime('%T, %A %d %B, %Y');
+  }
+
   my $html = '';
   $self->tt->process("event.tt", $event, \$html);
   $event->{full_html} = $html;
@@ -469,6 +483,22 @@ sub display_message {
   $self->send_data($msg);
 }
 
+sub display_announcement {
+  my ($self, $channel, $session, $str) = @_;
+  my $announcement = {
+    type    => "message",
+    event   => "announce",
+    chan    => $channel,
+    chanid  => channel_id($channel, $session),
+    session => $session,
+    message => $str
+  };
+  my $html = '';
+  $self->tt->process("announcement.tt", $announcement, \$html);
+  $announcement->{full_html} = $html;
+  $self->send_data($announcement);
+}
+
 sub clients {
   my $self = shift;
   return scalar @{$self->streams};
@@ -484,6 +514,14 @@ sub create_tab {
     session   => $session,
     timestamp => make_timestamp(),
   };
+
+  my $irc = $self->irc->connection_from_alias($session);
+  if ($name !~ /^#/ and my $user = $irc->nick_info($name)) {
+    $action->{topic}  = {
+      Value => $user->{Userhost} . " ($session)"
+    };
+  }
+
   my $chan_html = '';
   $self->tt->process("channel.tt", $action, \$chan_html);
   $action->{html}{channel} = $chan_html;
@@ -522,16 +560,9 @@ sub send_data {
 }
 
 sub show_nicks {
-  my ($self, $chan, $session) = @_;
+  my ($self, $channel, $session) = @_;
   my $irc = $self->irc->connection_from_alias($session);
-  $self->send_data({
-    type    => "message",
-    event   => "announce",
-    chanid  => channel_id($chan, $session),
-    chan    => $chan,
-    session => $session,
-    str     => format_nick_table($irc->channel_list($chan))
-  });
+  $self->display_announcement($channel, $session, format_nick_table($irc->channel_list($channel)));
 }
 
 sub format_nick_table {

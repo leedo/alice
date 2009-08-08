@@ -194,7 +194,7 @@ div.msg img {
 
 div.msg.monospace, div.msg.announce {
   font-family: Monaco, monospace;
-  font-size: 11px;
+  font-size: 10px;
   line-height: 13px;
   white-space: pre-wrap;
   word-wrap: normal;
