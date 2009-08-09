@@ -128,13 +128,13 @@ sub connected {
   my $irc = $self->connection($_[SENDER]->ID);
   my $session_alias = $irc->session_alias;
   $self->log_info("connected to $session_alias");
-  for (@{$self->config->{servers}{$session_alias}{channels}}) {
-    $self->log_debug("joining $_");
-    $irc->yield( join => $_ );
-  }
   for (@{$self->config->{servers}{$session_alias}{on_connect}}) {
     $self->log_debug("sending $_");
     $irc->yield( quote => $_ );
+  }
+  for (@{$self->config->{servers}{$session_alias}{channels}}) {
+    $self->log_debug("joining $_");
+    $irc->yield( join => $_ );
   }
 }
 
