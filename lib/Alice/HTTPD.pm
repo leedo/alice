@@ -125,7 +125,7 @@ after 'msgbuffer' => sub {
 has 'msgid' => (
   is => 'rw',
   isa => 'Int',
-  default => 0,
+  default => 1,
 );
 
 after 'msgid' => sub {

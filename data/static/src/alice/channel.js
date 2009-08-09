@@ -112,10 +112,11 @@ Alice.Channel = Class.create({
           this.messages.insert(alice.linkFilter(message.full_html));
           this.displayTopic(message.message);
         }
-        else
+        else {
           this.messages.insert(alice.applyFilters(message.full_html));
+          this.lastNick = message.nick;
+        }
       }
-      this.lastNick = message.nick;
       
       if (! alice.isFocused && message.highlight)
         growlNotify(message);

@@ -8180,10 +8180,11 @@ Alice.Channel = Class.create({
           this.messages.insert(alice.linkFilter(message.full_html));
           this.displayTopic(message.message);
         }
-        else
+        else {
           this.messages.insert(alice.applyFilters(message.full_html));
+          this.lastNick = message.nick;
+        }
       }
-      this.lastNick = message.nick;
 
       if (! alice.isFocused && message.highlight)
         growlNotify(message);
@@ -8234,7 +8235,7 @@ Alice.Connection = Class.create({
     this.len = 0;
     clearTimeout(this.timer);
     var connection = this;
-    console.log("opening new connection.");
+    console.log("opening new connection starting at message " + this.msgid);
     this.req = new Ajax.Request('/stream', {
       method: 'get',
       parameters: {msgid: connection.msgid},
@@ -8279,6 +8280,7 @@ Alice.Connection = Class.create({
 
     var lag = time / 1000 -  data.time;
     if (lag > 5) {
+      console.log(data);
       console.log("lag is " + Math.round(lag) + "s, reconnecting.");
       this.connect();
     }
@@ -8291,7 +8293,7 @@ Alice.Connection = Class.create({
       parameters: {session: session, msg: "/window new " + name},
       onSuccess: function (trans) {
         connection.handleUpdate(trans);
-        if (message) alice.displayMessage(message);
+        if (message) setTimeout(function(){alice.displayMessage(message)}, 1000);
       }
     });
   },
@@ -8422,6 +8424,8 @@ document.observe("dom:loaded", function () {
   window.onresize = function () {
     alice.activeChannel().scrollToBottom()};
   window.status = " ";
-  window.onfocus = function () {alice.isFocused = true};
+  window.onfocus = function () {
+    alice.activeChannel().input.focus();
+    alice.isFocused = true};
   window.onblur = function () {alice.isFocused = false};
 });

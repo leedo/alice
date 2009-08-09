@@ -20,7 +20,7 @@ Alice.Connection = Class.create({
     this.len = 0;
     clearTimeout(this.timer);
     var connection = this;
-    console.log("opening new connection.");
+    console.log("opening new connection starting at message " + this.msgid);
     this.req = new Ajax.Request('/stream', {
       method: 'get',
       parameters: {msgid: connection.msgid},
@@ -78,7 +78,7 @@ Alice.Connection = Class.create({
       parameters: {session: session, msg: "/window new " + name},
       onSuccess: function (trans) {
         connection.handleUpdate(trans);
-        if (message) alice.displayMessage(message);
+        if (message) setTimeout(function(){alice.displayMessage(message)}, 1000);
       }
     });
   },

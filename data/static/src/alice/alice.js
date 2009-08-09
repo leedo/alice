@@ -211,6 +211,8 @@ document.observe("dom:loaded", function () {
   window.onresize = function () {
     alice.activeChannel().scrollToBottom()};
   window.status = " ";  
-  window.onfocus = function () {alice.isFocused = true};
+  window.onfocus = function () {
+    alice.activeChannel().input.focus();
+    alice.isFocused = true};
   window.onblur = function () {alice.isFocused = false};
 });
