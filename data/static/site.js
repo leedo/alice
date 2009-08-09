@@ -8280,7 +8280,6 @@ Alice.Connection = Class.create({
 
     var lag = time / 1000 -  data.time;
     if (lag > 5) {
-      console.log(data);
       console.log("lag is " + Math.round(lag) + "s, reconnecting.");
       this.connect();
     }
