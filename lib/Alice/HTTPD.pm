@@ -411,7 +411,7 @@ sub display_event {
   my $html = '';
   $self->tt->process("event.tt", $event, \$html);
   $event->{full_html} = $html;
-  $self->{msgbuffer}{$channel} = [] if exists $self->{msgbuffer}{$channel};
+  $self->{msgbuffer}{$channel} = [] unless exists $self->{msgbuffer}{$channel};
   push @{$self->msgbuffer->{$channel}}, $event;
   $self->send_data($event);
 }

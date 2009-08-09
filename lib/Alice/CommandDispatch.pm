@@ -12,16 +12,17 @@ has 'handlers' => (
   default => sub {
     my $self = shift;
     [
-      {method => '_say',   re => qr{^([^/].+)}},
-      {method => 'query',  re => qr{^/query (.+)}},
-      {method => 'names',  re => qr{^/n(?:ames)?}, in_channel => 1},
-      {method => '_join',  re => qr{^/j(?:oin)? (.+)}},
-      {method => 'part',   re => qr{^/part}, in_channel => 1},
-      {method => 'window', re => qr{^/window new (.+)}},
-      {method => 'names',  re => qr{^/n(?:ames)?}, in_channel => 1},
-      {method => 'topic',  re => qr{^/topic (.+)}, in_channel => 1},
-      {method => 'me',     re => qr{^/me (.+)}},
-      {method => 'quote',  re => qr{^/(?:quote|raw) (.+)}},
+      {method => '_say',     re => qr{^([^/].+)}},
+      {method => 'query',    re => qr{^/query\s+(.+)}},
+      {method => 'names',    re => qr{^/n(?:ames)?}, in_channel => 1},
+      {method => '_join',    re => qr{^/j(?:oin)?\s+(.+)}},
+      {method => 'part',     re => qr{^/part(?:\s+(.+))?}, in_channel => 1},
+      {method => 'window',   re => qr{^/window new (.+)}},
+      {method => 'names',    re => qr{^/n(?:ames)?}, in_channel => 1},
+      {method => 'topic',    re => qr{^/topic(\s+(.+))?}, in_channel => 1},
+      {method => 'me',       re => qr{^/me (.+)}},
+      {method => 'quote',    re => qr{^/(?:quote|raw) (.+)}},
+      {method => 'notfound', re => qr{^/(.+)(?:\s.*)?}}
     ]
   }
 );
@@ -38,8 +39,9 @@ sub handle {
     my $re = $handler->{re};
     if ($command =~ /$re/) {
       my $method = $handler->{method};
+      my $arg = $1;
       return if ($handler->{in_channel} and $channel !~ /^[#&]/);
-      $self->$method($channel, $connection, $1);
+      $self->$method($channel, $connection, $arg);
       return;
     }
   }
@@ -94,7 +96,7 @@ sub quote {
   $connection->yield("quote", $arg);
 }
 
-sub announce {
+sub notfound {
   my ($self, $chan, $connection, $arg) = @_;
   $self->http->display_announcement($chan, $connection->session_alias,
     "Invalid command $arg");
