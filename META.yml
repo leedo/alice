@@ -17,6 +17,7 @@ requires:
   HTML::Entities: 0
   List::MoreUtils: 0.22
   IRC::Formatting::HTML: 0.2
+  DateTime: 0
   local::lib: 0
 urls:
   license: http://dev.perl.org/licenses/

@@ -1,9 +1,14 @@
-<li class="event">
+<li class="event" id="[% msgid %]">
+  [% IF eventtime %]
+    <div class="left">&nbsp;</div>
+    <div class="msg">
+  [% ELSE %]
     <div class="left">[% timestamp %]</div>
     <div class="msg">
+  [% END %]
 
   [% IF event == "topic" %]
-    Topic changed to "[% message %]" by <a href="javascript:alice.connection.requestTab('[% nick %]','[% session %]')" class="nick">[% nick %]</a>.
+    Topic changed to "[% message %]" by <a href="javascript:alice.connection.requestTab('[% nick %]','[% session %]')" class="nick">[% nick %]</a>[% IF eventtime %] at [% eventtime %][% END %].
   [% ELSIF event == "joined" || event == "left" %]
     <a href="javascript:alice.connection.requestTab('[% nick %]','[% session %]')" class="nick">[% nick %]</a> [% event %] the chat room.[% IF message %] ([% message %])[% END %]
   [% ELSIF event == "nick" %]

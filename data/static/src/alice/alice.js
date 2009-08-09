@@ -14,6 +14,7 @@ var Alice = Class.create({
     this.previousFocus = 0;
     this.connection = new Alice.Connection;
     this.filters = [ this.linkFilter ];
+    this.monospaceNicks = ['Shaniqua', 'root', 'p6eval'];
     document.onkeyup = this.onKeyUp.bind(this);
     document.onkeydown = this.onKeyDown.bind(this);
     setTimeout(this.connection.connect.bind(this.connection), 1000);
@@ -66,16 +67,10 @@ var Alice = Class.create({
   },
   
   onKeyUp: function (e) {
-    switch (e.which) {
-      case 17:
-        this.isCtrl = false;
-        break;
-      case 91:
-        this.isCommand = false;
-        break;
-      case 18:
-        this.isAlt = false;
-        break;
+    if (e.which != 75 && e.which != 78 && e.which != 80) {
+      this.isCtrl = false;
+      this.isCommand = false;
+      this.isAlt = false; 
     }
   },
   
@@ -209,12 +204,15 @@ document.observe("dom:loaded", function () {
   $$("div.topic").each(function (topic){
     topic.innerHTML = alice.linkFilter(topic.innerHTML)});
   $('config_button').observe("click", alice.toggleConfig.bind(alice));
+  alice.activeChannel().input.focus()
   window.onkeydown = function () {
     if (! $('config') && ! alice.isCtrl && ! alice.isCommand && ! alice.isAlt)
       alice.activeChannel().input.focus()};
   window.onresize = function () {
     alice.activeChannel().scrollToBottom()};
   window.status = " ";  
-  window.onfocus = function () {alice.isFocused = true};
+  window.onfocus = function () {
+    alice.activeChannel().input.focus();
+    alice.isFocused = true};
   window.onblur = function () {alice.isFocused = false};
 });

@@ -7887,6 +7887,7 @@ var Alice = Class.create({
     this.previousFocus = 0;
     this.connection = new Alice.Connection;
     this.filters = [ this.linkFilter ];
+    this.monospaceNicks = ['Shaniqua', 'root', 'p6eval'];
     document.onkeyup = this.onKeyUp.bind(this);
     document.onkeydown = this.onKeyDown.bind(this);
     setTimeout(this.connection.connect.bind(this.connection), 1000);
@@ -7939,16 +7940,10 @@ var Alice = Class.create({
   },
 
   onKeyUp: function (e) {
-    switch (e.which) {
-      case 17:
-        this.isCtrl = false;
-        break;
-      case 91:
-        this.isCommand = false;
-        break;
-      case 18:
-        this.isAlt = false;
-        break;
+    if (e.which != 75 && e.which != 78 && e.which != 80) {
+      this.isCtrl = false;
+      this.isCommand = false;
+      this.isAlt = false;
     }
   },
 
@@ -8085,7 +8080,7 @@ Alice.Channel = Class.create({
     this.form = $(id + "_form");
     this.topic = $(id + "_topic");
     this.messages = $(id + "_messages");
-    this.lastnick = "";
+    this.lastNick = "";
 
     this.msgHistory = [""];
     this.currentMsg = 0;
@@ -8172,24 +8167,23 @@ Alice.Channel = Class.create({
 
   addMessage: function(message) {
     if (message.html || message.full_html) {
-      var last_message = $$('#' + message.chanid + ' .'
-        + message.nick + ':last-child .msg').first();
-      if ((message.nick == "Shaniqua" || message.nick == "root" || message.nick == "p6eval")
-        && last_message) {
-        var html = alice.applyFilters(message.html);
-        last_message.insert("<br />" + html);
-      }
-      else if (message.event == "say" && last_message) {
-        var html = stripNick(alice.applyFilters(message.full_html));
-        this.messages.insert(html);
-      }
-      else if (message.event == "topic") {
-        this.messages.insert(alice.linkFilter(message.full_html));
-        this.displayTopic(message.message);
+      if (message.nick == this.lastNick) {
+        if (alice.monospaceNicks.indexOf(message.nick) > -1)
+          this.messages.down('li:last-child div.msg').insert(
+            "<br>" + alice.applyFilters(message.html));
+        else if (message.event == "say")
+          this.messages.insert(
+            stripNick(alice.applyFilters(message.full_html)));
       }
       else {
-        var html = alice.applyFilters(message.full_html);
-        this.messages.insert(html);
+        if (message.event == "topic") {
+          this.messages.insert(alice.linkFilter(message.full_html));
+          this.displayTopic(message.message);
+        }
+        else {
+          this.messages.insert(alice.applyFilters(message.full_html));
+          this.lastNick = message.nick;
+        }
       }
 
       if (! alice.isFocused && message.highlight)
@@ -8202,25 +8196,20 @@ Alice.Channel = Class.create({
       else if (message.event == "say")
         this.tab.addClassName("unread");
     }
-    else if (message.event == "announce") {
-      this.messages.insert("<li class='message'><div class='msg announce'>"
-        +message.str+"</div></li>");
-      this.scrollToBottom();
-    }
 
-    var messages = $$('#' + message.chanid + ' li');
+    var messages = this.messages.childElements();
     if (messages.length > 250) messages.first().remove();
   },
 
   scrollToBottom: function (force) {
     if (! force) {
-      var lastmsg = $$('#' + this.id + ' li:last-child').first();
+      var lastmsg = this.messages.childElements().last();
       if (! lastmsg) return;
       var msgheight = lastmsg.offsetHeight;
       var bottom = this.elem.scrollTop + this.elem.offsetHeight;
       var height = this.elem.scrollHeight;
     }
-    if (force || bottom + msgheight >= height)
+    if (force || bottom + msgheight + 100 >= height)
       this.elem.scrollTop = this.elem.scrollHeight;
   }
 });
@@ -8246,7 +8235,7 @@ Alice.Connection = Class.create({
     this.len = 0;
     clearTimeout(this.timer);
     var connection = this;
-    console.log("opening new connection.");
+    console.log("opening new connection starting at message " + this.msgid);
     this.req = new Ajax.Request('/stream', {
       method: 'get',
       parameters: {msgid: connection.msgid},
@@ -8266,7 +8255,6 @@ Alice.Connection = Class.create({
 
   handleUpdate: function (transport) {
     var time = new Date();
-    console.time('slicing');
     var data = transport.responseText.slice(this.len);
     var start, end;
     start = data.indexOf(this.seperator);
@@ -8278,32 +8266,24 @@ Alice.Connection = Class.create({
     else return;
     this.len += (end + this.seperator.length) - start;
     data = data.slice(start, end);
-    console.timeEnd('slicing');
 
     try {
-      console.time('evaling');
       data = data.evalJSON();
-      console.timeEnd('evaling');
+      if (data.msgs.length)
+        this.msgid = data.msgs[data.msgs.length - 1].msgid;
+      alice.handleActions(data.actions);
+      alice.displayMessages(data.msgs);
     }
-    catch (err) {
-      console.log(err);
-      return;
+    catch (e) {
+      console.log(e);
     }
-    if (data.msgs.length)
-      this.msgid = data.msgs[data.msgs.length - 1].msgid;
-    console.time('msgs');
-    alice.handleActions(data.actions);
-    console.timeEnd('msgs');
-    console.time('actions');
-    alice.displayMessages(data.msgs);
-    console.timeEnd('actions');
 
     var lag = time / 1000 -  data.time;
     if (lag > 5) {
+      console.log(data);
       console.log("lag is " + Math.round(lag) + "s, reconnecting.");
       this.connect();
     }
-
   },
 
   requestTab: function (name, session, message) {
@@ -8313,7 +8293,7 @@ Alice.Connection = Class.create({
       parameters: {session: session, msg: "/window new " + name},
       onSuccess: function (trans) {
         connection.handleUpdate(trans);
-        if (message) alice.displayMessage(message);
+        if (message) setTimeout(function(){alice.displayMessage(message)}, 1000);
       }
     });
   },
@@ -8437,12 +8417,15 @@ document.observe("dom:loaded", function () {
   $$("div.topic").each(function (topic){
     topic.innerHTML = alice.linkFilter(topic.innerHTML)});
   $('config_button').observe("click", alice.toggleConfig.bind(alice));
+  alice.activeChannel().input.focus()
   window.onkeydown = function () {
     if (! $('config') && ! alice.isCtrl && ! alice.isCommand && ! alice.isAlt)
       alice.activeChannel().input.focus()};
   window.onresize = function () {
     alice.activeChannel().scrollToBottom()};
   window.status = " ";
-  window.onfocus = function () {alice.isFocused = true};
+  window.onfocus = function () {
+    alice.activeChannel().input.focus();
+    alice.isFocused = true};
   window.onblur = function () {alice.isFocused = false};
 });

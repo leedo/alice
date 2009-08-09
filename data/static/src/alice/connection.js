@@ -20,7 +20,7 @@ Alice.Connection = Class.create({
     this.len = 0;
     clearTimeout(this.timer);
     var connection = this;
-    console.log("opening new connection.");
+    console.log("opening new connection starting at message " + this.msgid);
     this.req = new Ajax.Request('/stream', {
       method: 'get',
       parameters: {msgid: connection.msgid},
@@ -40,7 +40,6 @@ Alice.Connection = Class.create({
 
   handleUpdate: function (transport) {
     var time = new Date();
-    console.time('slicing');
     var data = transport.responseText.slice(this.len);
     var start, end;
     start = data.indexOf(this.seperator);
@@ -52,25 +51,17 @@ Alice.Connection = Class.create({
     else return;
     this.len += (end + this.seperator.length) - start;
     data = data.slice(start, end);
-    console.timeEnd('slicing');
   
     try {
-      console.time('evaling');
       data = data.evalJSON();
-      console.timeEnd('evaling');
+      if (data.msgs.length)
+        this.msgid = data.msgs[data.msgs.length - 1].msgid;
+      alice.handleActions(data.actions);
+      alice.displayMessages(data.msgs);
     }
-    catch (err) {
-      console.log(err);
-      return;
+    catch (e) {
+      console.log(e);
     }
-    if (data.msgs.length)
-      this.msgid = data.msgs[data.msgs.length - 1].msgid;
-    console.time('actions');
-    alice.handleActions(data.actions);
-    console.timeEnd('actions');
-    console.time('msgs');
-    alice.displayMessages(data.msgs);
-    console.timeEnd('msgs');
 
     // reconnect if lag is over 5 seconds... not a good way to do this.
     var lag = time / 1000 -  data.time;
@@ -78,7 +69,6 @@ Alice.Connection = Class.create({
       console.log("lag is " + Math.round(lag) + "s, reconnecting.");
       this.connect();
     }
-
   },
   
   requestTab: function (name, session, message) {
@@ -88,7 +78,7 @@ Alice.Connection = Class.create({
       parameters: {session: session, msg: "/window new " + name},
       onSuccess: function (trans) {
         connection.handleUpdate(trans);
-        if (message) alice.displayMessage(message);
+        if (message) setTimeout(function(){alice.displayMessage(message)}, 1000);
       }
     });
   },
