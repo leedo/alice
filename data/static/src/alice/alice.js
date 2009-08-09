@@ -67,16 +67,10 @@ var Alice = Class.create({
   },
   
   onKeyUp: function (e) {
-    switch (e.which) {
-      case 17:
-        this.isCtrl = false;
-        break;
-      case 91:
-        this.isCommand = false;
-        break;
-      case 18:
-        this.isAlt = false;
-        break;
+    if (e.which != 75 && e.which != 78 && e.which != 80) {
+      this.isCtrl = false;
+      this.isCommand = false;
+      this.isAlt = false; 
     }
   },
   

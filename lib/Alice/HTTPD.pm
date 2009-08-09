@@ -109,14 +109,16 @@ has 'dispatch' => (
 
 has 'msgbuffer' => (
   is => 'rw',
-  isa => 'ArrayRef[HashRef]',
-  default => sub {[]},
+  isa => 'HashRef[ArrayRef]',
+  default => sub {{}},
 );
 
 after 'msgbuffer' => sub {
   my $self = shift;
-  while (@{$self->{msgbuffer}} >= 100) {
-    shift @{$self->{msgbuffer}};
+  for my $channel (keys %{$self->{msgbuffer}}) {
+    while (@{$self->{msgbuffer}{$channel}} >= 100) {
+      shift @{$self->{msgbuffer}{$channel}};
+    }
   }
 };
 
@@ -172,7 +174,11 @@ sub setup_stream {
   # populate the msg queue with any buffered messages that are newer
   # than the provided msgid
   if (defined (my $msgid = $req->uri->query_param('msgid'))) {
-    $res->{msgs} = [ grep {$_->{msgid} > $msgid} @{$self->{msgbuffer}} ];
+    for my $channel (keys %{$self->{msgbuffer}}) {
+      for my $msg (@{$self->{msgbuffer}{$channel}}) {
+        push(@{$res->{msgs}}, $msg) if ($msg->{msgid} > $msgid);
+      }
+    }
   }
   push @{$self->streams}, $res;
   return 200;
@@ -405,7 +411,8 @@ sub display_event {
   my $html = '';
   $self->tt->process("event.tt", $event, \$html);
   $event->{full_html} = $html;
-  push @{$self->msgbuffer}, $event;
+  $self->{msgbuffer}{$channel} = [] if exists $self->{msgbuffer}{$channel};
+  push @{$self->msgbuffer->{$channel}}, $event;
   $self->send_data($event);
 }
 
@@ -430,7 +437,8 @@ sub display_message {
   $html = '';
   $self->tt->process("message.tt", $msg, \$html);
   $msg->{full_html} = $html;
-  push @{$self->msgbuffer}, $msg;
+  $self->{msgbuffer}{$channel} = [] unless exists $self->{msgbuffer}{$channel};
+  push @{$self->msgbuffer->{$channel}}, $msg;
   $self->send_data($msg);
 }
 
@@ -493,6 +501,7 @@ sub close_tab {
     session   => $session,
     timestamp => make_timestamp(),
   });
+  delete $self->{msgbuffer}{$name};
   $self->log_debug("sending a request to close a tab: $name") if $self->has_clients;
 }
 
