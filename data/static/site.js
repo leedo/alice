@@ -8415,6 +8415,7 @@ document.observe("dom:loaded", function () {
   $$("div.topic").each(function (topic){
     topic.innerHTML = alice.linkFilter(topic.innerHTML)});
   $('config_button').observe("click", alice.toggleConfig.bind(alice));
+  alice.activeChannel().input.focus()
   window.onkeydown = function () {
     if (! $('config') && ! alice.isCtrl && ! alice.isCommand && ! alice.isAlt)
       alice.activeChannel().input.focus()};

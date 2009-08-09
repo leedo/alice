@@ -84,7 +84,8 @@ sub topic {
 
 sub me {
   my ($self, $chan, $connection, $arg) = @_;
-  $self->http->display_message($arg, $chan, $connection->session_alias, decode_utf8("• $1"));
+  my $nick = $connection->nick_name;
+  $self->http->display_message($nick, $chan, $connection->session_alias, decode_utf8("• $arg"));
   $connection->yield("ctcp", $chan, "ACTION $1");
 }
 
