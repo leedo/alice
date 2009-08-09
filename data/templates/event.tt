@@ -1,4 +1,4 @@
-<li class="event">
+<li class="event" id="[% msgid %]">
   [% IF eventtime %]
     <div class="left">&nbsp;</div>
     <div class="msg">

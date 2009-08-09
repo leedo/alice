@@ -16,9 +16,8 @@ has 'handlers' => (
       {method => 'query',    re => qr{^/query\s+(.+)}},
       {method => 'names',    re => qr{^/n(?:ames)?}, in_channel => 1},
       {method => '_join',    re => qr{^/j(?:oin)?\s+(.+)}},
-      {method => 'part',     re => qr{^/part(?:\s+(.+))?}, in_channel => 1},
+      {method => 'part',     re => qr{^/part(?:\s+(.+))?}},
       {method => 'window',   re => qr{^/window new (.+)}},
-      {method => 'names',    re => qr{^/n(?:ames)?}, in_channel => 1},
       {method => 'topic',    re => qr{^/topic(\s+(.+))?}, in_channel => 1},
       {method => 'me',       re => qr{^/me (.+)}},
       {method => 'quote',    re => qr{^/(?:quote|raw) (.+)}},
@@ -64,7 +63,13 @@ sub _join {
 
 sub part {
   my ($self, $chan, $connection, $arg) = @_;
-  $connection->yield("part", $arg || $chan);
+  if ($chan =~ /^[#&]/) {
+    $connection->yield("part", $arg || $chan);
+  }
+  else {
+    delete $self->http->{msgbuffer}{$chan};
+  }
+  
 }
 
 sub window {
