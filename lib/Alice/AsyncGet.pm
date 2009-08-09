@@ -27,6 +27,7 @@ sub async_fetch {
 
   my $pathobj  = URI->new($uri);
   my $path     = $pathobj->path();
+  return 0 unless $path =~ /(?:jpe?g|gif|png)$/;
   $path        =~ s/^\/[^\/]+\///;
 
   POE::Session->create(
