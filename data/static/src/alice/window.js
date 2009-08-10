@@ -1,6 +1,6 @@
 Alice.Window = Class.create({
-  initialize: function (name, id, active, session) {
-    this.name = name;
+  initialize: function (title, id, active, session) {
+    this.title = title;
     this.id = id;
     this.session = session;
     this.active = active;
@@ -74,7 +74,7 @@ Alice.Window = Class.create({
   },
   
   focus: function (event) {
-    document.title = this.name;
+    document.title = this.title;
     if (alice.activeWindow()) alice.activeWindow().unFocus();
     this.active = true;
     this.tab.addClassName('active');

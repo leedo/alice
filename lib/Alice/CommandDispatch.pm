@@ -34,14 +34,14 @@ has 'http' => (
 );
 
 sub handle {
-  my ($self, $command, $sourcenel, $connection) = @_;
+  my ($self, $command, $source, $connection) = @_;
   for my $handler (@{$self->handlers}) {
     my $re = $handler->{re};
     if ($command =~ /$re/) {
       my $method = $handler->{method};
       my $arg = $1;
-      return if ($handler->{in_channel} and $sourcenel !~ /^[#&]/);
-      $self->$method($sourcenel, $connection, $arg);
+      return if ($handler->{in_channel} and $source !~ /^[#&]/);
+      $self->$method($source, $connection, $arg);
       return;
     }
   }
@@ -64,11 +64,15 @@ sub _join {
 
 sub part {
   my ($self, $source, $connection, $arg) = @_;
-  if ($arg =~ /^[#&]/) {
+  if ($arg and $arg =~ /^[#&]/) {
     $connection->yield("part", $arg);
     delete $self->http->{msgbuffer}{$arg};
   }
-  elsif ($source =~ /^[#&]/) {
+  elsif ($arg or $source !~ /^[#&]/) {
+    $self->http->display_announcement($source, $connection->session_alias,
+      "Can only /part a channel");
+  }
+  else {
     $connection->yield("part", $source);
     delete $self->http->{msgbuffer}{$source};
   }

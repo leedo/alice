@@ -8068,8 +8068,8 @@ var Alice = Class.create({
 });
 
 Alice.Window = Class.create({
-  initialize: function (name, id, active, session) {
-    this.name = name;
+  initialize: function (title, id, active, session) {
+    this.title = title;
     this.id = id;
     this.session = session;
     this.active = active;
@@ -8143,7 +8143,7 @@ Alice.Window = Class.create({
   },
 
   focus: function (event) {
-    document.title = this.name;
+    document.title = this.title;
     if (alice.activeWindow()) alice.activeWindow().unFocus();
     this.active = true;
     this.tab.addClassName('active');
@@ -8286,13 +8286,14 @@ Alice.Connection = Class.create({
     }
   },
 
-  requestWindow: function (name, session, message) {
+  requestWindow: function (title, session, message) {
     var connection = this;
     new Ajax.Request('/say', {
       method: 'get',
-      parameters: {session: session, msg: "/window new " + name},
+      parameters: {session: session, msg: "/window new " + title},
       onSuccess: function (trans) {
         connection.handleUpdate(trans);
+        if (message) setTimeout(function(){alice.displayMessage(message)}, 1000);
       }
     });
   },
@@ -8300,7 +8301,7 @@ Alice.Connection = Class.create({
   closeWindow: function (win) {
     new Ajax.Request('/say', {
       method: 'get',
-      parameters: {session: win.session, msg: "/window close" + win.title},
+      parameters: {session: win.session, msg: "/window close " + win.title},
     });
   },
 
