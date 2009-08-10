@@ -19,7 +19,7 @@ has 'handlers' => (
       {method => 'part',     re => qr{^/part(?:\s+(.+))?}},
       {method => 'create',   re => qr{^/window new (.+)}},
       {method => 'close',    re => qr{^/window close (.+)}},
-      {method => 'topic',    re => qr{^/topic(\s+(.+))?}, in_channel => 1},
+      {method => 'topic',    re => qr{^/topic(?:\s+(.+))?}, in_channel => 1},
       {method => 'me',       re => qr{^/me (.+)}},
       {method => 'quote',    re => qr{^/(?:quote|raw) (.+)}},
       {method => 'notfound', re => qr{^/(.+)(?:\s.*)?}}
