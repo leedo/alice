@@ -8167,7 +8167,7 @@ Alice.Channel = Class.create({
 
   addMessage: function(message) {
     if (message.html || message.full_html) {
-      if (message.nick == this.lastNick) {
+      if (message.nick && message.nick == this.lastNick) {
         if (alice.monospaceNicks.indexOf(message.nick) > -1)
           this.messages.down('li:last-child div.msg').insert(
             "<br>" + alice.applyFilters(message.html));
@@ -8182,7 +8182,7 @@ Alice.Channel = Class.create({
         }
         else {
           this.messages.insert(alice.applyFilters(message.full_html));
-          this.lastNick = message.nick;
+          if (message.nick) this.lastNick = message.nick;
         }
       }
 
