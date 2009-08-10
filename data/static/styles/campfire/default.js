@@ -24,8 +24,8 @@ function loadInlineImage(image) {
   if (image.width > maxWidth) image.style.width = maxWidth + 'px';
   image.style.visibility = 'visible';
   setTimeout(function () {
-    var channel = image.up("div.channel");
-    channel.scrollTop = channel.scrollHeight;
+    var win = image.up("div.window");
+    win.scrollTop = win.scrollHeight;
   }, 50);
 }
 
