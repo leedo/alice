@@ -341,8 +341,8 @@ sub save_config {
   my $servers;
   for my $name ($req->uri->query_param) {
     next unless $req->uri->query_param($name);
-    if ($name =~ /^(.+)_(.+)/) {
-      if ($2 eq "channels") {
+    if ($name =~ /^(.+?)_(.+)/) {
+      if ($2 eq "channels" or $2 eq "on_connect") {
         $new_config->{$1}{$2} = [$req->uri->query_param($name)];
       }
       else {
@@ -350,6 +350,8 @@ sub save_config {
       }
     }
   }
+  use Data::Dumper;
+  $self->log_debug(Dumper $new_config);
   for my $newserver (values %$new_config) {
     if (! exists $self->config->{servers}{$newserver->{name}}) {
       $self->irc->add_server($newserver->{name}, $newserver);

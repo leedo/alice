@@ -13,6 +13,17 @@
         $("channels_" + sessionid).insert("<option value=\""+channel+"\">"+channel+"</option>");
       return false;
     };
+    addCommand  = function (sessionid) {
+      var command = prompt("Please enter a channel name.");
+      if (command)
+        $("on_connect_" + sessionid).insert("<option value=\""+command+"\">"+command+"</option>");
+      return false;
+    };
+    removeCommands = function (sessionid) {
+      $A($("on_connect_" + sessionid).options).each(function (option) {
+        if (option.selected) option.remove()});
+      return false;
+    };
     removeChannels = function (sessionid) {
       $A($("channels_" + sessionid).options).each(function (option) {
         if (option.selected) option.remove()});
@@ -20,6 +31,7 @@
     };
     addServer = function () {
       var name = prompt("Please enter a name for this server.");
+      if (! name) return;
       // TODO: test if this server is already being used ...
       new Ajax.Request("/serverconfig", {
         parameters: {name: name},
@@ -103,6 +115,18 @@
       <div class="controls">
         <a href="#" onclick="return addChannel([% sessionid %])">New</a>
         <a href="#" onclick="return removeChannels([% sessionid %])">Remove</a>
+      </div>
+    </div>
+    <div class="field">
+      <label>Commands</label>
+      <select name="[% sessionid %]_on_connect" multiple="multiple" id="on_connect_[% sessionid %]" class="channelselect">
+        [% FOR command IN connection.config.on_connect %]
+        <option value="[% command %]">[% command %]</option>
+        [% END %]
+      </select>
+      <div class="controls">
+        <a href="#" onclick="return addCommand([% sessionid %])">New</a>
+        <a href="#" onclick="return removeCommands([% sessionid %])">Remove</a>
       </div>
     </div>
   </div>  
