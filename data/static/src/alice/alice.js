@@ -183,7 +183,6 @@ var Alice = Class.create({
   },
   
   displayMessage: function (message) {
-    console.log(message);
     var win = alice.getWindow(message['window'].id);
     if (! win) {
       this.connection.requestWindow(
