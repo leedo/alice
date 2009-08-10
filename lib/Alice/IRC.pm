@@ -187,7 +187,7 @@ sub joined {
     $self->httpd->display_event($nick, $channel, $irc->session_alias, "joined");  
   }
   else {
-    $self->httpd->create_tab($channel, $irc->session_alias);
+    $self->httpd->create_window($channel, $irc->session_alias);
   }
 }
 
@@ -211,7 +211,7 @@ sub part {
     $self->httpd->display_event($nick, $channel, $irc->session_alias, "left", $msg);
   }
   else {
-    $self->httpd->close_tab($channel, $irc->session_alias);
+    $self->httpd->close_window($channel, $irc->session_alias);
   }
 }
 

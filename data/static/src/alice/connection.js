@@ -71,11 +71,11 @@ Alice.Connection = Class.create({
     }
   },
   
-  requestTab: function (name, session, message) {
+  requestWindow: function (title, session, message) {
     var connection = this;
     new Ajax.Request('/say', {
       method: 'get',
-      parameters: {session: session, msg: "/window new " + name},
+      parameters: {session: session, msg: "/window new " + title},
       onSuccess: function (trans) {
         connection.handleUpdate(trans);
         if (message) setTimeout(function(){alice.displayMessage(message)}, 1000);
@@ -83,10 +83,10 @@ Alice.Connection = Class.create({
     });
   },
   
-  partChannel: function (channel) {
+  closeWindow: function (win) {
     new Ajax.Request('/say', {
       method: 'get',
-      parameters: {chan: channel.name, session: channel.session, msg: "/part"},
+      parameters: {session: win.session, msg: "/window close " + win.title},
     });
   },
   

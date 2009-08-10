@@ -1,6 +1,6 @@
-Alice.Channel = Class.create({
-  initialize: function (name, id, active, session) {
-    this.name = name;
+Alice.Window = Class.create({
+  initialize: function (title, id, active, session) {
+    this.title = title;
     this.id = id;
     this.session = session;
     this.active = active;
@@ -74,8 +74,8 @@ Alice.Channel = Class.create({
   },
   
   focus: function (event) {
-    document.title = this.name;
-    if (alice.activeChannel()) alice.activeChannel().unFocus();
+    document.title = this.title;
+    if (alice.activeWindow()) alice.activeWindow().unFocus();
     this.active = true;
     this.tab.addClassName('active');
     this.elem.addClassName('active');
@@ -88,7 +88,7 @@ Alice.Channel = Class.create({
   },
   
   close: function (event) {
-    alice.removeChannel(this);
+    alice.removeWindow(this);
     this.tab.remove();
     this.elem.remove();
   },
