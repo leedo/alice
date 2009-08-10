@@ -157,6 +157,14 @@ ul.messages li {
   overflow: hidden;
 }
 
+ul.messages li:last-child {
+  margin-bottom: 3px;
+}
+
+ul.messages li:first-child {
+  margin-top: 4px;
+}
+
 ul.messages li.self {
   background: #ffffcc;
 }

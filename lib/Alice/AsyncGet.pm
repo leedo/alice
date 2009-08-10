@@ -15,8 +15,6 @@ my @pending;
 
 sub async_fetch {
   my ($res,$uri)  = @_;
-  
-  return 0 unless $uri =~ /(?:jpe?g|gif|png)$/;
   if (scalar keys(%children) >= 5) {
     push @pending, {
       res   => $res,
