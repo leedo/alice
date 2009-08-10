@@ -11,7 +11,7 @@ alice.addFilters([
     var filtered = content;
     filtered = filtered.replace(
       /(<a[^>]*?>)(.*?\.(:?jpg|jpeg|gif|png)(:?\?v=0)?)</gi,
-      "$1<img src=\"http://localhost:8080/get/$2\" onload=\"loadInlineImage(this)\" " +
+      "$1<img src=\"$2\" onload=\"loadInlineImage(this)\" " +
       "height=\"14\" alt=\"Loading Image...\" title=\"$2\" /><");
     return filtered;
   }
