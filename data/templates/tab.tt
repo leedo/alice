@@ -1,4 +1,4 @@
-<li id="[% chanid %]_tab"[% IF loop.first %] class="active"[% END %]>
-  <div class="tab_button" id="[% chanid %]_tab_button"></div>
-  <div style="float:left">[% chan | html %]</div>
+<li id="[% window.id %]_tab"[% IF loop.first %] class="active"[% END %]>
+  <div class="tab_button" id="[% window.id %]_tab_button"></div>
+  <div style="float:left">[% window.title | html %]</div>
 </li>

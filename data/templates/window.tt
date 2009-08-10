@@ -1,0 +1,20 @@
+<div class="window[% IF loop.first %] active[% END %]" id="[% window.id %]">
+  <div class="topic" id="[% window.id %]_topic">
+    [% topic.Value || "(no topic set)" %]
+  </div>
+  <ul class="messages" id="[% window.id %]_messages">
+  </ul>
+  <div class="input" id="[% window.id %]_input">
+    <div id="[% window.id %]_autocomplete_choices" class="autocomplete"></div>
+    <form id="[% window.id %]_form" autocomplete="off">
+      <input type="hidden" name="source" value="[% window.title %]" />
+      <input name="msg" id="[% window.id %]_msg"/>
+      <input type="hidden" name="session" value="[% window.session %]" />
+    </form>
+    <script type="text/javascript">
+      alice.addWindow(
+        new Alice.Window('[% window.title %]','[% window.id %]',[% loop.first ? "true" : "false" %],'[% window.session %]')
+      );
+    </script>
+  </div>
+</div>

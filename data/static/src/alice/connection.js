@@ -71,7 +71,7 @@ Alice.Connection = Class.create({
     }
   },
   
-  requestTab: function (name, session, message) {
+  requestWindow: function (name, session, message) {
     var connection = this;
     new Ajax.Request('/say', {
       method: 'get',
@@ -83,10 +83,10 @@ Alice.Connection = Class.create({
     });
   },
   
-  partChannel: function (channel) {
+  closeWindow: function (win) {
     new Ajax.Request('/say', {
       method: 'get',
-      parameters: {chan: channel.name, session: channel.session, msg: "/part"},
+      parameters: {session: win.session, msg: "/window close" + win.title},
     });
   },
   

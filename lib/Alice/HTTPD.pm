@@ -241,12 +241,12 @@ sub ping {
 sub handle_message {
   my ($self, $req, $res) = @_;
   my $msg  = $req->uri->query_param('msg');
-  my $chan = lc $req->uri->query_param('chan');
+  my $source = lc $req->uri->query_param('source');
   my $session = $req->uri->query_param('session');
   return 200 unless $session;
   my $irc = $self->irc->connection_from_alias($session);
   return 200 unless $irc;
-  $self->dispatch->handle($msg, $chan, $irc) if length $msg;
+  $self->dispatch->handle($msg, $source, $irc) if length $msg;
   return 200;
 }
 
@@ -288,16 +288,18 @@ sub send_index {
     my $session = $irc->session_alias;
     for my $channel (keys %{$irc->channels}) {
       push @$channels, {
-        chanid  => channel_id($channel, $session),
-        chan    => $channel,
-        session => $session,
+        window => {
+          id      => window_id($channel, $session),
+          title   => $channel,
+          session => $session,
+        },
         topic   => $irc->channel_topic($channel),
         server  => $irc,
       }
     }
   }
   $self->tt->process('index.tt', {
-    channels  => $channels,
+    windows   => $channels,
     style     => $self->config->{style} || "default",
   }, \$output) or die $!;
   $res->content($output);
@@ -361,7 +363,7 @@ sub handle_autocomplete {
   my ($self, $req, $res) = @_;
   $res->content_type('text/html; charset=utf-8');
   my $query = $req->uri->query_param('msg');
-  my $chan = $req->uri->query_param('chan');
+  my $chan = $req->uri->query_param('source');
   my $session_alias = $req->uri->query_param('session');
   my $irc = $self->irc->connection_from_alias($session_alias);
   ($query) = $query =~ /((?:^\/)?[\d\w]*)$/;
@@ -389,15 +391,17 @@ sub send_topic {
 }
 
 sub display_event {
-  my ($self, $nick, $channel, $session, $event_type, $msg, $event_time) = @_;
+  my ($self, $nick, $window, $session, $event_type, $msg, $event_time) = @_;
 
   my $event = {
     type      => "message",
     event     => $event_type,
     nick      => $nick,
-    chan      => $channel,
-    chanid    => channel_id($channel, $session),
-    session   => $session,
+    window    => {
+      title   => $window,
+      id      => window_id($window, $session),
+      session => $session,
+    },
     message   => $msg,
     msgid     => $self->msgid,
     timestamp => make_timestamp(),
@@ -411,22 +415,24 @@ sub display_event {
   my $html = '';
   $self->tt->process("event.tt", $event, \$html);
   $event->{full_html} = $html;
-  $self->{msgbuffer}{$channel} = [] unless exists $self->{msgbuffer}{$channel};
-  push @{$self->msgbuffer->{$channel}}, $event;
+  $self->{msgbuffer}{$window} = [] unless exists $self->{msgbuffer}{$window};
+  push @{$self->msgbuffer->{$window}}, $event;
   $self->send_data($event);
 }
 
 sub display_message {
-  my ($self, $nick, $channel, $session, $text) = @_;
+  my ($self, $nick, $window, $session, $text) = @_;
   my $html = IRC::Formatting::HTML->formatted_string_to_html($text);
   my $mynick = $self->irc->connection_from_alias($session)->nick_name;
   my $msg = {
     type      => "message",
     event     => "say",
     nick      => $nick,
-    chan      => $channel,
-    chanid    => channel_id($channel, $session),
-    session   => $session,
+    window    => {
+      title   => $window,
+      id      => window_id($window, $session),
+      session => $session,
+    },
     msgid     => $self->msgid,
     self      => $nick eq $mynick,
     html      => $html,
@@ -437,19 +443,21 @@ sub display_message {
   $html = '';
   $self->tt->process("message.tt", $msg, \$html);
   $msg->{full_html} = $html;
-  $self->{msgbuffer}{$channel} = [] unless exists $self->{msgbuffer}{$channel};
-  push @{$self->msgbuffer->{$channel}}, $msg;
+  $self->{msgbuffer}{$window} = [] unless exists $self->{msgbuffer}{$window};
+  push @{$self->msgbuffer->{$window}}, $msg;
   $self->send_data($msg);
 }
 
 sub display_announcement {
-  my ($self, $channel, $session, $str) = @_;
+  my ($self, $window, $session, $str) = @_;
   my $announcement = {
     type    => "message",
     event   => "announce",
-    chan    => $channel,
-    chanid  => channel_id($channel, $session),
-    session => $session,
+    window  => {
+      title   => $window,
+      id      => window_id($window, $session),
+      session => $session,
+    },
     message => $str
   };
   my $html = '';
@@ -463,46 +471,50 @@ sub has_clients {
   return scalar @{$self->streams};
 }
 
-sub create_tab {
-  my ($self, $name, $session) = @_;
+sub create_window {
+  my ($self, $title, $session) = @_;
   my $action = {
     type      => "action",
     event     => "join",
-    chan      => $name,
-    chanid    => channel_id($name, $session),
-    session   => $session,
+    window    => {
+      title   => $title,
+      id      => window_id($title, $session),
+      session => $session,
+    },
     timestamp => make_timestamp(),
   };
 
   my $irc = $self->irc->connection_from_alias($session);
-  if ($name !~ /^#/ and my $user = $irc->nick_info($name)) {
+  if ($title !~ /^#/ and my $user = $irc->nick_info($title)) {
     $action->{topic}  = {
       Value => $user->{Userhost} . " ($session)"
     };
   }
 
-  my $chan_html = '';
-  $self->tt->process("channel.tt", $action, \$chan_html);
-  $action->{html}{channel} = $chan_html;
+  my $window_html = '';
+  $self->tt->process("window.tt", $action, \$window_html);
+  $action->{html}{window} = $window_html;
   my $tab_html = '';
   $self->tt->process("tab.tt", $action, \$tab_html);
   $action->{html}{tab} = $tab_html;
   $self->send_data($action);
-  $self->log_debug("sending a request for a new tab: $name " . $action->{chanid}) if $self->has_clients;
+  $self->log_debug("sending a request for a new tab: $title ") if $self->has_clients;
 }
 
-sub close_tab {
-  my ($self, $name, $session) = @_;
+sub close_window {
+  my ($self, $title, $session) = @_;
   $self->send_data({
     type      => "action",
     event     => "part",
-    chanid    => channel_id($name, $session),
-    chan      => $name,
-    session   => $session,
+    window    => {
+      id      => window_id($title, $session),
+      title   => $title,
+      session => $session,
+    },
     timestamp => make_timestamp(),
   });
-  delete $self->{msgbuffer}{$name};
-  $self->log_debug("sending a request to close a tab: $name") if $self->has_clients;
+  delete $self->{msgbuffer}{$title};
+  $self->log_debug("sending a request to close a tab: $title") if $self->has_clients;
 }
 
 sub send_data {
@@ -546,7 +558,7 @@ sub format_nick_table {
   return join "\n", map {join " ", @$_} @rows;
 }
 
-sub channel_id {
+sub window_id {
   my $id = join "_", @_;
   $id =~ s/[#&]/chan_/;
   return lc $id;

@@ -9,7 +9,7 @@ a:hover {
   text-shadow: rgba( 0, 0, 0, .3 ) 0 1px 1px;
 }
 
-div.channel {
+div.window {
   position:fixed;
   bottom: 54px;
   top: 17px;
