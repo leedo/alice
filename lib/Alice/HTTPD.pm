@@ -88,17 +88,6 @@ has 'commands' => (
   lazy => 1,
 );
 
-has 'tt' => (
-  is => 'ro',
-  isa => 'Template',
-  default => sub {
-    Template->new(
-      INCLUDE_PATH => 'data/templates',
-      ENCODING     => 'UTF8'
-    );
-  },
-);
-
 has 'dispatch' => (
   is => 'ro',
   isa => 'Alice::CommandDispatch',
@@ -107,20 +96,11 @@ has 'dispatch' => (
   }
 );
 
-has 'msgbuffer' => (
+has 'windows' => (
   is => 'rw',
-  isa => 'HashRef[ArrayRef]',
-  default => sub {{}},
+  isa => 'HashRef[Alice::Window]',
+  default => sub {{}}
 );
-
-after 'msgbuffer' => sub {
-  my $self = shift;
-  for my $channel (keys %{$self->{msgbuffer}}) {
-    while (@{$self->{msgbuffer}{$channel}} >= 100) {
-      shift @{$self->{msgbuffer}{$channel}};
-    }
-  }
-};
 
 has 'msgid' => (
   is => 'rw',
@@ -174,14 +154,20 @@ sub setup_stream {
   # populate the msg queue with any buffered messages that are newer
   # than the provided msgid
   if (defined (my $msgid = $req->uri->query_param('msgid'))) {
-    for my $channel (keys %{$self->{msgbuffer}}) {
-      for my $msg (@{$self->{msgbuffer}{$channel}}) {
-        push(@{$res->{msgs}}, $msg) if ($msg->{msgid} > $msgid);
-      }
-    }
+    $res->{msgs} = $self->buffered_messages;
   }
   push @{$self->streams}, $res;
   return 200;
+}
+
+sub buffered_messages {
+  my $self = shift;
+  return [ map {@{$_->msgbuffer}} @{$self->windows} ];
+}
+
+sub get_window {
+  my ($self, $title) = @_;
+  return $self->windows->{$title};
 }
 
 sub handle_stream {
@@ -361,24 +347,6 @@ sub save_config {
   DumpFile($ENV{HOME}.'/.alice.yaml', $self->config);
 }
 
-sub handle_autocomplete {
-  my ($self, $req, $res) = @_;
-  $res->content_type('text/html; charset=utf-8');
-  my $query = $req->uri->query_param('msg');
-  my $chan = $req->uri->query_param('source');
-  my $session_alias = $req->uri->query_param('session');
-  my $irc = $self->irc->connection_from_alias($session_alias);
-  ($query) = $query =~ /((?:^\/)?[\d\w]*)$/;
-  return 200 unless $query;
-  $self->log_debug("handling autocomplete for $query");
-  my @matches = sort {lc $a cmp lc $b} grep {/^\Q$query\E/i} $irc->channel_list($chan);
-  push @matches, sort grep {/^\Q$query\E/i} map {"/$_"} @{$self->commands};
-  my $html = '';
-  $self->tt->process('autocomplete.tt',{matches => \@matches}, \$html) or die $!;
-  $res->content($html);
-  return 200;
-}
-
 sub not_found {
   my ($self, $req, $res) = @_;
   $self->log_debug("serving 404:", $req->uri->path);
@@ -475,6 +443,10 @@ sub has_clients {
 
 sub create_window {
   my ($self, $title, $session) = @_;
+  my $window = Alice::Window->new(
+    title => $title,
+    session => $session,
+  );
   my $action = {
     type      => "action",
     event     => "join",
