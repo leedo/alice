@@ -2,6 +2,7 @@ package Alice::CommandDispatch;
 
 use Moose;
 use Encode;
+use POE;
 
 use strict;
 use warnings;
@@ -16,9 +17,9 @@ has 'handlers' => (
       {method => 'query',    re => qr{^/query\s+(.+)}},
       {method => 'names',    re => qr{^/n(?:ames)?}, in_channel => 1},
       {method => '_join',    re => qr{^/j(?:oin)?\s+(.+)}},
-      {method => 'part',     re => qr{^/part(?:\s+(.+))?}},
-      {method => 'create',   re => qr{^/window new (.+)}},
-      {method => 'close',    re => qr{^/window close (.+)}},
+      {method => 'part',     re => qr{^/part}},
+      {method => 'create',   re => qr{^/create (.+)}},
+      {method => 'close',    re => qr{^/close}},
       {method => 'topic',    re => qr{^/topic(?:\s+(.+))?}, in_channel => 1},
       {method => 'me',       re => qr{^/me (.+)}},
       {method => 'quote',    re => qr{^/(?:quote|raw) (.+)}},
@@ -27,105 +28,95 @@ has 'handlers' => (
   }
 );
 
-has 'http' => (
+has 'app' => (
   is       => 'ro',
-  isa      => 'Alice::HTTPD',
+  isa      => 'Alice',
   required => 1,
 );
 
 sub handle {
-  my ($self, $command, $source, $connection) = @_;
+  my ($self, $command, $window) = @_;
   for my $handler (@{$self->handlers}) {
     my $re = $handler->{re};
     if ($command =~ /$re/) {
       my $method = $handler->{method};
       my $arg = $1;
-      return if ($handler->{in_channel} and $source !~ /^[#&]/);
-      $self->$method($source, $connection, $arg);
+      return if ($handler->{in_channel} and $window->is_channel);
+      $self->$method($window, $arg);
       return;
     }
   }
 }
 
 sub names {
-  my ($self, $source, $connection, $arg) = @_;
-  $self->http->show_nicks($source, $connection->session_alias);
+  my ($self, $window, $arg) = @_;
+  $self->app->send($window->render_announcement($window->nick_table));
 }
 
 sub query {
-  my ($self, $source, $connection, $arg) = @_;
-  $self->http->create_window($arg, $connection->session_alias);
+  my ($self, $window, $arg) = @_;
+  $self->app->create_window($arg, $window->session);
 }
 
 sub _join {
-  my ($self, $source, $connection, $arg) = @_;
-  $connection->yield("join", $arg);
+  my ($self, $window, $arg) = @_;
+  $window->connection->yield("join", $arg);
 }
 
 sub part {
-  my ($self, $source, $connection, $arg) = @_;
-  if ($arg and $arg =~ /^[#&]/) {
-    $connection->yield("part", $arg);
-    delete $self->http->{msgbuffer}{$arg};
-  }
-  elsif ($arg or $source !~ /^[#&]/) {
-    $self->http->display_announcement($source, $connection->session_alias,
-      "Can only /part a channel");
+  my ($self, $window, $arg) = @_;
+  if ($window->is_channel) {
+    $window->part;
   }
   else {
-    $connection->yield("part", $source);
-    delete $self->http->{msgbuffer}{$source};
+    $self->app->send($window->render_announceent("Can only /part a channel"));
   }
 }
 
 sub close {
-  my ($self, $source, $connection, $arg) = @_;
-  if ($arg =~ /^[#&]/) {
-    $connection->yield("part", $arg);
+  my ($self, $window) = @_;
+  if ($window->is_channel) {
+    $window->part;
   }
-  delete $self->http->{msgbuffer}{$arg};
+  $self->app->close_window($window);
 }
 
-sub window {
-  my ($self, $source, $connection, $arg) = @_;
-  $self->http->create_window($arg, $connection->session_alias);
+sub create {
+  my ($self, $window, $arg) = @_;
+  $self->app->create_window($arg, $window->session);
 }
 
 sub topic {
-  my ($self, $source, $connection, $arg) = @_;
+  my ($self, $window, $arg) = @_;
   if ($arg) {
-    $connection->yield("topic", $source, $arg);
+    $window->set_topic($arg);
   }
   else {
-    my $topic = $connection->channel_topic($source);
-    $self->http->send_topic(
-      $topic->{SetBy}, $source, $connection->session_alias, decode_utf8($topic->{Value}));
+    my $topic = $window->topic;
+    $self->app->send($window->render_event(decode_utf8($topic->{Value}), $topic, $topic->{SetBy}));
   }
 }
 
 sub me {
-  my ($self, $source, $connection, $arg) = @_;
-  my $nick = $connection->nick_name;
-  $self->http->display_message($nick, $source, $connection->session_alias, decode_utf8("• $arg"));
-  $connection->yield("ctcp", $source, "ACTION $1");
+  my ($self, $window, $arg) = @_;
+  $self->app->send($window->render_message($window->nick, decode_utf8("• $arg")));
+  $window->connection->yield("ctcp", $window->title, "ACTION $1");
 }
 
 sub quote {
-  my ($self, $source, $connection, $arg) = @_;
-  $connection->yield("quote", $arg);
+  my ($self, $window, $arg) = @_;
+  $window->connection->yield("quote", $arg);
 }
 
 sub notfound {
-  my ($self, $source, $connection, $arg) = @_;
-  $self->http->display_announcement($source, $connection->session_alias,
-    "Invalid command $arg");
+  my ($self, $window, $arg) = @_;
+  $self->app->send($window->render_announcement("Invalid command $arg"));
 }
 
 sub _say {
-  my ($self, $source, $connection, $arg) = @_;
-  my $nick = $connection->nick_name;
-  $self->http->display_message($nick, $source, $connection->session_alias, decode_utf8($arg));
-  $connection->yield("privmsg", $source, $arg);
+  my ($self, $window, $arg) = @_;
+  $self->app->send($window->render_message($window->nick, decode_utf8($arg)));
+  $window->connection->yield("privmsg", $window->title, $arg);
 }
 
 __PACKAGE__->meta->make_immutable;

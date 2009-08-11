@@ -8067,10 +8067,9 @@ var Alice = Class.create({
 });
 
 Alice.Window = Class.create({
-  initialize: function (title, id, active, session) {
+  initialize: function (title, id, active) {
     this.title = title;
     this.id = id;
-    this.session = session;
     this.active = active;
 
     this.elem = $(id);
@@ -8091,22 +8090,6 @@ Alice.Window = Class.create({
     this.tab.observe("mousedown", this.focus.bind(this));
     this.tabButton.observe("click", function (e) {self.close(); Event.stop(e);});
     this.tabButton.observe("mousedown", function (e) {Event.stop(e)});
-    /*
-    this.autocompleter = new Alice.Autocompleter(
-      this.input, this.id + "_autocomplete_choices",
-      "/autocomplete",
-      {
-        parameters: Object.toQueryString({chan: self.name, session: self.session}),
-        method: 'get',
-        updateElement: function (elem) {
-          if (! elem.innerHTML.match(/^\//)) {
-            elem.innerHTML = elem.innerHTML + ":";
-          }
-          self.input.value = self.input.value.replace(/\S+\b$/, elem.innerHTML + " ");
-        }
-      }
-    );
-    */
   },
 
   nextMessage: function () {
@@ -8289,7 +8272,7 @@ Alice.Connection = Class.create({
     var connection = this;
     new Ajax.Request('/say', {
       method: 'get',
-      parameters: {session: session, msg: "/window new " + title},
+      parameters: {session: session, msg: "/create " + title},
       onSuccess: function (trans) {
         connection.handleUpdate(trans);
         if (message) setTimeout(function(){alice.displayMessage(message)}, 1000);
@@ -8300,7 +8283,7 @@ Alice.Connection = Class.create({
   closeWindow: function (win) {
     new Ajax.Request('/say', {
       method: 'get',
-      parameters: {session: win.session, msg: "/window close " + win.title},
+      parameters: {source: win.id, msg: "/close"}
     });
   },
 

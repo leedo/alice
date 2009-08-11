@@ -16,58 +16,21 @@ use POE::Component::Server::HTTP;
 use JSON;
 use Template;
 use URI::QueryParam;
-use IRC::Formatting::HTML;
 use YAML qw/DumpFile/;
 
-has 'config' => (
+has 'app' => (
   is  => 'ro',
-  isa => 'HashRef',
+  isa => 'Alice',
   required => 1,
-  trigger => sub {
-    my $self = shift;
-    POE::Component::Server::HTTP->new(
-      Port            => $self->config->{port},
-      PreHandler      => {
-        '/'             => sub{$self->check_authentication(@_)},
-      },
-      ContentHandler  => {
-        '/serverconfig' => sub{$self->server_config(@_)},
-        '/config'       => sub{$self->send_config(@_)},
-        '/save'         => sub{$self->save_config(@_)},
-        '/view'         => sub{$self->send_index(@_)},
-        '/stream'       => sub{$self->setup_stream(@_)},
-        '/favicon.ico'  => sub{$self->not_found(@_)},
-        '/say'          => sub{$self->handle_message(@_)},
-        '/static/'      => sub{$self->handle_static(@_)},
-        '/autocomplete' => sub{$self->handle_autocomplete(@_)},
-        '/get/'         => sub{async_fetch($_[1],$_[0]->uri); return RC_WAIT;},
-      },
-      StreamHandler    => sub{$self->handle_stream(@_)},
-    );
-    POE::Session->create(
-      object_states => [
-        $self => {
-          _start => 'start_ping',
-          ping   => 'ping',
-        }
-      ],
-    );
-  },
 );
 
 before qw/send_config save_config send_index setup_stream not_found
-          handle_message handle_static handle_autocomplete server_config/ => sub {
+          handle_message handle_static server_config/ => sub {
   $_[1]->header(Connection => 'close');
   $_[2]->header(Connection => 'close');
   $_[2]->streaming(0);
   $_[2]->code(200);
 };
-
-has 'irc' => (
-  is  => 'rw',
-  isa => 'Alice::IRC',
-  weak_ref => 1,
-);
 
 has 'streams' => (
   is  => 'rw',
@@ -88,20 +51,6 @@ has 'commands' => (
   lazy => 1,
 );
 
-has 'dispatch' => (
-  is => 'ro',
-  isa => 'Alice::CommandDispatch',
-  default => sub {
-    Alice::CommandDispatch->new(http => shift);
-  }
-);
-
-has 'windows' => (
-  is => 'rw',
-  isa => 'HashRef[Alice::Window]',
-  default => sub {{}}
-);
-
 has 'msgid' => (
   is => 'rw',
   isa => 'Int',
@@ -112,6 +61,52 @@ after 'msgid' => sub {
   my $self = shift;
   $self->{msgid} = $self->{msgid} + 1;
 };
+
+sub BUILD {
+  my $self = shift;
+  POE::Component::Server::HTTP->new(
+    Port            => $self->config->{port},
+    PreHandler      => {
+      '/'             => sub{$self->check_authentication(@_)},
+    },
+    ContentHandler  => {
+      '/serverconfig' => sub{$self->server_config(@_)},
+      '/config'       => sub{$self->send_config(@_)},
+      '/save'         => sub{$self->save_config(@_)},
+      '/view'         => sub{$self->send_index(@_)},
+      '/stream'       => sub{$self->setup_stream(@_)},
+      '/favicon.ico'  => sub{$self->not_found(@_)},
+      '/say'          => sub{$self->handle_message(@_)},
+      '/static/'      => sub{$self->handle_static(@_)},
+      '/get/'         => sub{async_fetch($_[1],$_[0]->uri); return RC_WAIT;},
+    },
+    StreamHandler    => sub{$self->handle_stream(@_)},
+  );
+  POE::Session->create(
+    object_states => [
+      $self => {
+        _start => 'start_ping',
+        ping   => 'ping',
+      }
+    ],
+  );
+}
+
+has 'tt' => (
+  is => 'ro',
+  isa => 'Template',
+  default => sub {
+    Template->new(
+      INCLUDE_PATH => 'data/templates',
+      ENCODING     => 'UTF8'
+    );
+  },
+);
+
+sub config {
+  my $self = shift;
+  return $self->app->config;
+}
 
 sub check_authentication {
   my ($self, $req, $res)  = @_;
@@ -162,12 +157,7 @@ sub setup_stream {
 
 sub buffered_messages {
   my $self = shift;
-  return [ map {@{$_->msgbuffer}} @{$self->windows} ];
-}
-
-sub get_window {
-  my ($self, $title) = @_;
-  return $self->windows->{$title};
+  return [ map {@{$_->msgbuffer}} $self->app->windows ];
 }
 
 sub handle_stream {
@@ -228,11 +218,9 @@ sub handle_message {
   my ($self, $req, $res) = @_;
   my $msg  = $req->uri->query_param('msg');
   my $source = lc $req->uri->query_param('source');
-  my $session = $req->uri->query_param('session');
-  return 200 unless $session;
-  my $irc = $self->irc->connection_from_alias($session);
-  return 200 unless $irc;
-  $self->dispatch->handle($msg, $source, $irc) if length $msg;
+  my $window = $self->app->window_map->{$source};
+  return unless $window;
+  $self->app->dispatch($msg, $window) if length $msg;
   return 200;
 }
 
@@ -270,18 +258,11 @@ sub send_index {
   $res->content_type('text/html; charset=utf-8');
   my $output = '';
   my $channels = [];
-  for my $irc ($self->irc->connections) {
-    my $session = $irc->session_alias;
-    for my $channel (keys %{$irc->channels}) {
-      push @$channels, {
-        window => {
-          id      => window_id($channel, $session),
-          title   => $channel,
-          session => $session,
-        },
-        topic   => $irc->channel_topic($channel),
-        server  => $irc,
-      }
+  for my $window ($self->app->windows) {
+    push @$channels, {
+      window  => $window->serialized,
+      topic   => $window->topic,
+      server  => $window->connection,
     }
   }
   $self->tt->process('index.tt', {
@@ -336,8 +317,6 @@ sub save_config {
       }
     }
   }
-  use Data::Dumper;
-  $self->log_debug(Dumper $new_config);
   for my $newserver (values %$new_config) {
     if (! exists $self->config->{servers}{$newserver->{name}}) {
       $self->irc->add_server($newserver->{name}, $newserver);
@@ -354,188 +333,26 @@ sub not_found {
   return 404;
 }
 
-sub send_topic {
-  my ($self, $who, $channel, $session, $topic, $time) = @_;
-  my $nick = ( split /!/, $who)[0];
-  $self->display_event($nick, $channel, $session, "topic", $topic, $time);
-}
-
-sub display_event {
-  my ($self, $nick, $window, $session, $event_type, $msg, $event_time) = @_;
-
-  my $event = {
-    type      => "message",
-    event     => $event_type,
-    nick      => $nick,
-    window    => {
-      title   => $window,
-      id      => window_id($window, $session),
-      session => $session,
-    },
-    message   => $msg,
-    msgid     => $self->msgid,
-    timestamp => make_timestamp(),
-  };
-
-  if ($event_time) {
-    my $datetime        = DateTime->from_epoch( epoch  => $event_time );
-    $event->{eventtime} = $datetime->strftime('%T, %A %d %B, %Y');
-  }
-
-  my $html = '';
-  $self->tt->process("event.tt", $event, \$html);
-  $event->{full_html} = $html;
-  $self->{msgbuffer}{$window} = [] unless exists $self->{msgbuffer}{$window};
-  push @{$self->msgbuffer->{$window}}, $event;
-  $self->send_data($event);
-}
-
-sub display_message {
-  my ($self, $nick, $window, $session, $text) = @_;
-  my $html = IRC::Formatting::HTML->formatted_string_to_html($text);
-  my $mynick = $self->irc->connection_from_alias($session)->nick_name;
-  my $msg = {
-    type      => "message",
-    event     => "say",
-    nick      => $nick,
-    window    => {
-      title   => $window,
-      id      => window_id($window, $session),
-      session => $session,
-    },
-    msgid     => $self->msgid,
-    self      => $nick eq $mynick,
-    html      => $html,
-    message   => $text,
-    highlight => $text =~ /\b$mynick\b/i || 0,
-    timestamp => make_timestamp(),
-  };
-  $html = '';
-  $self->tt->process("message.tt", $msg, \$html);
-  $msg->{full_html} = $html;
-  $self->{msgbuffer}{$window} = [] unless exists $self->{msgbuffer}{$window};
-  push @{$self->msgbuffer->{$window}}, $msg;
-  $self->send_data($msg);
-}
-
-sub display_announcement {
-  my ($self, $window, $session, $str) = @_;
-  my $announcement = {
-    type    => "message",
-    event   => "announce",
-    window  => {
-      title   => $window,
-      id      => window_id($window, $session),
-      session => $session,
-    },
-    message => $str
-  };
-  my $html = '';
-  $self->tt->process("announcement.tt", $announcement, \$html);
-  $announcement->{full_html} = $html;
-  $self->send_data($announcement);
-}
-
 sub has_clients {
   my $self = shift;
   return scalar @{$self->streams};
 }
 
-sub create_window {
-  my ($self, $title, $session) = @_;
-  my $window = Alice::Window->new(
-    title => $title,
-    session => $session,
-  );
-  my $action = {
-    type      => "action",
-    event     => "join",
-    window    => {
-      title   => $title,
-      id      => window_id($title, $session),
-      session => $session,
-    },
-    timestamp => make_timestamp(),
-  };
-
-  my $irc = $self->irc->connection_from_alias($session);
-  if ($title !~ /^#/ and my $user = $irc->nick_info($title)) {
-    $action->{topic}  = {
-      Value => $user->{Userhost} . " ($session)"
-    };
-  }
-
-  my $window_html = '';
-  $self->tt->process("window.tt", $action, \$window_html);
-  $action->{html}{window} = $window_html;
-  my $tab_html = '';
-  $self->tt->process("tab.tt", $action, \$tab_html);
-  $action->{html}{tab} = $tab_html;
-  $self->send_data($action);
-  $self->log_debug("sending a request for a new tab: $title ") if $self->has_clients;
-}
-
-sub close_window {
-  my ($self, $title, $session) = @_;
-  $self->send_data({
-    type      => "action",
-    event     => "part",
-    window    => {
-      id      => window_id($title, $session),
-      title   => $title,
-      session => $session,
-    },
-    timestamp => make_timestamp(),
-  });
-  delete $self->{msgbuffer}{$title};
-  $self->log_debug("sending a request to close a tab: $title") if $self->has_clients;
-}
-
 sub send_data {
-  my ($self, $data) = @_;
+  my ($self, @data) = @_;
   return unless $self->has_clients;
   for my $res (@{$self->streams}) {
-    if ($data->{type} eq "message") {
-      push @{$res->{msgs}}, $data;
-    }
-    elsif ($data->{type} eq "action") {
-      push @{$res->{actions}}, $data;
+    for my $item (@data) {
+      $item->{msgid} = $self->msgid;
+      if ($item->{type} eq "message") {
+        push @{$res->{msgs}}, $item;
+      }
+      elsif ($item->{type} eq "action") {
+        push @{$res->{actions}}, $item;
+      }
     }
   }
   $_->continue for @{$self->streams};
-}
-
-sub show_nicks {
-  my ($self, $channel, $session) = @_;
-  my $irc = $self->irc->connection_from_alias($session);
-  $self->display_announcement($channel, $session, format_nick_table($irc->channel_list($channel)));
-}
-
-sub format_nick_table {
-  my @nicks = @_;
-  return "" unless @nicks;
-  my $maxlen = 0;
-  for (@nicks) {
-    my $length = length $_;
-    $maxlen = $length if $length > $maxlen;
-  }
-  my $cols = int(74  / $maxlen + 2);
-  my (@rows, @row);
-  for (sort {lc $a cmp lc $b} @nicks) {
-    push @row, $_ . " " x ($maxlen - length $_);
-    if (@row >= $cols) {
-      push @rows, [@row];
-      @row = ();
-    }
-  }
-  push @rows, [@row] if @row;
-  return join "\n", map {join " ", @$_} @rows;
-}
-
-sub window_id {
-  my $id = join "_", @_;
-  $id =~ s/[#&]/chan_/;
-  return lc $id;
 }
 
 sub make_timestamp {
