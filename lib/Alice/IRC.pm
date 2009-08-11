@@ -113,13 +113,13 @@ sub config {
 sub connected {
   my $self = $_[OBJECT];
   $self->log_info("connected to " . $self->alias);
-  for (@{$self->config->{servers}{$self->alias}{channels}}) {
-    $self->log_debug("joining $_");
-    $self->connection->yield( join => $_ );
-  }
   for (@{$self->config->{servers}{$self->alias}{on_connect}}) {
     $self->log_debug("sending $_");
     $self->connection->yield( quote => $_ );
+  }
+  for (@{$self->config->{servers}{$self->alias}{channels}}) {
+    $self->log_debug("joining $_");
+    $self->connection->yield( join => $_ );
   }
 }
 
@@ -153,7 +153,7 @@ sub nick {
   my ($self, $who, $new_nick) = @_[OBJECT, ARG0, ARG1];
   my $nick = ( split /!/, $who )[0];
   my @events = map {
-      $self->window($_)->render_event("nick", $new_nick, $nick)
+      $self->window($_)->render_event("nick", $nick, $new_nick)
     } $self->connection->nick_channels($new_nick);
   $self->app->send(@events)
 }
