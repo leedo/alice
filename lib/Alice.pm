@@ -81,20 +81,26 @@ sub create_window {
   );
   $self->add_window($window);
   $self->send($window->join_action);
-  $self->log_debug("sending a request for a new tab: " . $window->title) if $self->httpd->has_clients;
+  $self->log_debug("sending a request for a new tab: " . $window->title)
+    if $self->httpd->has_clients;
 }
 
 sub close_window {
   my ($self, $window) = @_;
   return unless $window;
   $self->send($window->close_action);
-  $self->log_debug("sending a request to close a tab: " . $window->title) if $self->httpd->has_clients;
+  $self->log_debug("sending a request to close a tab: " . $window->title)
+    if $self->httpd->has_clients;
   delete $self->window_map->{$window->id};
 }
 
 sub add_irc_server {
   my ($self, $name, $config) = @_;
-  $self->ircs->{$name} = Alice::IRC->new(app => $self, name => $name, config => $config);
+  $self->ircs->{$name} = Alice::IRC->new(
+    app    => $self,
+    name   => $name,
+    config => $config,
+  );
 }
 
 sub run {

@@ -16,7 +16,7 @@ has 'handlers' => (
       {method => 'query',    re => qr{^/query\s+(.+)}},
       {method => 'names',    re => qr{^/n(?:ames)?}, in_channel => 1},
       {method => '_join',    re => qr{^/j(?:oin)?\s+(.+)}},
-      {method => 'part',     re => qr{^/part}},
+      {method => 'part',     re => qr{^/part}, in_channel => 1},
       {method => 'create',   re => qr{^/create (.+)}},
       {method => 'close',    re => qr{^/close}},
       {method => 'topic',    re => qr{^/topic(?:\s+(.+))?}, in_channel => 1},
@@ -38,10 +38,16 @@ sub handle {
   for my $handler (@{$self->handlers}) {
     my $re = $handler->{re};
     if ($command =~ /$re/) {
-      my $method = $handler->{method};
       my $arg = $1;
-      return if ($handler->{in_channel} and ! $window->is_channel);
-      $self->$method($window, $arg);
+      if ($handler->{in_channel} and ! $window->is_channel) {
+        $self->app->send(
+          $window->render_announcement("$command can only be used in a channel")
+        );
+      }
+      else {
+        my $method = $handler->{method};
+        $self->$method($window, $arg);
+      }
       return;
     }
   }
@@ -67,16 +73,11 @@ sub part {
   if ($window->is_channel) {
     $window->part;
   }
-  else {
-    $self->app->send($window->render_announcement("Can only /part a channel"));
-  }
 }
 
 sub close {
   my ($self, $window) = @_;
-  if ($window->is_channel) {
-    $window->part;
-  }
+  $window->part if $window->is_channel;
   $self->app->close_window($window);
 }
 

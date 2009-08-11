@@ -7937,6 +7937,7 @@ var Alice = Class.create({
     for (var i=0; i < windows.length; i++) {
       if (windows[i].active) return windows[i];
     }
+    if (windows[0]) return windows[0];
   },
 
   onKeyUp: function (e) {
