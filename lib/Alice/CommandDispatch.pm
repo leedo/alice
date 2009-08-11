@@ -2,7 +2,6 @@ package Alice::CommandDispatch;
 
 use Moose;
 use Encode;
-use POE;
 
 use strict;
 use warnings;
@@ -41,7 +40,7 @@ sub handle {
     if ($command =~ /$re/) {
       my $method = $handler->{method};
       my $arg = $1;
-      return if ($handler->{in_channel} and $window->is_channel);
+      return if ($handler->{in_channel} and ! $window->is_channel);
       $self->$method($window, $arg);
       return;
     }
@@ -55,7 +54,7 @@ sub names {
 
 sub query {
   my ($self, $window, $arg) = @_;
-  $self->app->create_window($arg, $window->session);
+  $self->app->create_window($arg, $window->connection);
 }
 
 sub _join {
@@ -83,17 +82,17 @@ sub close {
 
 sub create {
   my ($self, $window, $arg) = @_;
-  $self->app->create_window($arg, $window->session);
+  $self->app->create_window($arg, $window->connection);
 }
 
 sub topic {
   my ($self, $window, $arg) = @_;
   if ($arg) {
-    $window->set_topic($arg);
+    $window->topic($arg);
   }
   else {
     my $topic = $window->topic;
-    $self->app->send($window->render_event(decode_utf8($topic->{Value}), $topic, $topic->{SetBy}));
+    $self->app->send($window->render_event("topic", $topic->{SetBy}, decode_utf8($topic->{Value})));
   }
 }
 

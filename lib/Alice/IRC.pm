@@ -157,9 +157,9 @@ sub nick {
   my ($self, $who, $new_nick) = @_[OBJECT, ARG0, ARG1];
   my $nick = ( split /!/, $who )[0];
   my @events = map {
-      $self->window($_)->render_event($nick, "nick", $new_nick)
+      $self->window($_)->render_event("nick", $nick, $new_nick)
     } $self->connection->nick_channels($new_nick);
-  $self->httpd->send(@events)
+  $self->app->send(@events)
 }
 
 sub joined {
@@ -167,7 +167,7 @@ sub joined {
   my $nick = ( split /!/, $who)[0];
   if ($nick ne $self->connection->nick_name) {
     my $window = $self->window($where);
-    $self->app->send($window->render_event($nick, "joined"));
+    $self->app->send($window->render_event("joined", $nick));
   }
   else {
     $self->app->create_window($where, $self->connection);
@@ -181,7 +181,7 @@ sub chan_sync {
   my $topic = $window->topic;
   if ($topic->{Value} and $topic->{SetBy}) {
     $self->app->send(
-      $window->render_event($topic->{SetBy}, "topic", $topic->{Value})
+      $window->render_event("topic", $topic->{SetBy}, $topic->{Value})
     );
   }
 }
@@ -191,7 +191,7 @@ sub part {
   my $nick = ( split /!/, $who)[0];
   my $window = $self->window($where);
   if ($nick ne $self->connection->nick_name) {
-    $self->app->send($window->render_event($nick, "left", $msg));
+    $self->app->send($window->render_event("left", $nick, $msg));
   }
   else {
     $self->app->close_window($window);
@@ -203,15 +203,16 @@ sub quit {
   my $nick = ( split /!/, $who)[0];
   my @events = map {
     my $window = $self->window($_);
-    $window->render_event($nick, "quit", $msg);
+    $window->render_event("quit", $nick, $msg);
   } @$channels;
   $self->app->send(@events);
 }
 
 sub topic {
   my ($self, $who, $channel, $topic) = @_[OBJECT, ARG0 .. ARG2];
+  my $nick = (split /!/, $who)[0];
   my $window = $self->window($channel);
-  $self->send($window->render_event($who, "topic", decode_utf8($topic)));
+  $self->app->send($window->render_event("topic", $nick, decode_utf8($topic)));
 };
 
 sub log_debug {

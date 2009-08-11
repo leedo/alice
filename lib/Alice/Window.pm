@@ -4,9 +4,9 @@ use Moose;
 use IRC::Formatting::HTML;
 
 has is_channel => (
-  is => 'ro',
-  isa => 'Bool',
-  lazy => 1,
+  is      => 'ro',
+  isa     => 'Bool',
+  lazy    => 1,
   default => sub {
     my $self = shift;
     return $self->title =~ /^[#&]/;
@@ -14,15 +14,15 @@ has is_channel => (
 );
 
 has title => (
-  is => 'ro',
-  isa => 'Str',
+  is       => 'ro',
+  isa      => 'Str',
   required => 1,
 );
 
 has id => (
-  is => 'ro',
-  isa => 'Str',
-  lazy => 1,
+  is      => 'ro',
+  isa     => 'Str',
+  lazy    => 1,
   default => sub {
     my $self = shift;
     my $id = $self->title . $self->session;
@@ -32,9 +32,9 @@ has id => (
 );
 
 has session => (
-  is => 'ro',
-  isa => 'Str',
-  lazy => 1,
+  is      => 'ro',
+  isa     => 'Str',
+  lazy    => 1,
   default => sub {
     my $self = shift;
     return $self->connection->session_alias;
@@ -55,7 +55,7 @@ sub nick {
 sub topic {
   my ($self, $string) = @_;
   if ($string) {
-    $self->connection->yield(topic => $string);
+    $self->connection->yield(topic => $self->title, $string);
     return $string;
   }
   else {
@@ -64,26 +64,22 @@ sub topic {
 }
 
 has msgbuffer => (
-  is => 'rw',
-  isa => 'ArrayRef',
+  is      => 'rw',
+  isa     => 'ArrayRef',
   default => sub {[]},
 );
 
 sub add_message {
   my ($self, $message) = shift;
   push @{$self->msgbuffer}, $message;
-}
-
-after add_message => sub {
-  my $self = shift;
   if (@{$self->msgbuffer} > 100) {
     shift @{$self->msgbuffer};
   }
-};
+}
 
 has 'tt' => (
-  is => 'ro',
-  isa => 'Template',
+  is     => 'ro',
+  isa    => 'Template',
   default => sub {
     Template->new(
       INCLUDE_PATH => 'data/templates',
@@ -93,16 +89,16 @@ has 'tt' => (
 );
 
 has 'serialized' => (
-  is => 'ro',
-  isa => 'HashRef',
-  lazy => 1,
+  is      => 'ro',
+  isa     => 'HashRef',
+  lazy    => 1,
   default => sub {
-  my $self = shift;
-  return {
-      id => $self->id, 
+    my $self = shift;
+    return {
+      id     => $self->id, 
       ession => $self->session,
-      title => $self->title
-    }
+      title  => $self->title
+    };
   }
 );
 

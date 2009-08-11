@@ -1,9 +1,9 @@
 package Alice;
 
 use Moose;
+use Alice::Window;
 use Alice::HTTPD;
 use Alice::IRC;
-use Alice::Window;
 use POE;
 
 has config => (
