@@ -153,7 +153,7 @@ sub nick {
   my ($self, $who, $new_nick) = @_[OBJECT, ARG0, ARG1];
   my $nick = ( split /!/, $who )[0];
   my @events = map {
-      $self->window($_)->render_event("nick", $nick, $new_nick)
+      $self->window($_)->render_event("nick", $new_nick, $nick)
     } $self->connection->nick_channels($new_nick);
   $self->app->send(@events)
 }
@@ -197,6 +197,7 @@ sub part {
 sub quit {
   my ($self, $who, $msg, $channels) = @_[OBJECT, ARG0 .. ARG2];
   my $nick = ( split /!/, $who)[0];
+  print STDERR "$nick quit\n";
   my @events = map {
     my $window = $self->window($_);
     $window->render_event("quit", $nick, $msg);

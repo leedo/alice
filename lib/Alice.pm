@@ -51,6 +51,11 @@ sub windows {
   return values %{$self->window_map};
 }
 
+sub buffered_messages {
+  my ($self, $min) = @_;
+  return [ grep {$_->{msgid} > $min} map {@{$_->msgbuffer}} $self->windows ];
+}
+
 sub connections {
   my $self = shift;
   return map {$_->connection} values %{$self->ircs};

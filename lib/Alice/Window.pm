@@ -3,6 +3,7 @@ package Alice::Window;
 use Moose;
 use IRC::Formatting::HTML;
 use Encode;
+use DateTime;
 
 has is_channel => (
   is      => 'ro',
@@ -130,6 +131,13 @@ sub join_action {
   return $action;
 }
 
+sub timestamp {
+  my $self = shift;
+  my $dt = DateTime->now(time_zone => "local");
+  my $ampm = $dt->am_or_pm eq "AM" ? "a" : "p";
+  return sprintf("%d:%02d%s",$dt->hour_12, $dt->min, $ampm);
+}
+
 sub render_event {
   my ($self, $event, $nick, $str) = @_;
   $str = decode("utf8", $str, Encode::FB_WARN);
@@ -140,6 +148,7 @@ sub render_event {
     window    => $self->serialized,
     message   => $str,
     msgid     => $self->nextmsgid,
+    timestamp => $self->timestamp,
   };
 
   my $html = '';
@@ -162,6 +171,7 @@ sub render_message {
     html      => $html,
     self      => $self->nick eq $nick,
     msgid     => $self->nextmsgid,
+    timestamp => $self->timestamp,
   };
   my $fullhtml = '';
   $self->tt->process("message.tt", $message, \$fullhtml);

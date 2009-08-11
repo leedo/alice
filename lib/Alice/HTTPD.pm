@@ -9,7 +9,6 @@ use Moose;
 use bytes;
 use MIME::Base64;
 use Time::HiRes qw/time/;
-use DateTime;
 use POE;
 use POE::Component::Server::HTTP;
 use JSON;
@@ -134,18 +133,12 @@ sub setup_stream {
   $res->{msgs} = [];
   $res->{actions} = [];
   
-  # populate the msg queue with any buffered messages that are newer
-  # than the provided msgid
+  # populate the msg queue with any buffered messages
   if (defined (my $msgid = $req->uri->query_param('msgid'))) {
-    $res->{msgs} = $self->buffered_messages($msgid);
+    $res->{msgs} = $self->app->buffered_messages($msgid);
   }
   push @{$self->streams}, $res;
   return 200;
-}
-
-sub buffered_messages {
-  my ($self, $min) = @_;
-  return [ grep {$_->{msgid} > $min} map {@{$_->msgbuffer}} $self->app->windows ];
 }
 
 sub handle_stream {
