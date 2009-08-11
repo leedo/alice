@@ -33,7 +33,7 @@ has 'app' => (
   required => 1,
 );
 
-has 'dispatch' => (
+has 'events' => (
   isa => 'HashRef',
   is => 'ro',
   default => sub {
@@ -83,7 +83,7 @@ sub BUILDARGS {
 sub BUILD {
   my $self = shift;
   POE::Session->create(
-    object_states => [ $self => $self->dispatch ],
+    object_states => [ $self => $self->events ],
   );
 }
 
