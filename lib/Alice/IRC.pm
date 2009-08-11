@@ -9,7 +9,6 @@ use POE::Component::IRC::State;
 use POE::Component::IRC::Plugin::Connector;
 use POE::Component::IRC::Plugin::CTCP;
 use POE::Component::IRC::Plugin::NickReclaim;
-use Encode;
 use Moose;
 
 has 'connection' => (
@@ -133,7 +132,6 @@ sub public {
   my ($self, $who, $where, $what) = @_[OBJECT, ARG0 .. ARG2];
   my $nick = ( split /!/, $who )[0];
   my $window = $self->window($where->[0]);
-  $what = decode("utf8", $what, Encode::FB_WARN);
   $self->app->send($window->render_message($nick, $what));
 }
 
@@ -141,7 +139,6 @@ sub msg {
   my ($self, $who, $what) = @_[OBJECT, ARG0, ARG2];
   my $nick = ( split /!/, $who)[0];
   my $window = $self->window($nick);
-  $what = decode("utf8", $what, Encode::FB_WARN);
   $self->app->send($window->render_message($nick, $what));
 }
 
@@ -149,7 +146,6 @@ sub action {
   my ($self, $who, $where, $what) = @_[OBJECT, ARG0 .. ARG2];
   my $nick = ( split /!/, $who )[0];
   my $window = $self->window($where->[0]);
-  $what = decode("utf8", "• $what", Encode::FB_WARN);
   $self->app->send($window->render_message($nick, $what));
 }
 
@@ -212,7 +208,7 @@ sub topic {
   my ($self, $who, $channel, $topic) = @_[OBJECT, ARG0 .. ARG2];
   my $nick = (split /!/, $who)[0];
   my $window = $self->window($channel);
-  $self->app->send($window->render_event("topic", $nick, decode_utf8($topic)));
+  $self->app->send($window->render_event("topic", $nick, $topic));
 };
 
 sub log_debug {

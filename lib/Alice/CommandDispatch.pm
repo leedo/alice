@@ -92,13 +92,15 @@ sub topic {
   }
   else {
     my $topic = $window->topic;
-    $self->app->send($window->render_event("topic", $topic->{SetBy}, decode_utf8($topic->{Value})));
+    $self->app->send(
+      $window->render_event("topic", $topic->{SetBy}, $topic->{Value})
+    );
   }
 }
 
 sub me {
   my ($self, $window, $arg) = @_;
-  $self->app->send($window->render_message($window->nick, decode_utf8("• $arg")));
+  $self->app->send($window->render_message($window->nick, "• $arg"));
   $window->connection->yield("ctcp", $window->title, "ACTION $1");
 }
 
@@ -114,7 +116,7 @@ sub notfound {
 
 sub _say {
   my ($self, $window, $arg) = @_;
-  $self->app->send($window->render_message($window->nick, decode_utf8($arg)));
+  $self->app->send($window->render_message($window->nick, $arg));
   $window->connection->yield("privmsg", $window->title, $arg);
 }
 

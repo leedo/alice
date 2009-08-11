@@ -7,7 +7,6 @@ use Alice::AsyncGet;
 use Alice::CommandDispatch;
 use Moose;
 use bytes;
-use Encode;
 use MIME::Base64;
 use Time::HiRes qw/time/;
 use DateTime;

@@ -2,6 +2,7 @@ package Alice::Window;
 
 use Moose;
 use IRC::Formatting::HTML;
+use Encode;
 
 has is_channel => (
   is      => 'ro',
@@ -131,6 +132,7 @@ sub join_action {
 
 sub render_event {
   my ($self, $event, $nick, $str) = @_;
+  $str = decode("utf8", $str, Encode::FB_WARN);
   my $message = {
     type      => "message",
     event     => $event,
@@ -149,6 +151,7 @@ sub render_event {
 
 sub render_message {
   my ($self, $nick, $str) = @_;
+  $str = decode("utf8", $str, Encode::FB_WARN);
   my $html = IRC::Formatting::HTML->formatted_string_to_html($str);
   my $message = {
     type      => "message",
@@ -169,6 +172,7 @@ sub render_message {
 
 sub render_announcement {
   my ($self, $str) = @_;
+  $str = decode("utf8", $str, Encode::FB_WARN);
   my $message = {
     type    => "message",
     event   => "announce",
