@@ -197,10 +197,9 @@ sub part {
 sub quit {
   my ($self, $who, $msg, $channels) = @_[OBJECT, ARG0 .. ARG2];
   my $nick = ( split /!/, $who)[0];
-  print STDERR "$nick quit\n";
   my @events = map {
     my $window = $self->window($_);
-    $window->render_event("quit", $nick, $msg);
+    $window->render_event("left", $nick, $msg);
   } @$channels;
   $self->app->send(@events);
 }

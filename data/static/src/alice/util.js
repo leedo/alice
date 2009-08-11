@@ -13,3 +13,22 @@ function growlNotify (message) {
       identifier: message.msgid
   })
 }
+
+function makeSortable () {
+  Sortable.create('tabs', {
+    overlap: 'horizontal',
+    constraint: 'horizontal',
+    format: /(.+)/,
+    onUpdate: function (res) {
+      var tabs = res.childElements();
+      tabs.invoke('removeClassName','leftof_active');
+      for (var i=0; i < tabs.length; i++) {
+        if (tabs[i].hasClassName('active')) {
+          if (tabs[i].previous()) tabs[i].previous().addClassName('leftof_active');
+          tabs[i].removeClassName('leftof_active');
+          return;
+        }
+      }
+    }
+  });
+}

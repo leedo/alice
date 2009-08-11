@@ -107,9 +107,9 @@ has 'serialized' => (
   default => sub {
     my $self = shift;
     return {
-      id     => $self->id, 
-      ession => $self->session,
-      title  => $self->title
+      id      => $self->id, 
+      session => $self->session,
+      title   => $self->title
     };
   }
 );

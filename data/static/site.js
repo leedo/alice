@@ -8027,6 +8027,7 @@ var Alice = Class.create({
     if (! $(windowId)) {
       $('windows').insert(html['window']);
       $('tabs').insert(html.tab);
+      makeSortable();
     }
   },
 
@@ -8393,6 +8394,25 @@ function growlNotify (message) {
   })
 }
 
+function makeSortable () {
+  Sortable.create('tabs', {
+    overlap: 'horizontal',
+    constraint: 'horizontal',
+    format: /(.+)/,
+    onUpdate: function (res) {
+      var tabs = res.childElements();
+      tabs.invoke('removeClassName','leftof_active');
+      for (var i=0; i < tabs.length; i++) {
+        if (tabs[i].hasClassName('active')) {
+          if (tabs[i].previous()) tabs[i].previous().addClassName('leftof_active');
+          tabs[i].removeClassName('leftof_active');
+          return;
+        }
+      }
+    }
+  });
+}
+
 var alice = new Alice();
 
 document.observe("dom:loaded", function () {
@@ -8410,4 +8430,5 @@ document.observe("dom:loaded", function () {
     alice.activeWindow().input.focus();
     alice.isFocused = true};
   window.onblur = function () {alice.isFocused = false};
+  makeSortable();
 });

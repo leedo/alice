@@ -154,6 +154,7 @@ var Alice = Class.create({
     if (! $(windowId)) {
       $('windows').insert(html['window']);
       $('tabs').insert(html.tab);
+      makeSortable();
     }
   },
   
@@ -215,4 +216,5 @@ document.observe("dom:loaded", function () {
     alice.activeWindow().input.focus();
     alice.isFocused = true};
   window.onblur = function () {alice.isFocused = false};
+  makeSortable();
 });
