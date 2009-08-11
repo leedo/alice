@@ -71,11 +71,11 @@ Alice.Connection = Class.create({
     }
   },
   
-  requestWindow: function (title, session, message) {
+  requestWindow: function (title, windowId, message) {
     var connection = this;
     new Ajax.Request('/say', {
       method: 'get',
-      parameters: {session: session, msg: "/create " + title},
+      parameters: {source: windowId, msg: "/create " + title},
       onSuccess: function (trans) {
         connection.handleUpdate(trans);
         if (message) setTimeout(function(){alice.displayMessage(message)}, 1000);

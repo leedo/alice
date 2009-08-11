@@ -8,11 +8,11 @@
   [% END %]
 
   [% IF event == "topic" %]
-    Topic changed to "[% message %]" by <a href="javascript:alice.connection.requestWindow('[% nick %]','[% window.session %]')" class="nick">[% nick %]</a>[% IF eventtime %] at [% eventtime %][% END %].
+    Topic changed to "[% message %]" by <a href="javascript:alice.connection.requestWindow('[% nick %]','[% window.id %]')" class="nick">[% nick %]</a>[% IF eventtime %] at [% eventtime %][% END %].
   [% ELSIF event == "joined" || event == "left" %]
-    <a href="javascript:alice.connection.requestWindow('[% nick %]','[% window.session %]')" class="nick">[% nick %]</a> [% event %] the chat room.[% IF message %] ([% message %])[% END %]
+    <a href="javascript:alice.connection.requestWindow('[% nick %]','[% window.id %]')" class="nick">[% nick %]</a> [% event %] the chat room.[% IF message %] ([% message %])[% END %]
   [% ELSIF event == "nick" %]
-    [% nick %] is now known as <a href="javascript:alice.connection.requestWindow('[% nick %]','[% window.session %]')" class="nick">[% message %]</a>.
+    [% nick %] is now known as <a href="javascript:alice.connection.requestWindow('[% nick %]','[% window.id %]')" class="nick">[% message %]</a>.
   [% END %]
   </div>
 </li>

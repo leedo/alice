@@ -188,7 +188,7 @@ var Alice = Class.create({
     var win = alice.getWindow(message['window'].id);
     if (! win) {
       this.connection.requestWindow(
-        message['window'].title, message['window'].session, message);
+        message['window'].title, this.activeWindow().id, message);
       return;
     }
     win.addMessage(message);
