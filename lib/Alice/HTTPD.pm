@@ -281,7 +281,7 @@ sub send_config {
   $self->tt->process('config.tt', {
     config      => $self->config,
     connections => [ sort {$a->{alias} cmp $b->{alias}}
-                     $self->irc->connections ],
+                     $self->app->connections ],
   }, \$output);
   $res->content($output);
   return 200;
