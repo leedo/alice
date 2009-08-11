@@ -69,8 +69,18 @@ has msgbuffer => (
   default => sub {[]},
 );
 
+my $msgid = 1;
+
+sub nextmsgid {
+  return $msgid ++;
+}
+
+sub msgid {
+  return $msgid;
+}
+
 sub add_message {
-  my ($self, $message) = shift;
+  my ($self, $message) = @_;
   push @{$self->msgbuffer}, $message;
   if (@{$self->msgbuffer} > 100) {
     shift @{$self->msgbuffer};
@@ -127,6 +137,7 @@ sub render_event {
     nick      => $nick,
     window    => $self->serialized,
     message   => $str,
+    msgid     => $self->nextmsgid,
   };
 
   my $html = '';
@@ -147,6 +158,7 @@ sub render_message {
     message   => $str,
     html      => $html,
     self      => $self->nick eq $nick,
+    msgid     => $self->nextmsgid,
   };
   my $fullhtml = '';
   $self->tt->process("message.tt", $message, \$fullhtml);

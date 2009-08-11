@@ -51,17 +51,6 @@ has 'commands' => (
   lazy => 1,
 );
 
-has 'msgid' => (
-  is => 'rw',
-  isa => 'Int',
-  default => 1,
-);
-
-after 'msgid' => sub {
-  my $self = shift;
-  $self->{msgid} = $self->{msgid} + 1;
-};
-
 sub BUILD {
   my $self = shift;
   POE::Component::Server::HTTP->new(
@@ -149,15 +138,15 @@ sub setup_stream {
   # populate the msg queue with any buffered messages that are newer
   # than the provided msgid
   if (defined (my $msgid = $req->uri->query_param('msgid'))) {
-    $res->{msgs} = $self->buffered_messages;
+    $res->{msgs} = $self->buffered_messages($msgid);
   }
   push @{$self->streams}, $res;
   return 200;
 }
 
 sub buffered_messages {
-  my $self = shift;
-  return [ map {@{$_->msgbuffer}} $self->app->windows ];
+  my ($self, $min) = @_;
+  return [ grep {$_->{msgid} > $min} map {@{$_->msgbuffer}} $self->app->windows ];
 }
 
 sub handle_stream {
@@ -343,7 +332,6 @@ sub send_data {
   return unless $self->has_clients;
   for my $res (@{$self->streams}) {
     for my $item (@data) {
-      $item->{msgid} = $self->msgid;
       if ($item->{type} eq "message") {
         push @{$res->{msgs}}, $item;
       }

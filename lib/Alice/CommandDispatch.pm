@@ -68,7 +68,7 @@ sub part {
     $window->part;
   }
   else {
-    $self->app->send($window->render_announceent("Can only /part a channel"));
+    $self->app->send($window->render_announcement("Can only /part a channel"));
   }
 }
 
