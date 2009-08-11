@@ -16,9 +16,10 @@ has 'handlers' => (
       {method => 'query',    re => qr{^/query\s+(.+)}},
       {method => 'names',    re => qr{^/n(?:ames)?}, in_channel => 1},
       {method => '_join',    re => qr{^/j(?:oin)?\s+(.+)}},
-      {method => 'part',     re => qr{^/part(?:\s+(.+))?}},
-      {method => 'window',   re => qr{^/window new (.+)}},
-      {method => 'topic',    re => qr{^/topic(\s+(.+))?}, in_channel => 1},
+      {method => 'part',     re => qr{^/part}, in_channel => 1},
+      {method => 'create',   re => qr{^/create (.+)}},
+      {method => 'close',    re => qr{^/close}},
+      {method => 'topic',    re => qr{^/topic(?:\s+(.+))?}, in_channel => 1},
       {method => 'me',       re => qr{^/me (.+)}},
       {method => 'quote',    re => qr{^/(?:quote|raw) (.+)}},
       {method => 'notfound', re => qr{^/(.+)(?:\s.*)?}}
@@ -26,92 +27,98 @@ has 'handlers' => (
   }
 );
 
-has 'http' => (
+has 'app' => (
   is       => 'ro',
-  isa      => 'Alice::HTTPD',
+  isa      => 'Alice',
   required => 1,
 );
 
 sub handle {
-  my ($self, $command, $channel, $connection) = @_;
+  my ($self, $command, $window) = @_;
   for my $handler (@{$self->handlers}) {
     my $re = $handler->{re};
     if ($command =~ /$re/) {
-      my $method = $handler->{method};
       my $arg = $1;
-      return if ($handler->{in_channel} and $channel !~ /^[#&]/);
-      $self->$method($channel, $connection, $arg);
+      if ($handler->{in_channel} and ! $window->is_channel) {
+        $self->app->send(
+          $window->render_announcement("$command can only be used in a channel")
+        );
+      }
+      else {
+        my $method = $handler->{method};
+        $self->$method($window, $arg);
+      }
       return;
     }
   }
 }
 
 sub names {
-  my ($self, $chan, $connection, $arg) = @_;
-  $self->http->show_nicks($chan, $connection->session_alias);
+  my ($self, $window, $arg) = @_;
+  $self->app->send($window->render_announcement($window->nick_table));
 }
 
 sub query {
-  my ($self, $chan, $connection, $arg) = @_;
-  $self->http->create_tab($arg, $connection->session_alias);
+  my ($self, $window, $arg) = @_;
+  $self->app->create_window($arg, $window->connection);
 }
 
 sub _join {
-  my ($self, $chan, $connection, $arg) = @_;
-  $connection->yield("join", $arg);
+  my ($self, $window, $arg) = @_;
+  $window->connection->yield("join", $arg);
 }
 
 sub part {
-  my ($self, $chan, $connection, $arg) = @_;
-  if ($chan =~ /^[#&]/) {
-    $connection->yield("part", $arg || $chan);
+  my ($self, $window, $arg) = @_;
+  if ($window->is_channel) {
+    $window->part;
   }
-  else {
-    delete $self->http->{msgbuffer}{$chan};
-  }
-  
 }
 
-sub window {
-  my ($self, $chan, $connection, $arg) = @_;
-  $self->http->create_tab($arg, $connection->session_alias);
+sub close {
+  my ($self, $window) = @_;
+  $window->part if $window->is_channel;
+  $self->app->close_window($window);
+}
+
+sub create {
+  my ($self, $window, $arg) = @_;
+  $self->app->create_window($arg, $window->connection);
 }
 
 sub topic {
-  my ($self, $chan, $connection, $arg) = @_;
+  my ($self, $window, $arg) = @_;
   if ($arg) {
-    $connection->yield("topic", $chan, $arg);
+    $window->topic($arg);
   }
   else {
-    my $topic = $connection->channel_topic($chan);
-    $self->http->send_topic(
-      $topic->{SetBy}, $chan, $connection->session_alias, decode_utf8($topic->{Value}));
+    my $topic = $window->topic;
+    $self->app->send(
+      $window->render_event("topic", $topic->{SetBy}, $topic->{Value})
+    );
   }
 }
 
 sub me {
-  my ($self, $chan, $connection, $arg) = @_;
-  my $nick = $connection->nick_name;
-  $self->http->display_message($nick, $chan, $connection->session_alias, decode_utf8("• $arg"));
-  $connection->yield("ctcp", $chan, "ACTION $1");
+  my ($self, $window, $arg) = @_;
+  $self->app->send($window->render_message($window->nick, "• $arg"));
+  $window->connection->yield("ctcp", $window->title, "ACTION $1");
 }
 
 sub quote {
-  my ($self, $chan, $connection, $arg) = @_;
-  $connection->yield("quote", $arg);
+  my ($self, $window, $arg) = @_;
+  $window->connection->yield("quote", $arg);
 }
 
 sub notfound {
-  my ($self, $chan, $connection, $arg) = @_;
-  $self->http->display_announcement($chan, $connection->session_alias,
-    "Invalid command $arg");
+  my ($self, $window, $arg) = @_;
+  $self->app->send($window->render_announcement("Invalid command $arg"));
 }
 
 sub _say {
-  my ($self, $chan, $connection, $arg) = @_;
-  my $nick = $connection->nick_name;
-  $self->http->display_message($nick, $chan, $connection->session_alias, decode_utf8($arg));
-  $connection->yield("privmsg", $chan, $arg);
+  my ($self, $window, $arg) = @_;
+  $self->app->send($window->render_message($window->nick, $arg));
+  $window->connection->yield("privmsg", $window->title, $arg);
 }
 
 __PACKAGE__->meta->make_immutable;

@@ -10,7 +10,7 @@ var Alice = Class.create({
     this.isCommand = false;
     this.isAlt = false;
     this.isFocused = true;
-    this.channels = new Hash();
+    this.windows = new Hash();
     this.previousFocus = 0;
     this.connection = new Alice.Connection;
     this.filters = [ this.linkFilter ];
@@ -44,26 +44,27 @@ var Alice = Class.create({
     return false;
   },
   
-  addChannel: function (channel) {
-    this.channels.set(channel.id, channel);
+  addWindow: function (win) {
+    this.windows.set(win.id, win);
   },
   
-  removeChannel: function (channel) {
-    if (channel.active) this.focusLast();
-    this.channels.unset(channel.id);
-    this.connection.partChannel(channel);
-    channel = null;
+  removeWindow: function (win) {
+    if (win.active) this.focusLast();
+    this.windows.unset(win.id);
+    this.connection.closeWindow(win);
+    win = null;
   },
   
-  getChannel: function (channelId) {
-    return this.channels.get(channelId);
+  getWindow: function (windowId) {
+    return this.windows.get(windowId);
   },
   
-  activeChannel: function () {
-    var channels = this.channels.values();
-    for (var i=0; i < channels.length; i++) {
-      if (channels[i].active) return channels[i];
+  activeWindow: function () {
+    var windows = this.windows.values();
+    for (var i=0; i < windows.length; i++) {
+      if (windows[i].active) return windows[i];
     }
+    if (windows[0]) return windows[0];
   },
   
   onKeyUp: function (e) {
@@ -82,22 +83,22 @@ var Alice = Class.create({
     else if (e.which == 18)
       this.isAlt = true;
     else if (this.isCtrl && e.which == 75) {
-      this.activeChannel().messages.innerHTML = '';
+      this.activeWindow().messages.innerHTML = '';
       return false;
     }
     else if (this.isCtrl && e.which == 78) {
-      this.nextTab();
+      this.nextWindow();
       return false;
     }
     else if (this.isCtrl && e.which == 80) {
-      this.previousTab();
+      this.previousWindow();
       return false;
     }
     else if (e.which == Event.KEY_UP) {
-      this.activeChannel().previousMessage();
+      this.activeWindow().previousMessage();
     }
     else if (e.which == Event.KEY_DOWN) {
-      this.activeChannel().nextMessage();
+      this.activeWindow().nextMessage();
     }
   },
   
@@ -120,41 +121,41 @@ var Alice = Class.create({
     return content;
   },
   
-  nextTab: function () {
-    var nextChan = this.activeChannel().tab.next();
-    if (! nextChan)
-      nextChan = $$('.channel').first();
-    if (! nextChan) return;
-    nextChan = nextChan.id.replace('_tab','');
-    this.getChannel(nextChan).focus();
+  nextWindow: function () {
+    var nextWindow = this.activeWindow().tab.next();
+    if (! nextWindow)
+      nextWindow = $$('.window').first();
+    if (! nextWindow) return;
+    nextWindow = nextWindow.id.replace('_tab','');
+    this.getWindow(nextWindow).focus();
   },
   
   focusLast: function () {
     if (this.previousFocus)
       this.previousFocus.focus();
-    else if (this.channels.values().length)
-      this.channels.values().first().focus();
+    else if (this.windows.values().length)
+      this.windows.values().first().focus();
   },
   
-  previousTab: function () {
-    var prevChan = this.activeChannel().tab.previous();
-    if (! prevChan)
-      prevChan = $$('.channel').last();
-    if (! prevChan) return;
-    prevChan = prevChan.id.replace('_tab','');
-    this.getChannel(prevChan).focus();
+  previousWindow: function () {
+    var prevWindow = this.activeWindow().tab.previous();
+    if (! prevWindow)
+      prevWindow = $$('.window').last();
+    if (! prevWindow) return;
+    prevWindow = prevWindow.id.replace('_tab','');
+    this.getWindow(prevWindow).focus();
   },
   
-  closeTab: function (chanid) {
-    var channel = this.getChannel(chanid);
-    if (channel) channel.close();
+  closeWindow: function (windowId) {
+    var win= this.getWindow(windowId);
+    if (win) win.close();
   },
   
-  addTab: function (chan, html) {
-    chan = $(chan);
-    if (! chan) {
-      $('channels').insert(html.channel);
+  insertWindow: function (windowId, html) {
+    if (! $(windowId)) {
+      $('windows').insert(html['window']);
       $('tabs').insert(html.tab);
+      makeSortable();
     }
   },
   
@@ -168,10 +169,10 @@ var Alice = Class.create({
   handleAction: function (action) {
     switch (action.event) {
       case "join":
-        this.addTab(action.chanid, action.html);
+        this.insertWindow(action['window'].id, action.html);
         break;
       case "part":
-        this.closeTab(action.chanid);
+        this.closeWindow(action['window'].id);
         break;
     }
   },
@@ -184,16 +185,17 @@ var Alice = Class.create({
   },
   
   displayMessage: function (message) {
-    var channel = alice.getChannel(message.chanid);
-    if (! channel) {
-      this.connection.requestTab(message.chan, message.session, message);
+    var win = alice.getWindow(message['window'].id);
+    if (! win) {
+      this.connection.requestWindow(
+        message['window'].title, this.activeWindow().id, message);
       return;
     }
-    channel.addMessage(message);
+    win.addMessage(message);
   }
 });
 
-//= require <alice/channel>
+//= require <alice/window>
 //= require <alice/connection>
 //= require <alice/autocompleter>
 //= require <alice/util>
@@ -204,15 +206,16 @@ document.observe("dom:loaded", function () {
   $$("div.topic").each(function (topic){
     topic.innerHTML = alice.linkFilter(topic.innerHTML)});
   $('config_button').observe("click", alice.toggleConfig.bind(alice));
-  alice.activeChannel().input.focus()
+  alice.activeWindow().input.focus()
   window.onkeydown = function () {
     if (! $('config') && ! alice.isCtrl && ! alice.isCommand && ! alice.isAlt)
-      alice.activeChannel().input.focus()};
+      alice.activeWindow().input.focus()};
   window.onresize = function () {
-    alice.activeChannel().scrollToBottom()};
+    alice.activeWindow().scrollToBottom()};
   window.status = " ";  
   window.onfocus = function () {
-    alice.activeChannel().input.focus();
+    alice.activeWindow().input.focus();
     alice.isFocused = true};
   window.onblur = function () {alice.isFocused = false};
+  makeSortable();
 });

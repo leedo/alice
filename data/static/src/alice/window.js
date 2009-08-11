@@ -1,8 +1,7 @@
-Alice.Channel = Class.create({
-  initialize: function (name, id, active, session) {
-    this.name = name;
+Alice.Window = Class.create({
+  initialize: function (title, id, active) {
+    this.title = title;
     this.id = id;
-    this.session = session;
     this.active = active;
     
     this.elem = $(id);
@@ -23,22 +22,6 @@ Alice.Channel = Class.create({
     this.tab.observe("mousedown", this.focus.bind(this));
     this.tabButton.observe("click", function (e) {self.close(); Event.stop(e);});
     this.tabButton.observe("mousedown", function (e) {Event.stop(e)});
-    /*
-    this.autocompleter = new Alice.Autocompleter(
-      this.input, this.id + "_autocomplete_choices",
-      "/autocomplete",
-      {
-        parameters: Object.toQueryString({chan: self.name, session: self.session}),
-        method: 'get',
-        updateElement: function (elem) {
-          if (! elem.innerHTML.match(/^\//)) {
-            elem.innerHTML = elem.innerHTML + ":";
-          }
-          self.input.value = self.input.value.replace(/\S+\b$/, elem.innerHTML + " ");
-        }
-      }
-    );
-    */
   },
   
   nextMessage: function () {
@@ -74,8 +57,8 @@ Alice.Channel = Class.create({
   },
   
   focus: function (event) {
-    document.title = this.name;
-    if (alice.activeChannel()) alice.activeChannel().unFocus();
+    document.title = this.title;
+    if (alice.activeWindow()) alice.activeWindow().unFocus();
     this.active = true;
     this.tab.addClassName('active');
     this.elem.addClassName('active');
@@ -88,7 +71,7 @@ Alice.Channel = Class.create({
   },
   
   close: function (event) {
-    alice.removeChannel(this);
+    alice.removeWindow(this);
     this.tab.remove();
     this.elem.remove();
   },
