@@ -198,7 +198,7 @@ sub ping {
 sub handle_message {
   my ($self, $req, $res) = @_;
   my $msg  = $req->uri->query_param('msg');
-  my $source = lc $req->uri->query_param('source');
+  my $source = $req->uri->query_param('source');
   my $window = $self->app->window_map->{$source};
   return unless $window;
   $self->app->dispatch($msg, $window) if length $msg;
