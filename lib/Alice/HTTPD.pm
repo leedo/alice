@@ -335,10 +335,6 @@ sub send_data {
   $_->continue for @{$self->streams};
 }
 
-sub make_timestamp {
-  return sprintf("%02d:%02d", (localtime)[2,1])
-}
-
 sub log_debug {
   my $self = shift;
   print STDERR join " ", @_, "\n" if $self->config->{debug};
