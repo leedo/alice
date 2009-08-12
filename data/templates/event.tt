@@ -12,7 +12,7 @@
   [% ELSIF event == "joined" || event == "left" %]
     <a href="javascript:alice.connection.requestWindow('[% nick %]','[% window.id %]')" class="nick">[% nick %]</a> [% event %] the chat room.[% IF message %] ([% message %])[% END %]
   [% ELSIF event == "nick" %]
-    [% nick %] is now known as <a href="javascript:alice.connection.requestWindow('[% nick %]','[% window.id %]')" class="nick">[% message %]</a>.
+    [% nick %] is now known as <a href="javascript:alice.connection.requestWindow('[% message %]','[% window.id %]')" class="nick">[% message %]</a>.
   [% END %]
   </div>
 </li>
