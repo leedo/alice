@@ -97,7 +97,9 @@ Alice.Window = Class.create({
         }
         else {
           this.messages.insert(alice.applyFilters(message.full_html));
-          if (message.nick) this.lastNick = message.nick;
+          this.lastNick = "";
+          if (message.event == "say" && message.nick)
+            this.lastNick = message.nick;
         }
       }
       
