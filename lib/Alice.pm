@@ -1,5 +1,3 @@
-package Alice;
-
 use MooseX::Declare;
 
 class Alice {
