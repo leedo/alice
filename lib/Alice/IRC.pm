@@ -186,6 +186,7 @@ sub part {
   my ($self, $who, $where, $msg) = @_[OBJECT, ARG0 .. ARG2];
   my $nick = ( split /!/, $who)[0];
   my $window = $self->window($where);
+  return unless $window;
   if ($nick ne $self->connection->nick_name) {
     $self->app->send($window->render_event("left", $nick, $msg));
   }

@@ -50,7 +50,7 @@ class Alice::CommandDispatch {
     }
   }
 
-  method names (Alice::Window $window, Str $arg) {
+  method names (Alice::Window $window, $?) {
     $self->app->send($window->render_announcement($window->nick_table));
   }
 
@@ -62,13 +62,13 @@ class Alice::CommandDispatch {
     $window->connection->yield("join", $arg);
   }
 
-  method part (Alice::Window $window, Str $arg) {
+  method part (Alice::Window $window, $?) {
     if ($window->is_channel) {
       $window->part;
     }
   }
 
-  method close (Alice::Window $window) {
+  method close (Alice::Window $window, $?) {
     $window->part if $window->is_channel;
     $self->app->close_window($window);
   }
@@ -77,7 +77,7 @@ class Alice::CommandDispatch {
     $self->app->create_window($arg, $window->connection);
   }
 
-  method topic (Alice::Window $window, Str $arg) {
+  method topic (Alice::Window $window, Str $arg?) {
     if ($arg) {
       $window->topic($arg);
     }

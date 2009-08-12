@@ -11,8 +11,8 @@ requires:
   JSON: 0
   Moose: 0
   MooseX::Declare: 0
-  CLASS: 0
   MooseX::ClassAttribute: 0
+  CLASS: 0
   POE::Component::IRC: 0
   POE::Component::Server::HTTP: 0
   POE::Component::SSLify: 0
