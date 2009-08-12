@@ -1,11 +1,12 @@
-use MooseX::ClassAttribute;
-use CLASS;
-use IRC::Formatting::HTML;
-use Encode;
-use DateTime;
 use MooseX::Declare;
 
 class Alice::Window {
+  
+  use CLASS;
+  use Encode;
+  use DateTime;
+  use MooseX::ClassAttribute;
+  use IRC::Formatting::HTML;
   
   class_has msgid => (
     is      => 'rw',
@@ -103,7 +104,7 @@ class Alice::Window {
   }
   
   method nextmsgid {
-    return CLASS->msgid ++;
+    return CLASS->msgid(CLASS->msgid + 1);
   }
 
   method add_message (HashRef $message) {
@@ -209,26 +210,5 @@ class Alice::Window {
 
   method nick_table {
     return _format_nick_table($self->nicks);
-  }
-
-  sub _format_nick_table {
-    my @nicks = @_;
-    return "" unless @nicks;
-    my $maxlen = 0;
-    for (@nicks) {
-      my $length = length $_;
-      $maxlen = $length if $length > $maxlen;
-    }
-    my $cols = int(74  / $maxlen + 2);
-    my (@rows, @row);
-    for (sort {lc $a cmp lc $b} @nicks) {
-      push @row, $_ . " " x ($maxlen - length $_);
-      if (@row >= $cols) {
-        push @rows, [@row];
-        @row = ();
-      }
-    }
-    push @rows, [@row] if @row;
-    return join "\n", map {join " ", @$_} @rows;
   }
 }

@@ -1,126 +1,109 @@
-package Alice::CommandDispatch;
+use MooseX::Declare;
 
-use Moose;
-use Encode;
+class Alice::CommandDispatch {
+  
+  use Encode;
+  
+  has 'handlers' => (
+    is => 'rw',
+    isa => 'ArrayRef',
+    default => sub {
+      my $self = shift;
+      [
+        {method => '_say',     re => qr{^([^/].*)}},
+        {method => 'query',    re => qr{^/query\s+(.+)}},
+        {method => 'names',    re => qr{^/n(?:ames)?}, in_channel => 1},
+        {method => '_join',    re => qr{^/j(?:oin)?\s+(.+)}},
+        {method => 'part',     re => qr{^/part}, in_channel => 1},
+        {method => 'create',   re => qr{^/create (.+)}},
+        {method => 'close',    re => qr{^/close}},
+        {method => 'topic',    re => qr{^/topic(?:\s+(.+))?}, in_channel => 1},
+        {method => 'me',       re => qr{^/me (.+)}},
+        {method => 'quote',    re => qr{^/(?:quote|raw) (.+)}},
+        {method => 'notfound', re => qr{^/(.+)(?:\s.*)?}}
+      ]
+    }
+  );
 
-use strict;
-use warnings;
+  has 'app' => (
+    is       => 'ro',
+    isa      => 'Alice',
+    required => 1,
+  );
 
-has 'handlers' => (
-  is => 'rw',
-  isa => 'ArrayRef',
-  default => sub {
-    my $self = shift;
-    [
-      {method => '_say',     re => qr{^([^/].*)}},
-      {method => 'query',    re => qr{^/query\s+(.+)}},
-      {method => 'names',    re => qr{^/n(?:ames)?}, in_channel => 1},
-      {method => '_join',    re => qr{^/j(?:oin)?\s+(.+)}},
-      {method => 'part',     re => qr{^/part}, in_channel => 1},
-      {method => 'create',   re => qr{^/create (.+)}},
-      {method => 'close',    re => qr{^/close}},
-      {method => 'topic',    re => qr{^/topic(?:\s+(.+))?}, in_channel => 1},
-      {method => 'me',       re => qr{^/me (.+)}},
-      {method => 'quote',    re => qr{^/(?:quote|raw) (.+)}},
-      {method => 'notfound', re => qr{^/(.+)(?:\s.*)?}}
-    ]
-  }
-);
-
-has 'app' => (
-  is       => 'ro',
-  isa      => 'Alice',
-  required => 1,
-);
-
-sub handle {
-  my ($self, $command, $window) = @_;
-  for my $handler (@{$self->handlers}) {
-    my $re = $handler->{re};
-    if ($command =~ /$re/) {
-      my $arg = $1;
-      if ($handler->{in_channel} and ! $window->is_channel) {
-        $self->app->send(
-          $window->render_announcement("$command can only be used in a channel")
-        );
+  method handle (Str $command, Alice::Window $window) {
+    for my $handler (@{$self->handlers}) {
+      my $re = $handler->{re};
+      if ($command =~ /$re/) {
+        my $arg = $1;
+        if ($handler->{in_channel} and ! $window->is_channel) {
+          $self->app->send(
+            $window->render_announcement("$command can only be used in a channel")
+          );
+        }
+        else {
+          my $method = $handler->{method};
+          $self->$method($window, $arg);
+        }
+        return;
       }
-      else {
-        my $method = $handler->{method};
-        $self->$method($window, $arg);
-      }
-      return;
     }
   }
-}
 
-sub names {
-  my ($self, $window, $arg) = @_;
-  $self->app->send($window->render_announcement($window->nick_table));
-}
+  method names (Alice::Window $window, Str $arg) {
+    $self->app->send($window->render_announcement($window->nick_table));
+  }
 
-sub query {
-  my ($self, $window, $arg) = @_;
-  $self->app->create_window($arg, $window->connection);
-}
+  method query (Alice::Window $window, Str $arg) {
+    $self->app->create_window($arg, $window->connection);
+  }
 
-sub _join {
-  my ($self, $window, $arg) = @_;
-  $window->connection->yield("join", $arg);
-}
+  method _join (Alice::Window $window, Str $arg) {
+    $window->connection->yield("join", $arg);
+  }
 
-sub part {
-  my ($self, $window, $arg) = @_;
-  if ($window->is_channel) {
-    $window->part;
+  method part (Alice::Window $window, Str $arg) {
+    if ($window->is_channel) {
+      $window->part;
+    }
+  }
+
+  method close (Alice::Window $window) {
+    $window->part if $window->is_channel;
+    $self->app->close_window($window);
+  }
+
+  method create (Alice::Window $window, Str $arg) {
+    $self->app->create_window($arg, $window->connection);
+  }
+
+  method topic (Alice::Window $window, Str $arg) {
+    if ($arg) {
+      $window->topic($arg);
+    }
+    else {
+      my $topic = $window->topic;
+      $self->app->send(
+        $window->render_event("topic", $topic->{SetBy}, $topic->{Value})
+      );
+    }
+  }
+
+  method me (Alice::Window $window, Str $arg) {
+    $self->app->send($window->render_message($window->nick, "• $arg"));
+    $window->connection->yield("ctcp", $window->title, "ACTION $1");
+  }
+
+  method quote (Alice::Window $window, Str $arg) {
+    $window->connection->yield("quote", $arg);
+  }
+
+  method notfound (Alice::Window $window, Str $arg) {
+    $self->app->send($window->render_announcement("Invalid command $arg"));
+  }
+
+  method _say (Alice::Window $window, Str $arg) {
+    $self->app->send($window->render_message($window->nick, $arg));
+    $window->connection->yield("privmsg", $window->title, $arg);
   }
 }
-
-sub close {
-  my ($self, $window) = @_;
-  $window->part if $window->is_channel;
-  $self->app->close_window($window);
-}
-
-sub create {
-  my ($self, $window, $arg) = @_;
-  $self->app->create_window($arg, $window->connection);
-}
-
-sub topic {
-  my ($self, $window, $arg) = @_;
-  if ($arg) {
-    $window->topic($arg);
-  }
-  else {
-    my $topic = $window->topic;
-    $self->app->send(
-      $window->render_event("topic", $topic->{SetBy}, $topic->{Value})
-    );
-  }
-}
-
-sub me {
-  my ($self, $window, $arg) = @_;
-  $self->app->send($window->render_message($window->nick, "• $arg"));
-  $window->connection->yield("ctcp", $window->title, "ACTION $1");
-}
-
-sub quote {
-  my ($self, $window, $arg) = @_;
-  $window->connection->yield("quote", $arg);
-}
-
-sub notfound {
-  my ($self, $window, $arg) = @_;
-  $self->app->send($window->render_announcement("Invalid command $arg"));
-}
-
-sub _say {
-  my ($self, $window, $arg) = @_;
-  $self->app->send($window->render_message($window->nick, $arg));
-  $window->connection->yield("privmsg", $window->title, $arg);
-}
-
-__PACKAGE__->meta->make_immutable;
-no Moose;
-1;
