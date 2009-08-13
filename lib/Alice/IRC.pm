@@ -83,7 +83,7 @@ class Alice::IRC {
     );
   }
 
-  sub start {
+  sub START {
     my $self = $_[OBJECT];
     my $irc = $self->connection;
     $irc->{connector} = POE::Component::IRC::Plugin::Connector->new();
@@ -105,7 +105,7 @@ class Alice::IRC {
     return $self->app->config;
   }
 
-  sub connected {
+  event irc_connected {
     my $self = $_[OBJECT];
     $self->log_info("connected to " . $self->alias);
     for (@{$self->config->{servers}{$self->alias}{on_connect}}) {
@@ -118,33 +118,33 @@ class Alice::IRC {
     }
   }
 
-  sub disconnected {
+  event irc_disconnected {
     my $self = $_[OBJECT];
     $self->log_info("disconnected from " . $self->alias);
   }
 
-  sub public {
+  event irc_public {
     my ($self, $who, $where, $what) = @_[OBJECT, ARG0 .. ARG2];
     my $nick = ( split /!/, $who )[0];
     my $window = $self->window($where->[0]);
     $self->app->send($window->render_message($nick, $what));
   }
 
-  sub msg {
+  event irc_msg {
     my ($self, $who, $what) = @_[OBJECT, ARG0, ARG2];
     my $nick = ( split /!/, $who)[0];
     my $window = $self->window($nick);
     $self->app->send($window->render_message($nick, $what));
   }
 
-  sub action {
+  event irc_ctcp_action {
     my ($self, $who, $where, $what) = @_[OBJECT, ARG0 .. ARG2];
     my $nick = ( split /!/, $who )[0];
     my $window = $self->window($where->[0]);
     $self->app->send($window->render_message($nick, $what));
   }
 
-  sub nick {
+  event irc_nick {
     my ($self, $who, $new_nick) = @_[OBJECT, ARG0, ARG1];
     my $nick = ( split /!/, $who )[0];
     my @events = map {
@@ -153,7 +153,7 @@ class Alice::IRC {
     $self->app->send(@events)
   }
 
-  sub joined {
+  event irc_join {
     my ($self, $who, $where) = @_[OBJECT, ARG0, ARG1];
     my $nick = ( split /!/, $who)[0];
     if ($nick ne $self->connection->nick_name) {
@@ -165,7 +165,7 @@ class Alice::IRC {
     }
   }
 
-  sub chan_sync {
+  event irc_chan_sync {
     my ($self, $channel) = @_[OBJECT, ARG0];
     my $window = $self->window($channel);
     return unless $window;
@@ -177,7 +177,7 @@ class Alice::IRC {
     }
   }
 
-  sub part {
+  event irc_part {
     my ($self, $who, $where, $msg) = @_[OBJECT, ARG0 .. ARG2];
     my $nick = ( split /!/, $who)[0];
     my $window = $self->window($where);
@@ -190,7 +190,7 @@ class Alice::IRC {
     }
   }
 
-  sub quit {
+  event irc_quit {
     my ($self, $who, $msg, $channels) = @_[OBJECT, ARG0 .. ARG2];
     my $nick = ( split /!/, $who)[0];
     my @events = map {
@@ -200,7 +200,7 @@ class Alice::IRC {
     $self->app->send(@events);
   }
 
-  sub topic {
+  event irc_topic {
     my ($self, $who, $channel, $topic) = @_[OBJECT, ARG0 .. ARG2];
     my $nick = (split /!/, $who)[0];
     my $window = $self->window($channel);

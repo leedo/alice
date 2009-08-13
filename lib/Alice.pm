@@ -106,7 +106,6 @@ class Alice {
     $self->ircs->{$name} = Alice::IRC->new(
       app    => $self,
       name   => $name,
-      config => $config,
     );
   }
 
