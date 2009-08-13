@@ -7,31 +7,47 @@ class Alice {
   use POE;
 
   has config => (
-    is => 'ro',
-    isa => 'HashRef',
+    is       => 'ro',
+    isa      => 'HashRef',
     required => 1,
   );
 
   has ircs => (
-    is => 'ro',
-    isa => 'HashRef[HashRef]',
+    is      => 'ro',
+    isa     => 'HashRef[HashRef]',
     default => sub {{}},
   );
 
   has httpd => (
-    is => 'ro',
-    isa => 'Alice::HTTPD',
-    lazy => 1,
+    is      => 'ro',
+    isa     => 'Alice::HTTPD',
+    lazy    => 1,
     default => sub {
       Alice::HTTPD->new(app => shift);
     },
   );
 
   has dispatcher => (
-    is => 'ro',
-    isa => 'Alice::CommandDispatch',
+    is      => 'ro',
+    isa     => 'Alice::CommandDispatch',
     default => sub {
       Alice::CommandDispatch->new(app => shift);
+    }
+  );
+
+  has notifier => (
+    is      => 'ro',
+    default => sub {
+      eval {
+        if ($^O eq 'darwin') {
+          require Alice::Notifier::Growl;
+          return Alice::Notifier::Growl->new;
+        }
+        elsif ($^O eq 'linux') {
+          require Alice::Notifier::LibNotify;
+          return Alice::Notifier::LibNotify->new;
+        }
+      }
     }
   );
 
@@ -40,8 +56,8 @@ class Alice {
   }
 
   has window_map => (
-    is => 'rw',
-    isa => 'HashRef[Alice::Window]',
+    is      => 'rw',
+    isa     => 'HashRef[Alice::Window]',
     default => sub {{}},
   );
 
@@ -102,8 +118,12 @@ class Alice {
   }
 
   sub send {
-    my $self = shift;
-    $self->httpd->send_data(@_);
+    my ($self, @messages) = @_;
+    $self->httpd->send(@messages);
+    return unless $self->notifier or ! $self->httpd->has_clients;
+    for my $message (@messages) {
+      $self->notifier->display($message) if $message->{highlight};
+    }
   }
 
   sub log_debug {

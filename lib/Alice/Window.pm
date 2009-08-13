@@ -158,12 +158,14 @@ class Alice::Window {
   method render_message (Str $nick, Str $msg) {
     $msg = decode("utf8", $msg, Encode::FB_WARN);
     my $html = IRC::Formatting::HTML->formatted_string_to_html($msg);
+    my $own_nick = $self->nick;
     my $message = {
       type      => "message",
       event     => "say",
       nick      => $nick,
       window    => $self->serialized,
       message   => $msg,
+      highlight => $msg =~ /\b$own_nick\b/i ? 1 : 0,
       html      => $html,
       self      => $self->nick eq $nick,
       msgid     => $self->nextmsgid,

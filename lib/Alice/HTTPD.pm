@@ -319,7 +319,7 @@ sub has_clients {
   return scalar @{$self->streams};
 }
 
-sub send_data {
+sub send {
   my ($self, @data) = @_;
   return unless $self->has_clients;
   for my $res (@{$self->streams}) {
