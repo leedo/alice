@@ -18,6 +18,7 @@ $view->signal_connect('navigation-requested' => sub {
   my $pid = fork();
   if ($pid == 0) {
     exec('x-www-browser', $uri);
+    exit 0;
   }
   return 'ignore';
 });
@@ -26,7 +27,8 @@ $view->signal_connect('populate_popup' => sub {
   for my $menuitem ($menu->get_children) {
     my $label = ($menuitem->get_children)[0];
     next unless $label;
-    if ($label->get_text ne 'Open Link'
+    if ($label->get_text ne 'Reload'
+        and $label->get_text ne 'Open Link'
         and $label->get_text ne 'Copy Link Location'
         and $label->get_text ne 'Copy Image') {
       $menu->remove($menuitem);
