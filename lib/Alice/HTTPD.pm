@@ -2,13 +2,12 @@ use MooseX::Declare;
 
 class Alice::HTTPD {
   use MooseX::POE::SweetArgs qw/event/;
+  use POE::Component::Server::HTTP;
   use Alice::AsyncGet;
   use Alice::CommandDispatch;
   use bytes;
   use MIME::Base64;
   use Time::HiRes qw/time/;
-  use POE;
-  use POE::Component::Server::HTTP;
   use JSON;
   use Template;
   use URI::QueryParam;

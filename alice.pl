@@ -14,7 +14,7 @@ $0 = 'Alice';
 
 my $config = {
   port  => 8080,
-  debug => 1,
+  debug => 0,
   style => 'default',
 };
 if (-e $ENV{HOME}.'/.alice.yaml') {
