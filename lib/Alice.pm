@@ -41,11 +41,11 @@ class Alice {
       eval {
         if ($^O eq 'darwin') {
           require Alice::Notifier::Growl;
-          return Alice::Notifier::Growl->new;
+          Alice::Notifier::Growl->new;
         }
         elsif ($^O eq 'linux') {
           require Alice::Notifier::LibNotify;
-          return Alice::Notifier::LibNotify->new;
+          Alice::Notifier::LibNotify->new;
         }
       }
     }
@@ -105,7 +105,8 @@ class Alice {
   method add_irc_server (Str $name, HashRef $config) {
     $self->ircs->{$name} = Alice::IRC->new(
       app    => $self,
-      name   => $name,
+      alias  => $name,
+      config => $config
     );
   }
 

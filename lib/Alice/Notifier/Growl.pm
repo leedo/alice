@@ -1,25 +1,17 @@
 use MooseX::Declare;
 
-class {
-  use Growl::GNTP;
+class Alice::Notifier::Growl {
+  use Mac::Growl ':all';
 
-  has 'connection' => (
-    is => 'ro',
-    isa => 'Growl::GNTP',
-    default => sub {
-      return Growl::GNTP->new(AppName => 'Alice');
-    }
-  );
-
-  method BUILD {
-    $self->connection->register([{ Name => "message" }]);
+  sub BUILD {
+    my $self = shift;
+    RegisterNotifications("Alice", ["message"], ["message"], "Alice.app");
   }
 
   method display (HashRef $message) {
-    $self->notify(
-      Event => "message",
-      Title => $message->{nick} . " in " . $message->{window}->{title},
-      Message => $message->{message},
+    PostNotification("Alice", "message", 
+      $message->{nick} . " in " . $message->{window}->{title},
+      $message->{message},
     );
   }
 }
