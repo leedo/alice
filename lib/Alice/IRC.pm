@@ -9,25 +9,25 @@ class Alice::IRC {
   use POE::Component::IRC::Plugin::NickReclaim;
 
   has 'connection' => (
-    is  => 'rw',
+    is      => 'rw',
     default => sub {{}},
   );
 
   has 'alias' => (
-    isa => 'Str',
-    is => 'ro',
+    isa      => 'Str',
+    is       => 'ro',
     required => 1,
   );
   
   has 'config' => (
-    isa => 'HashRef',
-    is => 'rw',
+    isa      => 'HashRef',
+    is       => 'rw',
     required => 1,
   );
 
   has 'app' => (
-    isa => 'Alice',
-    is  => 'ro',
+    isa      => 'Alice',
+    is       => 'ro',
     required => 1,
   );
 
@@ -49,11 +49,12 @@ class Alice::IRC {
       msg_length => 1024,
     );
     $self->connection($irc);
-    $irc->yield(register => 'all');
-    $irc->yield(connect => {});
+    $self->add_plugins;
+    $self->connection->yield(register => 'all');
+    $self->connection->yield(connect => {});
   }
   
-  method setup_plugins {
+  method add_plugins {
     my $irc = $self->connection;
     $irc->{connector} = POE::Component::IRC::Plugin::Connector->new();
     $irc->plugin_add('Connector' => $irc->{connector});
