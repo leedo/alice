@@ -1,126 +1,133 @@
-package Alice;
+use MooseX::Declare;
 
-use Moose;
-use Alice::Window;
-use Alice::HTTPD;
-use Alice::IRC;
-use POE;
+class Alice {
+  use Alice::Window;
+  use Alice::HTTPD;
+  use Alice::IRC;
+  use POE;
 
-has config => (
-  is => 'ro',
-  isa => 'HashRef',
-  required => 1,
-);
+  has config => (
+    is       => 'ro',
+    isa      => 'HashRef',
+    required => 1,
+  );
 
-has ircs => (
-  is => 'ro',
-  isa => 'HashRef[HashRef]',
-  default => sub {{}},
-);
+  has ircs => (
+    is      => 'ro',
+    isa     => 'HashRef[HashRef]',
+    default => sub {{}},
+  );
 
-has httpd => (
-  is => 'ro',
-  isa => 'Alice::HTTPD',
-  lazy => 1,
-  default => sub {
-    Alice::HTTPD->new(app => shift);
-  },
-);
+  has httpd => (
+    is      => 'ro',
+    isa     => 'Alice::HTTPD',
+    lazy    => 1,
+    default => sub {
+      Alice::HTTPD->new(app => shift);
+    },
+  );
 
-has dispatcher => (
-  is => 'ro',
-  isa => 'Alice::CommandDispatch',
-  default => sub {
-    Alice::CommandDispatch->new(app => shift);
+  has dispatcher => (
+    is      => 'ro',
+    isa     => 'Alice::CommandDispatch',
+    default => sub {
+      Alice::CommandDispatch->new(app => shift);
+    }
+  );
+
+  has notifier => (
+    is      => 'ro',
+    default => sub {
+      eval {
+        if ($^O eq 'darwin') {
+          require Alice::Notifier::Growl;
+          Alice::Notifier::Growl->new;
+        }
+        elsif ($^O eq 'linux') {
+          require Alice::Notifier::LibNotify;
+          Alice::Notifier::LibNotify->new;
+        }
+      }
+    }
+  );
+
+  method dispatch (Str $command, Alice::Window $window) {
+    $self->dispatcher->handle($command, $window);
   }
-);
 
-sub dispatch {
-  my $self = shift;
-  $self->dispatcher->handle(@_);
-}
-
-has window_map => (
-  is => 'rw',
-  isa => 'HashRef[Alice::Window]',
-  default => sub {{}},
-);
-
-sub windows {
-  my $self = shift;
-  return values %{$self->window_map};
-}
-
-sub buffered_messages {
-  my ($self, $min) = @_;
-  return [ grep {$_->{msgid} > $min} map {@{$_->msgbuffer}} $self->windows ];
-}
-
-sub connections {
-  my $self = shift;
-  return map {$_->connection} values %{$self->ircs};
-}
-
-sub window {
-  my ($self, $session, $title) = @_;
-  my $id = $title . $session;
-  $id =~ s/^[#&]/chan_/;
-  return $self->window_map->{$id};
-}
-
-sub add_window {
-  my ($self, $window) = @_;
-  $self->window_map->{$window->id} = $window;
-}
-
-sub create_window {
-  my ($self, $title, $connection) = @_;
-  my $window = Alice::Window->new(
-    title      => $title,
-    connection => $connection,
+  has window_map => (
+    is      => 'rw',
+    isa     => 'HashRef[Alice::Window]',
+    default => sub {{}},
   );
-  $self->add_window($window);
-  $self->send($window->join_action);
-  $self->log_debug("sending a request for a new tab: " . $window->title)
-    if $self->httpd->has_clients;
-}
 
-sub close_window {
-  my ($self, $window) = @_;
-  return unless $window;
-  $self->send($window->close_action);
-  $self->log_debug("sending a request to close a tab: " . $window->title)
-    if $self->httpd->has_clients;
-  delete $self->window_map->{$window->id};
-}
+  method windows {
+    return values %{$self->window_map};
+  }
 
-sub add_irc_server {
-  my ($self, $name, $config) = @_;
-  $self->ircs->{$name} = Alice::IRC->new(
-    app    => $self,
-    name   => $name,
-    config => $config,
-  );
-}
+  method buffered_messages (Int $min) {
+    return [ grep {$_->{msgid} > $min} map {@{$_->msgbuffer}} $self->windows ];
+  }
 
-sub run {
-  my $self = shift;
-  $self->httpd;
-  $self->add_irc_server($_, $self->config->{servers}{$_})
-    for keys %{$self->config->{servers}};
-  POE::Kernel->run;
-}
+  method connections {
+    return map {$_->connection} values %{$self->ircs};
+  }
 
-sub send {
-  my $self = shift;
-  $self->httpd->send_data(@_);
-}
+  method window (Str $session, Str $title) {
+    my $id = $title . $session;
+    $id =~ s/^[#&]/chan_/;
+    return $self->window_map->{$id};
+  }
 
-sub log_debug {
-  my $self = shift;
-  print STDERR join(" ", @_) . "\n";
-}
+  method add_window (Alice::Window $window) {
+    $self->window_map->{$window->id} = $window;
+  }
 
-__PACKAGE__->meta->make_immutable;
-no Moose;
-1;
+  method create_window (Str $title, $connection) {
+    my $window = Alice::Window->new(
+      title      => $title,
+      connection => $connection,
+    );
+    $self->add_window($window);
+    $self->send($window->join_action);
+    $self->log_debug("sending a request for a new tab: " . $window->title)
+      if $self->httpd->has_clients;
+  }
+
+  method close_window (Alice::Window $window) {
+    return unless $window;
+    $self->send($window->close_action);
+    $self->log_debug("sending a request to close a tab: " . $window->title)
+      if $self->httpd->has_clients;
+    delete $self->window_map->{$window->id};
+  }
+
+  method add_irc_server (Str $name, HashRef $config) {
+    $self->ircs->{$name} = Alice::IRC->new(
+      app    => $self,
+      alias  => $name,
+      config => $config
+    );
+  }
+
+  method run {
+    $self->httpd;
+    $self->add_irc_server($_, $self->config->{servers}{$_})
+      for keys %{$self->config->{servers}};
+    POE::Kernel->run;
+  }
+
+  sub send {
+    my ($self, @messages) = @_;
+    $self->httpd->send(@messages);
+    return unless $self->notifier or ! $self->httpd->has_clients;
+    for my $message (@messages) {
+      $self->notifier->display($message) if $message->{highlight};
+    }
+  }
+
+  sub log_debug {
+    shift;
+    print STDERR join(" ", @_) . "\n";
+  }
+}

@@ -1,226 +1,183 @@
-package Alice::IRC;
+use MooseX::Declare;
 
-use strict;
-use warnings;
+class Alice::IRC {
+  use MooseX::POE::SweetArgs qw/event/;
+  use POE::Component::IRC;
+  use POE::Component::IRC::State;
+  use POE::Component::IRC::Plugin::Connector;
+  use POE::Component::IRC::Plugin::CTCP;
+  use POE::Component::IRC::Plugin::NickReclaim;
 
-use POE;
-use POE::Component::IRC;
-use POE::Component::IRC::State;
-use POE::Component::IRC::Plugin::Connector;
-use POE::Component::IRC::Plugin::CTCP;
-use POE::Component::IRC::Plugin::NickReclaim;
-use Moose;
+  has 'connection' => (
+    is      => 'rw',
+    default => sub {{}},
+  );
 
-has 'connection' => (
-  isa => 'POE::Component::IRC::State',
-  is  => 'rw',
-  default => sub {{}},
-);
-
-has 'alias' => (
-  isa => 'Str',
-  is => 'ro',
-  lazy => 1,
-  default => sub {
-    return shift->connection->session_alias;
-  }
-);
-
-has 'app' => (
-  isa => 'Alice',
-  is  => 'ro',
-  required => 1,
-);
-
-has 'events' => (
-  isa => 'HashRef',
-  is => 'ro',
-  default => sub {
-    {
-      _start          => "start",
-      irc_public      => "public",
-      irc_001         => "connected",
-      irc_disconnected => "disconnected",
-      irc_join        => "joined",
-      irc_part        => "part",
-      irc_quit        => "quit",
-      irc_chan_sync   => "chan_sync",
-      irc_topic       => "topic",
-      irc_ctcp_action => "action",
-      irc_nick        => "nick",
-      irc_msg         => "msg"
-    }
-  }
-);
-
-sub BUILDARGS {
-  my ($class, %args) = @_;
+  has 'alias' => (
+    isa      => 'Str',
+    is       => 'ro',
+    required => 1,
+  );
   
-  my $name = $args{name};
-  my $config = $args{config};
-  if ($config->{ssl}) {
+  has 'config' => (
+    isa      => 'HashRef',
+    is       => 'rw',
+    required => 1,
+  );
+
+  has 'app' => (
+    isa      => 'Alice',
+    is       => 'ro',
+    required => 1,
+  );
+
+  sub START {
+    my $self = shift;
+    if ($self->config->{ssl}) {
       eval { require POE::Component::SSLify };
       die "Missing module POE::Component::SSLify" if ($@);
-  }
-  my $self = {
-    app => $args{app},
-    connection => POE::Component::IRC::State->spawn(
-      alias    => $name,
-      nick     => $config->{nick},
-      ircname  => $config->{ircname},
-      server   => $config->{host},
-      port     => $config->{port},
-      password => $config->{password},
-      username => $config->{username},
-      UseSSL   => $config->{ssl},
+    }
+    my $irc = POE::Component::IRC::State->spawn(
+      alias    => $self->alias,
+      nick     => $self->config->{nick},
+      ircname  => $self->config->{ircname},
+      server   => $self->config->{host},
+      port     => $self->config->{port},
+      password => $self->config->{password},
+      username => $self->config->{username},
+      UseSSL   => $self->config->{ssl},
       msg_length => 1024,
-    ),
+    );
+    $self->connection($irc);
+    $self->add_plugins;
+    $self->connection->yield(register => 'all');
+    $self->connection->yield(connect => {});
+  }
+  
+  method add_plugins {
+    my $irc = $self->connection;
+    $irc->{connector} = POE::Component::IRC::Plugin::Connector->new();
+    $irc->plugin_add('Connector' => $irc->{connector});
+    $irc->plugin_add('CTCP' => POE::Component::IRC::Plugin::CTCP->new(
+      version => 'alice',
+      userinfo => $irc->nick_name
+    ));
+    $irc->plugin_add('NickReclaim' => POE::Component::IRC::Plugin::NickReclaim->new());
+  }
+
+  method window (Str $title){
+    return $self->app->window($self->alias, $title);
+  }
+
+  event irc_connected => sub {
+    my $self = shift;
+    $self->log_info("connected to " . $self->alias);
+    for (@{$self->config->{on_connect}}) {
+      $self->log_debug("sending $_");
+      $self->connection->yield( quote => $_ );
+    }
+    for (@{$self->config->{channels}}) {
+      $self->log_debug("joining $_");
+      $self->connection->yield( join => $_ );
+    }
   };
-  return $self;
-}
 
-sub BUILD {
-  my $self = shift;
-  POE::Session->create(
-    object_states => [ $self => $self->events ],
-  );
-}
+  event irc_disconnected => sub {
+    my $self = shift;
+    $self->log_info("disconnected from " . $self->alias);
+  };
 
-sub start {
-  my $self = $_[OBJECT];
-  my $irc = $self->connection;
-  $irc->{connector} = POE::Component::IRC::Plugin::Connector->new();
-  $irc->plugin_add('Connector' => $irc->{connector});
-  $irc->plugin_add('CTCP' => POE::Component::IRC::Plugin::CTCP->new(
-    version => 'alice',
-    userinfo => $irc->nick_name
-  ));
-  $irc->plugin_add('NickReclaim' => POE::Component::IRC::Plugin::NickReclaim->new());
-  $irc->yield(register => 'all');
-  $irc->yield(connect => {});
-}
+  event irc_public => sub {
+    my ($self, $who, $where, $what) = @_;
+    my $nick = ( split /!/, $who )[0];
+    my $window = $self->window($where->[0]);
+    $self->app->send($window->render_message($nick, $what));
+  };
 
-sub window {
-  my ($self, $title) = @_;
-  return $self->app->window($self->alias, $title);
-}
+  event irc_msg => sub {
+    my ($self, $who, $what) = @_;
+    my $nick = ( split /!/, $who)[0];
+    my $window = $self->window($nick);
+    $self->app->send($window->render_message($nick, $what));
+  };
 
-sub config {
-  my $self = shift;
-  return $self->app->config;
-}
+  event irc_ctcp_action => sub {
+    my ($self, $who, $where, $what) = @_;
+    my $nick = ( split /!/, $who )[0];
+    my $window = $self->window($where->[0]);
+    $self->app->send($window->render_message($nick, $what));
+  };
 
-sub connected {
-  my $self = $_[OBJECT];
-  $self->log_info("connected to " . $self->alias);
-  for (@{$self->config->{servers}{$self->alias}{on_connect}}) {
-    $self->log_debug("sending $_");
-    $self->connection->yield( quote => $_ );
-  }
-  for (@{$self->config->{servers}{$self->alias}{channels}}) {
-    $self->log_debug("joining $_");
-    $self->connection->yield( join => $_ );
-  }
-}
-
-sub disconnected {
-  my $self = $_[OBJECT];
-  $self->log_info("disconnected from " . $self->alias);
-}
-
-sub public {
-  my ($self, $who, $where, $what) = @_[OBJECT, ARG0 .. ARG2];
-  my $nick = ( split /!/, $who )[0];
-  my $window = $self->window($where->[0]);
-  $self->app->send($window->render_message($nick, $what));
-}
-
-sub msg {
-  my ($self, $who, $what) = @_[OBJECT, ARG0, ARG2];
-  my $nick = ( split /!/, $who)[0];
-  my $window = $self->window($nick);
-  $self->app->send($window->render_message($nick, $what));
-}
-
-sub action {
-  my ($self, $who, $where, $what) = @_[OBJECT, ARG0 .. ARG2];
-  my $nick = ( split /!/, $who )[0];
-  my $window = $self->window($where->[0]);
-  $self->app->send($window->render_message($nick, $what));
-}
-
-sub nick {
-  my ($self, $who, $new_nick) = @_[OBJECT, ARG0, ARG1];
-  my $nick = ( split /!/, $who )[0];
-  my @events = map {
+  event irc_nick => sub {
+    my ($self, $who, $new_nick) = @_;
+    my $nick = ( split /!/, $who )[0];
+    my @events = map {
       $self->window($_)->render_event("nick", $nick, $new_nick)
     } $self->connection->nick_channels($new_nick);
-  $self->app->send(@events)
-}
+    $self->app->send(@events)
+  };
 
-sub joined {
-  my ($self, $who, $where) = @_[OBJECT, ARG0, ARG1];
-  my $nick = ( split /!/, $who)[0];
-  if ($nick ne $self->connection->nick_name) {
+  event irc_join => sub {
+    my ($self, $who, $where) = @_;
+    my $nick = ( split /!/, $who)[0];
+    if ($nick ne $self->connection->nick_name) {
+      my $window = $self->window($where);
+      $self->app->send($window->render_event("joined", $nick));
+    }
+    else {
+      $self->app->create_window($where, $self->connection);
+    }
+  };
+
+  event irc_chan_sync => sub {
+    my ($self, $channel) = @_;
+    my $window = $self->window($channel);
+    return unless $window;
+    my $topic = $window->topic;
+    if ($topic->{Value} and $topic->{SetBy}) {
+      $self->app->send(
+        $window->render_event("topic", $topic->{SetBy}, $topic->{Value})
+      );
+    }
+  };
+
+  event irc_part => sub {
+    my ($self, $who, $where, $msg) = @_;
+    my $nick = ( split /!/, $who)[0];
     my $window = $self->window($where);
-    $self->app->send($window->render_event("joined", $nick));
+    return unless $window;
+    if ($nick ne $self->connection->nick_name) {
+      $self->app->send($window->render_event("left", $nick, $msg));
+    }
+    else {
+      $self->app->close_window($window);
+    }
+  };
+
+  event irc_quit => sub {
+    my ($self, $who, $msg, $channels) = @_;
+    my $nick = ( split /!/, $who)[0];
+    my @events = map {
+      my $window = $self->window($_);
+      $window->render_event("left", $nick, $msg);
+    } @$channels;
+    $self->app->send(@events);
+  };
+
+  event irc_topic => sub {
+    my ($self, $who, $channel, $topic) = @_;
+    my $nick = (split /!/, $who)[0];
+    my $window = $self->window($channel);
+    $self->app->send($window->render_event("topic", $nick, $topic));
+  };
+
+  sub log_debug {
+    my $self = shift;
+    print STDERR join " ", @_, "\n" if $self->app->config->{debug};
   }
-  else {
-    $self->app->create_window($where, $self->connection);
+
+  sub log_info {
+    my $self = shift;
+    print STDERR join " ", @_, "\n";
   }
 }
-
-sub chan_sync {
-  my ($self, $channel) = @_[OBJECT, ARG0];
-  my $window = $self->window($channel);
-  return unless $window;
-  my $topic = $window->topic;
-  if ($topic->{Value} and $topic->{SetBy}) {
-    $self->app->send(
-      $window->render_event("topic", $topic->{SetBy}, $topic->{Value})
-    );
-  }
-}
-
-sub part {
-  my ($self, $who, $where, $msg) = @_[OBJECT, ARG0 .. ARG2];
-  my $nick = ( split /!/, $who)[0];
-  my $window = $self->window($where);
-  if ($nick ne $self->connection->nick_name) {
-    $self->app->send($window->render_event("left", $nick, $msg));
-  }
-  else {
-    $self->app->close_window($window);
-  }
-}
-
-sub quit {
-  my ($self, $who, $msg, $channels) = @_[OBJECT, ARG0 .. ARG2];
-  my $nick = ( split /!/, $who)[0];
-  my @events = map {
-    my $window = $self->window($_);
-    $window->render_event("left", $nick, $msg);
-  } @$channels;
-  $self->app->send(@events);
-}
-
-sub topic {
-  my ($self, $who, $channel, $topic) = @_[OBJECT, ARG0 .. ARG2];
-  my $nick = (split /!/, $who)[0];
-  my $window = $self->window($channel);
-  $self->app->send($window->render_event("topic", $nick, $topic));
-};
-
-sub log_debug {
-  my $self = shift;
-  print STDERR join " ", @_, "\n" if $self->config->{debug};
-}
-
-sub log_info {
-  my $self = shift;
-  print STDERR join " ", @_, "\n";
-}
-
-__PACKAGE__->meta->make_immutable;
-no Moose;
-1;
