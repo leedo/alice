@@ -1,6 +1,7 @@
 use MooseX::Declare;
 
 class Alice::HTTPD {
+  use MooseX::POE::SweetArgs qw/event/;
   use Alice::AsyncGet;
   use Alice::CommandDispatch;
   use bytes;
@@ -38,6 +39,17 @@ class Alice::HTTPD {
     default => sub { [qw/join part names topic me query/] },
     lazy => 1,
   );
+  
+  has 'tt' => (
+    is => 'ro',
+    isa => 'Template',
+    default => sub {
+      Template->new(
+        INCLUDE_PATH => 'data/templates',
+        ENCODING     => 'UTF8'
+      );
+    },
+  );
 
   sub BUILD {
     my $self = shift;
@@ -59,26 +71,23 @@ class Alice::HTTPD {
       },
       StreamHandler    => sub{$self->handle_stream(@_)},
     );
-    POE::Session->create(
-      object_states => [
-        $self => {
-          _start => 'start_ping',
-          ping   => 'ping',
-        }
-      ],
-    );
+  }
+  
+  sub START {
+    my $self = shift;
+    POE::Kernel->delay(ping => 15);
   }
 
-  has 'tt' => (
-    is => 'ro',
-    isa => 'Template',
-    default => sub {
-      Template->new(
-        INCLUDE_PATH => 'data/templates',
-        ENCODING     => 'UTF8'
-      );
-    },
-  );
+  event ping => sub {
+    my $self = shift;
+    my $data = {
+      type  => "action",
+      event => "ping",
+    };
+    push @{$_->{actions}}, $data for @{$self->streams};
+    $_->continue for @{$self->streams};
+    POE::Kernel->delay(ping => 15);
+  };
 
   method config {
     return $self->app->config;
@@ -163,21 +172,6 @@ class Alice::HTTPD {
     }
     $res->close;
     $res->continue;
-  }
-
-  sub start_ping {
-    $_[KERNEL]->delay(ping => 30);
-  }
-
-  sub ping {
-    my $self = $_[OBJECT];
-    my $data = {
-      type  => "action",
-      event => "ping",
-    };
-    push @{$_->{actions}}, $data for @{$self->streams};
-    $_->continue for @{$self->streams};
-    $_[KERNEL]->delay(ping => 15);
   }
 
   method handle_message ($req, $res) {
