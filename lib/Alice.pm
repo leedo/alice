@@ -92,6 +92,7 @@ class Alice {
     $self->send($window->join_action);
     $self->log_debug("sending a request for a new tab: " . $window->title)
       if $self->httpd->has_clients;
+    return $window;
   }
 
   method close_window (Alice::Window $window) {

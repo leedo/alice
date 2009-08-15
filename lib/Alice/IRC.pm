@@ -66,7 +66,11 @@ class Alice::IRC {
   }
 
   method window (Str $title){
-    return $self->app->window($self->alias, $title);
+    my $window = $self->app->window($self->alias, $title);
+    if (! $window) {
+      $window = $self->app->create_window($title, $self->connection);
+    }
+    return $window;
   }
 
   event irc_connected => sub {
@@ -95,7 +99,7 @@ class Alice::IRC {
   };
 
   event irc_msg => sub {
-    my ($self, $who, $what) = @_;
+    my ($self, $who, $recp, $what) = @_;
     my $nick = ( split /!/, $who)[0];
     my $window = $self->window($nick);
     $self->app->send($window->render_message($nick, $what));
@@ -105,7 +109,7 @@ class Alice::IRC {
     my ($self, $who, $where, $what) = @_;
     my $nick = ( split /!/, $who )[0];
     my $window = $self->window($where->[0]);
-    $self->app->send($window->render_message($nick, $what));
+    $self->app->send($window->render_message($nick, "• $what"));
   };
 
   event irc_nick => sub {
