@@ -1,30 +1,30 @@
 Alice.Window = Class.create({
-  initialize: function (title, id, active) {
+  initialize: function(application, element, title, active) {
+    this.application = application;
+    
+    this.element = $(element);
     this.title = title;
-    this.id = id;
+    this.id = this.element.identify();
     this.active = active;
     
-    this.elem = $(id);
-    this.tab = $(id + "_tab");
-    this.input = $(id + "_msg");
-    this.tabButton = $(id + "_tab_button");
-    this.form = $(id + "_form");
-    this.topic = $(id + "_topic");
-    this.messages = $(id + "_messages");
+    this.tab = $(this.id + "_tab");
+    this.input = $(this.id + "_msg");
+    this.tabButton = $(this.id + "_tab_button");
+    this.form = $(this.id + "_form");
+    this.topic = $(this.id + "_topic");
+    this.messages = $(this.id + "_messages");
     this.lastNick = "";
     
     this.msgHistory = [""];
     this.currentMsg = 0;
     
-    var self = this;
-    
     this.form.observe("submit", this.sayMessage.bind(this));
     this.tab.observe("mousedown", this.focus.bind(this));
-    this.tabButton.observe("click", function (e) {self.close(); Event.stop(e);});
-    this.tabButton.observe("mousedown", function (e) {Event.stop(e)});
+    this.tabButton.observe("click", function(e) { this.close() && e.stop() }.bind(this));
+    this.tabButton.observe("mousedown", function(e) { e.stop() });
   },
   
-  nextMessage: function () {
+  nextMessage: function() {
     if (this.msgHistory.length <= 1) return;
     this.currentMsg++;
     if (this.currentMsg >= this.msgHistory.length)
@@ -32,7 +32,7 @@ Alice.Window = Class.create({
     this.input.value = this.msgHistory[this.currentMsg];
   },
   
-  previousMessage: function () {
+  previousMessage: function() {
     if (this.msgHistory.length <= 1) return;
     this.currentMsg--;
     if (this.currentMsg < 0)
@@ -40,28 +40,28 @@ Alice.Window = Class.create({
     this.input.value = this.msgHistory[this.currentMsg];
   },
   
-  sayMessage: function (event) {
-    alice.connection.sendMessage(this.form);
+  sayMessage: function(event) {
+    this.application.connection.sendMessage(this.form);
     this.currentMsg = 0;
     this.msgHistory.push(this.input.value);
     this.input.value = '';
-    Event.stop(event);
+    event.stop();
   },
   
-  unFocus: function () {
+  unFocus: function() {
     this.active = false;
-    alice.previousFocus = this;
-    this.elem.removeClassName('active');
+    this.application.previousFocus = this;
+    this.element.removeClassName('active');
     this.tab.removeClassName('active');
     if (this.tab.previous()) this.tab.previous().removeClassName("leftof_active");
   },
   
-  focus: function (event) {
+  focus: function(event) {
     document.title = this.title;
-    if (alice.activeWindow()) alice.activeWindow().unFocus();
+    if (this.application.activeWindow()) this.application.activeWindow().unFocus();
     this.active = true;
     this.tab.addClassName('active');
-    this.elem.addClassName('active');
+    this.element.addClassName('active');
     this.tab.removeClassName("unread");
     this.tab.removeClassName("highlight");
     this.tab.removeClassName("leftof_active");
@@ -70,44 +70,44 @@ Alice.Window = Class.create({
     this.input.focus();
   },
   
-  close: function (event) {
-    alice.removeWindow(this);
+  close: function(event) {
+    this.application.removeWindow(this);
     this.tab.remove();
-    this.elem.remove();
+    this.element.remove();
   },
   
   displayTopic: function(topic) {
-    this.topic.innerHTML = alice.linkFilter(topic);
+    this.topic.update(Alice.makeLinksClickable(topic));
   },
   
   addMessage: function(message) {
     if (message.html || message.full_html) {
       if (message.nick && message.nick == this.lastNick) {
-        if (alice.monospaceNicks.indexOf(message.nick) > -1)
+        if (this.application.messagesAreMonospacedFor(message.nick))
           this.messages.down('li:last-child div.msg').insert(
-            "<br>" + alice.applyFilters(message.html));
+            "<br>" + this.application.applyFilters(message.html));
         else if (message.event == "say")
           this.messages.insert(
-            Alice.stripNick(alice.applyFilters(message.full_html)));
+            Alice.stripNick(this.application.applyFilters(message.full_html)));
       }
       else {
         if (message.event == "topic") {
-          this.messages.insert(alice.linkFilter(message.full_html));
+          this.messages.insert(Alice.makeLinksClickable(message.full_html));
           this.displayTopic(message.message);
         }
         else {
-          this.messages.insert(alice.applyFilters(message.full_html));
+          this.messages.insert(this.application.applyFilters(message.full_html));
           this.lastNick = "";
           if (message.event == "say" && message.nick)
             this.lastNick = message.nick;
         }
       }
       
-      if (! alice.isFocused && message.highlight)
+      if (!this.application.isFocused && message.highlight)
         Alice.growlNotify(message);
 
       // scroll to bottom or highlight the tab
-      if (this.elem.hasClassName('active'))
+      if (this.element.hasClassName('active'))
         this.scrollToBottom();
       else if (message.event == "say" && message.highlight)
         this.tab.addClassName("highlight");
@@ -119,15 +119,15 @@ Alice.Window = Class.create({
     if (messages.length > 250) messages.first().remove();
   },
   
-  scrollToBottom: function (force) {
-    if (! force) {
+  scrollToBottom: function(force) {
+    if (!force) {
       var lastmsg = this.messages.childElements().last();
-      if (! lastmsg) return;
+      if (!lastmsg) return;
       var msgheight = lastmsg.offsetHeight; 
-      var bottom = this.elem.scrollTop + this.elem.offsetHeight;
-      var height = this.elem.scrollHeight;
+      var bottom = this.element.scrollTop + this.element.offsetHeight;
+      var height = this.element.scrollHeight;
     }
     if (force || bottom + msgheight + 100 >= height)
-      this.elem.scrollTop = this.elem.scrollHeight;
+      this.element.scrollTop = this.element.scrollHeight;
   }
 });

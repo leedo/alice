@@ -4,16 +4,16 @@
 
 var Alice = { };
 
+//= require <alice/util>
 //= require <alice/application>
 //= require <alice/window>
 //= require <alice/connection>
-//= require <alice/util>
 
 var alice = new Alice.Application();
 
 document.observe("dom:loaded", function () {
   $$("div.topic").each(function (topic){
-    topic.innerHTML = alice.linkFilter(topic.innerHTML)});
+    topic.innerHTML = Alice.makeLinksClickable(topic.innerHTML)});
   $('config_button').observe("click", alice.toggleConfig.bind(alice));
   alice.activeWindow().input.focus()
   window.onkeydown = function () {

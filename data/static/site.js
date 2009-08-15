@@ -6930,105 +6930,8 @@ Element.offsetSize = function (element, type) {
 
 var Alice = { };
 
-Alice.Application = Class.create({
-  initialize: function () {
-    this.isCtrl = false;
-    this.isCommand = false;
-    this.isAlt = false;
-    this.isFocused = true;
-    this.windows = new Hash();
-    this.previousFocus = 0;
-    this.connection = new Alice.Connection;
-    this.filters = [ this.linkFilter ];
-    this.monospaceNicks = ['Shaniqua', 'root', 'p6eval'];
-    document.onkeyup = this.onKeyUp.bind(this);
-    document.onkeydown = this.onKeyDown.bind(this);
-    setTimeout(this.connection.connect.bind(this.connection), 1000);
-  },
-
-  toggleConfig: function (e) {
-    if (! $('config')) {
-      this.connection.getConfig(function (transport) {
-          $('container').insert(transport.responseText);
-        });
-    }
-    else {
-      $('config').remove();
-      $$('.overlay').invoke('remove');
-    }
-  },
-
-  submitConfig: function(form) {
-    $$('#config .channelselect').each(function (select) {
-      $A(select.options).each(function (option) {
-        option.selected = true;
-      });
-    });
-    this.connection.sendConfig(form.serialize());
-    $('config').remove();
-    $$('.overlay').invoke('remove');
-    return false;
-  },
-
-  addWindow: function (win) {
-    this.windows.set(win.id, win);
-  },
-
-  removeWindow: function (win) {
-    if (win.active) this.focusLast();
-    this.windows.unset(win.id);
-    this.connection.closeWindow(win);
-    win = null;
-  },
-
-  getWindow: function (windowId) {
-    return this.windows.get(windowId);
-  },
-
-  activeWindow: function () {
-    var windows = this.windows.values();
-    for (var i=0; i < windows.length; i++) {
-      if (windows[i].active) return windows[i];
-    }
-    if (windows[0]) return windows[0];
-  },
-
-  onKeyUp: function (e) {
-    if (e.which != 75 && e.which != 78 && e.which != 80) {
-      this.isCtrl = false;
-      this.isCommand = false;
-      this.isAlt = false;
-    }
-  },
-
-  onKeyDown: function (e) {
-    if (e.which == 17)
-      this.isCtrl = true;
-    else if (e.which == 91)
-      this.isCommand = true;
-    else if (e.which == 18)
-      this.isAlt = true;
-    else if (this.isCtrl && e.which == 75) {
-      this.activeWindow().messages.innerHTML = '';
-      return false;
-    }
-    else if (this.isCtrl && e.which == 78) {
-      this.nextWindow();
-      return false;
-    }
-    else if (this.isCtrl && e.which == 80) {
-      this.previousWindow();
-      return false;
-    }
-    else if (e.which == Event.KEY_UP) {
-      this.activeWindow().previousMessage();
-    }
-    else if (e.which == Event.KEY_DOWN) {
-      this.activeWindow().nextMessage();
-    }
-  },
-
-  linkFilter: function (content) {
+Object.extend(Alice, {
+  makeLinksClickable: function (content) {
     var filtered = content;
     filtered = filtered.replace(
       /(https?\:\/\/[\w\d$\-_.+!*'(),%\/?=&;~#:@]*)/gi,
@@ -7036,339 +6939,6 @@ Alice.Application = Class.create({
     return filtered;
   },
 
-  addFilters: function (list) {
-    this.filters = this.filters.concat(list);
-  },
-
-  applyFilters: function (content) {
-    this.filters.each(function(filter) {
-        content = filter(content);
-      });
-    return content;
-  },
-
-  nextWindow: function () {
-    var nextWindow = this.activeWindow().tab.next();
-    if (! nextWindow)
-      nextWindow = $$('.window').first();
-    if (! nextWindow) return;
-    nextWindow = nextWindow.id.replace('_tab','');
-    this.getWindow(nextWindow).focus();
-  },
-
-  focusLast: function () {
-    if (this.previousFocus)
-      this.previousFocus.focus();
-    else if (this.windows.values().length)
-      this.windows.values().first().focus();
-  },
-
-  previousWindow: function () {
-    var prevWindow = this.activeWindow().tab.previous();
-    if (! prevWindow)
-      prevWindow = $$('.window').last();
-    if (! prevWindow) return;
-    prevWindow = prevWindow.id.replace('_tab','');
-    this.getWindow(prevWindow).focus();
-  },
-
-  closeWindow: function (windowId) {
-    var win= this.getWindow(windowId);
-    if (win) win.close();
-  },
-
-  insertWindow: function (windowId, html) {
-    if (! $(windowId)) {
-      $('windows').insert(html['window']);
-      $('tabs').insert(html.tab);
-      Alice.makeSortable();
-    }
-  },
-
-  handleActions: function (list) {
-    var self = this;
-    list.each(function(action) {
-      self.handleAction(action);
-    });
-  },
-
-  handleAction: function (action) {
-    switch (action.event) {
-      case "join":
-        this.insertWindow(action['window'].id, action.html);
-        break;
-      case "part":
-        this.closeWindow(action['window'].id);
-        break;
-    }
-  },
-
-  displayMessages: function (list) {
-    var self = this;
-    list.each(function(message) {
-      self.displayMessage(message);
-    });
-  },
-
-  displayMessage: function (message) {
-    var win = alice.getWindow(message['window'].id);
-    if (! win) {
-      this.connection.requestWindow(
-        message['window'].title, this.activeWindow().id, message);
-      return;
-    }
-    win.addMessage(message);
-  }
-});
-Alice.Window = Class.create({
-  initialize: function (title, id, active) {
-    this.title = title;
-    this.id = id;
-    this.active = active;
-
-    this.elem = $(id);
-    this.tab = $(id + "_tab");
-    this.input = $(id + "_msg");
-    this.tabButton = $(id + "_tab_button");
-    this.form = $(id + "_form");
-    this.topic = $(id + "_topic");
-    this.messages = $(id + "_messages");
-    this.lastNick = "";
-
-    this.msgHistory = [""];
-    this.currentMsg = 0;
-
-    var self = this;
-
-    this.form.observe("submit", this.sayMessage.bind(this));
-    this.tab.observe("mousedown", this.focus.bind(this));
-    this.tabButton.observe("click", function (e) {self.close(); Event.stop(e);});
-    this.tabButton.observe("mousedown", function (e) {Event.stop(e)});
-  },
-
-  nextMessage: function () {
-    if (this.msgHistory.length <= 1) return;
-    this.currentMsg++;
-    if (this.currentMsg >= this.msgHistory.length)
-      this.currentMsg = 0;
-    this.input.value = this.msgHistory[this.currentMsg];
-  },
-
-  previousMessage: function () {
-    if (this.msgHistory.length <= 1) return;
-    this.currentMsg--;
-    if (this.currentMsg < 0)
-      this.currentMsg = this.msgHistory.length - 1;
-    this.input.value = this.msgHistory[this.currentMsg];
-  },
-
-  sayMessage: function (event) {
-    alice.connection.sendMessage(this.form);
-    this.currentMsg = 0;
-    this.msgHistory.push(this.input.value);
-    this.input.value = '';
-    Event.stop(event);
-  },
-
-  unFocus: function () {
-    this.active = false;
-    alice.previousFocus = this;
-    this.elem.removeClassName('active');
-    this.tab.removeClassName('active');
-    if (this.tab.previous()) this.tab.previous().removeClassName("leftof_active");
-  },
-
-  focus: function (event) {
-    document.title = this.title;
-    if (alice.activeWindow()) alice.activeWindow().unFocus();
-    this.active = true;
-    this.tab.addClassName('active');
-    this.elem.addClassName('active');
-    this.tab.removeClassName("unread");
-    this.tab.removeClassName("highlight");
-    this.tab.removeClassName("leftof_active");
-    if (this.tab.previous()) this.tab.previous().addClassName("leftof_active");
-    this.scrollToBottom(true);
-    this.input.focus();
-  },
-
-  close: function (event) {
-    alice.removeWindow(this);
-    this.tab.remove();
-    this.elem.remove();
-  },
-
-  displayTopic: function(topic) {
-    this.topic.innerHTML = alice.linkFilter(topic);
-  },
-
-  addMessage: function(message) {
-    if (message.html || message.full_html) {
-      if (message.nick && message.nick == this.lastNick) {
-        if (alice.monospaceNicks.indexOf(message.nick) > -1)
-          this.messages.down('li:last-child div.msg').insert(
-            "<br>" + alice.applyFilters(message.html));
-        else if (message.event == "say")
-          this.messages.insert(
-            Alice.stripNick(alice.applyFilters(message.full_html)));
-      }
-      else {
-        if (message.event == "topic") {
-          this.messages.insert(alice.linkFilter(message.full_html));
-          this.displayTopic(message.message);
-        }
-        else {
-          this.messages.insert(alice.applyFilters(message.full_html));
-          this.lastNick = "";
-          if (message.event == "say" && message.nick)
-            this.lastNick = message.nick;
-        }
-      }
-
-      if (! alice.isFocused && message.highlight)
-        Alice.growlNotify(message);
-
-      if (this.elem.hasClassName('active'))
-        this.scrollToBottom();
-      else if (message.event == "say" && message.highlight)
-        this.tab.addClassName("highlight");
-      else if (message.event == "say")
-        this.tab.addClassName("unread");
-    }
-
-    var messages = this.messages.childElements();
-    if (messages.length > 250) messages.first().remove();
-  },
-
-  scrollToBottom: function (force) {
-    if (! force) {
-      var lastmsg = this.messages.childElements().last();
-      if (! lastmsg) return;
-      var msgheight = lastmsg.offsetHeight;
-      var bottom = this.elem.scrollTop + this.elem.offsetHeight;
-      var height = this.elem.scrollHeight;
-    }
-    if (force || bottom + msgheight + 100 >= height)
-      this.elem.scrollTop = this.elem.scrollHeight;
-  }
-});
-Alice.Connection = Class.create({
-  initialize: function () {
-    this.len = 0;
-    this.aborting = false;
-    this.req = null;
-    this.seperator = "--xalicex\n";
-    this.msgid = 0;
-    this.timer = null;
-  },
-
-  closeConnection: function () {
-    this.aborting = true;
-    if (this.req && this.req.transport)
-      this.req.transport.abort();
-    this.aborting = false;
-  },
-
-  connect: function () {
-    this.closeConnection();
-    this.len = 0;
-    clearTimeout(this.timer);
-    var connection = this;
-    console.log("opening new connection starting at message " + this.msgid);
-    this.req = new Ajax.Request('/stream', {
-      method: 'get',
-      parameters: {msgid: connection.msgid},
-      onException: function (req, e) {
-        console.log("encountered an error with stream.");
-        if (! connection.aborting)
-          setTimeout(connection.connect.bind(connection), 2000);
-      },
-      onInteractive: connection.handleUpdate.bind(connection),
-      onComplete: function () {
-        console.log("connection was closed cleanly.");
-        if (! connection.aborting)
-          setTimeout(connection.connect.bind(connection), 2000);
-      }
-    });
-  },
-
-  handleUpdate: function (transport) {
-    var time = new Date();
-    var data = transport.responseText.slice(this.len);
-    var start, end;
-    start = data.indexOf(this.seperator);
-    if (start > -1) {
-      start += this.seperator.length;
-      end = data.indexOf(this.seperator, start);
-      if (end == -1) return;
-    }
-    else return;
-    this.len += (end + this.seperator.length) - start;
-    data = data.slice(start, end);
-
-    try {
-      data = data.evalJSON();
-      if (data.msgs.length)
-        this.msgid = data.msgs[data.msgs.length - 1].msgid;
-      alice.handleActions(data.actions);
-      alice.displayMessages(data.msgs);
-    }
-    catch (e) {
-      console.log(e);
-    }
-
-    var lag = time / 1000 -  data.time;
-    if (lag > 5) {
-      console.log("lag is " + Math.round(lag) + "s, reconnecting.");
-      this.connect();
-    }
-  },
-
-  requestWindow: function (title, windowId, message) {
-    var connection = this;
-    new Ajax.Request('/say', {
-      method: 'get',
-      parameters: {source: windowId, msg: "/create " + title},
-      onSuccess: function (trans) {
-        connection.handleUpdate(trans);
-        if (message) setTimeout(function(){alice.displayMessage(message)}, 1000);
-      }
-    });
-  },
-
-  closeWindow: function (win) {
-    new Ajax.Request('/say', {
-      method: 'get',
-      parameters: {source: win.id, msg: "/close"}
-    });
-  },
-
-  sendMessage: function (form) {
-    new Ajax.Request('/say', {
-      method: 'get',
-      parameters: form.serialize(),
-    });
-  },
-
-  getConfig: function (callback) {
-    new Ajax.Request('/config', {
-      method: 'get',
-      onSuccess: callback
-    })
-  },
-
-  sendConfig: function (params) {
-    new Ajax.Request('/save', {
-      method: 'get',
-      parameters: params
-    });
-  },
-
-  sendPing: function () {
-    new Ajax.Request('/ping');
-  }
-});
-Object.extend(Alice, {
   stripNick: function(html) {
     return html.replace(/<div class="left">.*<\/div>/,'');
   },
@@ -7403,12 +6973,453 @@ Object.extend(Alice, {
     });
   }
 });
+Alice.Application = Class.create({
+  initialize: function() {
+    this.isCtrl = false;
+    this.isCommand = false;
+    this.isAlt = false;
+    this.isFocused = true;
+    this.windows = new Hash();
+    this.previousFocus = 0;
+    this.connection = new Alice.Connection(this);
+    this.filters = [ Alice.makeLinksClickable ];
+    this.monospaceNicks = ['Shaniqua', 'root', 'p6eval'];
+    document.onkeyup = this.onKeyUp.bind(this);
+    document.onkeydown = this.onKeyDown.bind(this);
+    setTimeout(this.connection.connect.bind(this.connection), 1000);
+  },
+
+  toggleConfig: function(e) {
+    if (!$('config')) {
+      this.connection.getConfig(function(transport) {
+        $('container').insert(transport.responseText);
+      });
+    } else {
+      $('config').remove();
+      $$('.overlay').invoke('remove');
+    }
+  },
+
+  submitConfig: function(form) {
+    $$('#config .channelselect').each(function(select) {
+      $A(select.options).each(function(option) {
+        option.selected = true;
+      });
+    });
+    this.connection.sendConfig(form.serialize());
+    $('config').remove();
+    $$('.overlay').invoke('remove');
+    return false;
+  },
+
+  openWindow: function(element, title, active) {
+    var win = new Alice.Window(this, element, title, active);
+    this.addWindow(win);
+    return win;
+  },
+
+  addWindow: function(win) {
+    this.windows.set(win.id, win);
+  },
+
+  removeWindow: function(win) {
+    if (win.active) this.focusLast();
+    this.windows.unset(win.id);
+    this.connection.closeWindow(win);
+    win = null;
+  },
+
+  getWindow: function(windowId) {
+    return this.windows.get(windowId);
+  },
+
+  activeWindow: function() {
+    var windows = this.windows.values();
+    for (var i=0; i < windows.length; i++) {
+      if (windows[i].active) return windows[i];
+    }
+    if (windows[0]) return windows[0];
+  },
+
+  onKeyUp: function(e) {
+    if (e.which != 75 && e.which != 78 && e.which != 80) {
+      this.isCtrl = false;
+      this.isCommand = false;
+      this.isAlt = false;
+    }
+  },
+
+  onKeyDown: function(e) {
+    if (e.which == 17)
+      this.isCtrl = true;
+    else if (e.which == 91)
+      this.isCommand = true;
+    else if (e.which == 18)
+      this.isAlt = true;
+    else if (this.isCtrl && e.which == 75) {
+      this.activeWindow().messages.innerHTML = '';
+      return false;
+    }
+    else if (this.isCtrl && e.which == 78) {
+      this.nextWindow();
+      return false;
+    }
+    else if (this.isCtrl && e.which == 80) {
+      this.previousWindow();
+      return false;
+    }
+    else if (e.which == Event.KEY_UP) {
+      this.activeWindow().previousMessage();
+    }
+    else if (e.which == Event.KEY_DOWN) {
+      this.activeWindow().nextMessage();
+    }
+  },
+
+  addFilters: function(list) {
+    this.filters = this.filters.concat(list);
+  },
+
+  applyFilters: function(content) {
+    return this.filters.inject(content, function(value, filter) {
+      return filter(value);
+    });
+  },
+
+  nextWindow: function() {
+    var nextWindow = this.activeWindow().tab.next();
+    if (!nextWindow)
+      nextWindow = $$('.window').first();
+    if (!nextWindow) return;
+    nextWindow = nextWindow.id.replace('_tab','');
+    this.getWindow(nextWindow).focus();
+  },
+
+  focusLast: function() {
+    if (this.previousFocus)
+      this.previousFocus.focus();
+    else if (this.windows.values().length)
+      this.windows.values().first().focus();
+  },
+
+  previousWindow: function() {
+    var previousWindow = this.activeWindow().tab.previous();
+    if (!previousWindow)
+      previousWindow = $$('.window').last();
+    if (!previousWindow) return;
+    previousWindow = previousWindow.id.replace('_tab','');
+    this.getWindow(previousWindow).focus();
+  },
+
+  closeWindow: function(windowId) {
+    var win= this.getWindow(windowId);
+    if (win) win.close();
+  },
+
+  insertWindow: function(windowId, html) {
+    if (!$(windowId)) {
+      $('windows').insert(html['window']);
+      $('tabs').insert(html.tab);
+      Alice.makeSortable();
+    }
+  },
+
+  handleActions: function(list) {
+    list.each(this.handleAction, this);
+  },
+
+  handleAction: function(action) {
+    switch (action.event) {
+      case "join":
+        this.insertWindow(action['window'].id, action.html);
+        break;
+      case "part":
+        this.closeWindow(action['window'].id);
+        break;
+    }
+  },
+
+  displayMessages: function(list) {
+    list.each(this.displayMessage, this);
+  },
+
+  displayMessage: function(message) {
+    var win = this.getWindow(message['window'].id);
+    if (win) {
+      win.addMessage(message);
+    } else {
+      this.connection.requestWindow(
+        message['window'].title, this.activeWindow().id, message
+      );
+    }
+  },
+
+  messagesAreMonospacedFor: function(nick) {
+    return this.monospaceNicks.indexOf(nick) > -1;
+  }
+});
+Alice.Window = Class.create({
+  initialize: function(application, element, title, active) {
+    this.application = application;
+
+    this.element = $(element);
+    this.title = title;
+    this.id = this.element.identify();
+    this.active = active;
+
+    this.tab = $(this.id + "_tab");
+    this.input = $(this.id + "_msg");
+    this.tabButton = $(this.id + "_tab_button");
+    this.form = $(this.id + "_form");
+    this.topic = $(this.id + "_topic");
+    this.messages = $(this.id + "_messages");
+    this.lastNick = "";
+
+    this.msgHistory = [""];
+    this.currentMsg = 0;
+
+    this.form.observe("submit", this.sayMessage.bind(this));
+    this.tab.observe("mousedown", this.focus.bind(this));
+    this.tabButton.observe("click", function(e) { this.close() && e.stop() }.bind(this));
+    this.tabButton.observe("mousedown", function(e) { e.stop() });
+  },
+
+  nextMessage: function() {
+    if (this.msgHistory.length <= 1) return;
+    this.currentMsg++;
+    if (this.currentMsg >= this.msgHistory.length)
+      this.currentMsg = 0;
+    this.input.value = this.msgHistory[this.currentMsg];
+  },
+
+  previousMessage: function() {
+    if (this.msgHistory.length <= 1) return;
+    this.currentMsg--;
+    if (this.currentMsg < 0)
+      this.currentMsg = this.msgHistory.length - 1;
+    this.input.value = this.msgHistory[this.currentMsg];
+  },
+
+  sayMessage: function(event) {
+    this.application.connection.sendMessage(this.form);
+    this.currentMsg = 0;
+    this.msgHistory.push(this.input.value);
+    this.input.value = '';
+    event.stop();
+  },
+
+  unFocus: function() {
+    this.active = false;
+    this.application.previousFocus = this;
+    this.element.removeClassName('active');
+    this.tab.removeClassName('active');
+    if (this.tab.previous()) this.tab.previous().removeClassName("leftof_active");
+  },
+
+  focus: function(event) {
+    document.title = this.title;
+    if (this.application.activeWindow()) this.application.activeWindow().unFocus();
+    this.active = true;
+    this.tab.addClassName('active');
+    this.element.addClassName('active');
+    this.tab.removeClassName("unread");
+    this.tab.removeClassName("highlight");
+    this.tab.removeClassName("leftof_active");
+    if (this.tab.previous()) this.tab.previous().addClassName("leftof_active");
+    this.scrollToBottom(true);
+    this.input.focus();
+  },
+
+  close: function(event) {
+    this.application.removeWindow(this);
+    this.tab.remove();
+    this.element.remove();
+  },
+
+  displayTopic: function(topic) {
+    this.topic.innerHTML = Alice.makeLinksClickable(topic);
+  },
+
+  addMessage: function(message) {
+    if (message.html || message.full_html) {
+      if (message.nick && message.nick == this.lastNick) {
+        if (this.application.messagesAreMonospacedFor(message.nick))
+          this.messages.down('li:last-child div.msg').insert(
+            "<br>" + this.application.applyFilters(message.html));
+        else if (message.event == "say")
+          this.messages.insert(
+            Alice.stripNick(this.application.applyFilters(message.full_html)));
+      }
+      else {
+        if (message.event == "topic") {
+          this.messages.insert(Alice.makeLinksClickable(message.full_html));
+          this.displayTopic(message.message);
+        }
+        else {
+          this.messages.insert(this.application.applyFilters(message.full_html));
+          this.lastNick = "";
+          if (message.event == "say" && message.nick)
+            this.lastNick = message.nick;
+        }
+      }
+
+      if (!this.application.isFocused && message.highlight)
+        Alice.growlNotify(message);
+
+      if (this.element.hasClassName('active'))
+        this.scrollToBottom();
+      else if (message.event == "say" && message.highlight)
+        this.tab.addClassName("highlight");
+      else if (message.event == "say")
+        this.tab.addClassName("unread");
+    }
+
+    var messages = this.messages.childElements();
+    if (messages.length > 250) messages.first().remove();
+  },
+
+  scrollToBottom: function(force) {
+    if (!force) {
+      var lastmsg = this.messages.childElements().last();
+      if (!lastmsg) return;
+      var msgheight = lastmsg.offsetHeight;
+      var bottom = this.element.scrollTop + this.element.offsetHeight;
+      var height = this.element.scrollHeight;
+    }
+    if (force || bottom + msgheight + 100 >= height)
+      this.element.scrollTop = this.element.scrollHeight;
+  }
+});
+Alice.Connection = Class.create({
+  initialize: function(application) {
+    this.application = application;
+    this.len = 0;
+    this.aborting = false;
+    this.request = null;
+    this.seperator = "--xalicex\n";
+    this.msgid = 0;
+    this.timer = null;
+  },
+
+  closeConnection: function() {
+    this.aborting = true;
+    if (this.request && this.request.transport)
+      this.request.transport.abort();
+    this.aborting = false;
+  },
+
+  connect: function() {
+    this.closeConnection();
+    this.len = 0;
+    clearTimeout(this.timer);
+
+    console.log("opening new connection starting at message " + this.msgid);
+    this.request = new Ajax.Request('/stream', {
+      method: 'get',
+      parameters: {msgid: this.msgid},
+      onException: this.handleException.bind(this),
+      onInteractive: this.handleUpdate.bind(this),
+      onComplete: this.handleComplete.bind(this)
+    });
+  },
+
+  handleException: function(request, exception) {
+    console.log("encountered an error with stream.");
+    if (!this.aborting)
+      setTimeout(this.connect.bind(this), 2000);
+  },
+
+  handleComplete: function(transport) {
+    console.log("connection was closed cleanly.");
+    if (!this.aborting)
+      setTimeout(this.connect.bind(this), 2000);
+  },
+
+  handleUpdate: function(transport) {
+    var time = new Date();
+    var data = transport.responseText.slice(this.len);
+    var start, end;
+    start = data.indexOf(this.seperator);
+    if (start > -1) {
+      start += this.seperator.length;
+      end = data.indexOf(this.seperator, start);
+      if (end == -1) return;
+    }
+    else return;
+    this.len += (end + this.seperator.length) - start;
+    data = data.slice(start, end);
+
+    try {
+      data = data.evalJSON();
+      if (data.msgs.length)
+        this.msgid = data.msgs[data.msgs.length - 1].msgid;
+      this.application.handleActions(data.actions);
+      this.application.displayMessages(data.msgs);
+    }
+    catch (e) {
+      console.log(e);
+    }
+
+    var lag = time / 1000 -  data.time;
+    if (lag > 5) {
+      console.log("lag is " + Math.round(lag) + "s, reconnecting.");
+      this.connect();
+    }
+  },
+
+  requestWindow: function(title, windowId, message) {
+    new Ajax.Request('/say', {
+      method: 'get',
+      parameters: {source: windowId, msg: "/create " + title},
+      onSuccess: function (transport) {
+        this.handleUpdate(transport);
+        if (message) {
+          setTimeout(function() {
+            this.application.displayMessage(message)
+          }.bind(this), 1000);
+        }
+      }.bind(this)
+    });
+  },
+
+  closeWindow: function(win) {
+    new Ajax.Request('/say', {
+      method: 'get',
+      parameters: {source: win.id, msg: "/close"}
+    });
+  },
+
+  sendMessage: function(form) {
+    new Ajax.Request('/say', {
+      method: 'get',
+      parameters: form.serialize(),
+    });
+  },
+
+  getConfig: function(callback) {
+    new Ajax.Request('/config', {
+      method: 'get',
+      onSuccess: callback
+    })
+  },
+
+  sendConfig: function(params) {
+    new Ajax.Request('/save', {
+      method: 'get',
+      parameters: params
+    });
+  },
+
+  sendPing: function() {
+    new Ajax.Request('/ping');
+  }
+});
 
 var alice = new Alice.Application();
 
 document.observe("dom:loaded", function () {
   $$("div.topic").each(function (topic){
-    topic.innerHTML = alice.linkFilter(topic.innerHTML)});
+    topic.innerHTML = Alice.makeLinksClickable(topic.innerHTML)});
   $('config_button').observe("click", alice.toggleConfig.bind(alice));
   alice.activeWindow().input.focus()
   window.onkeydown = function () {

@@ -1,34 +1,33 @@
 Alice.Application = Class.create({
-  initialize: function () {
+  initialize: function() {
     this.isCtrl = false;
     this.isCommand = false;
     this.isAlt = false;
     this.isFocused = true;
     this.windows = new Hash();
     this.previousFocus = 0;
-    this.connection = new Alice.Connection;
-    this.filters = [ this.linkFilter ];
+    this.connection = new Alice.Connection(this);
+    this.filters = [ Alice.makeLinksClickable ];
     this.monospaceNicks = ['Shaniqua', 'root', 'p6eval'];
     document.onkeyup = this.onKeyUp.bind(this);
     document.onkeydown = this.onKeyDown.bind(this);
     setTimeout(this.connection.connect.bind(this.connection), 1000);
   },
   
-  toggleConfig: function (e) {
-    if (! $('config')) {
-      this.connection.getConfig(function (transport) {
-          $('container').insert(transport.responseText);
-        });
-    }
-    else {
+  toggleConfig: function(e) {
+    if (!$('config')) {
+      this.connection.getConfig(function(transport) {
+        $('container').insert(transport.responseText);
+      });
+    } else {
       $('config').remove();
       $$('.overlay').invoke('remove');
     }
   },
   
   submitConfig: function(form) {
-    $$('#config .channelselect').each(function (select) {
-      $A(select.options).each(function (option) {
+    $$('#config .channelselect').each(function(select) {
+      $A(select.options).each(function(option) {
         option.selected = true;
       });
     });
@@ -38,22 +37,28 @@ Alice.Application = Class.create({
     return false;
   },
   
-  addWindow: function (win) {
+  openWindow: function(element, title, active) {
+    var win = new Alice.Window(this, element, title, active);
+    this.addWindow(win);
+    return win;
+  },
+  
+  addWindow: function(win) {
     this.windows.set(win.id, win);
   },
   
-  removeWindow: function (win) {
+  removeWindow: function(win) {
     if (win.active) this.focusLast();
     this.windows.unset(win.id);
     this.connection.closeWindow(win);
     win = null;
   },
   
-  getWindow: function (windowId) {
+  getWindow: function(windowId) {
     return this.windows.get(windowId);
   },
   
-  activeWindow: function () {
+  activeWindow: function() {
     var windows = this.windows.values();
     for (var i=0; i < windows.length; i++) {
       if (windows[i].active) return windows[i];
@@ -61,7 +66,7 @@ Alice.Application = Class.create({
     if (windows[0]) return windows[0];
   },
   
-  onKeyUp: function (e) {
+  onKeyUp: function(e) {
     if (e.which != 75 && e.which != 78 && e.which != 80) {
       this.isCtrl = false;
       this.isCommand = false;
@@ -69,7 +74,7 @@ Alice.Application = Class.create({
     }
   },
   
-  onKeyDown: function (e) {
+  onKeyDown: function(e) {
     if (e.which == 17)
       this.isCtrl = true;
     else if (e.which == 91)
@@ -96,71 +101,59 @@ Alice.Application = Class.create({
     }
   },
   
-  linkFilter: function (content) {
-    var filtered = content;
-    filtered = filtered.replace(
-      /(https?\:\/\/[\w\d$\-_.+!*'(),%\/?=&;~#:@]*)/gi,
-      "<a href=\"$1\">$1</a>");
-    return filtered;
-  },
-  
-  addFilters: function (list) {
+  addFilters: function(list) {
     this.filters = this.filters.concat(list);
   },
   
-  applyFilters: function (content) {
-    this.filters.each(function(filter) {
-        content = filter(content);
-      });
-    return content;
+  applyFilters: function(content) {
+    return this.filters.inject(content, function(value, filter) {
+      return filter(value);
+    });
   },
   
-  nextWindow: function () {
+  nextWindow: function() {
     var nextWindow = this.activeWindow().tab.next();
-    if (! nextWindow)
+    if (!nextWindow)
       nextWindow = $$('.window').first();
-    if (! nextWindow) return;
+    if (!nextWindow) return;
     nextWindow = nextWindow.id.replace('_tab','');
     this.getWindow(nextWindow).focus();
   },
   
-  focusLast: function () {
+  focusLast: function() {
     if (this.previousFocus)
       this.previousFocus.focus();
     else if (this.windows.values().length)
       this.windows.values().first().focus();
   },
   
-  previousWindow: function () {
-    var prevWindow = this.activeWindow().tab.previous();
-    if (! prevWindow)
-      prevWindow = $$('.window').last();
-    if (! prevWindow) return;
-    prevWindow = prevWindow.id.replace('_tab','');
-    this.getWindow(prevWindow).focus();
+  previousWindow: function() {
+    var previousWindow = this.activeWindow().tab.previous();
+    if (!previousWindow)
+      previousWindow = $$('.window').last();
+    if (!previousWindow) return;
+    previousWindow = previousWindow.id.replace('_tab','');
+    this.getWindow(previousWindow).focus();
   },
   
-  closeWindow: function (windowId) {
+  closeWindow: function(windowId) {
     var win= this.getWindow(windowId);
     if (win) win.close();
   },
   
-  insertWindow: function (windowId, html) {
-    if (! $(windowId)) {
+  insertWindow: function(windowId, html) {
+    if (!$(windowId)) {
       $('windows').insert(html['window']);
       $('tabs').insert(html.tab);
       Alice.makeSortable();
     }
   },
   
-  handleActions: function (list) {
-    var self = this;
-    list.each(function(action) {
-      self.handleAction(action);
-    });
+  handleActions: function(list) {
+    list.each(this.handleAction, this);
   },
   
-  handleAction: function (action) {
+  handleAction: function(action) {
     switch (action.event) {
       case "join":
         this.insertWindow(action['window'].id, action.html);
@@ -171,20 +164,22 @@ Alice.Application = Class.create({
     }
   },
   
-  displayMessages: function (list) {
-    var self = this;
-    list.each(function(message) {
-      self.displayMessage(message);
-    });
+  displayMessages: function(list) {
+    list.each(this.displayMessage, this);
   },
   
-  displayMessage: function (message) {
-    var win = alice.getWindow(message['window'].id);
-    if (! win) {
+  displayMessage: function(message) {
+    var win = this.getWindow(message['window'].id);
+    if (win) {
+      win.addMessage(message);
+    } else {
       this.connection.requestWindow(
-        message['window'].title, this.activeWindow().id, message);
-      return;
+        message['window'].title, this.activeWindow().id, message
+      );
     }
-    win.addMessage(message);
+  },
+  
+  messagesAreMonospacedFor: function(nick) {
+    return this.monospaceNicks.indexOf(nick) > -1;
   }
 });

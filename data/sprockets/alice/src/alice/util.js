@@ -1,4 +1,12 @@
 Object.extend(Alice, {
+  makeLinksClickable: function (content) {
+    var filtered = content;
+    filtered = filtered.replace(
+      /(https?\:\/\/[\w\d$\-_.+!*'(),%\/?=&;~#:@]*)/gi,
+      "<a href=\"$1\">$1</a>");
+    return filtered;
+  },
+  
   stripNick: function(html) {
     return html.replace(/<div class="left">.*<\/div>/,'');
   },

@@ -11,9 +11,7 @@
       <input name="msg" id="[% window.id %]_msg"/>
     </form>
     <script type="text/javascript">
-      alice.addWindow(
-        new Alice.Window('[% window.title %]','[% window.id %]',[% loop.first ? "true" : "false" %])
-      );
+      alice.openWindow('[% window.id %]','[% window.title %]',[% loop.first ? "true" : "false" %]);
     </script>
   </div>
 </div>
