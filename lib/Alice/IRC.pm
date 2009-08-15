@@ -51,6 +51,8 @@ class Alice::IRC {
     $self->connection($irc);
     $self->add_plugins;
     $self->connection->yield(register => 'all');
+    
+    $self->log_info("connecting to " . $self->alias);
     $self->connection->yield(connect => {});
   }
   
