@@ -7237,7 +7237,7 @@ Alice.Window = Class.create({
   },
 
   displayTopic: function(topic) {
-    this.topic.innerHTML = Alice.makeLinksClickable(topic);
+    this.topic.update(Alice.makeLinksClickable(topic));
   },
 
   addMessage: function(message) {
