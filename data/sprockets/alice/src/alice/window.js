@@ -88,7 +88,7 @@ Alice.Window = Class.create({
             "<br>" + alice.applyFilters(message.html));
         else if (message.event == "say")
           this.messages.insert(
-            stripNick(alice.applyFilters(message.full_html)));
+            Alice.stripNick(alice.applyFilters(message.full_html)));
       }
       else {
         if (message.event == "topic") {
@@ -104,7 +104,7 @@ Alice.Window = Class.create({
       }
       
       if (! alice.isFocused && message.highlight)
-        growlNotify(message);
+        Alice.growlNotify(message);
 
       // scroll to bottom or highlight the tab
       if (this.elem.hasClassName('active'))

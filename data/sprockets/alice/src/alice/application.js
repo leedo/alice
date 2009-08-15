@@ -1,10 +1,4 @@
-//= require <prototype>
-//= require <scriptaculous>
-//= require <scriptaculous/effects>
-//= require <scriptaculous/controls>
-//= require <scriptaculous/dragdrop>
-
-var Alice = Class.create({
+Alice.Application = Class.create({
   initialize: function () {
     this.isCtrl = false;
     this.isCommand = false;
@@ -155,7 +149,7 @@ var Alice = Class.create({
     if (! $(windowId)) {
       $('windows').insert(html['window']);
       $('tabs').insert(html.tab);
-      makeSortable();
+      Alice.makeSortable();
     }
   },
   
@@ -193,29 +187,4 @@ var Alice = Class.create({
     }
     win.addMessage(message);
   }
-});
-
-//= require <alice/window>
-//= require <alice/connection>
-//= require <alice/autocompleter>
-//= require <alice/util>
-
-var alice = new Alice();
-
-document.observe("dom:loaded", function () {
-  $$("div.topic").each(function (topic){
-    topic.innerHTML = alice.linkFilter(topic.innerHTML)});
-  $('config_button').observe("click", alice.toggleConfig.bind(alice));
-  alice.activeWindow().input.focus()
-  window.onkeydown = function () {
-    if (! $('config') && ! alice.isCtrl && ! alice.isCommand && ! alice.isAlt)
-      alice.activeWindow().input.focus()};
-  window.onresize = function () {
-    alice.activeWindow().scrollToBottom()};
-  window.status = " ";  
-  window.onfocus = function () {
-    alice.activeWindow().input.focus();
-    alice.isFocused = true};
-  window.onblur = function () {alice.isFocused = false};
-  makeSortable();
 });
