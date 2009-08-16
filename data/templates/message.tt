@@ -1,4 +1,4 @@
 <li class="message [% nick %][% IF self %] self[% END %]" id="[% msgid %]">
-  <div class="left"><a href="javascript:alice.connection.requestTab('[% nick %]','[% session %]')" class="nick">[% nick %]</a></div>
+  <div class="left"><a href="javascript:alice.connection.requestWindow('[% nick %]','[% window.id %]')" class="nick">[% nick %]</a></div>
   <div class="msg[% IF nick == "Shaniqua" || nick == "root" || nick == "p6eval" %] monospace[% END %]">[% html %]</div>
 </li>

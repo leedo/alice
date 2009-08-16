@@ -1,44 +1,49 @@
 Alice.Connection = Class.create({
-  initialize: function () {
+  initialize: function(application) {
+    this.application = application;
     this.len = 0;
     this.aborting = false;
-    this.req = null;
+    this.request = null;
     this.seperator = "--xalicex\n";
     this.msgid = 0;
     this.timer = null;
   },
   
-  closeConnection: function () {
+  closeConnection: function() {
     this.aborting = true;
-    if (this.req && this.req.transport)
-      this.req.transport.abort();
+    if (this.request && this.request.transport)
+      this.request.transport.abort();
     this.aborting = false;
   },
   
-  connect: function () {
+  connect: function() {
     this.closeConnection();
     this.len = 0;
     clearTimeout(this.timer);
-    var connection = this;
+
     console.log("opening new connection starting at message " + this.msgid);
-    this.req = new Ajax.Request('/stream', {
+    this.request = new Ajax.Request('/stream', {
       method: 'get',
-      parameters: {msgid: connection.msgid},
-      onException: function (req, e) {
-        console.log("encountered an error with stream.");
-        if (! connection.aborting)
-          setTimeout(connection.connect.bind(connection), 2000);
-      },
-      onInteractive: connection.handleUpdate.bind(connection),
-      onComplete: function () {
-        console.log("connection was closed cleanly.");
-        if (! connection.aborting)
-          setTimeout(connection.connect.bind(connection), 2000);
-      }
+      parameters: {msgid: this.msgid},
+      onException: this.handleException.bind(this),
+      onInteractive: this.handleUpdate.bind(this),
+      onComplete: this.handleComplete.bind(this)
     });
   },
 
-  handleUpdate: function (transport) {
+  handleException: function(request, exception) {
+    console.log("encountered an error with stream.");
+    if (!this.aborting)
+      setTimeout(this.connect.bind(this), 2000);
+  },
+
+  handleComplete: function(transport) {
+    console.log("connection was closed cleanly.");
+    if (!this.aborting)
+      setTimeout(this.connect.bind(this), 2000);
+  },
+
+  handleUpdate: function(transport) {
     var time = new Date();
     var data = transport.responseText.slice(this.len);
     var start, end;
@@ -56,8 +61,8 @@ Alice.Connection = Class.create({
       data = data.evalJSON();
       if (data.msgs.length)
         this.msgid = data.msgs[data.msgs.length - 1].msgid;
-      alice.handleActions(data.actions);
-      alice.displayMessages(data.msgs);
+      this.application.handleActions(data.actions);
+      this.application.displayMessages(data.msgs);
     }
     catch (e) {
       console.log(e);
@@ -71,47 +76,50 @@ Alice.Connection = Class.create({
     }
   },
   
-  requestTab: function (name, session, message) {
-    var connection = this;
+  requestWindow: function(title, windowId, message) {
     new Ajax.Request('/say', {
       method: 'get',
-      parameters: {session: session, msg: "/window new " + name},
-      onSuccess: function (trans) {
-        connection.handleUpdate(trans);
-        if (message) setTimeout(function(){alice.displayMessage(message)}, 1000);
-      }
+      parameters: {source: windowId, msg: "/create " + title},
+      onSuccess: function (transport) {
+        this.handleUpdate(transport);
+        if (message) {
+          setTimeout(function() {
+            this.application.displayMessage(message) 
+          }.bind(this), 1000);
+        }
+      }.bind(this)
     });
   },
   
-  partChannel: function (channel) {
+  closeWindow: function(win) {
     new Ajax.Request('/say', {
       method: 'get',
-      parameters: {chan: channel.name, session: channel.session, msg: "/part"},
+      parameters: {source: win.id, msg: "/close"}
     });
   },
   
-  sendMessage: function (form) {
+  sendMessage: function(form) {
     new Ajax.Request('/say', {
       method: 'get',
       parameters: form.serialize(),
     });
   },
   
-  getConfig: function (callback) {
+  getConfig: function(callback) {
     new Ajax.Request('/config', {
       method: 'get',
       onSuccess: callback
     })
   },
   
-  sendConfig: function (params) {
+  sendConfig: function(params) {
     new Ajax.Request('/save', {
       method: 'get',
       parameters: params
     });
   },
   
-  sendPing: function () {
+  sendPing: function() {
     new Ajax.Request('/ping');
   }
 });

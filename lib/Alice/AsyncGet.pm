@@ -15,19 +15,16 @@ my @pending;
 
 sub async_fetch {
   my ($res,$uri)  = @_;
-
   if (scalar keys(%children) >= 5) {
     push @pending, {
       res   => $res,
       uri   => $uri,
     };
-  
     return 0;
   }
-
+  
   my $pathobj  = URI->new($uri);
   my $path     = $pathobj->path();
-  return 0 unless $path =~ /(?:jpe?g|gif|png)$/;
   $path        =~ s/^\/[^\/]+\///;
 
   POE::Session->create(
