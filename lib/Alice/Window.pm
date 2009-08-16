@@ -155,27 +155,31 @@ class Alice::Window {
     return $message;
   }
 
-  method render_message (Str $nick, Str $msg) {
-    $msg = decode("utf8", $msg, Encode::FB_WARN);
-    my $html = IRC::Formatting::HTML->formatted_string_to_html($msg);
-    my $own_nick = $self->nick;
-    my $message = {
-      type      => "message",
-      event     => "say",
-      nick      => $nick,
-      window    => $self->serialized,
-      message   => $msg,
-      highlight => $msg =~ /\b$own_nick\b/i ? 1 : 0,
-      html      => $html,
-      self      => $self->nick eq $nick,
-      msgid     => $self->nextmsgid,
-      timestamp => $self->timestamp,
-    };
-    my $fullhtml = '';
-    $self->tt->process("message.tt", $message, \$fullhtml);
-    $message->{full_html} = $fullhtml;
-    $self->add_message($message);
-    return $message;
+  method render_message (Str $nick, Str $lines) {
+    my @messages;
+    $lines = decode("utf8", $lines, Encode::FB_WARN);
+    for my $line (split /\n/, $lines) {
+      my $html = IRC::Formatting::HTML->formatted_string_to_html($line);
+      my $own_nick = $self->nick;
+      my $message = {
+        type      => "message",
+        event     => "say",
+        nick      => $nick,
+        window    => $self->serialized,
+        message   => $line,
+        highlight => $line =~ /\b$own_nick\b/i ? 1 : 0,
+        html      => $html,
+        self      => $self->nick eq $nick,
+        msgid     => $self->nextmsgid,
+        timestamp => $self->timestamp,
+      };
+      my $fullhtml = '';
+      $self->tt->process("message.tt", $message, \$fullhtml);
+      $message->{full_html} = $fullhtml;
+      $self->add_message($message);
+      push @messages, $message;
+    }
+    return @messages;
   }
 
   method render_announcement (Str $msg) {

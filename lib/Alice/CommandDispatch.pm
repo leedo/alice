@@ -10,7 +10,7 @@ class Alice::CommandDispatch {
     default => sub {
       my $self = shift;
       [
-        {method => '_say',     re => qr{^([^/].*)}},
+        {method => '_say',     re => qr{^([^/].*)}s},
         {method => 'query',    re => qr{^/query\s+(.+)}},
         {method => 'names',    re => qr{^/n(?:ames)?}, in_channel => 1},
         {method => '_join',    re => qr{^/j(?:oin)?\s+(.+)}},
