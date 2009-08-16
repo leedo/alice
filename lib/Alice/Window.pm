@@ -136,14 +136,14 @@ class Alice::Window {
     return sprintf("%d:%02d%s",$dt->hour_12, $dt->min, $ampm);
   }
 
-  method render_event (Str $event, Str $nick, Str $msg?) {
-    $msg = decode("utf8", $msg, Encode::FB_WARN);
+  method render_event (Str $event, Str $nick, Str $body?) {
+    $body = decode("utf8", $body, Encode::FB_WARN);
     my $message = {
       type      => "message",
       event     => $event,
       nick      => $nick,
       window    => $self->serialized,
-      message   => $msg,
+      body      => $body,
       msgid     => $self->nextmsgid,
       timestamp => $self->timestamp,
     };
@@ -155,17 +155,17 @@ class Alice::Window {
     return $message;
   }
 
-  method render_message (Str $nick, Str $msg) {
-    $msg = decode("utf8", $msg, Encode::FB_WARN);
-    my $html = IRC::Formatting::HTML->formatted_string_to_html($msg);
+  method render_message (Str $nick, Str $body) {
+    $body = decode("utf8", $body, Encode::FB_WARN);
+    my $html = IRC::Formatting::HTML->formatted_string_to_html($body);
     my $own_nick = $self->nick;
     my $message = {
       type      => "message",
       event     => "say",
       nick      => $nick,
       window    => $self->serialized,
-      message   => $msg,
-      highlight => $msg =~ /\b$own_nick\b/i ? 1 : 0,
+      body      => $body,
+      highlight => $body =~ /\b$own_nick\b/i ? 1 : 0,
       html      => $html,
       self      => $self->nick eq $nick,
       msgid     => $self->nextmsgid,

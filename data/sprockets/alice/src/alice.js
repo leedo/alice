@@ -19,8 +19,8 @@ document.observe("dom:loaded", function () {
     topic.innerHTML = Alice.makeLinksClickable(topic.innerHTML)});
   $('config_button').observe("click", alice.toggleConfig.bind(alice));
   alice.activeWindow().input.focus()
-  window.onkeydown = function () {
-    if (!$('config') && !alice.isCtrl && !alice.isCommand && !alice.isAlt)
+  window.onkeydown = function (e) {
+    if (!$('config') && !Alice.isSpecialKey(e.which))
       alice.activeWindow().input.focus()};
   window.onresize = function () {
     alice.activeWindow().scrollToBottom()};

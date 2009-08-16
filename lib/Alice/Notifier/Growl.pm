@@ -11,7 +11,7 @@ class Alice::Notifier::Growl {
   method display (HashRef $message) {
     PostNotification("Alice", "message", 
       $message->{nick} . " in " . $message->{window}->{title},
-      $message->{message},
+      $message->{body},
     );
   }
 }

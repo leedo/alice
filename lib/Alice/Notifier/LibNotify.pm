@@ -14,7 +14,7 @@ class Alice::Notifier::LibNotify {
   method display (HashRef $message) {
     my $notification = $self->connection->create(
       summary => $message->{nick} . " in " . $message->{window}->{title},
-      body    => $message->{message}, # should be renamed to body
+      body    => $message->{body},
       timeout => 3000);
     $notification->show;
   }

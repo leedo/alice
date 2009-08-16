@@ -7182,6 +7182,15 @@ Object.extend(Alice, {
         }
       }
     });
+  },
+
+  isSpecialKey: function(keyCode) {
+    var special_keys = [
+			27,9,32,13,8,145,20,144,19,45,36,46,35,33,34,37,38,39,
+			40,17,18,91,112,113,114,115,116,117,118,119,120,121,122,123
+		];
+		if (special_keys.indexOf(keyCode) == -1) return false;
+		return true;
   }
 });
 Alice.Application = Class.create({
@@ -7521,7 +7530,7 @@ Alice.Window = Class.create({
       else {
         if (message.event == "topic") {
           this.messages.insert(Alice.makeLinksClickable(message.full_html));
-          this.displayTopic(message.message);
+          this.displayTopic(message.body);
         }
         else {
           this.messages.insert(this.application.applyFilters(message.full_html));
@@ -7691,8 +7700,8 @@ document.observe("dom:loaded", function () {
     topic.innerHTML = Alice.makeLinksClickable(topic.innerHTML)});
   $('config_button').observe("click", alice.toggleConfig.bind(alice));
   alice.activeWindow().input.focus()
-  window.onkeydown = function () {
-    if (!$('config') && !alice.isCtrl && !alice.isCommand && !alice.isAlt)
+  window.onkeydown = function (e) {
+    if (!$('config') && !Alice.isSpecialKey(e.which))
       alice.activeWindow().input.focus()};
   window.onresize = function () {
     alice.activeWindow().scrollToBottom()};

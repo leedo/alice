@@ -65,7 +65,7 @@ Alice.Window = Class.create({
       else {
         if (message.event == "topic") {
           this.messages.insert(Alice.makeLinksClickable(message.full_html));
-          this.displayTopic(message.message);
+          this.displayTopic(message.body);
         }
         else {
           this.messages.insert(this.application.applyFilters(message.full_html));

@@ -58,7 +58,8 @@ class Alice::IRC {
   
   method add_plugins {
     my $irc = $self->connection;
-    $irc->{connector} = POE::Component::IRC::Plugin::Connector->new();
+    $irc->{connector} = POE::Component::IRC::Plugin::Connector->new(
+      delay => 20, reconnect => 10);
     $irc->plugin_add('Connector' => $irc->{connector});
     $irc->plugin_add('CTCP' => POE::Component::IRC::Plugin::CTCP->new(
       version => 'alice',
