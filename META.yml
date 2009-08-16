@@ -19,8 +19,8 @@ requires:
   POE::Component::SSLify: 0
   Template: 0
   HTML::Entities: 0
-  List::MoreUtils: 0.22
-  IRC::Formatting::HTML: 0.2
+  List::MoreUtils: 0
+  IRC::Formatting::HTML: 0.3
   DateTime: 0
   local::lib: 0
 urls:

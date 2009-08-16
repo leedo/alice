@@ -1,5 +1,6 @@
 debug: 0
 style: default
+port: 8080
 #auth:
 # username: lee
 # password: mypass  

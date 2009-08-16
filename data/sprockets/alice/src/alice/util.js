@@ -14,7 +14,7 @@ Object.extend(Alice, {
     if (!window.fluid) return;
     window.fluid.showGrowlNotification({
         title: message.chan + ": " + message.nick,
-        description: message.message, 
+        description: message.body, 
         priority: 1, 
         sticky: false,
         identifier: message.msgid
@@ -47,5 +47,5 @@ Object.extend(Alice, {
 		];
 		if (special_keys.indexOf(keyCode) == -1) return false;
 		return true;
-  }
+  },
 });
