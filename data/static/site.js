@@ -7158,7 +7158,7 @@ Object.extend(Alice, {
     if (!window.fluid) return;
     window.fluid.showGrowlNotification({
         title: message.chan + ": " + message.nick,
-        description: message.message,
+        description: message.body,
         priority: 1,
         sticky: false,
         identifier: message.msgid
@@ -7191,7 +7191,7 @@ Object.extend(Alice, {
 		];
 		if (special_keys.indexOf(keyCode) == -1) return false;
 		return true;
-  }
+  },
 });
 Alice.Application = Class.create({
   initialize: function() {
@@ -7504,7 +7504,7 @@ Alice.Window = Class.create({
     this.tab.removeClassName("leftof_active");
     if (this.tab.previous()) this.tab.previous().addClassName("leftof_active");
     this.scrollToBottom(true);
-    this.input.focus();
+    if (!Prototype.Browser.MobileSafari) this.input.focus();
   },
 
   close: function(event) {
@@ -7696,7 +7696,6 @@ Alice.Keyboard = Class.create({
 var alice = new Alice.Application();
 
 document.observe("dom:loaded", function () {
-  setTimeout(function(){window.scrollTo(0,1)}, 5000);
   $$("div.topic").each(function (topic){
     topic.innerHTML = Alice.makeLinksClickable(topic.innerHTML)});
   $('config_button').observe("click", alice.toggleConfig.bind(alice));
@@ -7712,4 +7711,7 @@ document.observe("dom:loaded", function () {
     alice.isFocused = true};
   window.onblur = function () {alice.isFocused = false};
   Alice.makeSortable();
+  if (Prototype.Browser.MobileSafari) {
+    setTimeout(function(){window.scrollTo(0,1)}, 5000);
+  }
 });

@@ -39,7 +39,7 @@ Alice.Window = Class.create({
     this.tab.removeClassName("leftof_active");
     if (this.tab.previous()) this.tab.previous().addClassName("leftof_active");
     this.scrollToBottom(true);
-    this.input.focus();
+    if (!Prototype.Browser.MobileSafari) this.input.focus();
   },
   
   close: function(event) {
