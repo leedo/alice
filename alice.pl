@@ -4,6 +4,7 @@ use strict;
 use warnings;
 
 use FindBin;
+use Carp::Always;
 use lib "$FindBin::Bin/lib";
 use lib "$FindBin::Bin/extlib/lib/perl5";
 use local::lib "$FindBin::Bin/extlib";

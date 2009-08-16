@@ -11,6 +11,7 @@ requires:
   JSON: 0
   Moose: 0
   Encode: 0
+  Carp::Always: 0
   MooseX::Declare: 0
   MooseX::ClassAttribute: 0
   MooseX::POE: 0
