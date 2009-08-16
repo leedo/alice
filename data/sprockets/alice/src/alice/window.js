@@ -8,44 +8,16 @@ Alice.Window = Class.create({
     this.active = active;
     
     this.tab = $(this.id + "_tab");
-    this.input = $(this.id + "_msg");
+    this.input = new Alice.Input(this, this.id + "_msg");
     this.tabButton = $(this.id + "_tab_button");
     this.form = $(this.id + "_form");
     this.topic = $(this.id + "_topic");
     this.messages = $(this.id + "_messages");
     this.lastNick = "";
     
-    this.msgHistory = [""];
-    this.currentMsg = 0;
-    
-    this.form.observe("submit", this.sayMessage.bind(this));
     this.tab.observe("mousedown", this.focus.bind(this));
     this.tabButton.observe("click", function(e) { this.close() && e.stop() }.bind(this));
     this.tabButton.observe("mousedown", function(e) { e.stop() });
-  },
-  
-  nextMessage: function() {
-    if (this.msgHistory.length <= 1) return;
-    this.currentMsg++;
-    if (this.currentMsg >= this.msgHistory.length)
-      this.currentMsg = 0;
-    this.input.value = this.msgHistory[this.currentMsg];
-  },
-  
-  previousMessage: function() {
-    if (this.msgHistory.length <= 1) return;
-    this.currentMsg--;
-    if (this.currentMsg < 0)
-      this.currentMsg = this.msgHistory.length - 1;
-    this.input.value = this.msgHistory[this.currentMsg];
-  },
-  
-  sayMessage: function(event) {
-    this.application.connection.sendMessage(this.form);
-    this.currentMsg = 0;
-    this.msgHistory.push(this.input.value);
-    this.input.value = '';
-    event.stop();
   },
   
   unFocus: function() {

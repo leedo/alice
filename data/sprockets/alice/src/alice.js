@@ -1,13 +1,16 @@
 //= require <prototype>
 //= require <effects>
 //= require <dragdrop>
+//= require <shortcut>
 
 var Alice = { };
 
 //= require <alice/util>
 //= require <alice/application>
-//= require <alice/window>
 //= require <alice/connection>
+//= require <alice/window>
+//= require <alice/input>
+//= require <alice/keyboard>
 
 var alice = new Alice.Application();
 
@@ -17,7 +20,7 @@ document.observe("dom:loaded", function () {
   $('config_button').observe("click", alice.toggleConfig.bind(alice));
   alice.activeWindow().input.focus()
   window.onkeydown = function () {
-    if (! $('config') && ! alice.isCtrl && ! alice.isCommand && ! alice.isAlt)
+    if (!$('config') && !alice.isCtrl && !alice.isCommand && !alice.isAlt)
       alice.activeWindow().input.focus()};
   window.onresize = function () {
     alice.activeWindow().scrollToBottom()};

@@ -6927,20 +6927,231 @@ Element.findChildren = function(element, only, recursive, tagName) {
 Element.offsetSize = function (element, type) {
   return element['offset' + ((type=='vertical' || type=='height') ? 'Height' : 'Width')];
 };
+/**
+ * http://www.openjs.com/scripts/events/keyboard_shortcuts/
+ * Version : 2.01.B
+ * By Binny V A
+ * License : BSD
+ */
+shortcut = {
+	'all_shortcuts':{},//All the shortcuts are stored in this array
+	'add': function(shortcut_combination,callback,opt) {
+		var default_options = {
+			'type':'keydown',
+			'propagate':false,
+			'disable_in_input':false,
+			'target':document,
+			'keycode':false
+		}
+		if(!opt) opt = default_options;
+		else {
+			for(var dfo in default_options) {
+				if(typeof opt[dfo] == 'undefined') opt[dfo] = default_options[dfo];
+			}
+		}
+
+		var ele = opt.target;
+		if(typeof opt.target == 'string') ele = document.getElementById(opt.target);
+		var ths = this;
+		shortcut_combination = shortcut_combination.toLowerCase();
+
+		var func = function(e) {
+			e = e || window.event;
+
+			if(opt['disable_in_input']) { //Don't enable shortcut keys in Input, Textarea fields
+				var element;
+				if(e.target) element=e.target;
+				else if(e.srcElement) element=e.srcElement;
+				if(element.nodeType==3) element=element.parentNode;
+
+				if(element.tagName == 'INPUT' || element.tagName == 'TEXTAREA') return;
+			}
+
+			if (e.keyCode) code = e.keyCode;
+			else if (e.which) code = e.which;
+			var character = String.fromCharCode(code).toLowerCase();
+
+			if(code == 188) character=","; //If the user presses , when the type is onkeydown
+			if(code == 190) character="."; //If the user presses , when the type is onkeydown
+
+			var keys = shortcut_combination.split("+");
+			var kp = 0;
+
+			var shift_nums = {
+				"`":"~",
+				"1":"!",
+				"2":"@",
+				"3":"#",
+				"4":"$",
+				"5":"%",
+				"6":"^",
+				"7":"&",
+				"8":"*",
+				"9":"(",
+				"0":")",
+				"-":"_",
+				"=":"+",
+				";":":",
+				"'":"\"",
+				",":"<",
+				".":">",
+				"/":"?",
+				"\\":"|"
+			}
+			var special_keys = {
+				'esc':27,
+				'escape':27,
+				'tab':9,
+				'space':32,
+				'return':13,
+				'enter':13,
+				'backspace':8,
+
+				'scrolllock':145,
+				'scroll_lock':145,
+				'scroll':145,
+				'capslock':20,
+				'caps_lock':20,
+				'caps':20,
+				'numlock':144,
+				'num_lock':144,
+				'num':144,
+
+				'pause':19,
+				'break':19,
+
+				'insert':45,
+				'home':36,
+				'delete':46,
+				'end':35,
+
+				'pageup':33,
+				'page_up':33,
+				'pu':33,
+
+				'pagedown':34,
+				'page_down':34,
+				'pd':34,
+
+				'left':37,
+				'up':38,
+				'right':39,
+				'down':40,
+
+				'f1':112,
+				'f2':113,
+				'f3':114,
+				'f4':115,
+				'f5':116,
+				'f6':117,
+				'f7':118,
+				'f8':119,
+				'f9':120,
+				'f10':121,
+				'f11':122,
+				'f12':123
+			}
+
+			var modifiers = {
+				shift: { wanted:false, pressed:false},
+				ctrl : { wanted:false, pressed:false},
+				alt  : { wanted:false, pressed:false},
+				meta : { wanted:false, pressed:false}	//Meta is Mac specific
+			};
+
+			if(e.ctrlKey)	modifiers.ctrl.pressed = true;
+			if(e.shiftKey)	modifiers.shift.pressed = true;
+			if(e.altKey)	modifiers.alt.pressed = true;
+			if(e.metaKey)   modifiers.meta.pressed = true;
+
+			for(var i=0; k=keys[i],i<keys.length; i++) {
+				if(k == 'ctrl' || k == 'control') {
+					kp++;
+					modifiers.ctrl.wanted = true;
+
+				} else if(k == 'shift') {
+					kp++;
+					modifiers.shift.wanted = true;
+
+				} else if(k == 'alt') {
+					kp++;
+					modifiers.alt.wanted = true;
+				} else if(k == 'meta') {
+					kp++;
+					modifiers.meta.wanted = true;
+				} else if(k.length > 1) { //If it is a special key
+					if(special_keys[k] == code) kp++;
+
+				} else if(opt['keycode']) {
+					if(opt['keycode'] == code) kp++;
+
+				} else { //The special keys did not match
+					if(character == k) kp++;
+					else {
+						if(shift_nums[character] && e.shiftKey) { //Stupid Shift key bug created by using lowercase
+							character = shift_nums[character];
+							if(character == k) kp++;
+						}
+					}
+				}
+			}
+
+			if(kp == keys.length &&
+						modifiers.ctrl.pressed == modifiers.ctrl.wanted &&
+						modifiers.shift.pressed == modifiers.shift.wanted &&
+						modifiers.alt.pressed == modifiers.alt.wanted &&
+						modifiers.meta.pressed == modifiers.meta.wanted) {
+				callback(e);
+
+				if(!opt['propagate']) { //Stop the event
+					e.cancelBubble = true;
+					e.returnValue = false;
+
+					if (e.stopPropagation) {
+						e.stopPropagation();
+						e.preventDefault();
+					}
+					return false;
+				}
+			}
+		}
+		this.all_shortcuts[shortcut_combination] = {
+			'callback':func,
+			'target':ele,
+			'event': opt['type']
+		};
+		if(ele.addEventListener) ele.addEventListener(opt['type'], func, false);
+		else if(ele.attachEvent) ele.attachEvent('on'+opt['type'], func);
+		else ele['on'+opt['type']] = func;
+	},
+
+	'remove':function(shortcut_combination) {
+		shortcut_combination = shortcut_combination.toLowerCase();
+		var binding = this.all_shortcuts[shortcut_combination];
+		delete(this.all_shortcuts[shortcut_combination])
+		if(!binding) return;
+		var type = binding['event'];
+		var ele = binding['target'];
+		var callback = binding['callback'];
+
+		if(ele.detachEvent) ele.detachEvent('on'+type, callback);
+		else if(ele.removeEventListener) ele.removeEventListener(type, callback, false);
+		else ele['on'+type] = false;
+	}
+};
 
 var Alice = { };
 
 Object.extend(Alice, {
-  makeLinksClickable: function (content) {
-    var filtered = content;
-    filtered = filtered.replace(
+  makeLinksClickable: function(content) {
+    return content.replace(
       /(https?\:\/\/[\w\d$\-_.+!*'(),%\/?=&;~#:@]*)/gi,
-      "<a href=\"$1\">$1</a>");
-    return filtered;
+      "<a href=\"$1\">$1</a>"
+    );
   },
 
   stripNick: function(html) {
-    return html.replace(/<div class="left">.*<\/div>/,'');
+    return html.replace(/<div class="left">.*<\/div>/, '');
   },
 
   growlNotify: function(message) {
@@ -6975,17 +7186,13 @@ Object.extend(Alice, {
 });
 Alice.Application = Class.create({
   initialize: function() {
-    this.isCtrl = false;
-    this.isCommand = false;
-    this.isAlt = false;
     this.isFocused = true;
     this.windows = new Hash();
     this.previousFocus = 0;
     this.connection = new Alice.Connection(this);
     this.filters = [ Alice.makeLinksClickable ];
     this.monospaceNicks = ['Shaniqua', 'root', 'p6eval'];
-    document.onkeyup = this.onKeyUp.bind(this);
-    document.onkeydown = this.onKeyDown.bind(this);
+    this.keyboard = new Alice.Keyboard(this);
     setTimeout(this.connection.connect.bind(this.connection), 1000);
   },
 
@@ -7039,41 +7246,6 @@ Alice.Application = Class.create({
       if (windows[i].active) return windows[i];
     }
     if (windows[0]) return windows[0];
-  },
-
-  onKeyUp: function(e) {
-    if (e.which != 75 && e.which != 78 && e.which != 80) {
-      this.isCtrl = false;
-      this.isCommand = false;
-      this.isAlt = false;
-    }
-  },
-
-  onKeyDown: function(e) {
-    if (e.which == 17)
-      this.isCtrl = true;
-    else if (e.which == 91)
-      this.isCommand = true;
-    else if (e.which == 18)
-      this.isAlt = true;
-    else if (this.isCtrl && e.which == 75) {
-      this.activeWindow().messages.innerHTML = '';
-      return false;
-    }
-    else if (this.isCtrl && e.which == 78) {
-      this.nextWindow();
-      return false;
-    }
-    else if (this.isCtrl && e.which == 80) {
-      this.previousWindow();
-      return false;
-    }
-    else if (e.which == Event.KEY_UP) {
-      this.activeWindow().previousMessage();
-    }
-    else if (e.which == Event.KEY_DOWN) {
-      this.activeWindow().nextMessage();
-    }
   },
 
   addFilters: function(list) {
@@ -7156,138 +7328,6 @@ Alice.Application = Class.create({
 
   messagesAreMonospacedFor: function(nick) {
     return this.monospaceNicks.indexOf(nick) > -1;
-  }
-});
-Alice.Window = Class.create({
-  initialize: function(application, element, title, active) {
-    this.application = application;
-
-    this.element = $(element);
-    this.title = title;
-    this.id = this.element.identify();
-    this.active = active;
-
-    this.tab = $(this.id + "_tab");
-    this.input = $(this.id + "_msg");
-    this.tabButton = $(this.id + "_tab_button");
-    this.form = $(this.id + "_form");
-    this.topic = $(this.id + "_topic");
-    this.messages = $(this.id + "_messages");
-    this.lastNick = "";
-
-    this.msgHistory = [""];
-    this.currentMsg = 0;
-
-    this.form.observe("submit", this.sayMessage.bind(this));
-    this.tab.observe("mousedown", this.focus.bind(this));
-    this.tabButton.observe("click", function(e) { this.close() && e.stop() }.bind(this));
-    this.tabButton.observe("mousedown", function(e) { e.stop() });
-  },
-
-  nextMessage: function() {
-    if (this.msgHistory.length <= 1) return;
-    this.currentMsg++;
-    if (this.currentMsg >= this.msgHistory.length)
-      this.currentMsg = 0;
-    this.input.value = this.msgHistory[this.currentMsg];
-  },
-
-  previousMessage: function() {
-    if (this.msgHistory.length <= 1) return;
-    this.currentMsg--;
-    if (this.currentMsg < 0)
-      this.currentMsg = this.msgHistory.length - 1;
-    this.input.value = this.msgHistory[this.currentMsg];
-  },
-
-  sayMessage: function(event) {
-    this.application.connection.sendMessage(this.form);
-    this.currentMsg = 0;
-    this.msgHistory.push(this.input.value);
-    this.input.value = '';
-    event.stop();
-  },
-
-  unFocus: function() {
-    this.active = false;
-    this.application.previousFocus = this;
-    this.element.removeClassName('active');
-    this.tab.removeClassName('active');
-    if (this.tab.previous()) this.tab.previous().removeClassName("leftof_active");
-  },
-
-  focus: function(event) {
-    document.title = this.title;
-    if (this.application.activeWindow()) this.application.activeWindow().unFocus();
-    this.active = true;
-    this.tab.addClassName('active');
-    this.element.addClassName('active');
-    this.tab.removeClassName("unread");
-    this.tab.removeClassName("highlight");
-    this.tab.removeClassName("leftof_active");
-    if (this.tab.previous()) this.tab.previous().addClassName("leftof_active");
-    this.scrollToBottom(true);
-    this.input.focus();
-  },
-
-  close: function(event) {
-    this.application.removeWindow(this);
-    this.tab.remove();
-    this.element.remove();
-  },
-
-  displayTopic: function(topic) {
-    this.topic.update(Alice.makeLinksClickable(topic));
-  },
-
-  addMessage: function(message) {
-    if (message.html || message.full_html) {
-      if (message.nick && message.nick == this.lastNick) {
-        if (this.application.messagesAreMonospacedFor(message.nick))
-          this.messages.down('li:last-child div.msg').insert(
-            "<br>" + this.application.applyFilters(message.html));
-        else if (message.event == "say")
-          this.messages.insert(
-            Alice.stripNick(this.application.applyFilters(message.full_html)));
-      }
-      else {
-        if (message.event == "topic") {
-          this.messages.insert(Alice.makeLinksClickable(message.full_html));
-          this.displayTopic(message.message);
-        }
-        else {
-          this.messages.insert(this.application.applyFilters(message.full_html));
-          this.lastNick = "";
-          if (message.event == "say" && message.nick)
-            this.lastNick = message.nick;
-        }
-      }
-
-      if (!this.application.isFocused && message.highlight)
-        Alice.growlNotify(message);
-
-      if (this.element.hasClassName('active'))
-        this.scrollToBottom();
-      else if (message.event == "say" && message.highlight)
-        this.tab.addClassName("highlight");
-      else if (message.event == "say")
-        this.tab.addClassName("unread");
-    }
-
-    var messages = this.messages.childElements();
-    if (messages.length > 250) messages.first().remove();
-  },
-
-  scrollToBottom: function(force) {
-    if (!force) {
-      var lastmsg = this.messages.childElements().last();
-      if (!lastmsg) return;
-      var msgheight = lastmsg.offsetHeight;
-      var bottom = this.element.scrollTop + this.element.offsetHeight;
-      var height = this.element.scrollHeight;
-    }
-    if (force || bottom + msgheight + 100 >= height)
-      this.element.scrollTop = this.element.scrollHeight;
   }
 });
 Alice.Connection = Class.create({
@@ -7414,6 +7454,235 @@ Alice.Connection = Class.create({
     new Ajax.Request('/ping');
   }
 });
+Alice.Window = Class.create({
+  initialize: function(application, element, title, active) {
+    this.application = application;
+
+    this.element = $(element);
+    this.title = title;
+    this.id = this.element.identify();
+    this.active = active;
+
+    this.tab = $(this.id + "_tab");
+    this.input = new Alice.Input(this, this.id + "_msg");
+    this.tabButton = $(this.id + "_tab_button");
+    this.form = $(this.id + "_form");
+    this.topic = $(this.id + "_topic");
+    this.messages = $(this.id + "_messages");
+    this.lastNick = "";
+
+    this.tab.observe("mousedown", this.focus.bind(this));
+    this.tabButton.observe("click", function(e) { this.close() && e.stop() }.bind(this));
+    this.tabButton.observe("mousedown", function(e) { e.stop() });
+  },
+
+  unFocus: function() {
+    this.active = false;
+    this.application.previousFocus = this;
+    this.element.removeClassName('active');
+    this.tab.removeClassName('active');
+    if (this.tab.previous()) this.tab.previous().removeClassName("leftof_active");
+  },
+
+  focus: function(event) {
+    document.title = this.title;
+    if (this.application.activeWindow()) this.application.activeWindow().unFocus();
+    this.active = true;
+    this.tab.addClassName('active');
+    this.element.addClassName('active');
+    this.tab.removeClassName("unread");
+    this.tab.removeClassName("highlight");
+    this.tab.removeClassName("leftof_active");
+    if (this.tab.previous()) this.tab.previous().addClassName("leftof_active");
+    this.scrollToBottom(true);
+    this.input.focus();
+  },
+
+  close: function(event) {
+    this.application.removeWindow(this);
+    this.tab.remove();
+    this.element.remove();
+  },
+
+  displayTopic: function(topic) {
+    this.topic.update(Alice.makeLinksClickable(topic));
+  },
+
+  addMessage: function(message) {
+    if (message.html || message.full_html) {
+      if (message.nick && message.nick == this.lastNick) {
+        if (this.application.messagesAreMonospacedFor(message.nick))
+          this.messages.down('li:last-child div.msg').insert(
+            "<br>" + this.application.applyFilters(message.html));
+        else if (message.event == "say")
+          this.messages.insert(
+            Alice.stripNick(this.application.applyFilters(message.full_html)));
+      }
+      else {
+        if (message.event == "topic") {
+          this.messages.insert(Alice.makeLinksClickable(message.full_html));
+          this.displayTopic(message.message);
+        }
+        else {
+          this.messages.insert(this.application.applyFilters(message.full_html));
+          this.lastNick = "";
+          if (message.event == "say" && message.nick)
+            this.lastNick = message.nick;
+        }
+      }
+
+      if (!this.application.isFocused && message.highlight)
+        Alice.growlNotify(message);
+
+      if (this.element.hasClassName('active'))
+        this.scrollToBottom();
+      else if (message.event == "say" && message.highlight)
+        this.tab.addClassName("highlight");
+      else if (message.event == "say")
+        this.tab.addClassName("unread");
+    }
+
+    var messages = this.messages.childElements();
+    if (messages.length > 250) messages.first().remove();
+  },
+
+  scrollToBottom: function(force) {
+    if (!force) {
+      var lastmsg = this.messages.childElements().last();
+      if (!lastmsg) return;
+      var msgheight = lastmsg.offsetHeight;
+      var bottom = this.element.scrollTop + this.element.offsetHeight;
+      var height = this.element.scrollHeight;
+    }
+    if (force || bottom + msgheight + 100 >= height)
+      this.element.scrollTop = this.element.scrollHeight;
+  }
+});
+Alice.Input = Class.create({
+  initialize: function(win, element) {
+    this.window = win;
+    this.application = this.window.application;
+    this.element = $(element);
+    this.history = [];
+    this.index = -1;
+    this.buffer = "";
+  },
+
+  focus: function() {
+    this.element.focus();
+  },
+
+  previousCommand: function() {
+    if (this.index-- == -1) {
+      this.index = this.history.length - 1;
+      this.stash();
+    }
+
+    this.update();
+  },
+
+  nextCommand: function() {
+    if (this.index++ == -1) {
+      this.stash();
+    } else if (this.index == this.history.length) {
+      this.index = -1;
+    }
+
+    this.update();
+  },
+
+  newLine: function() {
+    console.log("newLine");
+  },
+
+  send: function() {
+    this.application.connection.sendMessage(this.element.form);
+    this.history.push(this.element.getValue());
+    this.element.setValue("");
+    this.index = -1;
+    this.stash();
+    this.update();
+  },
+
+  stash: function() {
+    this.buffer = this.element.getValue();
+  },
+
+  update: function() {
+    this.element.setValue(this.getCommand(this.index));
+  },
+
+  getCommand: function(index) {
+    if (index == -1) {
+      return this.buffer;
+    } else {
+      return this.history[index];
+    }
+  }
+});
+Alice.Keyboard = Class.create({
+  initialize: function(application) {
+    this.application = application;
+    this.enable();
+
+    this.shortcut("Cmd+K");
+    this.shortcut("Cmd+B");
+    this.shortcut("Cmd+F");
+    this.shortcut("Opt+Up");
+    this.shortcut("Opt+Down");
+    this.shortcut("Opt+Enter");
+    this.shortcut("Enter");
+  },
+
+  shortcut: function(name) {
+    var keystroke = name.replace("Cmd", "Meta").replace("Opt", "Alt"),
+        method = "on" + name.replace("+", "");
+
+    window.shortcut.add(keystroke, function() {
+      if (this.enabled) {
+        this.activeWindow = this.application.activeWindow();
+        this[method].call(this);
+        delete this.activeWindow;
+      }
+    }.bind(this));
+  },
+
+  onCmdK: function() {
+    this.activeWindow.messages.update("");
+  },
+
+  onCmdB: function() {
+    this.application.previousWindow();
+  },
+
+  onCmdF: function() {
+    this.application.nextWindow();
+  },
+
+  onOptUp: function() {
+    this.activeWindow.input.previousCommand();
+  },
+
+  onOptDown: function() {
+    this.activeWindow.input.nextCommand();
+  },
+
+  onOptEnter: function() {
+    this.activeWindow.input.newLine();
+  },
+
+  onEnter: function() {
+    this.activeWindow.input.send();
+  },
+
+  enable: function() {
+    this.enabled = true;
+  },
+
+  disable: function() {
+    this.enabled = false;
+  }
+});
 
 var alice = new Alice.Application();
 
@@ -7423,7 +7692,7 @@ document.observe("dom:loaded", function () {
   $('config_button').observe("click", alice.toggleConfig.bind(alice));
   alice.activeWindow().input.focus()
   window.onkeydown = function () {
-    if (! $('config') && ! alice.isCtrl && ! alice.isCommand && ! alice.isAlt)
+    if (!$('config') && !alice.isCtrl && !alice.isCommand && !alice.isAlt)
       alice.activeWindow().input.focus()};
   window.onresize = function () {
     alice.activeWindow().scrollToBottom()};

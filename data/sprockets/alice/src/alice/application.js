@@ -1,16 +1,12 @@
 Alice.Application = Class.create({
   initialize: function() {
-    this.isCtrl = false;
-    this.isCommand = false;
-    this.isAlt = false;
     this.isFocused = true;
     this.windows = new Hash();
     this.previousFocus = 0;
     this.connection = new Alice.Connection(this);
     this.filters = [ Alice.makeLinksClickable ];
     this.monospaceNicks = ['Shaniqua', 'root', 'p6eval'];
-    document.onkeyup = this.onKeyUp.bind(this);
-    document.onkeydown = this.onKeyDown.bind(this);
+    this.keyboard = new Alice.Keyboard(this);
     setTimeout(this.connection.connect.bind(this.connection), 1000);
   },
   
@@ -64,41 +60,6 @@ Alice.Application = Class.create({
       if (windows[i].active) return windows[i];
     }
     if (windows[0]) return windows[0];
-  },
-  
-  onKeyUp: function(e) {
-    if (e.which != 75 && e.which != 78 && e.which != 80) {
-      this.isCtrl = false;
-      this.isCommand = false;
-      this.isAlt = false; 
-    }
-  },
-  
-  onKeyDown: function(e) {
-    if (e.which == 17)
-      this.isCtrl = true;
-    else if (e.which == 91)
-      this.isCommand = true;
-    else if (e.which == 18)
-      this.isAlt = true;
-    else if (this.isCtrl && e.which == 75) {
-      this.activeWindow().messages.innerHTML = '';
-      return false;
-    }
-    else if (this.isCtrl && e.which == 78) {
-      this.nextWindow();
-      return false;
-    }
-    else if (this.isCtrl && e.which == 80) {
-      this.previousWindow();
-      return false;
-    }
-    else if (e.which == Event.KEY_UP) {
-      this.activeWindow().previousMessage();
-    }
-    else if (e.which == Event.KEY_DOWN) {
-      this.activeWindow().nextMessage();
-    }
   },
   
   addFilters: function(list) {

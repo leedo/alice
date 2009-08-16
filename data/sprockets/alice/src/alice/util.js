@@ -1,14 +1,13 @@
 Object.extend(Alice, {
-  makeLinksClickable: function (content) {
-    var filtered = content;
-    filtered = filtered.replace(
+  makeLinksClickable: function(content) {
+    return content.replace(
       /(https?\:\/\/[\w\d$\-_.+!*'(),%\/?=&;~#:@]*)/gi,
-      "<a href=\"$1\">$1</a>");
-    return filtered;
+      "<a href=\"$1\">$1</a>"
+    );
   },
   
   stripNick: function(html) {
-    return html.replace(/<div class="left">.*<\/div>/,'');
+    return html.replace(/<div class="left">.*<\/div>/, '');
   },
 
   growlNotify: function(message) {
