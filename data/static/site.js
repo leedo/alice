@@ -7270,8 +7270,8 @@ Alice.Application = Class.create({
   focusLast: function() {
     if (this.previousFocus)
       this.previousFocus.focus();
-    else if (this.windows.values().length)
-      this.windows.values().first().focus();
+    else
+      this.nextWindow();
   },
 
   previousWindow: function() {

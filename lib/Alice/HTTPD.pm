@@ -178,7 +178,9 @@ class Alice::HTTPD {
     my $source = $req->uri->query_param('source');
     my $window = $self->app->window_map->{$source};
     return unless $window;
-    $self->app->dispatch($msg, $window) if length $msg;
+    for (split /\n/, $msg) {
+      $self->app->dispatch($_, $window) if length $_;
+    }
     return 200;
   }
 
