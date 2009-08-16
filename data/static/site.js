@@ -7478,8 +7478,10 @@ Alice.Window = Class.create({
     this.form = $(this.id + "_form");
     this.topic = $(this.id + "_topic");
     this.messages = $(this.id + "_messages");
+    this.submit = $(this.id + "_submit");
     this.lastNick = "";
 
+    this.submit.observe("click", function (e) {this.input.send(); e.stop()}.bind(this));
     this.tab.observe("mousedown", this.focus.bind(this));
     this.tabButton.observe("click", function(e) { this.close() && e.stop() }.bind(this));
     this.tabButton.observe("mousedown", function(e) { e.stop() });
@@ -7713,5 +7715,7 @@ document.observe("dom:loaded", function () {
   Alice.makeSortable();
   if (Prototype.Browser.MobileSafari) {
     setTimeout(function(){window.scrollTo(0,1)}, 5000);
+    $$('button').invoke('setStyle',
+      {display:'block',position:'absolute',right:'0px'});
   }
 });

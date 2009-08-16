@@ -32,5 +32,7 @@ document.observe("dom:loaded", function () {
   Alice.makeSortable();
   if (Prototype.Browser.MobileSafari) {
     setTimeout(function(){window.scrollTo(0,1)}, 5000);
+    $$('button').invoke('setStyle',
+      {display:'block',position:'absolute',right:'0px'});
   }
 });

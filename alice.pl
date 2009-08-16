@@ -10,7 +10,7 @@ use local::lib "$FindBin::Bin/extlib";
 use YAML qw/LoadFile/;
 use Alice;
 
-$0 = 'Alice';
+$0 = "Alice\0";
 
 my $config = {
   port  => 8080,

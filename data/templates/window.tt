@@ -8,6 +8,7 @@
     <div id="[% window.id %]_autocomplete_choices" class="autocomplete"></div>
     <form id="[% window.id %]_form" autocomplete="off">
       <input type="hidden" name="source" value="[% window.id %]" />
+      <button type="submit" style="display:none" id="[% window.id %]_submit">Send</button>
       <textarea name="msg" id="[% window.id %]_msg"></textarea>
     </form>
     <script type="text/javascript">
