@@ -7591,11 +7591,8 @@ Alice.Input = Class.create({
   },
 
   onKeyPress: function(event) {
-    if (!this.justCompleted && this.completion) {
+    if (event.keyCode != Event.KEY_TAB) {
       this.completion = false;
-    } else if (this.justCompleted) {
-      this.justCompleted = false;
-      event.stop();
     }
   },
 
@@ -7641,14 +7638,12 @@ Alice.Input = Class.create({
     }
 
     this.completion.next();
-    this.justCompleted = true;
   },
 
   stopCompletion: function() {
     if (this.completion) {
       this.completion.restore();
       this.completion = false;
-      this.justCompleted = true;
     }
   },
 
