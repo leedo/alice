@@ -45,3 +45,7 @@ div.input {
   position: fixed;
   bottom: -36px;
 }
+
+div.msg.monospace, div.msg.announce {
+  line-height: 11px;
+}

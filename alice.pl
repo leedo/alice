@@ -7,10 +7,11 @@ use FindBin;
 use lib "$FindBin::Bin/lib";
 use lib "$FindBin::Bin/extlib/lib/perl5";
 use local::lib "$FindBin::Bin/extlib";
+use Carp::Always;
 use YAML qw/LoadFile/;
 use Alice;
 
-$0 = 'Alice';
+$0 = "Alice\0";
 
 my $config = {
   port  => 8080,

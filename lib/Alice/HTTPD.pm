@@ -179,7 +179,8 @@ class Alice::HTTPD {
     my $window = $self->app->window_map->{$source};
     return unless $window;
     for (split /\n/, $msg) {
-      $self->app->dispatch($_, $window) if length $_;
+      eval {$self->app->dispatch($_, $window) if length $_};
+      if ($@) {$self->log_debug($@)}
     }
     return 200;
   }

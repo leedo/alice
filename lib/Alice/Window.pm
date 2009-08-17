@@ -146,6 +146,7 @@ class Alice::Window {
       body      => $body,
       msgid     => $self->nextmsgid,
       timestamp => $self->timestamp,
+      nicks     => [$self->nicks],
     };
 
     my $html = '';

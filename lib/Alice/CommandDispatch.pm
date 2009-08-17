@@ -69,8 +69,12 @@ class Alice::CommandDispatch {
   }
 
   method close (Alice::Window $window, $?) {
-    $window->part if $window->is_channel;
-    $self->app->close_window($window);
+    if ($window->is_channel) {
+      $window->part;
+    }
+    else {
+      $self->app->close_window($window);
+    }
   }
 
   method create (Alice::Window $window, Str $arg) {
