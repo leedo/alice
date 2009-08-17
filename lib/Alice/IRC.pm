@@ -76,7 +76,7 @@ class Alice::IRC {
     return $window;
   }
 
-  event irc_connected => sub {
+  event irc_001 => sub {
     my $self = shift;
     $self->log_info("connected to " . $self->alias);
     for (@{$self->config->{on_connect}}) {
@@ -87,6 +87,16 @@ class Alice::IRC {
       $self->log_debug("joining $_");
       $self->connection->yield( join => $_ );
     }
+  };
+  
+  event irc_366 => sub {
+    my ($self, $server, $msg, $msglist) = @_;
+    my $window = $self->window($msglist->[0]);
+    return unless $window;
+    my $topic = $window->topic;
+    $self->app->send(
+      $window->render_event("topic", $topic->{SetBy} || "", $topic->{Value} || "")
+    );
   };
 
   event irc_disconnected => sub {
@@ -134,16 +144,6 @@ class Alice::IRC {
     else {
       $self->app->create_window($where, $self->connection);
     }
-  };
-
-  event irc_chan_sync => sub {
-    my ($self, $channel) = @_;
-    my $window = $self->window($channel);
-    return unless $window;
-    my $topic = $window->topic;
-    $self->app->send(
-      $window->render_event("topic", $topic->{SetBy} || "", $topic->{Value} || "")
-    );
   };
 
   event irc_part => sub {
