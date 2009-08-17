@@ -141,11 +141,9 @@ class Alice::IRC {
     my $window = $self->window($channel);
     return unless $window;
     my $topic = $window->topic;
-    if ($topic->{Value} and $topic->{SetBy}) {
-      $self->app->send(
-        $window->render_event("topic", $topic->{SetBy}, $topic->{Value})
-      );
-    }
+    $self->app->send(
+      $window->render_event("topic", $topic->{SetBy} || "", $topic->{Value} || "")
+    );
   };
 
   event irc_part => sub {

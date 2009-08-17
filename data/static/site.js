@@ -7480,6 +7480,7 @@ Alice.Window = Class.create({
     this.messages = $(this.id + "_messages");
     this.submit = $(this.id + "_submit");
     this.lastNick = "";
+    this.nicks = [];
 
     this.submit.observe("click", function (e) {this.input.send(); e.stop()}.bind(this));
     this.tab.observe("mousedown", this.focus.bind(this));
@@ -7545,6 +7546,9 @@ Alice.Window = Class.create({
       if (!this.application.isFocused && message.highlight)
         Alice.growlNotify(message);
 
+      if (message.nicks)
+        this.nicks = message.nicks;
+
       if (this.element.hasClassName('active'))
         this.scrollToBottom();
       else if (message.event == "say" && message.highlight)
@@ -7570,7 +7574,7 @@ Alice.Window = Class.create({
   },
 
   getNicknames: function() {
-    return $w("foo bar baz");
+     return this.nicks;
   }
 });
 Alice.Input = Class.create({
