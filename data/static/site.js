@@ -7786,7 +7786,9 @@ Alice.Completion = Class.create({
   },
 
   matchAgainst: function(candidates) {
-    return candidates.grep(new RegExp("^" + RegExp.escape(this.stem), "i")).sort();
+    return candidates.grep(new RegExp("^" + RegExp.escape(this.stem), "i")).sortBy(function(candidate) {
+      return candidate.toLowerCase();
+    });
   }
 });
 
