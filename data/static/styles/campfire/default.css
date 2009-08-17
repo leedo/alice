@@ -23,27 +23,29 @@ div.window table {
 }
 
 tr.input td {
-  height: 12px;
-  border-bottom: 2px solid #efefef;
+  height: 20px;
   background: #efefef;
 }
 
 tr.vert_dragger td {
-  height: 6px;
+  height: 5px;
   background 
   background: #efefef;
   border-top: 1px solid #aaa;
+  cursor: n-resize;
 }
 
 tr.input textarea {
   width: 100%;
-  padding: 3px 0 3px 3px;
+  padding: 3px 0;
   border: none;
   height: 14px;
   border-top: 1px solid #aaa;
   margin: 0;
   outline: 0 none;
   font-size: 12px;
+  overflow: hidden;
+  resize: none;
 }
 
 ul#tabs {
