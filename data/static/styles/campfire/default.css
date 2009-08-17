@@ -11,30 +11,35 @@ a:hover {
 
 div.window {
   position:fixed;
-  bottom: 54px;
-  top: 17px;
+  top: 0px;
+  bottom: 23px;
   width: 100%;
-  overflow-y: auto;
-  overflow-x: none;
 }
 
-div.input {
-  position: fixed;
-  bottom: 25px;
-  left: 0px;
-  height: 20px;
+div.window table {
   width: 100%;
-  padding-top: 6px;
+  height: 100%;
+  padding: 0;
+}
+
+tr.input td {
+  height: 12px;
   border-bottom: 2px solid #efefef;
+  background: #efefef;
+}
+
+tr.vert_dragger td {
+  height: 6px;
+  background 
   background: #efefef;
   border-top: 1px solid #aaa;
 }
 
-div.input textarea {
+tr.input textarea {
   width: 100%;
-  height: 100%;
   padding: 3px 0 3px 3px;
   border: none;
+  height: 14px;
   border-top: 1px solid #aaa;
   margin: 0;
   outline: 0 none;
@@ -123,10 +128,7 @@ ul#controls li:hover {
   background: #ccc;
 }
 
-div.topic {
-  position: fixed;
-  top: 0px;
-  left: 0px;
+tr.topic td {
   width: 100%;
   background: #efefef;
   font-size: 11px;
@@ -138,7 +140,7 @@ div.topic {
   overflow: hidden;
 }
 
-div.topic a {
+tr.topic a {
   text-decoration: none;
 }
 
@@ -146,6 +148,10 @@ ul.messages {
   list-style: none;
   margin: 0;
   padding: 0;
+  height: 100%;
+  width: 100%;
+  overflow-x: none;
+  overflow-y: auto;
   background: #fff;
 }
 
