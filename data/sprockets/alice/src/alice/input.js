@@ -6,6 +6,18 @@ Alice.Input = Class.create({
     this.history = [];
     this.index = -1;
     this.buffer = "";
+    this.completion = false;
+    
+    this.element.observe("keypress", this.onKeyPress.bind(this));
+  },
+  
+  onKeyPress: function(event) {
+    if (!this.justCompleted && this.completion) {
+      this.completion = false;
+    } else if (this.justCompleted) {
+      this.justCompleted = false;
+      event.stop();
+    }
   },
   
   focus: function() {
@@ -44,6 +56,23 @@ Alice.Input = Class.create({
     this.update();
   },
   
+  completeNickname: function() {
+    if (!this.completion) {
+      this.completion = new Alice.Completion(this.element, this.window.getNicknames());
+    }
+
+    this.completion.next();
+    this.justCompleted = true;
+  },
+  
+  stopCompletion: function() {
+    if (this.completion) {
+      this.completion.restore();
+      this.completion = false;
+      this.justCompleted = true;
+    }
+  },
+
   stash: function() {
     this.buffer = this.element.getValue();
   },

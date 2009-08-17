@@ -10,6 +10,8 @@ Alice.Keyboard = Class.create({
     this.shortcut("Opt+Down");
     this.shortcut("Opt+Enter");
     this.shortcut("Enter");
+    this.shortcut("Esc");
+    this.shortcut("Tab");
   },
   
   shortcut: function(name) {
@@ -51,6 +53,14 @@ Alice.Keyboard = Class.create({
   
   onEnter: function() {
     this.activeWindow.input.send();
+  },
+  
+  onTab: function() {
+    this.activeWindow.input.completeNickname();
+  },
+  
+  onEsc: function() {
+    this.activeWindow.input.stopCompletion();
   },
   
   enable: function() {
