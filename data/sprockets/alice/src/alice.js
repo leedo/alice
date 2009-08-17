@@ -20,6 +20,8 @@ document.observe("dom:loaded", function () {
     topic.innerHTML = Alice.makeLinksClickable(topic.innerHTML)});
   $('config_button').observe("click", alice.toggleConfig.bind(alice));
   alice.activeWindow().input.focus()
+  setTimeout(function () {
+    if (!alice.windows) alice.toggleConfig.bind(alice), 2000});
   window.onkeydown = function (e) {
     if (!$('config') && !Alice.isSpecialKey(e.which))
       alice.activeWindow().input.focus()};
