@@ -12,7 +12,7 @@
       </td>
     </tr>
     <tr class="vert_dragger">
-      <td></td>
+      <td id="[% window.id %]_dragger"></td>
     </tr>
     <tr class="input">
       <td id="[% window.id %]_input">

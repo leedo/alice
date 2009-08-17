@@ -102,11 +102,11 @@ Alice.Window = Class.create({
       var lastmsg = this.messages.childElements().last();
       if (!lastmsg) return;
       var msgheight = lastmsg.offsetHeight; 
-      var bottom = this.element.scrollTop + this.element.offsetHeight;
-      var height = this.element.scrollHeight;
+      var bottom = this.messages.scrollTop + this.messages.offsetHeight;
+      var height = this.messages.scrollHeight;
     }
     if (force || bottom + msgheight + 100 >= height)
-      this.element.scrollTop = this.element.scrollHeight;
+      this.messages.scrollTop = this.messages.scrollHeight;
   },
   
   getNicknames: function() {

@@ -24,8 +24,8 @@ function loadInlineImage(image) {
   if (image.width > maxWidth) image.style.width = maxWidth + 'px';
   image.style.visibility = 'visible';
   setTimeout(function () {
-    var win = image.up("div.window");
-    win.scrollTop = win.scrollHeight;
+    var messagelist = image.up("ul.messages");
+    messagelist.scrollTop = messagelist.scrollHeight;
   }, 50);
 }
 
