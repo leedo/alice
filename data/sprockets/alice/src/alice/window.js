@@ -101,5 +101,9 @@ Alice.Window = Class.create({
     }
     if (force || bottom + msgheight + 100 >= height)
       this.element.scrollTop = this.element.scrollHeight;
+  },
+  
+  getNicknames: function() {
+    return $w("foo bar baz");
   }
 });

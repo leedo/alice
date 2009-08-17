@@ -11,6 +11,7 @@ var Alice = { };
 //= require <alice/window>
 //= require <alice/input>
 //= require <alice/keyboard>
+//= require <alice/completion>
 
 var alice = new Alice.Application();
 
