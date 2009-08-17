@@ -7270,7 +7270,7 @@ Alice.Application = Class.create({
   nextWindow: function() {
     var nextWindow = this.activeWindow().tab.next();
     if (!nextWindow)
-      nextWindow = $$('.window').first();
+      nextWindow = $$('ul#tabs li').first();
     if (!nextWindow) return;
     nextWindow = nextWindow.id.replace('_tab','');
     this.getWindow(nextWindow).focus();
@@ -7286,7 +7286,7 @@ Alice.Application = Class.create({
   previousWindow: function() {
     var previousWindow = this.activeWindow().tab.previous();
     if (!previousWindow)
-      previousWindow = $$('.window').last();
+      previousWindow = $$('ul#tabs li').last();
     if (!previousWindow) return;
     previousWindow = previousWindow.id.replace('_tab','');
     this.getWindow(previousWindow).focus();

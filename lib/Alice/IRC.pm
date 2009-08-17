@@ -95,6 +95,7 @@ class Alice::IRC {
     my $window = $self->window($channel);
     return unless $window;
     my @nicks = map {s/^[@&]//} split " ", $msglist->[2];
+    $self->log_debug("$channel NICKS:", @nicks);
     my $topic = $window->topic;
     my $message = $window->render_event("topic", $topic->{SetBy} || "", $topic->{Value} || "");
     $message->{nicks} = [@nicks];
