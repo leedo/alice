@@ -89,14 +89,16 @@ class Alice::IRC {
     }
   };
   
-  event irc_366 => sub {
+  event irc_353 => sub {
     my ($self, $server, $msg, $msglist) = @_;
-    my $window = $self->window($msglist->[0]);
+    my $channel = $msglist->[1];
+    my $window = $self->window($channel);
     return unless $window;
+    my @nicks = map {s/^[@&]//} split " ", $msglist->[2];
     my $topic = $window->topic;
-    $self->app->send(
-      $window->render_event("topic", $topic->{SetBy} || "", $topic->{Value} || "")
-    );
+    my $message = $window->render_event("topic", $topic->{SetBy} || "", $topic->{Value} || "");
+    $message->{nicks} = [@nicks];
+    $self->app->send($message);
   };
 
   event irc_disconnected => sub {
@@ -142,7 +144,8 @@ class Alice::IRC {
       $self->app->send($window->render_event("joined", $nick));
     }
     else {
-      $self->app->create_window($where, $self->connection);
+      # this should be happening at irc_366 now
+      # $self->app->create_window($where, $self->connection);
     }
   };
 
