@@ -211,6 +211,17 @@ class Alice::Window {
     return $self->connection->channel_list($self->title);
   }
 
+  method nick_info (Str $nick) {
+    my $info = $self->connection->nick_info($nick);
+    if ($info) {
+      return join "\n", (
+        map({"$_: $info->{$_}"} keys %$info),
+        "Channels: " . join " ", $self->connection->nick_channels($nick)
+      );
+    }
+    return "No info for user \"$nick\"";
+  }
+
   method nick_table {
     return _format_nick_table($self->nicks);
   }

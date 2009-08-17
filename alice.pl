@@ -22,7 +22,7 @@ if (-e $ENV{HOME}.'/.alice.yaml') {
   eval { $config = LoadFile($ENV{HOME}.'/.alice.yaml') };
 }
   
-BEGIN { $SIG{__WARN__} = sub { warn $_[0] if $config->{debug} } };
+#BEGIN { $SIG{__WARN__} = sub { warn $_[0] if $config->{debug} } };
 
 print STDERR "You can view your IRC session at: http://localhost:".$config->{port}."/view\n";
 

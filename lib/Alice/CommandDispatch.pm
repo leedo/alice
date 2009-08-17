@@ -18,6 +18,7 @@ class Alice::CommandDispatch {
         {method => 'create',   re => qr{^/create (.+)}},
         {method => 'close',    re => qr{^/close}},
         {method => 'topic',    re => qr{^/topic(?:\s+(.+))?}, in_channel => 1},
+        {method => 'whois',    re => qr{^/whois (.+)}},
         {method => 'me',       re => qr{^/me (.+)}},
         {method => 'quote',    re => qr{^/(?:quote|raw) (.+)}},
         {method => 'notfound', re => qr{^/(.+)(?:\s.*)?}}
@@ -52,6 +53,10 @@ class Alice::CommandDispatch {
 
   method names (Alice::Window $window, $?) {
     $self->app->send($window->render_announcement($window->nick_table));
+  }
+
+  method whois (Alice::Window $window, Str $arg) {
+    $self->app->send($window->render_announcement($window->nick_info($arg)));
   }
 
   method query (Alice::Window $window, Str $arg) {
