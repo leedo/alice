@@ -7157,7 +7157,7 @@ Object.extend(Alice, {
   growlNotify: function(message) {
     if (!window.fluid) return;
     window.fluid.showGrowlNotification({
-        title: message.chan + ": " + message.nick,
+        title: message.window.title + ": " + message.nick,
         description: message.body,
         priority: 1,
         sticky: false,

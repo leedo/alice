@@ -121,7 +121,7 @@ class Alice {
   sub send {
     my ($self, @messages) = @_;
     $self->httpd->send(@messages);
-    return unless $self->notifier or ! $self->httpd->has_clients;
+    return unless $self->notifier and ! $self->httpd->has_clients;
     for my $message (@messages) {
       $self->notifier->display($message) if $message->{highlight};
     }
