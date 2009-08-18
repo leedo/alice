@@ -19,17 +19,17 @@ document.observe("dom:loaded", function () {
   $$("div.topic").each(function (topic){
     topic.innerHTML = Alice.makeLinksClickable(topic.innerHTML)});
   $('config_button').observe("click", alice.toggleConfig.bind(alice));
-  alice.activeWindow().input.focus()
+  if (alice.activeWindow()) alice.activeWindow().input.focus()
   setTimeout(function () {
     if (!alice.windows) alice.toggleConfig.bind(alice), 2000});
   window.onkeydown = function (e) {
-    if (!$('config') && !Alice.isSpecialKey(e.which))
+    if (alice.activeWindow() && !$('config') && !Alice.isSpecialKey(e.which))
       alice.activeWindow().input.focus()};
   window.onresize = function () {
-    alice.activeWindow().scrollToBottom()};
+    if (alice.activeWindow()) alice.activeWindow().scrollToBottom()};
   window.status = " ";  
   window.onfocus = function () {
-    alice.activeWindow().input.focus();
+    if (alice.activeWindow()) alice.activeWindow().input.focus();
     alice.isFocused = true};
   window.onblur = function () {alice.isFocused = false};
   Alice.makeSortable();
