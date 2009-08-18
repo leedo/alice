@@ -56,10 +56,12 @@ class Alice::CommandDispatch {
   }
 
   method whois (Alice::Window $window, Str $arg) {
+    $arg = decode("utf8", $arg, Encode::FB_WARN);
     $self->app->send($window->render_announcement($window->nick_info($arg)));
   }
 
   method query (Alice::Window $window, Str $arg) {
+    $arg = decode("utf8", $arg, Encode::FB_WARN);
     $self->app->create_window($arg, $window->connection);
   }
 
@@ -106,10 +108,12 @@ class Alice::CommandDispatch {
   }
 
   method quote (Alice::Window $window, Str $arg) {
+    $arg = decode("utf8", $arg, Encode::FB_WARN);
     $window->connection->yield("quote", $arg);
   }
 
   method notfound (Alice::Window $window, Str $arg) {
+    $arg = decode("utf8", $arg, Encode::FB_WARN);
     $self->app->send($window->render_announcement("Invalid command $arg"));
   }
 

@@ -10,7 +10,6 @@ class Alice::HTTPD {
   use Time::HiRes qw/time/;
   use JSON;
   use Template;
-  use Encode;
   use URI::QueryParam;
   use YAML qw/DumpFile/;
   use CLASS;
