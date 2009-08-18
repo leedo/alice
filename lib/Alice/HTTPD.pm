@@ -237,6 +237,7 @@ class Alice::HTTPD {
     $res->header("Cache-control" => "no-cache");
     my $output = '';
     $self->tt->process('config.tt', {
+      style       => $self->config->{style} || "default",
       config      => $self->config,
       connections => [ sort {$a->{alias} cmp $b->{alias}}
                        $self->app->connections ],
