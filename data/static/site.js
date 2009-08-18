@@ -7709,9 +7709,7 @@ Alice.Keyboard = Class.create({
   },
 
   onCmdC: function(event) {
-    console.log("onCmdC", event);
     if (!this.activeWindow.input.focused) {
-      console.log("canceling next focus");
       this.activeWindow.input.cancelNextFocus();
     }
   },
