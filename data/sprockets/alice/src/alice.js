@@ -17,7 +17,7 @@ if (window == window.parent) {
   var alice = new Alice.Application();
 
   document.observe("dom:loaded", function () {
-    $$("div.topic").each(function (topic){
+    $$("tr.topic td").each(function (topic){
       topic.innerHTML = Alice.makeLinksClickable(topic.innerHTML)});
     $('config_button').observe("click", alice.toggleConfig.bind(alice));
     if (alice.activeWindow()) alice.activeWindow().input.focus()
