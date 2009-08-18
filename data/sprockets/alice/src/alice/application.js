@@ -129,6 +129,9 @@ Alice.Application = Class.create({
       case "nicks":
         var win = this.getWindow(action['window'].id);
         if (win) win.nicks = action.nicks;
+      case "clear":
+        var win = this.getWindow(action['window'].id);
+        if (win) win.messages.update("");
     }
   },
   

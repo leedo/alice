@@ -17,6 +17,7 @@ class Alice::CommandDispatch {
         {method => 'part',     re => qr{^/part}, in_channel => 1},
         {method => 'create',   re => qr{^/create (.+)}},
         {method => 'close',    re => qr{^/close}},
+        {method => 'clear',    re => qr{^/clear}},
         {method => 'topic',    re => qr{^/topic(?:\s+(.+))?}, in_channel => 1},
         {method => 'whois',    re => qr{^/whois (.+)}},
         {method => 'me',       re => qr{^/me (.+)}},
@@ -90,6 +91,13 @@ class Alice::CommandDispatch {
     $arg = decode("utf8", $arg, Encode::FB_WARN);
     my $new_window = $self->app->create_window($arg, $window->connection);
     $self->app->send($new_window->join_action);
+  }
+
+  method clear (Alice::Window $window, $?) {
+    if ($window->is_channel) {
+      $window->msgbuffer([]);
+    }
+    $self->app->send($window->clear_action);
   }
 
   method topic (Alice::Window $window, Str $arg?) {

@@ -166,6 +166,14 @@ class Alice::Window {
     };
   }
 
+  method clear_action {
+    return {
+      type      => "action",
+      event     => "clear",
+      window    => $self->serialized,
+    };
+  }
+
   method timestamp {
     my $dt = DateTime->now(time_zone => "local");
     my $ampm = $dt->am_or_pm eq "AM" ? "a" : "p";
