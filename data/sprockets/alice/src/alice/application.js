@@ -11,14 +11,18 @@ Alice.Application = Class.create({
   },
   
   toggleConfig: function(e) {
-    if (!$('config')) {
-      this.connection.getConfig(function(transport) {
-        $('container').insert(transport.responseText);
-      });
+    if (this.configWindow && this.configWindow.focus) {
+      this.configWindow.focus();
+
     } else {
-      $('config').remove();
-      $$('.overlay').invoke('remove');
+      this.configWindow = window.open(null, "config", "resizable=no,scrollbars=no,status=no,toolbar=no,location=no,width=500,height=410");
+
+      this.connection.getConfig(function(transport) {
+        this.configWindow.document.write(transport.responseText);
+      }.bind(this));
     }
+    
+    e.stop();
   },
   
   submitConfig: function(form) {
@@ -27,9 +31,9 @@ Alice.Application = Class.create({
         option.selected = true;
       });
     });
-    this.connection.sendConfig(form.serialize());
-    $('config').remove();
-    $$('.overlay').invoke('remove');
+    this.connection.sendConfig(form.serialize(), function() {
+      window.close();
+    });
     return false;
   },
   

@@ -112,10 +112,11 @@ Alice.Connection = Class.create({
     })
   },
   
-  sendConfig: function(params) {
+  sendConfig: function(params, callback) {
     new Ajax.Request('/save', {
       method: 'get',
-      parameters: params
+      parameters: params,
+      onSuccess: callback
     });
   },
   
