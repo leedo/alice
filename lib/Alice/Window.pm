@@ -87,11 +87,6 @@ class Alice::Window {
   );
   
   method nicks {
-    # Use POCO::IRC's nick list if the channel is synced
-    if ($self->connection->is_channel_synced($self->title)) {
-      return [ $self->connection->channel_list($self->title) ];
-    }
-    # otherwise use the one we built on join
     return [ keys %{$self->nick_map} ];
   }
 
@@ -114,6 +109,14 @@ class Alice::Window {
   method finalize_nicks {
     $self->nick_map({ map {$_ => $_} @{$self->nick_stash} });
     $self->nick_stash([]);
+  }
+  
+  method remove_nick (Str $nick) {
+    delete $self->nick_map->{$nick};
+  }
+  
+  method add_nick (Str $nick) {
+    $self->nick_map->{$nick} = $nick;
   }
 
   method topic (Str $string?) {

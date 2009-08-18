@@ -154,6 +154,7 @@ class Alice::IRC {
     my $nick = ( split /!/, $who)[0];
     my $window = $self->window($where);
     if ($nick ne $self->connection->nick_name) {
+      $window->add_nick($nick);
       $self->app->send($window->render_event("joined", $nick));
     }
   };
@@ -164,6 +165,7 @@ class Alice::IRC {
     my $window = $self->window($where);
     return unless $window;
     if ($nick ne $self->connection->nick_name) {
+      $window->remove_nick($nick);
       $self->app->send($window->render_event("left", $nick, $msg));
     }
     else {
