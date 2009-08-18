@@ -75,7 +75,7 @@ class Alice {
   }
 
   method window (Str $session, Str $title) {
-    my $id = crc16(lc($title . $session));
+    my $id = "win_" . crc16(lc($title . $session));
     return $self->window_map->{$id};
   }
 

@@ -25,9 +25,9 @@ Alice.Connection = Class.create({
     this.request = new Ajax.Request('/stream', {
       method: 'get',
       parameters: {msgid: this.msgid},
-      //onException: this.handleException.bind(this),
+      onException: this.handleException.bind(this),
       onInteractive: this.handleUpdate.bind(this),
-      //onComplete: this.handleComplete.bind(this)
+      onComplete: this.handleComplete.bind(this)
     });
   },
 

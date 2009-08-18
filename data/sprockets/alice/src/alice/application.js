@@ -134,7 +134,6 @@ Alice.Application = Class.create({
   },
   
   displayMessage: function(message) {
-    console.log(message);
     var win = this.getWindow(message['window'].id);
     if (win) {
       win.addMessage(message);

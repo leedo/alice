@@ -7329,7 +7329,6 @@ Alice.Application = Class.create({
   },
 
   displayMessage: function(message) {
-    console.log(message);
     var win = this.getWindow(message['window'].id);
     if (win) {
       win.addMessage(message);
@@ -7371,7 +7370,9 @@ Alice.Connection = Class.create({
     this.request = new Ajax.Request('/stream', {
       method: 'get',
       parameters: {msgid: this.msgid},
+      onException: this.handleException.bind(this),
       onInteractive: this.handleUpdate.bind(this),
+      onComplete: this.handleComplete.bind(this)
     });
   },
 

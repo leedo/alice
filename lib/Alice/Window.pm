@@ -43,7 +43,7 @@ class Alice::Window {
     lazy    => 1,
     default => sub {
       my $self = shift;
-      return crc16(lc($self->title . $self->session));
+      return "win_" . crc16(lc($self->title . $self->session));
     }
   );
 
