@@ -197,6 +197,7 @@ div.msg {
   border-bottom: 1px solid #eee;
   background: #fff;
   word-wrap: break-word;
+  word-break: break-all;
   -khtml-line-break: after-white-space;
   -khtml-nbsp-mode: space;
 }
