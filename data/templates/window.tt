@@ -19,7 +19,7 @@
         <form id="[% window.id %]_form" autocomplete="off">
           <input type="hidden" name="source" value="[% window.id %]" />
           <button type="submit" style="display:none" id="[% window.id %]_submit">Send</button>
-          <textarea name="msg" id="[% window.id %]_msg"></textarea>
+          <textarea name="msg" id="[% window.id %]_msg" rows="1"></textarea>
         </form>
         <script type="text/javascript">[% USE JavaScript %]
           alice.openWindow('[% window.id %]','[% window.title | js %]',[% loop.first ? "true" : "false" %]);

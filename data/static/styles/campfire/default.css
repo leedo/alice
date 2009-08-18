@@ -37,10 +37,8 @@ tr.vert_dragger td {
 
 tr.input textarea {
   width: 100%;
-  padding: 3px 0;
+  padding: 0;
   border: none;
-  height: 14px;
-  border-top: 1px solid #aaa;
   margin: 0;
   outline: 0 none;
   font-size: 12px;

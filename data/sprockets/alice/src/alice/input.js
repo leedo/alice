@@ -11,6 +11,11 @@ Alice.Input = Class.create({
     
     this.element.observe("keypress", this.onKeyPress.bind(this));
     this.element.observe("blur", this.onBlur.bind(this));
+    
+    this.element.observe("keydown", this.resize.bind(this));
+    this.element.observe("cut", this.resize.bind(this));
+    this.element.observe("paste", this.resize.bind(this));
+    this.element.observe("change", this.resize.bind(this));
   },
   
   onKeyPress: function(event) {
@@ -98,5 +103,38 @@ Alice.Input = Class.create({
     } else {
       return this.history[index];
     }
+  },
+  
+  resize: function() {
+    (function() {
+      var height = this.getContentHeight();
+      if (height == 0) {
+        this.element.setStyle({ height: null });
+      } else if (height <= 150) {
+        this.element.setStyle({ height: height + "px" });
+      }
+    }).bind(this).defer();
+  },
+  
+  getContentHeight: function() {
+    var element = new Element("div").setStyle({
+      position:   "absolute",
+      visibility: "hidden",
+      left:       "-" + this.element.getWidth() + "px",
+      width:      this.element.getWidth() - 7 + "px",
+      fontFamily: this.element.getStyle("fontFamily"),
+      fontSize:   this.element.getStyle("fontSize"),
+      lineHeight: this.element.getStyle("lineHeight"),
+      whiteSpace: "pre-wrap",
+      wordWrap:   "break-word"
+    });
+
+    var value = this.element.getValue().escapeHTML().replace("\n", "<br>");
+    element.update(value);
+    $(document.body).insert(element);
+
+    var height = element.getHeight();
+    element.remove();
+    return height > 0 ? height - 1 : 0;
   }
 });
