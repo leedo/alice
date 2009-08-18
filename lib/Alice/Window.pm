@@ -72,7 +72,7 @@ class Alice::Window {
   has nick_map => (
     is => 'rw',
     isa => 'HashRef[Str]',
-    default => sub {[]}
+    default => sub {{}}
   );
   
   has 'tt' => (
@@ -87,9 +87,11 @@ class Alice::Window {
   );
   
   method nicks {
-    if ($self->connection->is_chan_synced($self->title)) {
+    # Use POCO::IRC's nick list if the channel is synced
+    if ($self->connection->is_channel_synced($self->title)) {
       return [ $self->connection->channel_list($self->title) ];
     }
+    # otherwise use the one we built on join
     return [ keys %{$self->nick_map} ];
   }
 
@@ -110,8 +112,8 @@ class Alice::Window {
   }
   
   method finalize_nicks {
-    # we can store more nick info in this hash later
-    $self->nicks({ map {$_ => $_} @{$self->nick_stash} });
+    $self->nick_map({ map {$_ => $_} @{$self->nick_stash} });
+    $self->nick_stash([]);
   }
 
   method topic (Str $string?) {
