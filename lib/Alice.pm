@@ -4,6 +4,7 @@ class Alice {
   use Alice::Window;
   use Alice::HTTPD;
   use Alice::IRC;
+  use Digest::CRC qw/crc16/;
   use POE;
 
   has config => (
@@ -74,8 +75,7 @@ class Alice {
   }
 
   method window (Str $session, Str $title) {
-    my $id = $title . $session;
-    $id =~ s/^[#&]/chan_/;
+    my $id = crc16(lc($title . $session));
     return $self->window_map->{$id};
   }
 

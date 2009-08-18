@@ -5,6 +5,7 @@ class Alice::Window {
   use CLASS;
   use Encode;
   use DateTime;
+  use Digest::CRC qw/crc16/;
   use MooseX::ClassAttribute;
   use IRC::Formatting::HTML;
   
@@ -42,9 +43,7 @@ class Alice::Window {
     lazy    => 1,
     default => sub {
       my $self = shift;
-      my $id = $self->title . $self->session;
-      $id =~ s/^[#&]/chan_/;
-      return $id;
+      return crc16(lc($self->title . $self->session));
     }
   );
 

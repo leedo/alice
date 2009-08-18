@@ -22,7 +22,7 @@
           <textarea name="msg" id="[% window.id %]_msg"></textarea>
         </form>
         <script type="text/javascript">
-          alice.openWindow('[% window.id %]','[% window.title %]',[% loop.first ? "true" : "false" %]);
+          alice.openWindow('[% window.id %]','[% window.title.json %]',[% loop.first ? "true" : "false" %]);
         </script>
       </td>
     </tr>

@@ -15,11 +15,13 @@ requires:
   MooseX::Declare: 0
   MooseX::ClassAttribute: 0
   MooseX::POE: 0
+  Digest::CRC: 0
   CLASS: 0
   POE::Component::IRC: 0
   POE::Component::Server::HTTP: 0
   POE::Component::SSLify: 0
   Template: 0
+  Template::Plugin::JSON: 0
   HTML::Entities: 0
   List::MoreUtils: 0
   IRC::Formatting::HTML: 0.3
