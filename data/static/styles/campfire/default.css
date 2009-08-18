@@ -24,15 +24,15 @@ div.window table {
 
 tr.input td {
   height: 20px;
-  background: #efefef;
+  background: #fff;
+  border-bottom: 2px solid #fff;
 }
 
 tr.vert_dragger td {
-  height: 5px;
-  background 
+  height: 3px;
   background: #efefef;
   border-top: 1px solid #aaa;
-  cursor: n-resize;
+  border-bottom: 2px solid #fff;
 }
 
 tr.input textarea {
