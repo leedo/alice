@@ -64,6 +64,7 @@ class Alice::CommandDispatch {
   }
 
   method _join (Alice::Window $window, Str $arg) {
+    $arg = decode("utf8", $arg, Encode::FB_WARN);
     $window->connection->yield("join", $arg);
   }
 
@@ -83,6 +84,7 @@ class Alice::CommandDispatch {
   }
 
   method create (Alice::Window $window, Str $arg) {
+    $arg = decode("utf8", $arg, Encode::FB_WARN);
     $self->app->create_window($arg, $window->connection);
   }
 

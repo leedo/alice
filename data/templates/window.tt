@@ -21,8 +21,8 @@
           <button type="submit" style="display:none" id="[% window.id %]_submit">Send</button>
           <textarea name="msg" id="[% window.id %]_msg"></textarea>
         </form>
-        <script type="text/javascript">
-          alice.openWindow('[% window.id %]','[% window.title.json %]',[% loop.first ? "true" : "false" %]);
+        <script type="text/javascript">[% USE JavaScript %]
+          alice.openWindow('[% window.id %]','[% window.title | js %]',[% loop.first ? "true" : "false" %]);
         </script>
       </td>
     </tr>

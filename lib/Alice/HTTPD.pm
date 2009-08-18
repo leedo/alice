@@ -10,6 +10,7 @@ class Alice::HTTPD {
   use Time::HiRes qw/time/;
   use JSON;
   use Template;
+  use Encode;
   use URI::QueryParam;
   use YAML qw/DumpFile/;
   use CLASS;
@@ -219,7 +220,7 @@ class Alice::HTTPD {
     my $channels = [];
     for my $window ($self->app->windows) {
       push @$channels, {
-        window  => $window->serialized,
+        window  => $window->serialized(encoded => 1),
         topic   => $window->topic,
         server  => $window->connection,
       }

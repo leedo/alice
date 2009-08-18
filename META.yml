@@ -21,7 +21,7 @@ requires:
   POE::Component::Server::HTTP: 0
   POE::Component::SSLify: 0
   Template: 0
-  Template::Plugin::JSON: 0
+  Template::Plugin::JavaScript: 0
   HTML::Entities: 0
   List::MoreUtils: 0
   IRC::Formatting::HTML: 0.3

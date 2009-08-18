@@ -74,19 +74,13 @@ class Alice::Window {
     },
   );
 
-  has 'serialized' => (
-    is      => 'ro',
-    isa     => 'HashRef',
-    lazy    => 1,
-    default => sub {
-      my $self = shift;
-      return {
-        id      => $self->id, 
-        session => $self->session,
-        title   => $self->title
-      };
-    }
-  );
+  method serialized (Bool :$encoded = 0) {
+    return {
+      id      => $self->id, 
+      session => $self->session,
+      title   => $encoded ? encode('utf8', $self->title) : $self->title,
+    };
+  }
 
   method nick {
     return $self->connection->nick_name;
@@ -94,11 +88,12 @@ class Alice::Window {
 
   method topic (Str $string?) {
     if ($string) {
+      $string = decode("utf8", $string, Encode::FB_WARN);
       $self->connection->yield(topic => $self->title, $string);
       return $string;
     }
     else {
-      return $self->connection->channel_topic($self->title);
+      return $self->connection->channel_topic($self->title) || {};
     }
   }
   

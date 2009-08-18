@@ -2,6 +2,7 @@ use MooseX::Declare;
 
 class Alice::IRC {
   use MooseX::POE::SweetArgs qw/event/;
+  use Encode;
   use POE::Component::IRC;
   use POE::Component::IRC::State;
   use POE::Component::IRC::Plugin::Connector;
@@ -69,6 +70,7 @@ class Alice::IRC {
   }
 
   method window (Str $title){
+    $title = decode("utf8", $title, Encode::FB_WARN);
     my $window = $self->app->window($self->alias, $title);
     if (! $window) {
       $window = $self->app->create_window($title, $self->connection);

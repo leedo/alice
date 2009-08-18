@@ -23,7 +23,8 @@ if (-e $ENV{HOME}.'/.alice.yaml') {
 }
   
 #BEGIN { $SIG{__WARN__} = sub { warn $_[0] if $config->{debug} } };
-
+binmode(STDERR, ":utf8");
+binmode(STDOUT, ":utf8");
 print STDERR "You can view your IRC session at: http://localhost:".$config->{port}."/view\n";
 
 my $alice = Alice->new(config => $config);
