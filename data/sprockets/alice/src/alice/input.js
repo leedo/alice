@@ -7,8 +7,10 @@ Alice.Input = Class.create({
     this.index = -1;
     this.buffer = "";
     this.completion = false;
+    this.focused = false;
     
     this.element.observe("keypress", this.onKeyPress.bind(this));
+    this.element.observe("blur", this.onBlur.bind(this));
   },
   
   onKeyPress: function(event) {
@@ -17,8 +19,22 @@ Alice.Input = Class.create({
     }
   },
   
+  cancelNextFocus: function() {
+    this.skipThisFocus = true;
+  },
+  
   focus: function() {
+    if (this.skipThisFocus) {
+      this.skipThisFocus = false;
+      return;
+    }
+    
     this.element.focus();
+    this.focused = true;
+  },
+  
+  onBlur: function() {
+    this.focused = false;
   },
   
   previousCommand: function() {

@@ -7586,8 +7586,10 @@ Alice.Input = Class.create({
     this.index = -1;
     this.buffer = "";
     this.completion = false;
+    this.focused = false;
 
     this.element.observe("keypress", this.onKeyPress.bind(this));
+    this.element.observe("blur", this.onBlur.bind(this));
   },
 
   onKeyPress: function(event) {
@@ -7596,8 +7598,22 @@ Alice.Input = Class.create({
     }
   },
 
+  cancelNextFocus: function() {
+    this.skipThisFocus = true;
+  },
+
   focus: function() {
+    if (this.skipThisFocus) {
+      this.skipThisFocus = false;
+      return;
+    }
+
     this.element.focus();
+    this.focused = true;
+  },
+
+  onBlur: function() {
+    this.focused = false;
   },
 
   previousCommand: function() {
@@ -7668,6 +7684,7 @@ Alice.Keyboard = Class.create({
     this.application = application;
     this.enable();
 
+    this.shortcut("Cmd+C", { propagate: true });
     this.shortcut("Cmd+K");
     this.shortcut("Cmd+B");
     this.shortcut("Cmd+F");
@@ -7679,17 +7696,23 @@ Alice.Keyboard = Class.create({
     this.shortcut("Tab");
   },
 
-  shortcut: function(name) {
+  shortcut: function(name, options) {
     var keystroke = name.replace("Cmd", "Meta").replace("Opt", "Alt"),
         method = "on" + name.replace("+", "");
 
-    window.shortcut.add(keystroke, function() {
+    window.shortcut.add(keystroke, function(event) {
       if (this.enabled) {
         this.activeWindow = this.application.activeWindow();
-        this[method].call(this);
+        this[method].call(this, event);
         delete this.activeWindow;
       }
-    }.bind(this));
+    }.bind(this), options);
+  },
+
+  onCmdC: function(event) {
+    if (!this.activeWindow.input.focused) {
+      this.activeWindow.input.cancelNextFocus();
+    }
   },
 
   onCmdK: function() {
