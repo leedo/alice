@@ -7186,12 +7186,23 @@ Object.extend(Alice, {
 
   isSpecialKey: function(keyCode) {
     var special_keys = [
-			27,9,32,13,8,145,20,144,19,45,36,46,35,33,34,37,38,39,
+			16,27,9,32,13,8,145,20,144,19,45,36,46,35,33,34,37,38,39,
 			40,17,18,91,112,113,114,115,116,117,118,119,120,121,122,123
 		];
 		if (special_keys.indexOf(keyCode) == -1) return false;
 		return true;
   },
+});
+
+
+Element.addMethods({
+  redraw: function(element){
+    element = $(element);
+    var n = document.createTextNode(' ');
+    element.appendChild(n);
+    (function(){n.parentNode.removeChild(n)}).defer();
+    return element;
+  }
 });
 Alice.Application = Class.create({
   initialize: function() {
@@ -7701,6 +7712,7 @@ Alice.Input = Class.create({
         this.element.setStyle({ height: height + "px", top: "-1px" });
       }
     }).bind(this).defer();
+    this.window.element.redraw();
   },
 
   getContentHeight: function() {
