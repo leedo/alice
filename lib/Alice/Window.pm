@@ -63,6 +63,18 @@ class Alice::Window {
     required => 1,
   );
   
+  has nick_stash => (
+    is => 'rw',
+    isa => 'ArrayRef[Str]',
+    default => sub {[]}
+  );
+  
+  has nick_map => (
+    is => 'rw',
+    isa => 'HashRef[Str]',
+    default => sub {[]}
+  );
+  
   has 'tt' => (
     is     => 'ro',
     isa    => 'Template',
@@ -73,6 +85,13 @@ class Alice::Window {
       );
     },
   );
+  
+  method nicks {
+    if ($self->connection->is_chan_synced($self->title)) {
+      return [ $self->connection->channel_list($self->title) ];
+    }
+    return [ keys %{$self->nick_map} ];
+  }
 
   method serialized (Bool :$encoded = 0) {
     return {
@@ -84,6 +103,15 @@ class Alice::Window {
 
   method nick {
     return $self->connection->nick_name;
+  }
+  
+  method stash_nicks (ArrayRef $nicks) {
+    push @{$self->nick_stash}, @$nicks;
+  }
+  
+  method finalize_nicks {
+    # we can store more nick info in this hash later
+    $self->nicks({ map {$_ => $_} @{$self->nick_stash} });
   }
 
   method topic (Str $string?) {
@@ -123,6 +151,15 @@ class Alice::Window {
     $action->{html}{tab} = $tab_html;
     return $action;
   }
+  
+  method nicks_action {
+    return {
+      type      => "action",
+      event     => "nicks",
+      nicks     => $self->nicks,
+      window    => $self->serialized,
+    };
+  }
 
   method timestamp {
     my $dt = DateTime->now(time_zone => "local");
@@ -140,7 +177,7 @@ class Alice::Window {
       body      => $body,
       msgid     => $self->nextmsgid,
       timestamp => $self->timestamp,
-      nicks     => [$self->nicks],
+      nicks     => $self->nicks,
     };
 
     my $html = '';
@@ -201,10 +238,6 @@ class Alice::Window {
     $self->connection->yield("part", $self->title);
   }
 
-  method nicks {
-    return $self->connection->channel_list($self->title);
-  }
-
   method nick_info (Str $nick) {
     my $info = $self->connection->nick_info($nick);
     if ($info) {
@@ -217,7 +250,7 @@ class Alice::Window {
   }
 
   method nick_table {
-    return _format_nick_table($self->nicks);
+    return _format_nick_table(@{$self->nicks});
   }
   
   sub _format_nick_table {

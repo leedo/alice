@@ -126,7 +126,7 @@ class Alice::HTTPD {
     $res->streaming(1);
     $res->content_type('multipart/mixed; boundary=xalicex; charset=utf-8');
     $res->{msgs} = [];
-    $res->{actions} = [];
+    $res->{actions} = [ map {$_->nicks_action} $self->app->windows ];
 
     # populate the msg queue with any buffered messages
     if (defined (my $msgid = $req->uri->query_param('msgid'))) {

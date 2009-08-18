@@ -97,10 +97,21 @@ class Alice::IRC {
     my $window = $self->window($channel);
     return unless $window;
     my @nicks = map {$_ =~ s/^[@&+]//; $_} split " ", $msglist->[2];
+    $window->stash_nicks(\@nicks);
+  };
+  
+  event irc_366 => sub {
+    my ($self, $server, $msg, $msglist) = @_;
+    my $channel = $msglist->[0];
+    my $window = $self->window($channel);
+    return unless $window;
+    $window->finalize_nicks;
     my $topic = $window->topic;
-    my $message = $window->render_event("topic", $topic->{SetBy} || "", $topic->{Value} || "");
-    $message->{nicks} = [@nicks];
-    $self->app->send($message);
+    $self->app->send(
+      $window->join_action,
+      $window->render_event("topic", $topic->{SetBy}||"", $topic->{Value}||""),
+    );
+    $self->log_debug("requesting new tab for: $channel");
   };
 
   event irc_disconnected => sub {
@@ -141,13 +152,9 @@ class Alice::IRC {
   event irc_join => sub {
     my ($self, $who, $where) = @_;
     my $nick = ( split /!/, $who)[0];
+    my $window = $self->window($where);
     if ($nick ne $self->connection->nick_name) {
-      my $window = $self->window($where);
       $self->app->send($window->render_event("joined", $nick));
-    }
-    else {
-      # this should be happening at irc_366 now
-      # $self->app->create_window($where, $self->connection);
     }
   };
 

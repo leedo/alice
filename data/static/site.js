@@ -7317,6 +7317,9 @@ Alice.Application = Class.create({
       case "part":
         this.closeWindow(action['window'].id);
         break;
+      case "nicks":
+        var win = this.getWindow(action['window'].id);
+        if (win) win.nicks = action.nicks;
     }
   },
 
@@ -7546,7 +7549,7 @@ Alice.Window = Class.create({
       if (!this.application.isFocused && message.highlight)
         Alice.growlNotify(message);
 
-      if (message.nicks)
+      if (message.nicks && message.nicks.length)
         this.nicks = message.nicks;
 
       if (this.element.hasClassName('active'))

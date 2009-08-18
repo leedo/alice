@@ -84,14 +84,13 @@ class Alice {
   }
 
   method create_window (Str $title, $connection) {
-    my $window = Alice::Window->new(
-      title      => $title,
-      connection => $connection,
-    );
-    $self->add_window($window);
-    $self->send($window->join_action);
-    $self->log_debug("sending a request for a new tab: " . $window->title)
-      if $self->httpd->has_clients;
+    my $window = $self->window($connection->session_alias, $title);
+    if (! $window) {
+      $window = Alice::Window->new(
+        title      => $title,
+        connection => $connection);
+      $self->add_window($window);
+    }
     return $window;
   }
 
