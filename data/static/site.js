@@ -7696,9 +7696,9 @@ Alice.Input = Class.create({
     (function() {
       var height = this.getContentHeight();
       if (height == 0) {
-        this.element.setStyle({ height: null });
+        this.element.setStyle({ height: null, top: 0 });
       } else if (height <= 150) {
-        this.element.setStyle({ height: height + "px" });
+        this.element.setStyle({ height: height + "px", top: "-1px" });
       }
     }).bind(this).defer();
   },
@@ -7722,7 +7722,7 @@ Alice.Input = Class.create({
 
     var height = element.getHeight();
     element.remove();
-    return height > 0 ? height - 1 : 0;
+    return height;
   }
 });
 Alice.Keyboard = Class.create({
