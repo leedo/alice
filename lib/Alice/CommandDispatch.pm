@@ -115,6 +115,7 @@ class Alice::CommandDispatch {
 
   method _say (Alice::Window $window, Str $arg) {
     $self->app->send($window->render_message($window->nick, $arg));
+    $arg = decode("utf8", $arg, Encode::FB_WARN);
     $window->connection->yield("privmsg", $window->title, $arg);
   }
 }
