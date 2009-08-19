@@ -1,0 +1,9 @@
+After installing simply run the command 'alice'
+
+You can then connect to alice using a WebKit browser at
+http://127.0.0.1:8080/view
+
+To add a new IRC server click on the gear icon in the
+bottom right corner. After adding a server it should
+connect automatically and open any channels as new
+tabs.

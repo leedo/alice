@@ -1,5 +1,39 @@
 use MooseX::Declare;
 
+=pod
+
+=head1 NAME
+
+Alice - An irc client that can be viewed in any WebKit browser
+
+=cut
+
+=head1 DESCRIPTION
+
+Alice is an IRC client that can run either locally or remotely, and
+can view it from multiple browsers at the same time. Alice will
+keep a message buffer, so when you load your browser you will get
+the last 100 lines from each channel. This way you can close the 
+web page and continue to collect messages to be read later.
+
+=head1 NOTIFICATIONS
+
+If you get a message with your nick in the body, and no browsers are
+connected, a notification will be sent to either Growl (if you are on
+OS X) or using libnotify (on Linux.) Alice does not send any notifications
+if a browser is connected, but if you are using Fluid (a Single Site
+Browser for OS X), Fluid will send a Growl notification when unfocused.
+
+=head1 RUNNING REMOTELY
+
+Right now there has been very little testing done for running alice
+remotely. There is one bug that makes it potentially unusable,
+and that only shows up if the server clock is significantly different
+from that of the browser's OS. This can be fixed in the future by
+calculating an offset and taking that into account.
+
+=cut
+
 class Alice {
   use Alice::Window;
   use Alice::HTTPD;
@@ -7,6 +41,8 @@ class Alice {
   use MooseX::AttributeHelpers;
   use Digest::CRC qw/crc16/;
   use POE;
+
+  our $VERSION = '0.01';
 
   has config => (
     is       => 'ro',
@@ -132,3 +168,24 @@ class Alice {
     print STDERR join(" ", @_) . "\n";
   }
 }
+
+=pod
+
+=head1 AUTHORS
+
+Lee Aylward E<lt>leedo@cpan.orgE<gt>
+
+Sam Stephenson
+
+Ryan Baumann
+
+=head1 COPYRIGHT
+
+Copyright 2009 by Lee Aylward E<lt>leedo@cpan.orgE<gt>
+
+This program is free software; you can redistribute it and/or modify it
+under the same terms as Perl itself.
+
+See L<http://www.perl.com/perl/misc/Artistic.html>
+
+=cut

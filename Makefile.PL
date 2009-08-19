@@ -1,6 +1,8 @@
 use inc::Module::Install;
 
 name        'Alice',
+version     '0.01';
+license     'perl';
 
 requires    'YAML';
 requires    'JSON';
@@ -19,9 +21,6 @@ requires    'File::ShareDir';
 requires    'MIME::Base64';
 requires    'Digest::CRC';
 
-auto_install(
-  force => 1,
-);
 install_share  'share';
 install_script 'script/alice';
 WriteAll;
