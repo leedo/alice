@@ -1,32 +1,3 @@
-<<<<<<< HEAD:lib/Alice/HTTPD.pm
-package Alice::HTTPD;
-
-use strict;
-use warnings;
-
-use Alice::AsyncGet;
-use Alice::CommandDispatch;
-use Moose;
-use bytes;
-use Encode;
-use MIME::Base64;
-use Time::HiRes qw/time/;
-use DateTime;
-use POE;
-use POE::Component::Server::HTTP;
-use JSON;
-use Template;
-use URI::QueryParam;
-use IRC::Formatting::HTML;
-use YAML qw/DumpFile/;
-use File::ShareDir qw/dist_dir/;
-
-has 'config' => (
-  is  => 'ro',
-  isa => 'HashRef',
-  required => 1,
-  trigger => sub {
-=======
 use MooseX::Declare;
 
 class Alice::HTTPD {
@@ -100,70 +71,6 @@ class Alice::HTTPD {
       },
       StreamHandler    => sub{$self->handle_stream(@_)},
     );
-<<<<<<< HEAD:lib/Alice/HTTPD.pm
-    POE::Session->create(
-      object_states => [
-        $self => {
-          _start => 'start_ping',
-          ping   => 'ping',
-        }
-      ],
-    );
-  },
-);
-
-has 'assetdir' => (
-  is      => 'ro',
-  isa     => 'Str',
-  default => sub { dist_dir('Alice') },
-);
-
-before qw/send_config save_config send_index setup_stream not_found
-          handle_message handle_static handle_autocomplete server_config/ => sub {
-  $_[1]->header(Connection => 'close');
-  $_[2]->header(Connection => 'close');
-  $_[2]->streaming(0);
-  $_[2]->code(200);
-};
-
-has 'irc' => (
-  is  => 'rw',
-  isa => 'Alice::IRC',
-  weak_ref => 1,
-);
-
-has 'streams' => (
-  is  => 'rw',
-  isa => 'ArrayRef[POE::Component::Server::HTTP::Response]',
-  default => sub {[]},
-);
-
-has 'seperator' => (
-  is  => 'ro',
-  isa => 'Str',
-  default => '--xalicex',
-);
-
-has 'commands' => (
-  is => 'ro',
-  isa => 'ArrayRef[Str]',
-  default => sub { [qw/join part names topic me query/] },
-  lazy => 1,
-);
-
-has 'tt' => (
-  is => 'ro',
-  isa => 'Template',
-  lazy => 1,
-  default => sub {
-    my $self = shift;
-    Template->new(
-      INCLUDE_PATH => $self->assetdir . '/templates',
-      ENCODING     => 'UTF8'
-    );
-  },
-);
-=======
   }
   
   sub START {
@@ -181,7 +88,6 @@ has 'tt' => (
     $_->continue for @{$self->streams};
     POE::Kernel->delay(ping => 15);
   };
->>>>>>> master:lib/Alice/HTTPD.pm
 
   method config {
     return $self->app->config;
@@ -268,51 +174,7 @@ has 'tt' => (
     $res->continue;
   }
 
-<<<<<<< HEAD:lib/Alice/HTTPD.pm
-sub ping {
-  my $self = $_[OBJECT];
-  my $data = {
-    type  => "action",
-    event => "ping",
-  };
-  push @{$_->{actions}}, $data for @{$self->streams};
-  $_->continue for @{$self->streams};
-  $_[KERNEL]->delay(ping => 15);
-}
 
-sub handle_message {
-  my ($self, $req, $res) = @_;
-  my $msg  = $req->uri->query_param('msg');
-  my $chan = lc $req->uri->query_param('chan');
-  my $session = $req->uri->query_param('session');
-  return 200 unless $session;
-  my $irc = $self->irc->connection_from_alias($session);
-  return 200 unless $irc;
-  $self->dispatch->handle($msg, $chan, $irc) if length $msg;
-  return 200;
-}
-
-sub handle_static {
-  my ($self, $req, $res) = @_;
-  my $file = $req->uri->path;
-  my ($ext) = ($file =~ /[^\.]\.(.+)$/);
-  if (-e $self->assetdir . $file) {
-    open my $fh, '<', $self->assetdir . $file;
-    $self->log_debug("serving static file: $file");
-    if ($ext =~ /png|gif|jpg|jpeg/i) {
-      $res->content_type("image/$ext"); 
-    }
-    elsif ($ext =~ /js/) {
-      $res->header("Cache-control" => "no-cache");
-      $res->content_type("text/javascript");
-    }
-    elsif ($ext =~ /css/) {
-      $res->header("Cache-control" => "no-cache");
-      $res->content_type("text/css");
-    }
-    else {
-      $self->not_found($req, $res);
-=======
   method handle_message ($req, $res) {
     my $msg  = $req->uri->query_param('msg');
     my $source = $req->uri->query_param('source');
@@ -321,7 +183,6 @@ sub handle_static {
     for (split /\n/, $msg) {
       eval {$self->app->dispatch($_, $window) if length $_};
       if ($@) {$self->log_debug($@)}
->>>>>>> master:lib/Alice/HTTPD.pm
     }
     return 200;
   }
