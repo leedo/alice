@@ -10,6 +10,7 @@ class Alice::HTTPD {
   use Time::HiRes qw/time/;
   use JSON;
   use Template;
+  use File::ShareDir qw/dist_dir/;
   use URI::QueryParam;
   use YAML qw/DumpFile/;
   use CLASS;
@@ -39,19 +40,27 @@ class Alice::HTTPD {
     lazy => 1,
   );
   
+  has 'assetdir' => (
+    is => 'ro',
+    isa => 'Str',
+    default => sub {dist_dir('Alice')}
+  );
+  
   has 'tt' => (
     is => 'ro',
     isa => 'Template',
+    lazy => 1,
     default => sub {
+      my $self = shift;
+      print STDERR $self->assetdir;
       Template->new(
-        INCLUDE_PATH => 'data/templates',
+        INCLUDE_PATH => $self->assetdir . '/templates',
         ENCODING     => 'UTF8'
       );
     },
   );
 
   sub BUILD {
->>>>>>> master:lib/Alice/HTTPD.pm
     my $self = shift;
     POE::Component::Server::HTTP->new(
       Port            => $self->config->{port},
@@ -190,8 +199,8 @@ class Alice::HTTPD {
   method handle_static ($req, $res) {
     my $file = $req->uri->path;
     my ($ext) = ($file =~ /[^\.]\.(.+)$/);
-    if (-e "data$file") {
-      open my $fh, '<', "data$file";
+    if (-e $self->assetdir . "/$file") {
+      open my $fh, '<', $self->assetdir . "/$file";
       $self->log_debug("serving static file: $file");
       if ($ext =~ /png|gif|jpg|jpeg/i) {
         $res->content_type("image/$ext"); 

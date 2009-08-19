@@ -9,6 +9,7 @@ class Alice::Window {
   use MooseX::ClassAttribute;
   use MooseX::AttributeHelpers;
   use IRC::Formatting::HTML;
+  use File::ShareDir qw/dist_dir/;
   
   class_has msgid => (
     metaclass => 'Counter',
@@ -87,7 +88,7 @@ class Alice::Window {
     isa     => 'Template',
     default => sub {
       Template->new(
-        INCLUDE_PATH => 'data/templates',
+        INCLUDE_PATH => dist_dir('Alice') . '/templates',
         ENCODING     => 'UTF8'
       );
     },

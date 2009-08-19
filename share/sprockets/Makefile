@@ -1,13 +1,7 @@
-<<<<<<< HEAD:share/static/Makefile
-BUILD := .
-SOURCE := src
-INCLUDES := $(SOURCE) $(SOURCE)/alice $(SOURCE)/scriptaculous
-=======
 BUILD := data/static
 SOURCE := data/sprockets
 SPROCKETS := alice prototype scriptaculous shortcut
 INCLUDES := $(foreach sprocket,$(SPROCKETS),$(SOURCE)/$(sprocket)/src)
->>>>>>> master:Makefile
 INCLUDE := $(foreach dir,$(INCLUDES),-I $(dir))
 JAVASCRIPT_SOURCES := $(foreach dir,$(INCLUDES),$(wildcard $(dir)/*.js))
 
