@@ -1,10 +1,11 @@
+use 5.008001;
 use MooseX::Declare;
 
 =pod
 
 =head1 NAME
 
-Alice - An irc client that can be viewed in any WebKit browser
+App::Alice - An irc client that can be viewed in any WebKit browser
 
 =cut
 
@@ -34,10 +35,10 @@ calculating an offset and taking that into account.
 
 =cut
 
-class Alice {
-  use Alice::Window;
-  use Alice::HTTPD;
-  use Alice::IRC;
+class App::Alice {
+  use App::Alice::Window;
+  use App::Alice::HTTPD;
+  use App::Alice::IRC;
   use MooseX::AttributeHelpers;
   use Digest::CRC qw/crc16/;
   use POE;
@@ -58,18 +59,18 @@ class Alice {
 
   has httpd => (
     is      => 'ro',
-    isa     => 'Alice::HTTPD',
+    isa     => 'App::Alice::HTTPD',
     lazy    => 1,
     default => sub {
-      Alice::HTTPD->new(app => shift);
+      App::Alice::HTTPD->new(app => shift);
     },
   );
 
   has dispatcher => (
     is      => 'ro',
-    isa     => 'Alice::CommandDispatch',
+    isa     => 'App::Alice::CommandDispatch',
     default => sub {
-      Alice::CommandDispatch->new(app => shift);
+      App::Alice::CommandDispatch->new(app => shift);
     }
   );
 
@@ -78,24 +79,24 @@ class Alice {
     default => sub {
       eval {
         if ($^O eq 'darwin') {
-          require Alice::Notifier::Growl;
-          Alice::Notifier::Growl->new;
+          require App::Alice::Notifier::Growl;
+          App::Alice::Notifier::Growl->new;
         }
         elsif ($^O eq 'linux') {
-          require Alice::Notifier::LibNotify;
-          Alice::Notifier::LibNotify->new;
+          require App::Alice::Notifier::LibNotify;
+          App::Alice::Notifier::LibNotify->new;
         }
       }
     }
   );
 
-  method dispatch (Str $command, Alice::Window $window) {
+  method dispatch (Str $command, App::Alice::Window $window) {
     $self->dispatcher->handle($command, $window);
   }
 
   has window_map => (
     metaclass => 'Collection::Hash',
-    isa       => 'HashRef[Alice::Window]',
+    isa       => 'HashRef[App::Alice::Window]',
     default   => sub {{}},
     provides  => {
       values => 'windows',
@@ -124,14 +125,14 @@ class Alice {
     if (my $window = $self->get_window($id)) {
       return $window;
     }
-    my $window = Alice::Window->new(
+    my $window = App::Alice::Window->new(
       title      => $title,
       connection => $connection
     );  
     $self->add_window($id, $window);
   }
 
-  method close_window (Alice::Window $window) {
+  method close_window (App::Alice::Window $window) {
     return unless $window;
     $self->send($window->close_action);
     $self->log_debug("sending a request to close a tab: " . $window->title)
@@ -140,7 +141,7 @@ class Alice {
   }
 
   method add_irc_server (Str $name, HashRef $config) {
-    $self->ircs->{$name} = Alice::IRC->new(
+    $self->ircs->{$name} = App::Alice::IRC->new(
       app    => $self,
       alias  => $name,
       config => $config

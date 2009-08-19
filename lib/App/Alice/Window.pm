@@ -1,6 +1,6 @@
 use MooseX::Declare;
 
-class Alice::Window {
+class App::Alice::Window {
   
   use CLASS;
   use Encode;
@@ -88,7 +88,7 @@ class Alice::Window {
     isa     => 'Template',
     default => sub {
       Template->new(
-        INCLUDE_PATH => dist_dir('Alice') . '/templates',
+        INCLUDE_PATH => dist_dir('App::Alice') . '/templates',
         ENCODING     => 'UTF8'
       );
     },

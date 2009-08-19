@@ -1,6 +1,6 @@
 use MooseX::Declare;
 
-class Alice::IRC {
+class App::Alice::IRC {
   use MooseX::POE::SweetArgs qw/event/;
   use Encode;
   use POE::Component::IRC;
@@ -27,7 +27,7 @@ class Alice::IRC {
   );
 
   has 'app' => (
-    isa      => 'Alice',
+    isa      => 'App::Alice',
     is       => 'ro',
     required => 1,
   );

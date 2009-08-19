@@ -1,10 +1,10 @@
 use MooseX::Declare;
 
-class Alice::HTTPD {
+class App::Alice::HTTPD {
   use MooseX::POE::SweetArgs qw/event/;
   use POE::Component::Server::HTTP;
-  use Alice::AsyncGet;
-  use Alice::CommandDispatch;
+  use App::Alice::AsyncGet;
+  use App::Alice::CommandDispatch;
   use bytes;
   use MIME::Base64;
   use Time::HiRes qw/time/;
@@ -17,7 +17,7 @@ class Alice::HTTPD {
 
   has 'app' => (
     is  => 'ro',
-    isa => 'Alice',
+    isa => 'App::Alice',
     required => 1,
   );
 
@@ -43,7 +43,7 @@ class Alice::HTTPD {
   has 'assetdir' => (
     is => 'ro',
     isa => 'Str',
-    default => sub {dist_dir('Alice')}
+    default => sub {dist_dir('App::Alice')}
   );
   
   has 'tt' => (

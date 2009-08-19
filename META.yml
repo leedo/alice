@@ -1,5 +1,5 @@
 --- #YAML:1.0
-name: Alice
+name: App::Alice
 abstract: IRC client that is viewed in Safari
 version: 0.1
 author:

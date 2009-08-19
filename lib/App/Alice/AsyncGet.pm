@@ -1,4 +1,4 @@
-package Alice::AsyncGet;
+package App::Alice::AsyncGet;
 
 use strict;
 use warnings;

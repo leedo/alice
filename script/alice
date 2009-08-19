@@ -23,7 +23,7 @@ binmode(STDERR, ":utf8");
 binmode(STDOUT, ":utf8");
 print STDERR "You can view your IRC session at: http://localhost:".$config->{port}."/view\n";
 
-my $alice = Alice->new(config => $config);
+my $alice = App::Alice->new(config => $config);
 
 $SIG{INT} = sub {
   my @connections = grep {$_->connected} $alice->connections;

@@ -1,6 +1,6 @@
 use MooseX::Declare;
 
-class Alice::Notifier::Growl {
+class App::Alice::Notifier::Growl {
   use Mac::Growl ':all';
 
   sub BUILD {

@@ -1,6 +1,6 @@
 use MooseX::Declare;
 
-class Alice::Notifier::LibNotify {
+class App::Alice::Notifier::LibNotify {
   use Desktop::Notify;
 
   has 'connection' => (

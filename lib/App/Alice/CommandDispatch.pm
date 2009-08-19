@@ -1,6 +1,6 @@
 use MooseX::Declare;
 
-class Alice::CommandDispatch {
+class App::Alice::CommandDispatch {
   
   use Encode;
   
@@ -29,11 +29,11 @@ class Alice::CommandDispatch {
 
   has 'app' => (
     is       => 'ro',
-    isa      => 'Alice',
+    isa      => 'App::Alice',
     required => 1,
   );
 
-  method handle (Str $command, Alice::Window $window) {
+  method handle (Str $command, App::Alice::Window $window) {
     for my $handler (@{$self->handlers}) {
       my $re = $handler->{re};
       if ($command =~ /$re/) {
@@ -52,33 +52,33 @@ class Alice::CommandDispatch {
     }
   }
 
-  method names (Alice::Window $window, $?) {
+  method names (App::Alice::Window $window, $?) {
     $self->app->send($window->render_announcement($window->nick_table));
   }
 
-  method whois (Alice::Window $window, Str $arg) {
+  method whois (App::Alice::Window $window, Str $arg) {
     $arg = decode("utf8", $arg, Encode::FB_WARN);
     $self->app->send($window->render_announcement($window->whois_table($arg)));
   }
 
-  method query (Alice::Window $window, Str $arg) {
+  method query (App::Alice::Window $window, Str $arg) {
     $arg = decode("utf8", $arg, Encode::FB_WARN);
     my $new_window = $self->app->find_or_create_window($arg, $window->connection);
     $self->app->send($new_window->join_action);
   }
 
-  method _join (Alice::Window $window, Str $arg) {
+  method _join (App::Alice::Window $window, Str $arg) {
     $arg = decode("utf8", $arg, Encode::FB_WARN);
     $window->connection->yield("join", $arg);
   }
 
-  method part (Alice::Window $window, $?) {
+  method part (App::Alice::Window $window, $?) {
     if ($window->is_channel) {
       $window->part;
     }
   }
 
-  method close (Alice::Window $window, $?) {
+  method close (App::Alice::Window $window, $?) {
     if ($window->is_channel) {
       $window->part;
     }
@@ -87,20 +87,20 @@ class Alice::CommandDispatch {
     }
   }
 
-  method create (Alice::Window $window, Str $arg) {
+  method create (App::Alice::Window $window, Str $arg) {
     $arg = decode("utf8", $arg, Encode::FB_WARN);
     my $new_window = $self->app->find_or_create_window($arg, $window->connection);
     $self->app->send($new_window->join_action);
   }
 
-  method clear (Alice::Window $window, $?) {
+  method clear (App::Alice::Window $window, $?) {
     if ($window->is_channel) {
       $window->msgbuffer([]);
     }
     $self->app->send($window->clear_action);
   }
 
-  method topic (Alice::Window $window, Str $arg?) {
+  method topic (App::Alice::Window $window, Str $arg?) {
     if ($arg) {
       $window->topic($arg);
     }
@@ -112,22 +112,22 @@ class Alice::CommandDispatch {
     }
   }
 
-  method me (Alice::Window $window, Str $arg) {
+  method me (App::Alice::Window $window, Str $arg) {
     $self->app->send($window->render_message($window->nick, "• $arg"));
     $window->connection->yield("ctcp", $window->title, "ACTION $1");
   }
 
-  method quote (Alice::Window $window, Str $arg) {
+  method quote (App::Alice::Window $window, Str $arg) {
     $arg = decode("utf8", $arg, Encode::FB_WARN);
     $window->connection->yield("quote", $arg);
   }
 
-  method notfound (Alice::Window $window, Str $arg) {
+  method notfound (App::Alice::Window $window, Str $arg) {
     $arg = decode("utf8", $arg, Encode::FB_WARN);
     $self->app->send($window->render_announcement("Invalid command $arg"));
   }
 
-  method _say (Alice::Window $window, Str $arg) {
+  method _say (App::Alice::Window $window, Str $arg) {
     $self->app->send($window->render_message($window->nick, $arg));
     $arg = decode("utf8", $arg, Encode::FB_WARN);
     $window->connection->yield("privmsg", $window->title, $arg);
