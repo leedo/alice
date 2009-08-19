@@ -42,7 +42,7 @@ class App::Alice::HTTPD {
   has 'assetdir' => (
     is => 'ro',
     isa => 'Str',
-    default => sub {dist_dir('App::Alice')}
+    default => sub {dist_dir('App-Alice')}
   );
   
   has 'tt' => (

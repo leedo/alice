@@ -86,7 +86,7 @@ class App::Alice::Window {
     isa     => 'Template',
     default => sub {
       Template->new(
-        INCLUDE_PATH => dist_dir('App::Alice') . '/templates',
+        INCLUDE_PATH => dist_dir('App-Alice') . '/templates',
         ENCODING     => 'UTF8'
       );
     },
