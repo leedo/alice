@@ -7731,8 +7731,8 @@ Alice.Input = Class.create({
       wordWrap:   "break-word"
     });
 
-    var value = this.element.getValue().escapeHTML().replace("\n", "<br>");
-    element.update(value);
+    var value = this.element.getValue().escapeHTML();
+    element.update(value.replace(/\n$/, "\n\n").replace("\n", "<br>"));
     $(document.body).insert(element);
 
     var height = element.getHeight();
