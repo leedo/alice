@@ -176,7 +176,7 @@ class Alice::HTTPD {
   method handle_message ($req, $res) {
     my $msg  = $req->uri->query_param('msg');
     my $source = $req->uri->query_param('source');
-    my $window = $self->app->window_map->{$source};
+    my $window = $self->app->get_window($source);
     return unless $window;
     for (split /\n/, $msg) {
       eval {$self->app->dispatch($_, $window) if length $_};

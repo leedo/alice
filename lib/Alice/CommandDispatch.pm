@@ -58,12 +58,12 @@ class Alice::CommandDispatch {
 
   method whois (Alice::Window $window, Str $arg) {
     $arg = decode("utf8", $arg, Encode::FB_WARN);
-    $self->app->send($window->render_announcement($window->nick_info($arg)));
+    $self->app->send($window->render_announcement($window->whois_table($arg)));
   }
 
   method query (Alice::Window $window, Str $arg) {
     $arg = decode("utf8", $arg, Encode::FB_WARN);
-    my $new_window = $self->app->create_window($arg, $window->connection);
+    my $new_window = $self->app->find_or_create_window($arg, $window->connection);
     $self->app->send($new_window->join_action);
   }
 
@@ -89,7 +89,7 @@ class Alice::CommandDispatch {
 
   method create (Alice::Window $window, Str $arg) {
     $arg = decode("utf8", $arg, Encode::FB_WARN);
-    my $new_window = $self->app->create_window($arg, $window->connection);
+    my $new_window = $self->app->find_or_create_window($arg, $window->connection);
     $self->app->send($new_window->join_action);
   }
 

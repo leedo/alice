@@ -7,12 +7,17 @@ class Alice::Window {
   use DateTime;
   use Digest::CRC qw/crc16/;
   use MooseX::ClassAttribute;
+  use MooseX::AttributeHelpers;
   use IRC::Formatting::HTML;
   
   class_has msgid => (
-    is      => 'rw',
-    isa     => 'Int',
-    default => 1,
+    metaclass => 'Counter',
+    is        => 'rw',
+    isa       => 'Int',
+    default   => sub {1},
+    provides  => {
+      inc => 'next_msgid',
+    }
   );
   
   has is_channel => (
@@ -58,26 +63,28 @@ class Alice::Window {
   );
 
   has connection => (
-    is => 'ro',
-    isa => 'POE::Component::IRC::State',
+    is       => 'ro',
+    isa      => 'POE::Component::IRC::State',
     required => 1,
   );
   
-  has nick_stash => (
-    is => 'rw',
-    isa => 'ArrayRef[Str]',
-    default => sub {[]}
-  );
-  
-  has nick_map => (
-    is => 'rw',
-    isa => 'HashRef[Str]',
-    default => sub {{}}
+  has nicks => (
+    metaclass => 'Collection::Hash',
+    isa       => 'HashRef[Str|Undef]',
+    default   => sub {{}},
+    provides  => {
+      delete   => 'remove_nick',
+      exists   => 'includes_nick',
+      get      => 'nick_info',
+      keys     => 'all_nicks',
+      kv       => 'all_nick_info',
+      set      => 'add_nick',
+    }
   );
   
   has 'tt' => (
-    is     => 'ro',
-    isa    => 'Template',
+    is      => 'ro',
+    isa     => 'Template',
     default => sub {
       Template->new(
         INCLUDE_PATH => 'data/templates',
@@ -86,37 +93,24 @@ class Alice::Window {
     },
   );
   
-  method nicks {
-    return [ keys %{$self->nick_map} ];
+  method rename_nick (Str $nick, Str $new_nick) {
+    return unless $self->includes_nick($nick);
+    my $info = $self->nick_info($nick);
+    $self->add_nick($new_nick, $info);
+    $self->remove_nick($nick);
   }
 
   method serialized (Bool :$encoded = 0) {
     return {
-      id      => $self->id, 
-      session => $self->session,
-      title   => $encoded ? encode('utf8', $self->title) : $self->title,
+      id         => $self->id, 
+      session    => $self->session,
+      title      => $encoded ? encode('utf8', $self->title) : $self->title,
+      is_channel => $self->is_channel,
     };
   }
 
   method nick {
     return $self->connection->nick_name;
-  }
-  
-  method stash_nicks (ArrayRef $nicks) {
-    push @{$self->nick_stash}, @$nicks;
-  }
-  
-  method finalize_nicks {
-    $self->nick_map({ map {$_ => $_} @{$self->nick_stash} });
-    $self->nick_stash([]);
-  }
-  
-  method remove_nick (Str $nick) {
-    delete $self->nick_map->{$nick};
-  }
-  
-  method add_nick (Str $nick) {
-    $self->nick_map->{$nick} = $nick;
   }
 
   method topic (Str $string?) {
@@ -128,10 +122,6 @@ class Alice::Window {
     else {
       return $self->connection->channel_topic($self->title) || {};
     }
-  }
-  
-  method nextmsgid {
-    return CLASS->msgid(CLASS->msgid + 1);
   }
 
   method add_message (HashRef $message) {
@@ -161,7 +151,7 @@ class Alice::Window {
     return {
       type      => "action",
       event     => "nicks",
-      nicks     => $self->nicks,
+      nicks     => [ $self->all_nicks ],
       window    => $self->serialized,
     };
   }
@@ -188,9 +178,9 @@ class Alice::Window {
       nick      => $nick,
       window    => $self->serialized,
       body      => $body,
-      msgid     => $self->nextmsgid,
+      msgid     => $self->next_msgid,
       timestamp => $self->timestamp,
-      nicks     => $self->nicks,
+      nicks     => [ $self->all_nicks ],
     };
 
     my $html = '';
@@ -213,7 +203,7 @@ class Alice::Window {
       highlight => $body =~ /\b$own_nick\b/i ? 1 : 0,
       html      => $html,
       self      => $self->nick eq $nick,
-      msgid     => $self->nextmsgid,
+      msgid     => $self->next_msgid,
       timestamp => $self->timestamp,
     };
     my $fullhtml = '';
@@ -251,7 +241,7 @@ class Alice::Window {
     $self->connection->yield("part", $self->title);
   }
 
-  method nick_info (Str $nick) {
+  method whois_table (Str $nick) {
     my $info = $self->connection->nick_info($nick);
     if ($info) {
       return join "\n", (
@@ -263,7 +253,7 @@ class Alice::Window {
   }
 
   method nick_table {
-    return _format_nick_table(@{$self->nicks});
+    return _format_nick_table($self->all_nicks);
   }
   
   sub _format_nick_table {

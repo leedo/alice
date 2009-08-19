@@ -71,10 +71,7 @@ class Alice::IRC {
 
   method window (Str $title){
     $title = decode("utf8", $title, Encode::FB_WARN);
-    my $window = $self->app->window($self->alias, $title);
-    if (! $window) {
-      $window = $self->app->create_window($title, $self->connection);
-    }
+    my $window = $self->app->find_or_create_window($title, $self->connection);
     return $window;
   }
 
@@ -96,8 +93,13 @@ class Alice::IRC {
     my $channel = $msglist->[1];
     my $window = $self->window($channel);
     return unless $window;
-    my @nicks = map {$_ =~ s/^[@&+]//; $_} split " ", $msglist->[2];
-    $window->stash_nicks(\@nicks);
+    for my $nick (split " ", $msglist->[2]) {
+      my ($priv, $name) = (undef, $nick);
+      if ($nick =~ /^([@&+])?(.+)/) {
+        ($priv, $name) = ($1, $2);
+      }
+      $window->add_nick($name, $priv);
+    }
   };
   
   event irc_366 => sub {
@@ -105,7 +107,6 @@ class Alice::IRC {
     my $channel = $msglist->[0];
     my $window = $self->window($channel);
     return unless $window;
-    $window->finalize_nicks;
     my $topic = $window->topic;
     $self->app->send(
       $window->join_action,
@@ -143,10 +144,11 @@ class Alice::IRC {
   event irc_nick => sub {
     my ($self, $who, $new_nick) = @_;
     my $nick = ( split /!/, $who )[0];
-    my @events = map {
-      $self->window($_)->render_event("nick", $nick, $new_nick)
-    } $self->connection->nick_channels($new_nick);
-    $self->app->send(@events)
+    $self->app->send(
+      map { $_->rename_nick($nick, $new_nick);
+            $_->render_event("nick", $nick, $new_nick)
+      } $self->app->nick_windows($nick)
+    );
   };
 
   event irc_join => sub {
@@ -154,7 +156,7 @@ class Alice::IRC {
     my $nick = ( split /!/, $who)[0];
     my $window = $self->window($where);
     if ($nick ne $self->connection->nick_name) {
-      $window->add_nick($nick);
+      $window->add_nick($nick, undef);
       $self->app->send($window->render_event("joined", $nick));
     }
   };

@@ -4,6 +4,7 @@ class Alice {
   use Alice::Window;
   use Alice::HTTPD;
   use Alice::IRC;
+  use MooseX::AttributeHelpers;
   use Digest::CRC qw/crc16/;
   use POE;
 
@@ -57,13 +58,21 @@ class Alice {
   }
 
   has window_map => (
-    is      => 'rw',
-    isa     => 'HashRef[Alice::Window]',
-    default => sub {{}},
+    metaclass => 'Collection::Hash',
+    isa       => 'HashRef[Alice::Window]',
+    default   => sub {{}},
+    provides  => {
+      values => 'windows',
+      set    => 'add_window',
+      exists => 'has_window',
+      get    => 'get_window',
+      delete => 'remove_window',
+      keys   => 'window_ids',
+    }
   );
-
-  method windows {
-    return values %{$self->window_map};
+  
+  method nick_windows (Str $nick) {
+    return grep {$_->includes_nick($nick)} $self->windows;
   }
 
   method buffered_messages (Int $min) {
@@ -74,24 +83,16 @@ class Alice {
     return map {$_->connection} values %{$self->ircs};
   }
 
-  method window (Str $session, Str $title) {
-    my $id = "win_" . crc16(lc($title . $session));
-    return $self->window_map->{$id};
-  }
-
-  method add_window (Alice::Window $window) {
-    $self->window_map->{$window->id} = $window;
-  }
-
-  method create_window (Str $title, $connection) {
-    my $window = $self->window($connection->session_alias, $title);
-    if (! $window) {
-      $window = Alice::Window->new(
-        title      => $title,
-        connection => $connection);
-      $self->add_window($window);
+  method find_or_create_window (Str $title, $connection) {
+    my $id = "win_" . crc16(lc($title . $connection->session_alias));
+    if (my $window = $self->get_window($id)) {
+      return $window;
     }
-    return $window;
+    my $window = Alice::Window->new(
+      title      => $title,
+      connection => $connection
+    );  
+    $self->add_window($id, $window);
   }
 
   method close_window (Alice::Window $window) {
@@ -99,7 +100,7 @@ class Alice {
     $self->send($window->close_action);
     $self->log_debug("sending a request to close a tab: " . $window->title)
       if $self->httpd->has_clients;
-    delete $self->window_map->{$window->id};
+    $self->remove_window($window->id);
   }
 
   method add_irc_server (Str $name, HashRef $config) {

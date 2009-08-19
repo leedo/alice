@@ -7,7 +7,6 @@ use FindBin;
 use lib "$FindBin::Bin/lib";
 use lib "$FindBin::Bin/extlib/lib/perl5";
 use local::lib "$FindBin::Bin/extlib";
-use Carp::Always;
 use YAML qw/LoadFile/;
 use Alice;
 
@@ -21,8 +20,7 @@ my $config = {
 if (-e $ENV{HOME}.'/.alice.yaml') {
   eval { $config = LoadFile($ENV{HOME}.'/.alice.yaml') };
 }
-  
-#BEGIN { $SIG{__WARN__} = sub { warn $_[0] if $config->{debug} } };
+
 binmode(STDERR, ":utf8");
 binmode(STDOUT, ":utf8");
 print STDERR "You can view your IRC session at: http://localhost:".$config->{port}."/view\n";
