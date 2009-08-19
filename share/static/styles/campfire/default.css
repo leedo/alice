@@ -9,36 +9,41 @@ a:hover {
   text-shadow: rgba( 0, 0, 0, .3 ) 0 1px 1px;
 }
 
-div.channel {
+div.window {
   position:fixed;
-  bottom: 54px;
-  top: 17px;
-  width: 100%;
-  overflow-y: auto;
-  overflow-x: none;
-}
-
-div.input {
-  position: fixed;
+  top: 0px;
   bottom: 23px;
-  left: 0px;
-  height: 22px;
   width: 100%;
-  padding-top: 6px;
-  border-bottom: 2px solid #efefef;
-  background: #efefef;
-  border-top: 1px solid #aaa;
 }
 
-div.input input {
+div.window table {
   width: 100%;
   height: 100%;
-  padding: 3px 0;
-  border: none;
+  padding: 0;
+}
+
+tr.input td {
+  height: 20px;
+  background: #fff;
+  border-bottom: 2px solid #fff;
+}
+
+tr.vert_dragger td {
+  height: 3px;
+  background: #efefef;
   border-top: 1px solid #aaa;
+  border-bottom: 2px solid #fff;
+}
+
+tr.input textarea {
+  width: 100%;
+  padding: 0;
+  border: none;
   margin: 0;
   outline: 0 none;
   font-size: 12px;
+  overflow: hidden;
+  resize: none;
 }
 
 ul#tabs {
@@ -123,10 +128,7 @@ ul#controls li:hover {
   background: #ccc;
 }
 
-div.topic {
-  position: fixed;
-  top: 0px;
-  left: 0px;
+tr.topic td {
   width: 100%;
   background: #efefef;
   font-size: 11px;
@@ -138,7 +140,7 @@ div.topic {
   overflow: hidden;
 }
 
-div.topic a {
+tr.topic a {
   text-decoration: none;
 }
 
@@ -146,6 +148,10 @@ ul.messages {
   list-style: none;
   margin: 0;
   padding: 0;
+  height: 100%;
+  width: 100%;
+  overflow-x: none;
+  overflow-y: auto;
   background: #fff;
 }
 
@@ -155,6 +161,14 @@ ul.messages li {
   clear: both;
   width: 100%;
   overflow: hidden;
+}
+
+ul.messages li:last-child {
+  margin-bottom: 3px;
+}
+
+ul.messages li:first-child {
+  margin-top: 4px;
 }
 
 ul.messages li.self {
@@ -187,6 +201,10 @@ div.msg {
   -khtml-nbsp-mode: space;
 }
 
+div.msg a {
+  word-break: break-all;
+}
+
 div.msg img {
   display: block;
   border: none;
@@ -195,7 +213,7 @@ div.msg img {
 div.msg.monospace, div.msg.announce {
   font-family: Monaco, monospace;
   font-size: 10px;
-  line-height: 13px;
+  line-height: 12px;
   white-space: pre-wrap;
   word-wrap: normal;
   padding: 8px 5px;
@@ -223,7 +241,6 @@ ul.messages li.event div.left {
 
 div.msg.announce {
   color: #777;
-  font-style: italic;
 }
 
 div.msg img.audio {

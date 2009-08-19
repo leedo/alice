@@ -1,0 +1,30 @@
+<div class="window[% IF loop.first %] active[% END %]" id="[% window.id %]">
+  <table cellspacing="0" cellpadding="0">
+    <tr class="topic">
+      <td id="[% window.id %]_topic">
+        [% topic.Value || "(no topic set)" %]
+      </td>
+    </tr>
+    <tr>
+      <td valign="top">
+        <ul class="messages" id="[% window.id %]_messages">
+        </ul>
+      </td>
+    </tr>
+    <tr class="vert_dragger">
+      <td id="[% window.id %]_dragger"></td>
+    </tr>
+    <tr class="input">
+      <td id="[% window.id %]_input">
+        <form id="[% window.id %]_form" autocomplete="off">
+          <input type="hidden" name="source" value="[% window.id %]" />
+          <button type="submit" style="display:none" id="[% window.id %]_submit">Send</button>
+          <textarea name="msg" id="[% window.id %]_msg" rows="1"></textarea>
+        </form>
+        <script type="text/javascript">[% USE JavaScript %]
+          alice.openWindow('[% window.id %]','[% window.title | js %]',[% loop.first ? "true" : "false" %]);
+        </script>
+      </td>
+    </tr>
+  </table>
+</div>

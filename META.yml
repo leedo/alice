@@ -10,13 +10,20 @@ requires:
   YAML: 0
   JSON: 0
   Moose: 0
+  Encode: 0
+  MooseX::Declare: 0
+  MooseX::ClassAttribute: 0
+  MooseX::AttributeHelpers: 0
+  MooseX::POE: 0
+  Digest::CRC: 0
+  CLASS: 0
   POE::Component::IRC: 0
   POE::Component::Server::HTTP: 0
   POE::Component::SSLify: 0
   Template: 0
-  HTML::Entities: 0
-  List::MoreUtils: 0.22
-  IRC::Formatting::HTML: 0.2
+  Template::Plugin::JavaScript: 0
+  List::MoreUtils: 0
+  IRC::Formatting::HTML: 0.3
   DateTime: 0
   local::lib: 0
 urls:

@@ -1,0 +1,51 @@
+div.left {
+  width: 60px;
+}
+
+div.msg {
+  margin-left: 71px;
+}
+
+html, body {
+  height: 416px;
+}
+
+div#container {
+  height: 417px;
+  position: relative;
+  clear: both;
+}
+
+ul#tabs {
+  position: absolute;
+  bottom: 0px;
+  height: 22px;
+}
+
+ul#controls {
+  position: absolute;
+  bottom: 0px;
+  right: 0px;
+}
+
+div.window {
+  height: 416px;
+  position: relative;
+}
+
+div.input textarea {
+  padding: 3px 0 0 0;
+}
+
+ul.messages {
+  padding-bottom: 70px;
+}
+
+div.input {
+  position: fixed;
+  bottom: -36px;
+}
+
+div.msg.monospace, div.msg.announce {
+  line-height: 11px;
+}

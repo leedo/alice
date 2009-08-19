@@ -1,12 +1,17 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
   <head>
-    <title>[% channels.0.chan %]</title>
+    <title>[% windows.0.window.title %]</title>
     <script type="text/javascript" src="/static/site.js"></script>
     <script type="text/javascript" src="/static/styles/[% style %]/default.js"></script>
     <link type="text/css" rel="stylesheet" href="/static/site.css" />
     <link type="text/css" rel="stylesheet" href="/static/config.css" />
     <link type="text/css" rel="stylesheet" href="/static/styles/[% style %]/default.css" />
+    <!--[if !IE]>--> 
+    <link rel="stylesheet" href="/static/styles/[% style %]/iphone.css" type="text/css" 
+          media="only screen and (max-device-width: 480px)" /> 
+    <!--<![endif]-->
+    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no" />
   </head>
   <body>
     <div id="container">
@@ -15,31 +20,13 @@
         <li id="status" class="disabled"></li>
       </ul>
       <ul id="tabs">
-        [% FOR channels %]
+        [% FOR windows %]
         [% INCLUDE "tab.tt" %]
         [% END %]
       </ul>
-      <script type="text/javascript">
-        Sortable.create('tabs', {
-          overlap: 'horizontal',
-          constraint: 'horizontal',
-          format: /(.+)/,
-          onUpdate: function (res) {
-            var tabs = res.childElements();
-            tabs.invoke('removeClassName','leftof_active');
-            for (var i=0; i < tabs.length; i++) {
-              if (tabs[i].hasClassName('active')) {
-                if (tabs[i].previous()) tabs[i].previous().addClassName('leftof_active');
-                tabs[i].removeClassName('leftof_active');
-                return;
-              }
-            }
-          }
-        });
-      </script>
-      <div id="channels">
-      [% FOR channels %]
-      [% INCLUDE "channel.tt" %]
+      <div id="windows">
+      [% FOR windows %]
+      [% INCLUDE "window.tt" %]
       [% END %]
       </div>
     </div>

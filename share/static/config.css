@@ -1,10 +1,8 @@
 div#config {
   position: absolute;
   width: 480px;
-  left: 50%;
-  margin-left: -240px;
-  top: 50px;
-  bottom: 85px;
+  top: 5px;
+  bottom: 5px;
   background: #efefef;
   padding: 10px 10px;
   z-index: 999;
@@ -36,7 +34,7 @@ div#config div.setting div.field.clear {
   clear: both;
 }
 
-div#config label, input {
+div#config label, div#config input {
   display: block;
   font-size: 0.8em;
 }
@@ -130,16 +128,6 @@ div#config ul#connections li.connected {
   color: #222;
 }
 
-div.overlay {
-  position: absolute;
-  top: 35px;
-  -moz-border-radius: 5px;
-  -webkit-border-radius: 5px;
-  bottom: 70px;
-  width: 530px;
-  left: 50%;
-  margin-left: -255px;
-  background: #000;
-  opacity: 0.4;
-  z-index: 998;
+body.config {
+  background: #efefef;
 }

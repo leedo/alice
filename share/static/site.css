@@ -1,8 +1,8 @@
-div.channel.active {
+div.window.active {
   display: block;
 }
 
-div.channel {
+div.window {
   display: none;
 }
 

@@ -496,16 +496,11 @@ Object.extend(String.prototype, (function() {
   }
 
   function escapeHTML() {
-    escapeHTML.text.data = this;
-    return escapeHTML.div.innerHTML;
+    return this.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   }
 
   function unescapeHTML() {
-    var div = document.createElement('div');
-    div.innerHTML = this.stripTags();
-    return div.childNodes[0] ? (div.childNodes.length > 1 ?
-      $A(div.childNodes).inject('', function(memo, node) { return memo+node.nodeValue }) :
-      div.childNodes[0].nodeValue) : '';
+    return this.stripTags().replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&');
   }
 
 
@@ -666,24 +661,6 @@ Object.extend(String.prototype, (function() {
   };
 })());
 
-Object.extend(String.prototype.escapeHTML, {
-  div:  document.createElement('div'),
-  text: document.createTextNode('')
-});
-
-String.prototype.escapeHTML.div.appendChild(String.prototype.escapeHTML.text);
-
-if ('<\n>'.escapeHTML() !== '&lt;\n&gt;') {
-  String.prototype.escapeHTML = function() {
-    return this.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  };
-}
-
-if ('&lt;\n&gt;'.unescapeHTML() !== '<\n>') {
-  String.prototype.unescapeHTML = function() {
-    return this.stripTags().replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&');
-  };
-}
 var Template = Class.create({
   initialize: function(template, pattern) {
     this.template = template.toString();
@@ -2101,10 +2078,6 @@ Element.Methods = {
   readAttribute: function(element, name) {
     element = $(element);
     if (Prototype.Browser.IE) {
-      if (name === 'type' &&
-        element.tagName.toUpperCase() == 'IFRAME') {
-        return element.getAttribute('type');
-      }
       var t = Element._attributeTranslations.read;
       if (t.values[name]) return t.values[name](element, name);
       if (t.names[name]) name = t.names[name];
@@ -4902,43 +4875,6 @@ Object.extend(Element.ClassNames.prototype, Enumerable);
 
 /*--------------------------------------------------------------------------*/
 
-
-var Scriptaculous = {
-  Version: '1.8.2',
-  require: function(libraryName) {
-    document.write('<script type="text/javascript" src="'+libraryName+'"><\/script>');
-  },
-  REQUIRED_PROTOTYPE: '1.6.0.3',
-  load: function() {
-    function convertVersionString(versionString) {
-      var v = versionString.replace(/_.*|\./g, '');
-      v = parseInt(v + '0'.times(4-v.length));
-      return versionString.indexOf('_') > -1 ? v-1 : v;
-    }
-
-    if((typeof Prototype=='undefined') ||
-       (typeof Element == 'undefined') ||
-       (typeof Element.Methods=='undefined') ||
-       (convertVersionString(Prototype.Version) <
-        convertVersionString(Scriptaculous.REQUIRED_PROTOTYPE)))
-       throw("script.aculo.us requires the Prototype JavaScript framework >= " +
-        Scriptaculous.REQUIRED_PROTOTYPE);
-
-    var js = /scriptaculous\.js(\?.*)?$/;
-    $$('head script[src]').findAll(function(s) {
-      return s.src.match(js);
-    }).each(function(s) {
-      var path = s.src.replace(js, ''),
-      includes = s.src.match(/\?.*load=([a-z,]*)/);
-      (includes ? includes[1] : 'builder,effects,dragdrop,controls,slider,sound').split(',').each(
-       function(include) { Scriptaculous.require(path+include+'.js') });
-    });
-  }
-};
-
-Scriptaculous.load();
-
-
 String.prototype.parseColor = function() {
   var color = '#';
   if (this.slice(0,4) == 'rgb(') {
@@ -5156,12 +5092,6 @@ Effect.Queue = Effect.Queues.get('global');
 Effect.Base = Class.create({
   position: null,
   start: function(options) {
-    function codeForEvent(options,eventName){
-      return (
-        (options[eventName+'Internal'] ? 'this.options.'+eventName+'Internal(this);' : '') +
-        (options[eventName] ? 'this.options.'+eventName+'(this);' : '')
-      );
-    }
     if (options && options.transition === false) options.transition = Effect.Transitions.linear;
     this.options      = Object.extend(Object.extend({ },Effect.DefaultOptions), options || { });
     this.currentFrame = 0;
@@ -6046,885 +5976,6 @@ $w('getInlineOpacity forceRerendering setContentZoom collectTextNodes collectTex
 );
 
 Element.addMethods(Effect.Methods);
-
-
-
-if(typeof Effect == 'undefined')
-  throw("controls.js requires including script.aculo.us' effects.js library");
-
-var Autocompleter = { };
-Autocompleter.Base = Class.create({
-  baseInitialize: function(element, update, options) {
-    element          = $(element);
-    this.element     = element;
-    this.update      = $(update);
-    this.hasFocus    = false;
-    this.changed     = false;
-    this.active      = false;
-    this.index       = 0;
-    this.entryCount  = 0;
-    this.oldElementValue = this.element.value;
-
-    if(this.setOptions)
-      this.setOptions(options);
-    else
-      this.options = options || { };
-
-    this.options.paramName    = this.options.paramName || this.element.name;
-    this.options.tokens       = this.options.tokens || [];
-    this.options.frequency    = this.options.frequency || 0.4;
-    this.options.minChars     = this.options.minChars || 1;
-    this.options.onShow       = this.options.onShow ||
-      function(element, update){
-        if(!update.style.position || update.style.position=='absolute') {
-          update.style.position = 'absolute';
-          Position.clone(element, update, {
-            setHeight: false,
-            offsetTop: element.offsetHeight
-          });
-        }
-        Effect.Appear(update,{duration:0.15});
-      };
-    this.options.onHide = this.options.onHide ||
-      function(element, update){ new Effect.Fade(update,{duration:0.15}) };
-
-    if(typeof(this.options.tokens) == 'string')
-      this.options.tokens = new Array(this.options.tokens);
-    if (!this.options.tokens.include('\n'))
-      this.options.tokens.push('\n');
-
-    this.observer = null;
-
-    this.element.setAttribute('autocomplete','off');
-
-    Element.hide(this.update);
-
-    Event.observe(this.element, 'blur', this.onBlur.bindAsEventListener(this));
-    Event.observe(this.element, 'keydown', this.onKeyPress.bindAsEventListener(this));
-  },
-
-  show: function() {
-    if(Element.getStyle(this.update, 'display')=='none') this.options.onShow(this.element, this.update);
-    if(!this.iefix &&
-      (Prototype.Browser.IE) &&
-      (Element.getStyle(this.update, 'position')=='absolute')) {
-      new Insertion.After(this.update,
-       '<iframe id="' + this.update.id + '_iefix" '+
-       'style="display:none;position:absolute;filter:progid:DXImageTransform.Microsoft.Alpha(opacity=0);" ' +
-       'src="javascript:false;" frameborder="0" scrolling="no"></iframe>');
-      this.iefix = $(this.update.id+'_iefix');
-    }
-    if(this.iefix) setTimeout(this.fixIEOverlapping.bind(this), 50);
-  },
-
-  fixIEOverlapping: function() {
-    Position.clone(this.update, this.iefix, {setTop:(!this.update.style.height)});
-    this.iefix.style.zIndex = 1;
-    this.update.style.zIndex = 2;
-    Element.show(this.iefix);
-  },
-
-  hide: function() {
-    this.stopIndicator();
-    if(Element.getStyle(this.update, 'display')!='none') this.options.onHide(this.element, this.update);
-    if(this.iefix) Element.hide(this.iefix);
-  },
-
-  startIndicator: function() {
-    if(this.options.indicator) Element.show(this.options.indicator);
-  },
-
-  stopIndicator: function() {
-    if(this.options.indicator) Element.hide(this.options.indicator);
-  },
-
-  onKeyPress: function(event) {
-    if(this.active)
-      switch(event.keyCode) {
-       case Event.KEY_TAB:
-       case Event.KEY_RETURN:
-         this.selectEntry();
-         Event.stop(event);
-       case Event.KEY_ESC:
-         this.hide();
-         this.active = false;
-         Event.stop(event);
-         return;
-       case Event.KEY_LEFT:
-       case Event.KEY_RIGHT:
-         return;
-       case Event.KEY_UP:
-         this.markPrevious();
-         this.render();
-         Event.stop(event);
-         return;
-       case Event.KEY_DOWN:
-         this.markNext();
-         this.render();
-         Event.stop(event);
-         return;
-      }
-     else
-       if(event.keyCode==Event.KEY_TAB || event.keyCode==Event.KEY_RETURN ||
-         (Prototype.Browser.WebKit > 0 && event.keyCode == 0)) return;
-
-    this.changed = true;
-    this.hasFocus = true;
-
-    if(this.observer) clearTimeout(this.observer);
-      this.observer =
-        setTimeout(this.onObserverEvent.bind(this), this.options.frequency*1000);
-  },
-
-  activate: function() {
-    this.changed = false;
-    this.hasFocus = true;
-    this.getUpdatedChoices();
-  },
-
-  onHover: function(event) {
-    var element = Event.findElement(event, 'LI');
-    if(this.index != element.autocompleteIndex)
-    {
-        this.index = element.autocompleteIndex;
-        this.render();
-    }
-    Event.stop(event);
-  },
-
-  onClick: function(event) {
-    var element = Event.findElement(event, 'LI');
-    this.index = element.autocompleteIndex;
-    this.selectEntry();
-    this.hide();
-  },
-
-  onBlur: function(event) {
-    setTimeout(this.hide.bind(this), 250);
-    this.hasFocus = false;
-    this.active = false;
-  },
-
-  render: function() {
-    if(this.entryCount > 0) {
-      for (var i = 0; i < this.entryCount; i++)
-        this.index==i ?
-          Element.addClassName(this.getEntry(i),"selected") :
-          Element.removeClassName(this.getEntry(i),"selected");
-      if(this.hasFocus) {
-        this.show();
-        this.active = true;
-      }
-    } else {
-      this.active = false;
-      this.hide();
-    }
-  },
-
-  markPrevious: function() {
-    if(this.index > 0) this.index--;
-      else this.index = this.entryCount-1;
-    this.getEntry(this.index).scrollIntoView(true);
-  },
-
-  markNext: function() {
-    if(this.index < this.entryCount-1) this.index++;
-      else this.index = 0;
-    this.getEntry(this.index).scrollIntoView(false);
-  },
-
-  getEntry: function(index) {
-    return this.update.firstChild.childNodes[index];
-  },
-
-  getCurrentEntry: function() {
-    return this.getEntry(this.index);
-  },
-
-  selectEntry: function() {
-    this.active = false;
-    this.updateElement(this.getCurrentEntry());
-  },
-
-  updateElement: function(selectedElement) {
-    if (this.options.updateElement) {
-      this.options.updateElement(selectedElement);
-      return;
-    }
-    var value = '';
-    if (this.options.select) {
-      var nodes = $(selectedElement).select('.' + this.options.select) || [];
-      if(nodes.length>0) value = Element.collectTextNodes(nodes[0], this.options.select);
-    } else
-      value = Element.collectTextNodesIgnoreClass(selectedElement, 'informal');
-
-    var bounds = this.getTokenBounds();
-    if (bounds[0] != -1) {
-      var newValue = this.element.value.substr(0, bounds[0]);
-      var whitespace = this.element.value.substr(bounds[0]).match(/^\s+/);
-      if (whitespace)
-        newValue += whitespace[0];
-      this.element.value = newValue + value + this.element.value.substr(bounds[1]);
-    } else {
-      this.element.value = value;
-    }
-    this.oldElementValue = this.element.value;
-    this.element.focus();
-
-    if (this.options.afterUpdateElement)
-      this.options.afterUpdateElement(this.element, selectedElement);
-  },
-
-  updateChoices: function(choices) {
-    if(!this.changed && this.hasFocus) {
-      this.update.innerHTML = choices;
-      Element.cleanWhitespace(this.update);
-      Element.cleanWhitespace(this.update.down());
-
-      if(this.update.firstChild && this.update.down().childNodes) {
-        this.entryCount =
-          this.update.down().childNodes.length;
-        for (var i = 0; i < this.entryCount; i++) {
-          var entry = this.getEntry(i);
-          entry.autocompleteIndex = i;
-          this.addObservers(entry);
-        }
-      } else {
-        this.entryCount = 0;
-      }
-
-      this.stopIndicator();
-      this.index = 0;
-
-      if(this.entryCount==1 && this.options.autoSelect) {
-        this.selectEntry();
-        this.hide();
-      } else {
-        this.render();
-      }
-    }
-  },
-
-  addObservers: function(element) {
-    Event.observe(element, "mouseover", this.onHover.bindAsEventListener(this));
-    Event.observe(element, "click", this.onClick.bindAsEventListener(this));
-  },
-
-  onObserverEvent: function() {
-    this.changed = false;
-    this.tokenBounds = null;
-    if(this.getToken().length>=this.options.minChars) {
-      this.getUpdatedChoices();
-    } else {
-      this.active = false;
-      this.hide();
-    }
-    this.oldElementValue = this.element.value;
-  },
-
-  getToken: function() {
-    var bounds = this.getTokenBounds();
-    return this.element.value.substring(bounds[0], bounds[1]).strip();
-  },
-
-  getTokenBounds: function() {
-    if (null != this.tokenBounds) return this.tokenBounds;
-    var value = this.element.value;
-    if (value.strip().empty()) return [-1, 0];
-    var diff = arguments.callee.getFirstDifferencePos(value, this.oldElementValue);
-    var offset = (diff == this.oldElementValue.length ? 1 : 0);
-    var prevTokenPos = -1, nextTokenPos = value.length;
-    var tp;
-    for (var index = 0, l = this.options.tokens.length; index < l; ++index) {
-      tp = value.lastIndexOf(this.options.tokens[index], diff + offset - 1);
-      if (tp > prevTokenPos) prevTokenPos = tp;
-      tp = value.indexOf(this.options.tokens[index], diff + offset);
-      if (-1 != tp && tp < nextTokenPos) nextTokenPos = tp;
-    }
-    return (this.tokenBounds = [prevTokenPos + 1, nextTokenPos]);
-  }
-});
-
-Autocompleter.Base.prototype.getTokenBounds.getFirstDifferencePos = function(newS, oldS) {
-  var boundary = Math.min(newS.length, oldS.length);
-  for (var index = 0; index < boundary; ++index)
-    if (newS[index] != oldS[index])
-      return index;
-  return boundary;
-};
-
-Ajax.Autocompleter = Class.create(Autocompleter.Base, {
-  initialize: function(element, update, url, options) {
-    this.baseInitialize(element, update, options);
-    this.options.asynchronous  = true;
-    this.options.onComplete    = this.onComplete.bind(this);
-    this.options.defaultParams = this.options.parameters || null;
-    this.url                   = url;
-  },
-
-  getUpdatedChoices: function() {
-    this.startIndicator();
-
-    var entry = encodeURIComponent(this.options.paramName) + '=' +
-      encodeURIComponent(this.getToken());
-
-    this.options.parameters = this.options.callback ?
-      this.options.callback(this.element, entry) : entry;
-
-    if(this.options.defaultParams)
-      this.options.parameters += '&' + this.options.defaultParams;
-
-    new Ajax.Request(this.url, this.options);
-  },
-
-  onComplete: function(request) {
-    this.updateChoices(request.responseText);
-  }
-});
-
-
-Autocompleter.Local = Class.create(Autocompleter.Base, {
-  initialize: function(element, update, array, options) {
-    this.baseInitialize(element, update, options);
-    this.options.array = array;
-  },
-
-  getUpdatedChoices: function() {
-    this.updateChoices(this.options.selector(this));
-  },
-
-  setOptions: function(options) {
-    this.options = Object.extend({
-      choices: 10,
-      partialSearch: true,
-      partialChars: 2,
-      ignoreCase: true,
-      fullSearch: false,
-      selector: function(instance) {
-        var ret       = []; // Beginning matches
-        var partial   = []; // Inside matches
-        var entry     = instance.getToken();
-        var count     = 0;
-
-        for (var i = 0; i < instance.options.array.length &&
-          ret.length < instance.options.choices ; i++) {
-
-          var elem = instance.options.array[i];
-          var foundPos = instance.options.ignoreCase ?
-            elem.toLowerCase().indexOf(entry.toLowerCase()) :
-            elem.indexOf(entry);
-
-          while (foundPos != -1) {
-            if (foundPos == 0 && elem.length != entry.length) {
-              ret.push("<li><strong>" + elem.substr(0, entry.length) + "</strong>" +
-                elem.substr(entry.length) + "</li>");
-              break;
-            } else if (entry.length >= instance.options.partialChars &&
-              instance.options.partialSearch && foundPos != -1) {
-              if (instance.options.fullSearch || /\s/.test(elem.substr(foundPos-1,1))) {
-                partial.push("<li>" + elem.substr(0, foundPos) + "<strong>" +
-                  elem.substr(foundPos, entry.length) + "</strong>" + elem.substr(
-                  foundPos + entry.length) + "</li>");
-                break;
-              }
-            }
-
-            foundPos = instance.options.ignoreCase ?
-              elem.toLowerCase().indexOf(entry.toLowerCase(), foundPos + 1) :
-              elem.indexOf(entry, foundPos + 1);
-
-          }
-        }
-        if (partial.length)
-          ret = ret.concat(partial.slice(0, instance.options.choices - ret.length));
-        return "<ul>" + ret.join('') + "</ul>";
-      }
-    }, options || { });
-  }
-});
-
-
-Field.scrollFreeActivate = function(field) {
-  setTimeout(function() {
-    Field.activate(field);
-  }, 1);
-};
-
-Ajax.InPlaceEditor = Class.create({
-  initialize: function(element, url, options) {
-    this.url = url;
-    this.element = element = $(element);
-    this.prepareOptions();
-    this._controls = { };
-    arguments.callee.dealWithDeprecatedOptions(options); // DEPRECATION LAYER!!!
-    Object.extend(this.options, options || { });
-    if (!this.options.formId && this.element.id) {
-      this.options.formId = this.element.id + '-inplaceeditor';
-      if ($(this.options.formId))
-        this.options.formId = '';
-    }
-    if (this.options.externalControl)
-      this.options.externalControl = $(this.options.externalControl);
-    if (!this.options.externalControl)
-      this.options.externalControlOnly = false;
-    this._originalBackground = this.element.getStyle('background-color') || 'transparent';
-    this.element.title = this.options.clickToEditText;
-    this._boundCancelHandler = this.handleFormCancellation.bind(this);
-    this._boundComplete = (this.options.onComplete || Prototype.emptyFunction).bind(this);
-    this._boundFailureHandler = this.handleAJAXFailure.bind(this);
-    this._boundSubmitHandler = this.handleFormSubmission.bind(this);
-    this._boundWrapperHandler = this.wrapUp.bind(this);
-    this.registerListeners();
-  },
-  checkForEscapeOrReturn: function(e) {
-    if (!this._editing || e.ctrlKey || e.altKey || e.shiftKey) return;
-    if (Event.KEY_ESC == e.keyCode)
-      this.handleFormCancellation(e);
-    else if (Event.KEY_RETURN == e.keyCode)
-      this.handleFormSubmission(e);
-  },
-  createControl: function(mode, handler, extraClasses) {
-    var control = this.options[mode + 'Control'];
-    var text = this.options[mode + 'Text'];
-    if ('button' == control) {
-      var btn = document.createElement('input');
-      btn.type = 'submit';
-      btn.value = text;
-      btn.className = 'editor_' + mode + '_button';
-      if ('cancel' == mode)
-        btn.onclick = this._boundCancelHandler;
-      this._form.appendChild(btn);
-      this._controls[mode] = btn;
-    } else if ('link' == control) {
-      var link = document.createElement('a');
-      link.href = '#';
-      link.appendChild(document.createTextNode(text));
-      link.onclick = 'cancel' == mode ? this._boundCancelHandler : this._boundSubmitHandler;
-      link.className = 'editor_' + mode + '_link';
-      if (extraClasses)
-        link.className += ' ' + extraClasses;
-      this._form.appendChild(link);
-      this._controls[mode] = link;
-    }
-  },
-  createEditField: function() {
-    var text = (this.options.loadTextURL ? this.options.loadingText : this.getText());
-    var fld;
-    if (1 >= this.options.rows && !/\r|\n/.test(this.getText())) {
-      fld = document.createElement('input');
-      fld.type = 'text';
-      var size = this.options.size || this.options.cols || 0;
-      if (0 < size) fld.size = size;
-    } else {
-      fld = document.createElement('textarea');
-      fld.rows = (1 >= this.options.rows ? this.options.autoRows : this.options.rows);
-      fld.cols = this.options.cols || 40;
-    }
-    fld.name = this.options.paramName;
-    fld.value = text; // No HTML breaks conversion anymore
-    fld.className = 'editor_field';
-    if (this.options.submitOnBlur)
-      fld.onblur = this._boundSubmitHandler;
-    this._controls.editor = fld;
-    if (this.options.loadTextURL)
-      this.loadExternalText();
-    this._form.appendChild(this._controls.editor);
-  },
-  createForm: function() {
-    var ipe = this;
-    function addText(mode, condition) {
-      var text = ipe.options['text' + mode + 'Controls'];
-      if (!text || condition === false) return;
-      ipe._form.appendChild(document.createTextNode(text));
-    };
-    this._form = $(document.createElement('form'));
-    this._form.id = this.options.formId;
-    this._form.addClassName(this.options.formClassName);
-    this._form.onsubmit = this._boundSubmitHandler;
-    this.createEditField();
-    if ('textarea' == this._controls.editor.tagName.toLowerCase())
-      this._form.appendChild(document.createElement('br'));
-    if (this.options.onFormCustomization)
-      this.options.onFormCustomization(this, this._form);
-    addText('Before', this.options.okControl || this.options.cancelControl);
-    this.createControl('ok', this._boundSubmitHandler);
-    addText('Between', this.options.okControl && this.options.cancelControl);
-    this.createControl('cancel', this._boundCancelHandler, 'editor_cancel');
-    addText('After', this.options.okControl || this.options.cancelControl);
-  },
-  destroy: function() {
-    if (this._oldInnerHTML)
-      this.element.innerHTML = this._oldInnerHTML;
-    this.leaveEditMode();
-    this.unregisterListeners();
-  },
-  enterEditMode: function(e) {
-    if (this._saving || this._editing) return;
-    this._editing = true;
-    this.triggerCallback('onEnterEditMode');
-    if (this.options.externalControl)
-      this.options.externalControl.hide();
-    this.element.hide();
-    this.createForm();
-    this.element.parentNode.insertBefore(this._form, this.element);
-    if (!this.options.loadTextURL)
-      this.postProcessEditField();
-    if (e) Event.stop(e);
-  },
-  enterHover: function(e) {
-    if (this.options.hoverClassName)
-      this.element.addClassName(this.options.hoverClassName);
-    if (this._saving) return;
-    this.triggerCallback('onEnterHover');
-  },
-  getText: function() {
-    return this.element.innerHTML.unescapeHTML();
-  },
-  handleAJAXFailure: function(transport) {
-    this.triggerCallback('onFailure', transport);
-    if (this._oldInnerHTML) {
-      this.element.innerHTML = this._oldInnerHTML;
-      this._oldInnerHTML = null;
-    }
-  },
-  handleFormCancellation: function(e) {
-    this.wrapUp();
-    if (e) Event.stop(e);
-  },
-  handleFormSubmission: function(e) {
-    var form = this._form;
-    var value = $F(this._controls.editor);
-    this.prepareSubmission();
-    var params = this.options.callback(form, value) || '';
-    if (Object.isString(params))
-      params = params.toQueryParams();
-    params.editorId = this.element.id;
-    if (this.options.htmlResponse) {
-      var options = Object.extend({ evalScripts: true }, this.options.ajaxOptions);
-      Object.extend(options, {
-        parameters: params,
-        onComplete: this._boundWrapperHandler,
-        onFailure: this._boundFailureHandler
-      });
-      new Ajax.Updater({ success: this.element }, this.url, options);
-    } else {
-      var options = Object.extend({ method: 'get' }, this.options.ajaxOptions);
-      Object.extend(options, {
-        parameters: params,
-        onComplete: this._boundWrapperHandler,
-        onFailure: this._boundFailureHandler
-      });
-      new Ajax.Request(this.url, options);
-    }
-    if (e) Event.stop(e);
-  },
-  leaveEditMode: function() {
-    this.element.removeClassName(this.options.savingClassName);
-    this.removeForm();
-    this.leaveHover();
-    this.element.style.backgroundColor = this._originalBackground;
-    this.element.show();
-    if (this.options.externalControl)
-      this.options.externalControl.show();
-    this._saving = false;
-    this._editing = false;
-    this._oldInnerHTML = null;
-    this.triggerCallback('onLeaveEditMode');
-  },
-  leaveHover: function(e) {
-    if (this.options.hoverClassName)
-      this.element.removeClassName(this.options.hoverClassName);
-    if (this._saving) return;
-    this.triggerCallback('onLeaveHover');
-  },
-  loadExternalText: function() {
-    this._form.addClassName(this.options.loadingClassName);
-    this._controls.editor.disabled = true;
-    var options = Object.extend({ method: 'get' }, this.options.ajaxOptions);
-    Object.extend(options, {
-      parameters: 'editorId=' + encodeURIComponent(this.element.id),
-      onComplete: Prototype.emptyFunction,
-      onSuccess: function(transport) {
-        this._form.removeClassName(this.options.loadingClassName);
-        var text = transport.responseText;
-        if (this.options.stripLoadedTextTags)
-          text = text.stripTags();
-        this._controls.editor.value = text;
-        this._controls.editor.disabled = false;
-        this.postProcessEditField();
-      }.bind(this),
-      onFailure: this._boundFailureHandler
-    });
-    new Ajax.Request(this.options.loadTextURL, options);
-  },
-  postProcessEditField: function() {
-    var fpc = this.options.fieldPostCreation;
-    if (fpc)
-      $(this._controls.editor)['focus' == fpc ? 'focus' : 'activate']();
-  },
-  prepareOptions: function() {
-    this.options = Object.clone(Ajax.InPlaceEditor.DefaultOptions);
-    Object.extend(this.options, Ajax.InPlaceEditor.DefaultCallbacks);
-    [this._extraDefaultOptions].flatten().compact().each(function(defs) {
-      Object.extend(this.options, defs);
-    }.bind(this));
-  },
-  prepareSubmission: function() {
-    this._saving = true;
-    this.removeForm();
-    this.leaveHover();
-    this.showSaving();
-  },
-  registerListeners: function() {
-    this._listeners = { };
-    var listener;
-    $H(Ajax.InPlaceEditor.Listeners).each(function(pair) {
-      listener = this[pair.value].bind(this);
-      this._listeners[pair.key] = listener;
-      if (!this.options.externalControlOnly)
-        this.element.observe(pair.key, listener);
-      if (this.options.externalControl)
-        this.options.externalControl.observe(pair.key, listener);
-    }.bind(this));
-  },
-  removeForm: function() {
-    if (!this._form) return;
-    this._form.remove();
-    this._form = null;
-    this._controls = { };
-  },
-  showSaving: function() {
-    this._oldInnerHTML = this.element.innerHTML;
-    this.element.innerHTML = this.options.savingText;
-    this.element.addClassName(this.options.savingClassName);
-    this.element.style.backgroundColor = this._originalBackground;
-    this.element.show();
-  },
-  triggerCallback: function(cbName, arg) {
-    if ('function' == typeof this.options[cbName]) {
-      this.options[cbName](this, arg);
-    }
-  },
-  unregisterListeners: function() {
-    $H(this._listeners).each(function(pair) {
-      if (!this.options.externalControlOnly)
-        this.element.stopObserving(pair.key, pair.value);
-      if (this.options.externalControl)
-        this.options.externalControl.stopObserving(pair.key, pair.value);
-    }.bind(this));
-  },
-  wrapUp: function(transport) {
-    this.leaveEditMode();
-    this._boundComplete(transport, this.element);
-  }
-});
-
-Object.extend(Ajax.InPlaceEditor.prototype, {
-  dispose: Ajax.InPlaceEditor.prototype.destroy
-});
-
-Ajax.InPlaceCollectionEditor = Class.create(Ajax.InPlaceEditor, {
-  initialize: function($super, element, url, options) {
-    this._extraDefaultOptions = Ajax.InPlaceCollectionEditor.DefaultOptions;
-    $super(element, url, options);
-  },
-
-  createEditField: function() {
-    var list = document.createElement('select');
-    list.name = this.options.paramName;
-    list.size = 1;
-    this._controls.editor = list;
-    this._collection = this.options.collection || [];
-    if (this.options.loadCollectionURL)
-      this.loadCollection();
-    else
-      this.checkForExternalText();
-    this._form.appendChild(this._controls.editor);
-  },
-
-  loadCollection: function() {
-    this._form.addClassName(this.options.loadingClassName);
-    this.showLoadingText(this.options.loadingCollectionText);
-    var options = Object.extend({ method: 'get' }, this.options.ajaxOptions);
-    Object.extend(options, {
-      parameters: 'editorId=' + encodeURIComponent(this.element.id),
-      onComplete: Prototype.emptyFunction,
-      onSuccess: function(transport) {
-        var js = transport.responseText.strip();
-        if (!/^\[.*\]$/.test(js)) // TODO: improve sanity check
-          throw('Server returned an invalid collection representation.');
-        this._collection = eval(js);
-        this.checkForExternalText();
-      }.bind(this),
-      onFailure: this.onFailure
-    });
-    new Ajax.Request(this.options.loadCollectionURL, options);
-  },
-
-  showLoadingText: function(text) {
-    this._controls.editor.disabled = true;
-    var tempOption = this._controls.editor.firstChild;
-    if (!tempOption) {
-      tempOption = document.createElement('option');
-      tempOption.value = '';
-      this._controls.editor.appendChild(tempOption);
-      tempOption.selected = true;
-    }
-    tempOption.update((text || '').stripScripts().stripTags());
-  },
-
-  checkForExternalText: function() {
-    this._text = this.getText();
-    if (this.options.loadTextURL)
-      this.loadExternalText();
-    else
-      this.buildOptionList();
-  },
-
-  loadExternalText: function() {
-    this.showLoadingText(this.options.loadingText);
-    var options = Object.extend({ method: 'get' }, this.options.ajaxOptions);
-    Object.extend(options, {
-      parameters: 'editorId=' + encodeURIComponent(this.element.id),
-      onComplete: Prototype.emptyFunction,
-      onSuccess: function(transport) {
-        this._text = transport.responseText.strip();
-        this.buildOptionList();
-      }.bind(this),
-      onFailure: this.onFailure
-    });
-    new Ajax.Request(this.options.loadTextURL, options);
-  },
-
-  buildOptionList: function() {
-    this._form.removeClassName(this.options.loadingClassName);
-    this._collection = this._collection.map(function(entry) {
-      return 2 === entry.length ? entry : [entry, entry].flatten();
-    });
-    var marker = ('value' in this.options) ? this.options.value : this._text;
-    var textFound = this._collection.any(function(entry) {
-      return entry[0] == marker;
-    }.bind(this));
-    this._controls.editor.update('');
-    var option;
-    this._collection.each(function(entry, index) {
-      option = document.createElement('option');
-      option.value = entry[0];
-      option.selected = textFound ? entry[0] == marker : 0 == index;
-      option.appendChild(document.createTextNode(entry[1]));
-      this._controls.editor.appendChild(option);
-    }.bind(this));
-    this._controls.editor.disabled = false;
-    Field.scrollFreeActivate(this._controls.editor);
-  }
-});
-
-
-Ajax.InPlaceEditor.prototype.initialize.dealWithDeprecatedOptions = function(options) {
-  if (!options) return;
-  function fallback(name, expr) {
-    if (name in options || expr === undefined) return;
-    options[name] = expr;
-  };
-  fallback('cancelControl', (options.cancelLink ? 'link' : (options.cancelButton ? 'button' :
-    options.cancelLink == options.cancelButton == false ? false : undefined)));
-  fallback('okControl', (options.okLink ? 'link' : (options.okButton ? 'button' :
-    options.okLink == options.okButton == false ? false : undefined)));
-  fallback('highlightColor', options.highlightcolor);
-  fallback('highlightEndColor', options.highlightendcolor);
-};
-
-Object.extend(Ajax.InPlaceEditor, {
-  DefaultOptions: {
-    ajaxOptions: { },
-    autoRows: 3,                                // Use when multi-line w/ rows == 1
-    cancelControl: 'link',                      // 'link'|'button'|false
-    cancelText: 'cancel',
-    clickToEditText: 'Click to edit',
-    externalControl: null,                      // id|elt
-    externalControlOnly: false,
-    fieldPostCreation: 'activate',              // 'activate'|'focus'|false
-    formClassName: 'inplaceeditor-form',
-    formId: null,                               // id|elt
-    highlightColor: '#ffff99',
-    highlightEndColor: '#ffffff',
-    hoverClassName: '',
-    htmlResponse: true,
-    loadingClassName: 'inplaceeditor-loading',
-    loadingText: 'Loading...',
-    okControl: 'button',                        // 'link'|'button'|false
-    okText: 'ok',
-    paramName: 'value',
-    rows: 1,                                    // If 1 and multi-line, uses autoRows
-    savingClassName: 'inplaceeditor-saving',
-    savingText: 'Saving...',
-    size: 0,
-    stripLoadedTextTags: false,
-    submitOnBlur: false,
-    textAfterControls: '',
-    textBeforeControls: '',
-    textBetweenControls: ''
-  },
-  DefaultCallbacks: {
-    callback: function(form) {
-      return Form.serialize(form);
-    },
-    onComplete: function(transport, element) {
-      new Effect.Highlight(element, {
-        startcolor: this.options.highlightColor, keepBackgroundImage: true });
-    },
-    onEnterEditMode: null,
-    onEnterHover: function(ipe) {
-      ipe.element.style.backgroundColor = ipe.options.highlightColor;
-      if (ipe._effect)
-        ipe._effect.cancel();
-    },
-    onFailure: function(transport, ipe) {
-      alert('Error communication with the server: ' + transport.responseText.stripTags());
-    },
-    onFormCustomization: null, // Takes the IPE and its generated form, after editor, before controls.
-    onLeaveEditMode: null,
-    onLeaveHover: function(ipe) {
-      ipe._effect = new Effect.Highlight(ipe.element, {
-        startcolor: ipe.options.highlightColor, endcolor: ipe.options.highlightEndColor,
-        restorecolor: ipe._originalBackground, keepBackgroundImage: true
-      });
-    }
-  },
-  Listeners: {
-    click: 'enterEditMode',
-    keydown: 'checkForEscapeOrReturn',
-    mouseover: 'enterHover',
-    mouseout: 'leaveHover'
-  }
-});
-
-Ajax.InPlaceCollectionEditor.DefaultOptions = {
-  loadingCollectionText: 'Loading options...'
-};
-
-
-Form.Element.DelayedObserver = Class.create({
-  initialize: function(element, delay, callback) {
-    this.delay     = delay || 0.5;
-    this.element   = $(element);
-    this.callback  = callback;
-    this.timer     = null;
-    this.lastValue = $F(this.element);
-    Event.observe(this.element,'keyup',this.delayedListener.bindAsEventListener(this));
-  },
-  delayedListener: function(event) {
-    if(this.lastValue == $F(this.element)) return;
-    if(this.timer) clearTimeout(this.timer);
-    this.timer = setTimeout(this.onTimerEvent.bind(this), this.delay * 1000);
-    this.lastValue = $F(this.element);
-  },
-  onTimerEvent: function() {
-    this.timer = null;
-    this.callback(this.element, $F(this.element));
-  }
-});
-
 
 if(Object.isUndefined(Effect))
   throw("dragdrop.js requires including script.aculo.us' effects.js library");
@@ -7876,386 +6927,485 @@ Element.findChildren = function(element, only, recursive, tagName) {
 Element.offsetSize = function (element, type) {
   return element['offset' + ((type=='vertical' || type=='height') ? 'Height' : 'Width')];
 };
+/**
+ * http://www.openjs.com/scripts/events/keyboard_shortcuts/
+ * Version : 2.01.B
+ * By Binny V A
+ * License : BSD
+ */
+shortcut = {
+	'all_shortcuts':{},//All the shortcuts are stored in this array
+	'add': function(shortcut_combination,callback,opt) {
+		var default_options = {
+			'type':'keydown',
+			'propagate':false,
+			'disable_in_input':false,
+			'target':document,
+			'keycode':false
+		}
+		if(!opt) opt = default_options;
+		else {
+			for(var dfo in default_options) {
+				if(typeof opt[dfo] == 'undefined') opt[dfo] = default_options[dfo];
+			}
+		}
 
-var Alice = Class.create({
-  initialize: function () {
-    this.isCtrl = false;
-    this.isCommand = false;
-    this.isAlt = false;
+		var ele = opt.target;
+		if(typeof opt.target == 'string') ele = document.getElementById(opt.target);
+		var ths = this;
+		shortcut_combination = shortcut_combination.toLowerCase();
+
+		var func = function(e) {
+			e = e || window.event;
+
+			if(opt['disable_in_input']) { //Don't enable shortcut keys in Input, Textarea fields
+				var element;
+				if(e.target) element=e.target;
+				else if(e.srcElement) element=e.srcElement;
+				if(element.nodeType==3) element=element.parentNode;
+
+				if(element.tagName == 'INPUT' || element.tagName == 'TEXTAREA') return;
+			}
+
+			if (e.keyCode) code = e.keyCode;
+			else if (e.which) code = e.which;
+			var character = String.fromCharCode(code).toLowerCase();
+
+			if(code == 188) character=","; //If the user presses , when the type is onkeydown
+			if(code == 190) character="."; //If the user presses , when the type is onkeydown
+
+			var keys = shortcut_combination.split("+");
+			var kp = 0;
+
+			var shift_nums = {
+				"`":"~",
+				"1":"!",
+				"2":"@",
+				"3":"#",
+				"4":"$",
+				"5":"%",
+				"6":"^",
+				"7":"&",
+				"8":"*",
+				"9":"(",
+				"0":")",
+				"-":"_",
+				"=":"+",
+				";":":",
+				"'":"\"",
+				",":"<",
+				".":">",
+				"/":"?",
+				"\\":"|"
+			}
+			var special_keys = {
+				'esc':27,
+				'escape':27,
+				'tab':9,
+				'space':32,
+				'return':13,
+				'enter':13,
+				'backspace':8,
+
+				'scrolllock':145,
+				'scroll_lock':145,
+				'scroll':145,
+				'capslock':20,
+				'caps_lock':20,
+				'caps':20,
+				'numlock':144,
+				'num_lock':144,
+				'num':144,
+
+				'pause':19,
+				'break':19,
+
+				'insert':45,
+				'home':36,
+				'delete':46,
+				'end':35,
+
+				'pageup':33,
+				'page_up':33,
+				'pu':33,
+
+				'pagedown':34,
+				'page_down':34,
+				'pd':34,
+
+				'left':37,
+				'up':38,
+				'right':39,
+				'down':40,
+
+				'f1':112,
+				'f2':113,
+				'f3':114,
+				'f4':115,
+				'f5':116,
+				'f6':117,
+				'f7':118,
+				'f8':119,
+				'f9':120,
+				'f10':121,
+				'f11':122,
+				'f12':123
+			}
+
+			var modifiers = {
+				shift: { wanted:false, pressed:false},
+				ctrl : { wanted:false, pressed:false},
+				alt  : { wanted:false, pressed:false},
+				meta : { wanted:false, pressed:false}	//Meta is Mac specific
+			};
+
+			if(e.ctrlKey)	modifiers.ctrl.pressed = true;
+			if(e.shiftKey)	modifiers.shift.pressed = true;
+			if(e.altKey)	modifiers.alt.pressed = true;
+			if(e.metaKey)   modifiers.meta.pressed = true;
+
+			for(var i=0; k=keys[i],i<keys.length; i++) {
+				if(k == 'ctrl' || k == 'control') {
+					kp++;
+					modifiers.ctrl.wanted = true;
+
+				} else if(k == 'shift') {
+					kp++;
+					modifiers.shift.wanted = true;
+
+				} else if(k == 'alt') {
+					kp++;
+					modifiers.alt.wanted = true;
+				} else if(k == 'meta') {
+					kp++;
+					modifiers.meta.wanted = true;
+				} else if(k.length > 1) { //If it is a special key
+					if(special_keys[k] == code) kp++;
+
+				} else if(opt['keycode']) {
+					if(opt['keycode'] == code) kp++;
+
+				} else { //The special keys did not match
+					if(character == k) kp++;
+					else {
+						if(shift_nums[character] && e.shiftKey) { //Stupid Shift key bug created by using lowercase
+							character = shift_nums[character];
+							if(character == k) kp++;
+						}
+					}
+				}
+			}
+
+			if(kp == keys.length &&
+						modifiers.ctrl.pressed == modifiers.ctrl.wanted &&
+						modifiers.shift.pressed == modifiers.shift.wanted &&
+						modifiers.alt.pressed == modifiers.alt.wanted &&
+						modifiers.meta.pressed == modifiers.meta.wanted) {
+				callback(e);
+
+				if(!opt['propagate']) { //Stop the event
+					e.cancelBubble = true;
+					e.returnValue = false;
+
+					if (e.stopPropagation) {
+						e.stopPropagation();
+						e.preventDefault();
+					}
+					return false;
+				}
+			}
+		}
+		this.all_shortcuts[shortcut_combination] = {
+			'callback':func,
+			'target':ele,
+			'event': opt['type']
+		};
+		if(ele.addEventListener) ele.addEventListener(opt['type'], func, false);
+		else if(ele.attachEvent) ele.attachEvent('on'+opt['type'], func);
+		else ele['on'+opt['type']] = func;
+	},
+
+	'remove':function(shortcut_combination) {
+		shortcut_combination = shortcut_combination.toLowerCase();
+		var binding = this.all_shortcuts[shortcut_combination];
+		delete(this.all_shortcuts[shortcut_combination])
+		if(!binding) return;
+		var type = binding['event'];
+		var ele = binding['target'];
+		var callback = binding['callback'];
+
+		if(ele.detachEvent) ele.detachEvent('on'+type, callback);
+		else if(ele.removeEventListener) ele.removeEventListener(type, callback, false);
+		else ele['on'+type] = false;
+	}
+};
+
+var Alice = { };
+
+Object.extend(Alice, {
+  makeLinksClickable: function(content) {
+    return content.replace(
+      /(https?\:\/\/[\w\d$\-_.+!*'(),%\/?=&;~#:@]*)/gi,
+      "<a href=\"$1\">$1</a>"
+    );
+  },
+
+  stripNick: function(html) {
+    return html.replace(/<div class="left">.*<\/div>/, '');
+  },
+
+  growlNotify: function(message) {
+    if (!window.fluid) return;
+    window.fluid.showGrowlNotification({
+        title: message.window.title + ": " + message.nick,
+        description: message.body,
+        priority: 1,
+        sticky: false,
+        identifier: message.msgid
+    });
+  },
+
+  makeSortable: function() {
+    Sortable.create('tabs', {
+      overlap: 'horizontal',
+      constraint: 'horizontal',
+      format: /(.+)/,
+      onUpdate: function (res) {
+        var tabs = res.childElements();
+        tabs.invoke('removeClassName','leftof_active');
+        for (var i=0; i < tabs.length; i++) {
+          if (tabs[i].hasClassName('active')) {
+            if (tabs[i].previous()) tabs[i].previous().addClassName('leftof_active');
+            tabs[i].removeClassName('leftof_active');
+            return;
+          }
+        }
+      }
+    });
+  },
+
+  isSpecialKey: function(keyCode) {
+    var special_keys = [
+			16,27,9,32,13,8,145,20,144,19,45,36,46,35,33,34,37,38,39,
+			40,17,18,91,112,113,114,115,116,117,118,119,120,121,122,123
+		];
+		if (special_keys.indexOf(keyCode) == -1) return false;
+		return true;
+  },
+});
+
+
+Element.addMethods({
+  redraw: function(element){
+    element = $(element);
+    var n = document.createTextNode(' ');
+    element.appendChild(n);
+    (function(){n.parentNode.removeChild(n)}).defer();
+    return element;
+  }
+});
+Alice.Application = Class.create({
+  initialize: function() {
     this.isFocused = true;
-    this.channels = new Hash();
+    this.windows = new Hash();
     this.previousFocus = 0;
-    this.connection = new Alice.Connection;
-    this.filters = [ this.linkFilter ];
+    this.connection = new Alice.Connection(this);
+    this.filters = [ Alice.makeLinksClickable ];
     this.monospaceNicks = ['Shaniqua', 'root', 'p6eval'];
-    document.onkeyup = this.onKeyUp.bind(this);
-    document.onkeydown = this.onKeyDown.bind(this);
+    this.keyboard = new Alice.Keyboard(this);
     setTimeout(this.connection.connect.bind(this.connection), 1000);
   },
 
-  toggleConfig: function (e) {
-    if (! $('config')) {
-      this.connection.getConfig(function (transport) {
-          $('container').insert(transport.responseText);
-        });
+  toggleConfig: function(e) {
+    if (this.configWindow && this.configWindow.focus) {
+      this.configWindow.focus();
+
+    } else {
+      this.configWindow = window.open(null, "config", "resizable=no,scrollbars=no,status=no,toolbar=no,location=no,width=500,height=410");
+
+      this.connection.getConfig(function(transport) {
+        this.configWindow.document.write(transport.responseText);
+      }.bind(this));
     }
-    else {
-      $('config').remove();
-      $$('.overlay').invoke('remove');
-    }
+
+    e.stop();
   },
 
   submitConfig: function(form) {
-    $$('#config .channelselect').each(function (select) {
-      $A(select.options).each(function (option) {
+    $$('#config .channelselect').each(function(select) {
+      $A(select.options).each(function(option) {
         option.selected = true;
       });
     });
-    this.connection.sendConfig(form.serialize());
-    $('config').remove();
-    $$('.overlay').invoke('remove');
+    this.connection.sendConfig(form.serialize(), function() {
+      window.close();
+    });
     return false;
   },
 
-  addChannel: function (channel) {
-    this.channels.set(channel.id, channel);
+  openWindow: function(element, title, active) {
+    var win = new Alice.Window(this, element, title, active);
+    this.addWindow(win);
+    return win;
   },
 
-  removeChannel: function (channel) {
-    if (channel.active) this.focusLast();
-    this.channels.unset(channel.id);
-    this.connection.partChannel(channel);
-    channel = null;
+  addWindow: function(win) {
+    this.windows.set(win.id, win);
   },
 
-  getChannel: function (channelId) {
-    return this.channels.get(channelId);
+  removeWindow: function(win) {
+    if (win.active) this.focusLast();
+    this.windows.unset(win.id);
+    this.connection.closeWindow(win);
+    win = null;
   },
 
-  activeChannel: function () {
-    var channels = this.channels.values();
-    for (var i=0; i < channels.length; i++) {
-      if (channels[i].active) return channels[i];
-    }
+  getWindow: function(windowId) {
+    return this.windows.get(windowId);
   },
 
-  onKeyUp: function (e) {
-    switch (e.which) {
-      case 17:
-        this.isCtrl = false;
-        break;
-      case 91:
-        this.isCommand = false;
-        break;
-      case 18:
-        this.isAlt = false;
-        break;
+  activeWindow: function() {
+    var windows = this.windows.values();
+    for (var i=0; i < windows.length; i++) {
+      if (windows[i].active) return windows[i];
     }
+    if (windows[0]) return windows[0];
   },
 
-  onKeyDown: function (e) {
-    if (e.which == 17)
-      this.isCtrl = true;
-    else if (e.which == 91)
-      this.isCommand = true;
-    else if (e.which == 18)
-      this.isAlt = true;
-    else if (this.isCtrl && e.which == 75) {
-      this.activeChannel().messages.innerHTML = '';
-      return false;
-    }
-    else if (this.isCtrl && e.which == 78) {
-      this.nextTab();
-      return false;
-    }
-    else if (this.isCtrl && e.which == 80) {
-      this.previousTab();
-      return false;
-    }
-    else if (e.which == Event.KEY_UP) {
-      this.activeChannel().previousMessage();
-    }
-    else if (e.which == Event.KEY_DOWN) {
-      this.activeChannel().nextMessage();
-    }
-  },
-
-  linkFilter: function (content) {
-    var filtered = content;
-    filtered = filtered.replace(
-      /(https?\:\/\/[\w\d$\-_.+!*'(),%\/?=&;~#:@]*)/gi,
-      "<a href=\"$1\">$1</a>");
-    return filtered;
-  },
-
-  addFilters: function (list) {
+  addFilters: function(list) {
     this.filters = this.filters.concat(list);
   },
 
-  applyFilters: function (content) {
-    this.filters.each(function(filter) {
-        content = filter(content);
-      });
-    return content;
+  applyFilters: function(content) {
+    return this.filters.inject(content, function(value, filter) {
+      return filter(value);
+    });
   },
 
-  nextTab: function () {
-    var nextChan = this.activeChannel().tab.next();
-    if (! nextChan)
-      nextChan = $$('.channel').first();
-    if (! nextChan) return;
-    nextChan = nextChan.id.replace('_tab','');
-    this.getChannel(nextChan).focus();
+  nextWindow: function() {
+    var nextWindow = this.activeWindow().tab.next();
+    if (!nextWindow)
+      nextWindow = $$('ul#tabs li').first();
+    if (!nextWindow) return;
+    nextWindow = nextWindow.id.replace('_tab','');
+    this.getWindow(nextWindow).focus();
   },
 
-  focusLast: function () {
+  focusLast: function() {
     if (this.previousFocus)
       this.previousFocus.focus();
-    else if (this.channels.values().length)
-      this.channels.values().first().focus();
+    else
+      this.nextWindow();
   },
 
-  previousTab: function () {
-    var prevChan = this.activeChannel().tab.previous();
-    if (! prevChan)
-      prevChan = $$('.channel').last();
-    if (! prevChan) return;
-    prevChan = prevChan.id.replace('_tab','');
-    this.getChannel(prevChan).focus();
+  previousWindow: function() {
+    var previousWindow = this.activeWindow().tab.previous();
+    if (!previousWindow)
+      previousWindow = $$('ul#tabs li').last();
+    if (!previousWindow) return;
+    previousWindow = previousWindow.id.replace('_tab','');
+    this.getWindow(previousWindow).focus();
   },
 
-  closeTab: function (chanid) {
-    var channel = this.getChannel(chanid);
-    if (channel) channel.close();
+  closeWindow: function(windowId) {
+    var win= this.getWindow(windowId);
+    if (win) win.close();
   },
 
-  addTab: function (chan, html) {
-    chan = $(chan);
-    if (! chan) {
-      $('channels').insert(html.channel);
+  insertWindow: function(windowId, html) {
+    if (!$(windowId)) {
+      $('windows').insert(html['window']);
       $('tabs').insert(html.tab);
+      Alice.makeSortable();
     }
   },
 
-  handleActions: function (list) {
-    var self = this;
-    list.each(function(action) {
-      self.handleAction(action);
-    });
+  handleActions: function(list) {
+    list.each(this.handleAction, this);
   },
 
-  handleAction: function (action) {
+  handleAction: function(action) {
     switch (action.event) {
       case "join":
-        this.addTab(action.chanid, action.html);
+        this.insertWindow(action['window'].id, action.html);
         break;
       case "part":
-        this.closeTab(action.chanid);
+        this.closeWindow(action['window'].id);
         break;
+      case "nicks":
+        var win = this.getWindow(action['window'].id);
+        if (win) win.nicks = action.nicks;
+      case "clear":
+        var win = this.getWindow(action['window'].id);
+        if (win) win.messages.update("");
     }
   },
 
-  displayMessages: function (list) {
-    var self = this;
-    list.each(function(message) {
-      self.displayMessage(message);
-    });
+  displayMessages: function(list) {
+    list.each(this.displayMessage, this);
   },
 
-  displayMessage: function (message) {
-    var channel = alice.getChannel(message.chanid);
-    if (! channel) {
-      this.connection.requestTab(message.chan, message.session, message);
-      return;
+  displayMessage: function(message) {
+    var win = this.getWindow(message['window'].id);
+    if (win) {
+      win.addMessage(message);
+    } else {
+      this.connection.requestWindow(
+        message['window'].title, this.activeWindow().id, message
+      );
     }
-    channel.addMessage(message);
-  }
-});
-
-Alice.Channel = Class.create({
-  initialize: function (name, id, active, session) {
-    this.name = name;
-    this.id = id;
-    this.session = session;
-    this.active = active;
-
-    this.elem = $(id);
-    this.tab = $(id + "_tab");
-    this.input = $(id + "_msg");
-    this.tabButton = $(id + "_tab_button");
-    this.form = $(id + "_form");
-    this.topic = $(id + "_topic");
-    this.messages = $(id + "_messages");
-    this.lastNick = "";
-
-    this.msgHistory = [""];
-    this.currentMsg = 0;
-
-    var self = this;
-
-    this.form.observe("submit", this.sayMessage.bind(this));
-    this.tab.observe("mousedown", this.focus.bind(this));
-    this.tabButton.observe("click", function (e) {self.close(); Event.stop(e);});
-    this.tabButton.observe("mousedown", function (e) {Event.stop(e)});
-    /*
-    this.autocompleter = new Alice.Autocompleter(
-      this.input, this.id + "_autocomplete_choices",
-      "/autocomplete",
-      {
-        parameters: Object.toQueryString({chan: self.name, session: self.session}),
-        method: 'get',
-        updateElement: function (elem) {
-          if (! elem.innerHTML.match(/^\//)) {
-            elem.innerHTML = elem.innerHTML + ":";
-          }
-          self.input.value = self.input.value.replace(/\S+\b$/, elem.innerHTML + " ");
-        }
-      }
-    );
-    */
   },
 
-  nextMessage: function () {
-    if (this.msgHistory.length <= 1) return;
-    this.currentMsg++;
-    if (this.currentMsg >= this.msgHistory.length)
-      this.currentMsg = 0;
-    this.input.value = this.msgHistory[this.currentMsg];
-  },
-
-  previousMessage: function () {
-    if (this.msgHistory.length <= 1) return;
-    this.currentMsg--;
-    if (this.currentMsg < 0)
-      this.currentMsg = this.msgHistory.length - 1;
-    this.input.value = this.msgHistory[this.currentMsg];
-  },
-
-  sayMessage: function (event) {
-    alice.connection.sendMessage(this.form);
-    this.currentMsg = 0;
-    this.msgHistory.push(this.input.value);
-    this.input.value = '';
-    Event.stop(event);
-  },
-
-  unFocus: function () {
-    this.active = false;
-    alice.previousFocus = this;
-    this.elem.removeClassName('active');
-    this.tab.removeClassName('active');
-    if (this.tab.previous()) this.tab.previous().removeClassName("leftof_active");
-  },
-
-  focus: function (event) {
-    document.title = this.name;
-    if (alice.activeChannel()) alice.activeChannel().unFocus();
-    this.active = true;
-    this.tab.addClassName('active');
-    this.elem.addClassName('active');
-    this.tab.removeClassName("unread");
-    this.tab.removeClassName("highlight");
-    this.tab.removeClassName("leftof_active");
-    if (this.tab.previous()) this.tab.previous().addClassName("leftof_active");
-    this.scrollToBottom(true);
-    this.input.focus();
-  },
-
-  close: function (event) {
-    alice.removeChannel(this);
-    this.tab.remove();
-    this.elem.remove();
-  },
-
-  displayTopic: function(topic) {
-    this.topic.innerHTML = alice.linkFilter(topic);
-  },
-
-  addMessage: function(message) {
-    if (message.html || message.full_html) {
-      if (message.nick == this.lastNick) {
-        if (alice.monospaceNicks.indexOf(message.nick) > -1)
-          this.messages.down('li:last-child div.msg').insert(
-            "<br>" + alice.applyFilters(message.html));
-        else if (message.event == "say")
-          this.messages.insert(
-            stripNick(alice.applyFilters(message.full_html)));
-      }
-      else {
-        if (message.event == "topic") {
-          this.messages.insert(alice.linkFilter(message.full_html));
-          this.displayTopic(message.message);
-        }
-        else
-          this.messages.insert(alice.applyFilters(message.full_html));
-      }
-      this.lastNick = message.nick;
-
-      if (! alice.isFocused && message.highlight)
-        growlNotify(message);
-
-      if (this.elem.hasClassName('active'))
-        this.scrollToBottom();
-      else if (message.event == "say" && message.highlight)
-        this.tab.addClassName("highlight");
-      else if (message.event == "say")
-        this.tab.addClassName("unread");
-    }
-
-    var messages = this.messages.childElements();
-    if (messages.length > 250) messages.first().remove();
-  },
-
-  scrollToBottom: function (force) {
-    if (! force) {
-      var bottom = this.elem.scrollTop + this.elem.offsetHeight;
-      var height = this.elem.scrollHeight;
-    }
-    if (force || bottom + 100 >= height)
-      this.elem.scrollTop = this.elem.scrollHeight;
+  messagesAreMonospacedFor: function(nick) {
+    return this.monospaceNicks.indexOf(nick) > -1;
   }
 });
 Alice.Connection = Class.create({
-  initialize: function () {
+  initialize: function(application) {
+    this.application = application;
     this.len = 0;
     this.aborting = false;
-    this.req = null;
+    this.request = null;
     this.seperator = "--xalicex\n";
     this.msgid = 0;
     this.timer = null;
   },
 
-  closeConnection: function () {
+  closeConnection: function() {
     this.aborting = true;
-    if (this.req && this.req.transport)
-      this.req.transport.abort();
+    if (this.request && this.request.transport)
+      this.request.transport.abort();
     this.aborting = false;
   },
 
-  connect: function () {
+  connect: function() {
     this.closeConnection();
     this.len = 0;
     clearTimeout(this.timer);
-    var connection = this;
-    console.log("opening new connection.");
-    this.req = new Ajax.Request('/stream', {
+
+    console.log("opening new connection starting at message " + this.msgid);
+    this.request = new Ajax.Request('/stream', {
       method: 'get',
-      parameters: {msgid: connection.msgid},
-      onException: function (req, e) {
-        console.log("encountered an error with stream.");
-        if (! connection.aborting)
-          setTimeout(connection.connect.bind(connection), 2000);
-      },
-      onInteractive: connection.handleUpdate.bind(connection),
-      onComplete: function () {
-        console.log("connection was closed cleanly.");
-        if (! connection.aborting)
-          setTimeout(connection.connect.bind(connection), 2000);
-      }
+      parameters: {msgid: this.msgid},
+      onException: this.handleException.bind(this),
+      onInteractive: this.handleUpdate.bind(this),
+      onComplete: this.handleComplete.bind(this)
     });
   },
 
-  handleUpdate: function (transport) {
+  handleException: function(request, exception) {
+    console.log("encountered an error with stream.");
+    if (!this.aborting)
+      setTimeout(this.connect.bind(this), 2000);
+  },
+
+  handleComplete: function(transport) {
+    console.log("connection was closed cleanly.");
+    if (!this.aborting)
+      setTimeout(this.connect.bind(this), 2000);
+  },
+
+  handleUpdate: function(transport) {
     var time = new Date();
     var data = transport.responseText.slice(this.len);
     var start, end;
@@ -8273,8 +7423,8 @@ Alice.Connection = Class.create({
       data = data.evalJSON();
       if (data.msgs.length)
         this.msgid = data.msgs[data.msgs.length - 1].msgid;
-      alice.handleActions(data.actions);
-      alice.displayMessages(data.msgs);
+      this.application.handleActions(data.actions);
+      this.application.displayMessages(data.msgs);
     }
     catch (e) {
       console.log(e);
@@ -8287,143 +7437,473 @@ Alice.Connection = Class.create({
     }
   },
 
-  requestTab: function (name, session, message) {
-    var connection = this;
+  requestWindow: function(title, windowId, message) {
     new Ajax.Request('/say', {
       method: 'get',
-      parameters: {session: session, msg: "/window new " + name},
-      onSuccess: function (trans) {
-        connection.handleUpdate(trans);
-        if (message) alice.displayMessage(message);
-      }
+      parameters: {source: windowId, msg: "/create " + title},
+      onSuccess: function (transport) {
+        this.handleUpdate(transport);
+        if (message) {
+          setTimeout(function() {
+            this.application.displayMessage(message)
+          }.bind(this), 1000);
+        }
+      }.bind(this)
     });
   },
 
-  partChannel: function (channel) {
+  closeWindow: function(win) {
     new Ajax.Request('/say', {
       method: 'get',
-      parameters: {chan: channel.name, session: channel.session, msg: "/part"},
+      parameters: {source: win.id, msg: "/close"}
     });
   },
 
-  sendMessage: function (form) {
+  sendMessage: function(form) {
     new Ajax.Request('/say', {
       method: 'get',
       parameters: form.serialize(),
     });
   },
 
-  getConfig: function (callback) {
+  getConfig: function(callback) {
     new Ajax.Request('/config', {
       method: 'get',
       onSuccess: callback
     })
   },
 
-  sendConfig: function (params) {
+  sendConfig: function(params, callback) {
     new Ajax.Request('/save', {
       method: 'get',
-      parameters: params
+      parameters: params,
+      onSuccess: callback
     });
   },
 
-  sendPing: function () {
+  sendPing: function() {
     new Ajax.Request('/ping');
   }
 });
-Alice.Autocompleter = Class.create(Ajax.Autocompleter, {
-  onKeyPress: function (event) {
-    if(this.active)
-      switch(event.keyCode) {
-        case Event.KEY_TAB:
-          this.markNext();
-          this.render();
-          Event.stop(event);
-          alice.activeChannel().scrollToBottom(true);
-          return;
-        case Event.KEY_RETURN:
-          this.selectEntry();
-          Event.stop(event);
-        case Event.KEY_ESC:
-          this.hide();
-          this.active = false;
-          Event.stop(event);
-          return;
-        case Event.KEY_LEFT:
-          this.markPrevious();
-          this.render();
-          Event.stop(event);
-          return;
-        case Event.KEY_RIGHT:
-          this.markNext();
-          this.render();
-          Event.stop(event);
-          return;
-        case Event.KEY_UP:
-          Event.stop(event);
-          return;
-        case Event.KEY_DOWN:
-          Event.stop(event);
-          return;
-      }
-    else if (event.keyCode==Event.KEY_TAB) {
-      this.active = true;
-      this.show();
-      Event.stop(event);
-    }
-    else
-      if(event.keyCode==Event.KEY_RETURN ||
-        (Prototype.Browser.WebKit > 0 && event.keyCode == 0)) return;
+Alice.Window = Class.create({
+  initialize: function(application, element, title, active) {
+    this.application = application;
 
-    this.changed = true;
-    this.hasFocus = true;
+    this.element = $(element);
+    this.title = title;
+    this.id = this.element.identify();
+    this.active = active;
 
-    if(this.observer) clearTimeout(this.observer);
-    this.observer =
-      setTimeout(this.onObserverEvent.bind(this), this.options.frequency*1000);
+    this.tab = $(this.id + "_tab");
+    this.input = new Alice.Input(this, this.id + "_msg");
+    this.tabButton = $(this.id + "_tab_button");
+    this.form = $(this.id + "_form");
+    this.topic = $(this.id + "_topic");
+    this.messages = $(this.id + "_messages");
+    this.submit = $(this.id + "_submit");
+    this.lastNick = "";
+    this.nicks = [];
+
+    this.submit.observe("click", function (e) {this.input.send(); e.stop()}.bind(this));
+    this.tab.observe("mousedown", this.focus.bind(this));
+    this.tabButton.observe("click", function(e) { this.close() && e.stop() }.bind(this));
+    this.tabButton.observe("mousedown", function(e) { e.stop() });
   },
-  render: function() {
-    if(this.entryCount > 0) {
-      for (var i = 0; i < this.entryCount; i++)
-        this.index==i ?
-          Element.addClassName(this.getEntry(i),"selected") :
-          Element.removeClassName(this.getEntry(i),"selected");
-      if(this.hasFocus) {
+
+  unFocus: function() {
+    this.active = false;
+    this.application.previousFocus = this;
+    this.element.removeClassName('active');
+    this.tab.removeClassName('active');
+    if (this.tab.previous()) this.tab.previous().removeClassName("leftof_active");
+  },
+
+  focus: function(event) {
+    document.title = this.title;
+    if (this.application.activeWindow()) this.application.activeWindow().unFocus();
+    this.active = true;
+    this.tab.addClassName('active');
+    this.element.addClassName('active');
+    this.tab.removeClassName("unread");
+    this.tab.removeClassName("highlight");
+    this.tab.removeClassName("leftof_active");
+    if (this.tab.previous()) this.tab.previous().addClassName("leftof_active");
+    this.scrollToBottom(true);
+    if (!Prototype.Browser.MobileSafari) this.input.focus();
+  },
+
+  close: function(event) {
+    this.application.removeWindow(this);
+    this.tab.remove();
+    this.element.remove();
+  },
+
+  displayTopic: function(topic) {
+    this.topic.update(Alice.makeLinksClickable(topic));
+  },
+
+  addMessage: function(message) {
+    if (message.html || message.full_html) {
+      if (message.nick && message.nick == this.lastNick) {
+        if (this.application.messagesAreMonospacedFor(message.nick))
+          this.messages.down('li:last-child div.msg').insert(
+            "<br>" + this.application.applyFilters(message.html));
+        else if (message.event == "say")
+          this.messages.insert(
+            Alice.stripNick(this.application.applyFilters(message.full_html)));
       }
-    } else {
-      this.active = false;
-      this.hide();
+      else {
+        if (message.event == "topic") {
+          this.messages.insert(Alice.makeLinksClickable(message.full_html));
+          this.displayTopic(message.body);
+        }
+        else {
+          this.messages.insert(this.application.applyFilters(message.full_html));
+          this.lastNick = "";
+          if (message.event == "say" && message.nick)
+            this.lastNick = message.nick;
+        }
+      }
+
+      if (!this.application.isFocused && message.highlight)
+        Alice.growlNotify(message);
+
+      if (message.nicks && message.nicks.length)
+        this.nicks = message.nicks;
+
+      if (this.element.hasClassName('active'))
+        this.scrollToBottom();
+      else if (message.event == "say" && message.highlight)
+        this.tab.addClassName("highlight");
+      else if (message.event == "say")
+        this.tab.addClassName("unread");
     }
+
+    var messages = this.messages.childElements();
+    if (messages.length > 250) messages.first().remove();
+  },
+
+  scrollToBottom: function(force) {
+    if (!force) {
+      var lastmsg = this.messages.down('li:last-child');
+      if (!lastmsg) return;
+      var msgheight = lastmsg.offsetHeight;
+      var bottom = this.messages.scrollTop + this.messages.offsetHeight;
+      var height = this.messages.scrollHeight;
+    }
+    if (force || bottom + msgheight + 100 >= height)
+      this.messages.scrollTop = this.messages.scrollHeight;
+  },
+
+  getNicknames: function() {
+     return this.nicks;
   }
 });
-function stripNick (html) {
-  html = html.replace(/<div class="left">.*<\/div>/,'');
-  return html;
-}
+Alice.Input = Class.create({
+  initialize: function(win, element) {
+    this.window = win;
+    this.application = this.window.application;
+    this.element = $(element);
+    this.history = [];
+    this.index = -1;
+    this.buffer = "";
+    this.completion = false;
+    this.focused = false;
 
-function growlNotify (message) {
-  if (! window.fluid) return;
-  window.fluid.showGrowlNotification({
-      title: message.chan + ": " + message.nick,
-      description: message.message,
-      priority: 1,
-      sticky: false,
-      identifier: message.msgid
-  })
-}
+    this.element.observe("keypress", this.onKeyPress.bind(this));
+    this.element.observe("blur", this.onBlur.bind(this));
 
-var alice = new Alice();
+    this.element.observe("keydown", this.resize.bind(this));
+    this.element.observe("cut", this.resize.bind(this));
+    this.element.observe("paste", this.resize.bind(this));
+    this.element.observe("change", this.resize.bind(this));
+  },
 
-document.observe("dom:loaded", function () {
-  $$("div.topic").each(function (topic){
-    topic.innerHTML = alice.linkFilter(topic.innerHTML)});
-  $('config_button').observe("click", alice.toggleConfig.bind(alice));
-  window.onkeydown = function () {
-    if (! $('config') && ! alice.isCtrl && ! alice.isCommand && ! alice.isAlt)
-      alice.activeChannel().input.focus()};
-  window.onresize = function () {
-    alice.activeChannel().scrollToBottom()};
-  window.status = " ";
-  window.onfocus = function () {alice.isFocused = true};
-  window.onblur = function () {alice.isFocused = false};
+  onKeyPress: function(event) {
+    if (event.keyCode != Event.KEY_TAB) {
+      this.completion = false;
+    }
+  },
+
+  cancelNextFocus: function() {
+    this.skipThisFocus = true;
+  },
+
+  focus: function() {
+    if (this.skipThisFocus) {
+      this.skipThisFocus = false;
+      return;
+    }
+
+    this.element.focus();
+    this.focused = true;
+  },
+
+  onBlur: function() {
+    this.focused = false;
+  },
+
+  previousCommand: function() {
+    if (this.index-- == -1) {
+      this.index = this.history.length - 1;
+      this.stash();
+    }
+
+    this.update();
+  },
+
+  nextCommand: function() {
+    if (this.index++ == -1) {
+      this.stash();
+    } else if (this.index == this.history.length) {
+      this.index = -1;
+    }
+
+    this.update();
+  },
+
+  newLine: function() {
+    console.log("newLine");
+  },
+
+  send: function() {
+    this.application.connection.sendMessage(this.element.form);
+    this.history.push(this.element.getValue());
+    this.element.setValue("");
+    this.index = -1;
+    this.stash();
+    this.update();
+  },
+
+  completeNickname: function() {
+    if (!this.completion) {
+      this.completion = new Alice.Completion(this.element, this.window.getNicknames());
+    }
+
+    this.completion.next();
+  },
+
+  stopCompletion: function() {
+    if (this.completion) {
+      this.completion.restore();
+      this.completion = false;
+    }
+  },
+
+  stash: function() {
+    this.buffer = this.element.getValue();
+  },
+
+  update: function() {
+    this.element.setValue(this.getCommand(this.index));
+  },
+
+  getCommand: function(index) {
+    if (index == -1) {
+      return this.buffer;
+    } else {
+      return this.history[index];
+    }
+  },
+
+  resize: function() {
+    (function() {
+      var height = this.getContentHeight();
+      if (height == 0) {
+        this.element.setStyle({ height: null, top: 0 });
+      } else if (height <= 150) {
+        this.element.setStyle({ height: height + "px", top: "-1px" });
+      }
+    }).bind(this).defer();
+    this.window.element.redraw();
+  },
+
+  getContentHeight: function() {
+    var element = new Element("div").setStyle({
+      position:   "absolute",
+      visibility: "hidden",
+      left:       "-" + this.element.getWidth() + "px",
+      width:      this.element.getWidth() - 7 + "px",
+      fontFamily: this.element.getStyle("fontFamily"),
+      fontSize:   this.element.getStyle("fontSize"),
+      lineHeight: this.element.getStyle("lineHeight"),
+      whiteSpace: "pre-wrap",
+      wordWrap:   "break-word"
+    });
+
+    var value = this.element.getValue().escapeHTML().replace("\n", "<br>");
+    element.update(value);
+    $(document.body).insert(element);
+
+    var height = element.getHeight();
+    element.remove();
+    return height;
+  }
 });
+Alice.Keyboard = Class.create({
+  initialize: function(application) {
+    this.application = application;
+    this.enable();
+
+    this.shortcut("Cmd+C", { propagate: true });
+    this.shortcut("Cmd+K");
+    this.shortcut("Cmd+B");
+    this.shortcut("Cmd+F");
+    this.shortcut("Opt+Up");
+    this.shortcut("Opt+Down");
+    this.shortcut("Opt+Enter");
+    this.shortcut("Enter");
+    this.shortcut("Esc");
+    this.shortcut("Tab");
+  },
+
+  shortcut: function(name, options) {
+    var keystroke = name.replace("Cmd", "Meta").replace("Opt", "Alt"),
+        method = "on" + name.replace("+", "");
+
+    window.shortcut.add(keystroke, function(event) {
+      if (this.enabled) {
+        this.activeWindow = this.application.activeWindow();
+        this[method].call(this, event);
+        delete this.activeWindow;
+      }
+    }.bind(this), options);
+  },
+
+  onCmdC: function(event) {
+    if (!this.activeWindow.input.focused) {
+      this.activeWindow.input.cancelNextFocus();
+    }
+  },
+
+  onCmdK: function() {
+    this.activeWindow.messages.update("");
+  },
+
+  onCmdB: function() {
+    this.application.previousWindow();
+  },
+
+  onCmdF: function() {
+    this.application.nextWindow();
+  },
+
+  onOptUp: function() {
+    this.activeWindow.input.previousCommand();
+  },
+
+  onOptDown: function() {
+    this.activeWindow.input.nextCommand();
+  },
+
+  onOptEnter: function() {
+    this.activeWindow.input.newLine();
+  },
+
+  onEnter: function() {
+    this.activeWindow.input.send();
+  },
+
+  onTab: function() {
+    this.activeWindow.input.completeNickname();
+  },
+
+  onEsc: function() {
+    this.activeWindow.input.stopCompletion();
+  },
+
+  enable: function() {
+    this.enabled = true;
+  },
+
+  disable: function() {
+    this.enabled = false;
+  }
+});
+Alice.Completion = Class.create({
+  initialize: function(element, candidates) {
+    this.element = $(element);
+    this.value = this.element.getValue();
+    this.index = this.element.selectionStart;
+    this.findStem();
+    this.matches = this.matchAgainst(candidates);
+    this.matchIndex = -1;
+  },
+
+  next: function() {
+    if (!this.matches.length) return;
+    if (++this.matchIndex == this.matches.length) this.matchIndex = 0;
+
+    var match = this.matches[this.matchIndex];
+    if (this.leftOffset == 0) match += ": ";
+    this.restore(match, this.leftOffset + match.length);
+  },
+
+  restore: function(stem, index) {
+    this.element.setValue(this.stemLeft + (stem || this.stem) + this.stemRight);
+    this.setCursorToIndex(Object.isUndefined(index) ? this.index : index);
+  },
+
+  setCursorToIndex: function(index) {
+    this.element.selectionStart = index;
+    this.element.selectionEnd = index;
+  },
+
+  findStem: function() {
+    var left = [], right = [], chr, index, length = this.value.length;
+
+    for (index = this.index - 1; index >= 0; index--) {
+      chr = this.value.charAt(index);
+      if (!Alice.Completion.PATTERN.test(chr)) break;
+      left.unshift(chr);
+    }
+
+    for (index = this.index; index < length; index++) {
+      chr = this.value.charAt(index);
+      if (!Alice.Completion.PATTERN.test(chr)) break;
+      right.push(chr);
+    }
+
+    this.stem = left.concat(right).join("");
+    this.stemLeft  = this.value.substr(0, this.index - left.length);
+    this.stemRight = this.value.substr(this.index + right.length);
+    this.leftOffset = this.index - left.length;
+  },
+
+  matchAgainst: function(candidates) {
+    return candidates.grep(new RegExp("^" + RegExp.escape(this.stem), "i")).sortBy(function(candidate) {
+      return candidate.toLowerCase();
+    });
+  }
+});
+
+Alice.Completion.PATTERN = /[A-Za-z0-9\[\\\]^_{|}-]/;
+
+if (window == window.parent) {
+  var alice = new Alice.Application();
+
+  document.observe("dom:loaded", function () {
+    $$("tr.topic td").each(function (topic){
+      topic.innerHTML = Alice.makeLinksClickable(topic.innerHTML)});
+    $('config_button').observe("click", alice.toggleConfig.bind(alice));
+    if (alice.activeWindow()) alice.activeWindow().input.focus()
+    setTimeout(function () {
+      if (!alice.windows) alice.toggleConfig.bind(alice), 2000});
+    window.onkeydown = function (e) {
+      if (alice.activeWindow() && !$('config') && !Alice.isSpecialKey(e.which))
+        alice.activeWindow().input.focus()};
+    window.onresize = function () {
+      if (alice.activeWindow()) alice.activeWindow().scrollToBottom()};
+    window.status = " ";
+    window.onfocus = function () {
+      if (alice.activeWindow()) alice.activeWindow().input.focus();
+      alice.isFocused = true};
+    window.onblur = function () {alice.isFocused = false};
+    Alice.makeSortable();
+    if (Prototype.Browser.MobileSafari) {
+      setTimeout(function(){window.scrollTo(0,1)}, 5000);
+      $$('button').invoke('setStyle',
+        {display:'block',position:'absolute',right:'0px'});
+    }
+  });
+}

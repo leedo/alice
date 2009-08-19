@@ -15,16 +15,14 @@ my @pending;
 
 sub async_fetch {
   my ($res,$uri)  = @_;
-
   if (scalar keys(%children) >= 5) {
     push @pending, {
       res   => $res,
       uri   => $uri,
     };
-  
     return 0;
   }
-
+  
   my $pathobj  = URI->new($uri);
   my $path     = $pathobj->path();
   $path        =~ s/^\/[^\/]+\///;
