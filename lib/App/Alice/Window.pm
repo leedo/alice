@@ -1,8 +1,6 @@
 use MooseX::Declare;
 
 class App::Alice::Window {
-  
-  use CLASS;
   use Encode;
   use DateTime;
   use Digest::CRC qw/crc16/;

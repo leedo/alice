@@ -13,7 +13,6 @@ class App::Alice::HTTPD {
   use File::ShareDir qw/dist_dir/;
   use URI::QueryParam;
   use YAML qw/DumpFile/;
-  use CLASS;
 
   has 'app' => (
     is  => 'ro',
@@ -331,7 +330,7 @@ class App::Alice::HTTPD {
   
   for my $method (qw/send_config save_config send_index setup_stream
                   not_found handle_message handle_static server_config/) {
-    Moose::Util::add_method_modifier(CLASS, "before", [$method, sub {
+    Moose::Util::add_method_modifier(__PACKAGE__, "before", [$method, sub {
       $_[1]->header(Connection => 'close');
       $_[2]->header(Connection => 'close');
       $_[2]->streaming(0);
