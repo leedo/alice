@@ -1,14 +1,12 @@
-#NAME
-
-##App::Alice
+#App::Alice
 an Altogether Lovely Internet Chatting Experience
 
-#SYNPOSIS
+##SYNPOSIS
 
   arthur:~ leedo$ alice
   You can view your IRC session at: http://localhost:8080/view
 
-#DESCRIPTION
+##DESCRIPTION
 
 Alice is an IRC client that can be run either locally or remotely, and
 can be viewed in multiple web browsers at the same time. The alice server
@@ -21,7 +19,7 @@ to each connected browser. It uses this connection to push IRC messages
 to the browsers in realtime. Sending messages and events to a channel
 is done through a simple HTTP request back to the alice server.
 
-#USAGE
+##USAGE
 
 After installing, there should be a new `alice' command available. Run
 this command to start the alice server. The first run won't find
@@ -33,58 +31,58 @@ configuration window. Add your IRC servers and channels in this window
 and save. This will get you connected to those servers, and your channels
 should appear as tabs at the bottom of the screen.
 
-#COMMANDS
+##COMMANDS
 
-##/join $string
+###/join $string
 
 Takes a channel name as an argument. It will attempt to join this channel
 on the server of the channel that you typed the command into.
 
-##/part
+###/part
 
 This will close the currently focused tab and part the channel. Only works on
 channels.
 
-##/close
+###/close
 
 Closes the current tab, even private message tabs. If used in a channel
 it will also part the channel.
 
-##/clear
+###/clear
 
 This will clear the current tab's messages from your browser. It will also 
 clear the tab's message buffer so when you refresh your browser the messages 
 won't re-appear (as they normally would.)
 
-##/query $string
+###/query $string
 
 Takes a nick as an argument. This will open a new tab for private messaging
 with a user. Only works in a channel.
 
-##/whois $string
+###/whois $string
 
 Takes a nick as an argument. This will print some information about the
 supplied user.
 
-##/quote $string
+###/quote $string
 
 Sends $string as a raw message to the server.
 
-##/topic [$string]
+###/topic [$string]
 
 Takes an optional topic string. This will display the topic for the current tab.
 If a string is supplied, it will attempt to update the channel's topic.
 Only works in a channel.
 
-##/n[ames]
+###/n[ames]
 
 This will print all of the nick's in the current tab in a tabular format.
 
-##/me $string
+###/me $string
 
 Sends $string as an ACTION to the channel
 
-#NOTIFICATIONS
+##NOTIFICATIONS
 
 If you get a message with your nick in the body, and no browsers are
 connected, a notification will be sent to either Growl (if running on
@@ -93,18 +91,18 @@ if a browser is connected (the exception being if you are using the Fluid
 SSB which can access Growl). This is something that will probably become 
 configurable over time.
 
-#RUNNING REMOTELY
+##RUNNING REMOTELY
 
 Currently, there has been very little testing done for running alice
 remotely. So please let us know how your experience with it is.
 
-#MOBILE INTERFACE
+##MOBILE INTERFACE
 
 Surprisingly, alice works very well in Mobile Safari (the browser used
 by the iPhone.) It still needs a little work to be fully functional, though.
 The required style changes are automatically applied for mobile devices.
 
-#AUTHORS
+##AUTHORS
 
 Lee Aylward E<lt>leedo@cpan.orgE<gt>
 
@@ -112,7 +110,7 @@ Sam Stephenson
 
 Ryan Baumann
 
-#COPYRIGHT
+##COPYRIGHT
 
 Copyright 2009 by Lee Aylward E<lt>leedo@cpan.orgE<gt>
 
