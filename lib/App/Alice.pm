@@ -1,46 +1,6 @@
 use 5.008001;
 use MooseX::Declare;
 
-=pod
-
-=head1 NAME
-
-App::Alice - the Altogether Lovely Internet Chat Experience
-
-=cut
-
-=head1 DESCRIPTION
-
-Alice is an IRC client that can be run either locally or remotely, and
-can be viewed in multiple web browsers at the same time. Alice stores
-a message buffer, so when you load your browser you will get
-the last 100 lines from each channel. This way you can close the 
-web page and continue to collect messages to be read later.
-
-Alice's built in web server maintains a long streaming HTTP response
-to each connected browser. It uses this connection to push IRC messages
-to the client in realtime. Sending messages and events to a channel
-is done through a simple HTTP request back to the alice server.
-
-=head1 NOTIFICATIONS
-
-If you get a message with your nick in the body, and no browsers are
-connected, a notification will be sent to either Growl (if running on
-OS X) or using libnotify (on Linux.) Alice does not send any notifications
-if a browser is connected (the exception being if you are using the Fluid
-SSB which can access Growl). This is something that will probably become 
-configurable over time.
-
-=head1 RUNNING REMOTELY
-
-Currently, there has been very little testing done for running alice
-remotely. There is one bug that makes it potentially difficult,
-and that only shows up if the server clock is significantly different
-from that of the browser's OS. This can be fixed in the future by
-calculating an offset and taking that into account.
-
-=cut
-
 class App::Alice {
   use App::Alice::Window;
   use App::Alice::HTTPD;
@@ -175,22 +135,3 @@ class App::Alice {
     print STDERR join(" ", @_) . "\n";
   }
 }
-
-=pod
-
-=head1 AUTHORS
-
-Lee Aylward E<lt>leedo@cpan.orgE<gt>
-
-Sam Stephenson
-
-Ryan Baumann
-
-=head1 COPYRIGHT
-
-Copyright 2009 by Lee Aylward E<lt>leedo@cpan.orgE<gt>
-
-This program is free software; you can redistribute it and/or modify it
-under the same terms as Perl itself.
-
-=cut
