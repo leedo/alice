@@ -23,6 +23,8 @@ no_index:
 requires:
   DateTime: 0.49
   Digest::CRC: 0.14
+  ExtUtils::Depends: 0
+  ExtUtils::MakeMaker: 6.54
   File::ShareDir: 0.01
   IRC::Formatting::HTML: 0.03
   JSON: 2.15
