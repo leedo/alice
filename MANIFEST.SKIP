@@ -46,4 +46,5 @@
 \.DS_Store
 
 # Avoid archives of this distribution
+\bshare/sprockets
 App-Alice
