@@ -1,5 +1,10 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 
+use strict;
+use warnings;
+
+use FindBin;
+use lib "$FindBin::Bin/../cpanp";
 use CPANPLUS::Backend;
 
 my $cb = CPANPLUS::Backend->new;
@@ -34,7 +39,4 @@ my @modules = qw/
   Digest::CRC
 /;
 
-for (@modules) {
-  $cb->install(modules => [$_]);
-}
-
+$cb->install(modules => [$_]) for @modules;
