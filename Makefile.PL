@@ -6,11 +6,13 @@ perl_version '5.008';
 all_from    'lib/App/Alice.pm';
 githubmeta;
 
-# need this for Devel::Declare (for MooseX::Declare)
-requires    'ExtUtils::Depends'            => 0,
-
 # need a recent version to detect POE Components
 configure_requires 'ExtUtils::MakeMaker'   => '6.54';
+
+# need this for Devel::Declare (for MooseX::Declare)
+requires    'ExtUtils::Depends'            => 0,
+# need a recent version for clean_subroutines
+requires    'namespace::clean'             => '0.11';
 
 requires    'YAML'                         => '0.70';
 requires    'MooseX::Declare'              => '0.23';
