@@ -26,6 +26,7 @@ MANIFEST
 MANIFEST.SKIP
 META.yml
 README
+README.md
 script/alice
 share/sprockets/alice/src/alice.js
 share/sprockets/alice/src/alice/application.js

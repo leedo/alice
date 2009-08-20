@@ -7,7 +7,6 @@ class App::Alice::Window {
   use MooseX::ClassAttribute;
   use MooseX::AttributeHelpers;
   use IRC::Formatting::HTML;
-  use File::ShareDir qw/dist_dir/;
   
   class_has msgid => (
     metaclass => 'Counter',
@@ -27,6 +26,12 @@ class App::Alice::Window {
       my $self = shift;
       return $self->title =~ /^[#&]/;
     }
+  );
+
+  has assetdir => (
+    is       => 'ro',
+    isa      => 'Str',
+    required => 1,
   );
 
   has msgbuffer => (
@@ -84,9 +89,10 @@ class App::Alice::Window {
   has 'tt' => (
     is      => 'ro',
     isa     => 'Template',
+    lazy    => 1,
     default => sub {
       Template->new(
-        INCLUDE_PATH => dist_dir('App-Alice') . '/templates',
+        INCLUDE_PATH => shift->assetdir . '/templates',
         ENCODING     => 'UTF8'
       );
     },

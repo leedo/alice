@@ -10,7 +10,6 @@ class App::Alice::HTTPD {
   use Time::HiRes qw/time/;
   use JSON;
   use Template;
-  use File::ShareDir qw/dist_dir/;
   use URI::QueryParam;
   use YAML qw/DumpFile/;
 
@@ -42,7 +41,7 @@ class App::Alice::HTTPD {
   has 'assetdir' => (
     is => 'ro',
     isa => 'Str',
-    default => sub {dist_dir('App-Alice')}
+    default => sub { shift->app->assetdir }
   );
   
   has 'tt' => (
@@ -51,7 +50,6 @@ class App::Alice::HTTPD {
     lazy => 1,
     default => sub {
       my $self = shift;
-      print STDERR $self->assetdir;
       Template->new(
         INCLUDE_PATH => $self->assetdir . '/templates',
         ENCODING     => 'UTF8'
@@ -132,6 +130,7 @@ class App::Alice::HTTPD {
     return 200 if defined $req->header('error');
     
     my $local_time = time;
+    my $remote_time = $local_time;
 
     $self->log_debug("opening a streaming http connection");
     $res->streaming(1);
@@ -139,10 +138,11 @@ class App::Alice::HTTPD {
     $res->{msgs} = [];
     $res->{actions} = [ map {$_->nicks_action} $self->app->windows ];
     
-    if (my $remote_time = $req->uri->query_param('t')) {
-      $res->{offset} = $localtime - $remote_time;
-      $self->log_debug("request time offset is " . $res->{offset});
+    if ($req->uri->query_param('t')) {
+      $remote_time = $req->uri->query_param('t')
     }
+    $res->{offset} = $local_time - $remote_time;
+    $self->log_debug("request time offset is " . $res->{offset});
 
     # populate the msg queue with any buffered messages
     if (defined (my $msgid = $req->uri->query_param('msgid'))) {

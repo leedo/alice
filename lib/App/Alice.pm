@@ -17,6 +17,12 @@ class App::Alice {
     required => 1,
   );
 
+  has assetdir => (
+    is        => 'ro',
+    isa       => 'Str',
+    required  => 1,
+  );
+
   has ircs => (
     is      => 'ro',
     isa     => 'HashRef[HashRef]',
@@ -93,7 +99,8 @@ class App::Alice {
     }
     my $window = App::Alice::Window->new(
       title      => $title,
-      connection => $connection
+      connection => $connection,
+      assetdir   => $self->assetdir,
     );  
     $self->add_window($id, $window);
   }

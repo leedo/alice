@@ -4,9 +4,20 @@ use strict;
 use warnings;
 
 use FindBin;
-use lib "$FindBin::Bin/lib";
 use YAML qw/LoadFile/;
-use App::Alice;
+use File::ShareDir qw/dist_dir/;
+
+my $assetdir;
+if ($FindBin::Bin =~ /script$/) {
+  require lib;
+  lib->import("$FindBin::Bin/../lib");
+  $assetdir = "$FindBin::Bin/../share";
+}
+else {
+  $assetdir = dist_dir('App-Alice');
+}
+
+require App::Alice;
 
 $0 = "Alice\0";
 
@@ -23,7 +34,7 @@ binmode(STDERR, ":utf8");
 binmode(STDOUT, ":utf8");
 print STDERR "You can view your IRC session at: http://localhost:".$config->{port}."/view\n";
 
-my $alice = App::Alice->new(config => $config);
+my $alice = App::Alice->new(config => $config, assetdir => $assetdir);
 
 $SIG{INT} = sub {
   my @connections = grep {$_->connected} $alice->connections;
