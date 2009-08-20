@@ -32,9 +32,13 @@ if (-e $ENV{HOME}.'/.alice.yaml') {
   
 binmode(STDERR, ":utf8");
 binmode(STDOUT, ":utf8");
-print STDERR "You can view your IRC session at: http://localhost:".$config->{port}."/view\n";
+print STDERR "You can view your IRC session at: http://localhost:"
+            . $config->{port}."/view\n";
 
-my $alice = App::Alice->new(config => $config, assetdir => $assetdir);
+my $alice = App::Alice->new(
+  config   => $config,
+  assetdir => $assetdir
+);
 
 $SIG{INT} = sub {
   my @connections = grep {$_->connected} $alice->connections;
