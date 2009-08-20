@@ -4,6 +4,7 @@ an Altogether Lovely Internet Chatting Experience
 ##SYNPOSIS
 
   arthur:~ leedo$ alice
+
   You can view your IRC session at: http://localhost:8080/view
 
 ##DESCRIPTION
@@ -104,7 +105,7 @@ The required style changes are automatically applied for mobile devices.
 
 ##AUTHORS
 
-Lee Aylward E<lt>leedo@cpan.orgE<gt>
+Lee Aylward <leedo@cpan.org>
 
 Sam Stephenson
 
@@ -112,7 +113,7 @@ Ryan Baumann
 
 ##COPYRIGHT
 
-Copyright 2009 by Lee Aylward E<lt>leedo@cpan.orgE<gt>
+Copyright 2009 by Lee Aylward <leedo@cpan.org>
 
 This program is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.
