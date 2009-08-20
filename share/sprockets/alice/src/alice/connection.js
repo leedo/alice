@@ -19,12 +19,13 @@ Alice.Connection = Class.create({
   connect: function() {
     this.closeConnection();
     this.len = 0;
+    var now = new Date();
     clearTimeout(this.timer);
 
     console.log("opening new connection starting at message " + this.msgid);
     this.request = new Ajax.Request('/stream', {
       method: 'get',
-      parameters: {msgid: this.msgid},
+      parameters: {msgid: this.msgid, t: now.getTime() / 1000},
       onException: this.handleException.bind(this),
       onInteractive: this.handleUpdate.bind(this),
       onComplete: this.handleComplete.bind(this)
