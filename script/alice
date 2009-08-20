@@ -1,0 +1,55 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+
+use FindBin;
+use YAML qw/LoadFile/;
+use File::ShareDir qw/dist_dir/;
+
+my $assetdir;
+if ($FindBin::Bin =~ /script$/) {
+  require lib;
+  lib->import("$FindBin::Bin/../lib");
+  $assetdir = "$FindBin::Bin/../share";
+}
+else {
+  $assetdir = dist_dir('App-Alice');
+}
+
+require App::Alice;
+
+$0 = "Alice\0";
+
+my $config = {
+  port  => 8080,
+  debug => 0,
+  style => 'default',
+};
+if (-e $ENV{HOME}.'/.alice.yaml') {
+  eval { $config = LoadFile($ENV{HOME}.'/.alice.yaml') };
+}
+  
+binmode(STDERR, ":utf8");
+binmode(STDOUT, ":utf8");
+print STDERR "You can view your IRC session at: http://localhost:"
+            . $config->{port}."/view\n";
+
+my $alice = App::Alice->new(
+  config   => $config,
+  assetdir => $assetdir
+);
+
+$SIG{INT} = sub {
+  my @connections = grep {$_->connected} $alice->connections;
+  if (! @connections) {
+    print STDERR "Bye!\n";
+    exit(0);
+  }
+  print STDERR "closing connections, ^C again to quit\n";
+  for ($alice->connections) {
+    $_->call(quit => "alice.");
+  }
+};
+
+$alice->run;

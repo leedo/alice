@@ -1,34 +1,43 @@
---- #YAML:1.0
-name: Alice
-abstract: IRC client that is viewed in Safari
-version: 0.1
+---
+abstract: 'an Altogether Lovely Internet Chatting Experience'
 author:
-  - Lee Aylward <lee@laylward.com>
-license: perl
+  - 'Lee Aylward <leedo@cpan.org>'
+build_requires:
+  ExtUtils::MakeMaker: 6.42
+  Test::More: 0.86
+configure_requires:
+  ExtUtils::MakeMaker: 6.42
 distribution_type: module
-requires:
-  YAML: 0
-  JSON: 0
-  Moose: 0
-  Encode: 0
-  MooseX::Declare: 0
-  MooseX::ClassAttribute: 0
-  MooseX::AttributeHelpers: 0
-  MooseX::POE: 0
-  Digest::CRC: 0
-  CLASS: 0
-  POE::Component::IRC: 0
-  POE::Component::Server::HTTP: 0
-  POE::Component::SSLify: 0
-  Template: 0
-  Template::Plugin::JavaScript: 0
-  HTML::Entities: 0
-  List::MoreUtils: 0
-  IRC::Formatting::HTML: 0.3
-  DateTime: 0
-  local::lib: 0
-urls:
-  license: http://dev.perl.org/licenses/
+generated_by: 'Module::Install version 0.91'
+license: perl
 meta-spec:
-  version: 1.3
-  url: http://module-build.sourceforge.net/META-spec-v1.3.html
+  url: http://module-build.sourceforge.net/META-spec-v1.4.html
+  version: 1.4
+name: App-Alice
+no_index:
+  directory:
+    - inc
+    - share
+    - share/sprockets
+    - t
+requires:
+  DateTime: 0.49
+  Digest::CRC: 0.14
+  File::ShareDir: 0.01
+  IRC::Formatting::HTML: 0.03
+  JSON: 2.15
+  MooseX::ClassAttribute: 0.09
+  MooseX::Declare: 0.23
+  MooseX::POE: 0.205
+  POE::Component::IRC: 6.08
+  POE::Component::SSLify: 0.15
+  POE::Component::Server::HTTP: 0.09
+  Template: 2.20
+  Template::Plugin::JavaScript: 0.01
+  YAML: 0.70
+  perl: 5.8.0
+resources:
+  homepage: http://github.com/leedo/alice/tree
+  license: http://dev.perl.org/licenses/
+  repository: git://github.com/leedo/alice.git
+version: 0.01

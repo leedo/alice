@@ -1,6 +1,6 @@
-[submodule "data/sprockets/prototype"]
-	path = data/sprockets/prototype
+[submodule "share/sprockets/prototype"]
+	path = share/sprockets/prototype
 	url = git://github.com/sstephenson/prototype.git
-[submodule "data/sprockets/scriptaculous"]
-	path = data/sprockets/scriptaculous
+[submodule "share/sprockets/scriptaculous"]
+	path = share/sprockets/scriptaculous
 	url = git://github.com/madrobby/scriptaculous.git

@@ -1,0 +1,20 @@
+<div class="channel[% IF loop.first %] active[% END %]" id="[% chanid %]">
+  <div class="topic" id="[% chanid %]_topic">
+    [% topic.Value || "(no topic set)" %]
+  </div>
+  <ul class="messages" id="[% chanid %]_messages">
+  </ul>
+  <div class="input" id="[% chanid %]_input">
+    <div id="[% chanid %]_autocomplete_choices" class="autocomplete"></div>
+    <form id="[% chanid %]_form" autocomplete="off">
+      <input type="hidden" name="chan" value="[% chan %]" />
+      <input name="msg" id="[% chanid %]_msg"/>
+      <input type="hidden" name="session" value="[% session %]" />
+    </form>
+    <script type="text/javascript">
+      alice.addChannel(
+        new Alice.Channel('[% chan %]','[% chanid %]',[% loop.first ? "true" : "false" %],'[% session %]')
+      );
+    </script>
+  </div>
+</div>

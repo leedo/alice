@@ -1,2 +1,5 @@
 *.swp
 .modulebuildrc
+\bMakefile
+blib
+pm_to_blib
