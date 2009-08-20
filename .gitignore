@@ -1,5 +1,5 @@
 *.swp
 .modulebuildrc
-Makefile
+\bMakefile
 blib
 pm_to_blib

@@ -124,7 +124,7 @@
 		      <input type="text" name="[% sessionid %]_password" value="[% connection.config.password %]" size="15" />
 		    </div>
 		    <div class="field clear">
-		      <label>Channels</label>
+		      <label>Channels (e.g. #alice)</label>
 		      <select name="[% sessionid %]_channels" multiple="multiple" id="channels_[% sessionid %]" class="channelselect">
 		        [% FOR channel IN connection.config.channels %]
 		        <option value="[% channel %]">[% channel %]</option>

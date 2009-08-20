@@ -1,5 +1,5 @@
-BUILD := data/static
-SOURCE := data/sprockets
+BUILD := static
+SOURCE := sprockets
 SPROCKETS := alice prototype scriptaculous shortcut
 INCLUDES := $(foreach sprocket,$(SPROCKETS),$(SOURCE)/$(sprocket)/src)
 INCLUDE := $(foreach dir,$(INCLUDES),-I $(dir))

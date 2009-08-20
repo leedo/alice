@@ -13,6 +13,7 @@ inc/Module/Install/Share.pm
 inc/Module/Install/Win32.pm
 inc/Module/Install/WriteAll.pm
 lib/App/Alice.pm
+lib/App/Alice.pod
 lib/App/Alice/AsyncGet.pm
 lib/App/Alice/CommandDispatch.pm
 lib/App/Alice/HTTPD.pm

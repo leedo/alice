@@ -1,5 +1,5 @@
 ---
-abstract: 'the Altogether Lovely Internet Chat Experience'
+abstract: 'an Altogether Lovely Internet Chatting Experience'
 author:
   - 'Lee Aylward <leedo@cpan.org>'
 build_requires:
