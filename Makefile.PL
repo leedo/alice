@@ -1,8 +1,10 @@
 use inc::Module::Install;
 
-name        'App-Alice',
-version     '0.01';
-license     'perl';
+name        'App-Alice';
+author      'Lee Aylward <leedo@cpan.org>';
+perl_version '5.008';
+all_from    'lib/App/Alice.pm';
+githubmeta;
 
 requires    'YAML'                         => '0.70';
 requires    'JSON'                         => '2.15';
@@ -19,7 +21,11 @@ requires    'DateTime'                     => '0.49';
 requires    'File::ShareDir'               => '0.01';
 requires    'Digest::CRC'                  => '0.14';
 
+test_requires 'Test::More'                 => '0.86';
 
 install_share  'share';
 install_script 'script/alice';
+no_index    'directory' => 'share/sprockets';
+
+install_as_cpan;
 WriteAll;

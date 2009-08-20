@@ -130,12 +130,19 @@ class App::Alice::HTTPD {
 
     # XHR tries to reconnect again with this header for some reason
     return 200 if defined $req->header('error');
+    
+    my $local_time = time;
 
     $self->log_debug("opening a streaming http connection");
     $res->streaming(1);
     $res->content_type('multipart/mixed; boundary=xalicex; charset=utf-8');
     $res->{msgs} = [];
     $res->{actions} = [ map {$_->nicks_action} $self->app->windows ];
+    
+    if (my $remote_time = $req->uri->query_param('t')) {
+      $res->{offset} = $localtime - $remote_time;
+      $self->log_debug("request time offset is " . $res->{offset});
+    }
 
     # populate the msg queue with any buffered messages
     if (defined (my $msgid = $req->uri->query_param('msgid'))) {
@@ -156,7 +163,8 @@ class App::Alice::HTTPD {
         $res->{started} = 1;
         $output .= $self->seperator."\n";
       }
-      $output .= to_json({msgs => $res->{msgs}, actions => $res->{actions}, time => time});
+      $output .= to_json({msgs => $res->{msgs}, actions => $res->{actions},
+                          time => time - $res->{offset}});
       my $padding = " " x (1024 - bytes::length $output);
       $res->send($output . $padding . "\n" . $self->seperator . "\n");
       if ($res->is_error) {

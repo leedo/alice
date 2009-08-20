@@ -42,5 +42,8 @@
 \bBUILD.COM$
 \bbuild.com$
  
+\.swp$
+\.DS_Store
+
 # Avoid archives of this distribution
-\bApp-Alice[\d\.\_]+
+App-Alice
