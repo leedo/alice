@@ -3,7 +3,10 @@ an Altogether Lovely Internet Chatting Experience
 
 ##SYNPOSIS
 
-  arthur:~ leedo$ alice
+  First time:
+    $ ./bin/installdeps.pl
+  Then:
+    $ ./bin/alice
 
   You can view your IRC session at: http://localhost:8080/view
 
