@@ -12,20 +12,21 @@ if ($FindBin::Bin =~ /.*alice.*\/bin$/i) {
   require lib;
   lib->import("$FindBin::Bin/../lib");
   $assetdir = "$FindBin::Bin/../share";
-  if (-e "$FindBin::Bin/../extdir") {
-    lib->import("$FindBin::Bin/../extdir");
-    local::lib->import("$FindBin::Bin/../extdir");
+  if (-e "$FindBin::Bin/../extlib") {
+    lib->import("$FindBin::Bin/../extlib/lib/perl5");
+    require local::lib;
+    local::lib->import("$FindBin::Bin/../extlib");
   }
 }
 
 # or actually installed
 else {
-  require File::ShareDir qw/dist_dir/;
+  require File::ShareDir;
   File::ShareDir->import('dist_dir');
   $assetdir = dist_dir('App-Alice');
 }
 
-use YAML qw/LoadFile DumpFile/;
+#use YAML qw/LoadFile DumpFile/;
 require App::Alice;
 
 $0 = "Alice\0";

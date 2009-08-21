@@ -26,6 +26,7 @@ requires    'Template::Plugin::JavaScript' => '0.01';
 requires    'IRC::Formatting::HTML'        => '0.03';
 requires    'JSON'                         => '2.15';
 requires    'DateTime'                     => '0.49';
+requires    'DateTime::TimeZone';
 requires    'File::ShareDir'               => '0.01';
 requires    'Digest::CRC'                  => '0.14';
 
