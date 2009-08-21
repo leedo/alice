@@ -8,7 +8,7 @@ use YAML qw/LoadFile/;
 use File::ShareDir qw/dist_dir/;
 
 my $assetdir;
-if ($FindBin::Bin =~ /script$/) {
+if ($FindBin::Bin =~ /alice.*\/bin$/) {
   require lib;
   lib->import("$FindBin::Bin/../lib");
   $assetdir = "$FindBin::Bin/../share";
