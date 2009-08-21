@@ -1,5 +1,13 @@
-*.swp
+.*
+!.gitignore
 .modulebuildrc
-\bMakefile
+Makefile*
+!Makefile.PL
 blib
 pm_to_blib
+MANIFEST
+build
+META.yml
+App-Alice-*
+inc
+README
