@@ -4,8 +4,6 @@ use strict;
 use warnings;
 
 use FindBin;
-use YAML qw/LoadFile DumpFile/;
-use File::ShareDir qw/dist_dir/;
 
 my $assetdir;
 
@@ -22,10 +20,14 @@ if ($FindBin::Bin =~ /.*alice.*\/bin$/i) {
 
 # or actually installed
 else {
+  require File::ShareDir qw/dist_dir/;
+  File::ShareDir->import('dist_dir');
   $assetdir = dist_dir('App-Alice');
 }
 
+use YAML qw/LoadFile DumpFile/;
 require App::Alice;
+
 $0 = "Alice\0";
 binmode(STDERR, ":utf8");
 binmode(STDOUT, ":utf8");
