@@ -11,15 +11,6 @@ an Altogether Lovely Internet Chatting Experience
     $ ./bin/alice
   You can view your IRC session at: http://localhost:8080/view
 
-DESCRIPTION
-    Alice is an IRC client that can be run either locally or remotely, and
-  or
-    $ ./bin/installdeps.pl
-  Then:
-    $ ./bin/alice
-
-  You can view your IRC session at: http://localhost:8080/view
-
 ##DESCRIPTION
 
 Alice is an IRC client that can be run either locally or remotely, and
