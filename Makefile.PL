@@ -32,7 +32,7 @@ requires    'Digest::CRC'                  => '0.14';
 test_requires 'Test::More'                 => '0.86';
 
 install_share  'share';
-install_script 'script/alice';
+install_script 'bin/alice';
 no_index    'directory' => 'share/sprockets';
 
 install_as_cpan;
