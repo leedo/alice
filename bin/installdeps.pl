@@ -7,7 +7,7 @@ use FindBin;
 use lib "$FindBin::Bin/../cpanp";
 use CPANPLUS::Backend;
 
-$ENV{PATH} = $ENV{PATH} . ":$FindBin";
+$ENV{PATH} = $ENV{PATH} . ":$FindBin::Bin";
 
 my $cb = CPANPLUS::Backend->new;
 $cb->flush('all');
