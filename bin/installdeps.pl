@@ -23,6 +23,7 @@ $conf->set_conf(allow_build_interactivity => 0);
 my @modules = qw/
   ExtUtils::Depends
   YAML
+  Class::Inspector
   Class::MOP
   Moose 
   MooseX::ClassAttribute
