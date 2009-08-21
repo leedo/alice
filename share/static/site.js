@@ -7570,6 +7570,8 @@ Alice.Window = Class.create({
         }
       }
 
+      this.messages.redraw();
+
       if (!this.application.isFocused && message.highlight)
         Alice.growlNotify(message);
 
