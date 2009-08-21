@@ -61,6 +61,7 @@ class App::Alice::HTTPD {
     my $self = shift;
     POE::Component::Server::HTTP->new(
       Port            => $self->config->{port},
+      Address         => $self->config->{address},
       PreHandler      => {
         '/'             => sub{$self->check_authentication(@_)},
       },
