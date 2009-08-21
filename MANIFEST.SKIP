@@ -44,6 +44,7 @@
  
 \.swp$
 \.DS_Store
+\bextlib.*
 
 # Avoid archives of this distribution
 \bshare/sprockets
