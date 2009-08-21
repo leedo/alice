@@ -24,6 +24,7 @@ $conf->set_conf(allow_build_interactivity => 0);
 
 my @modules = qw/
   ExtUtils::Depends
+  IO::String
   YAML
   Class::Inspector
   Class::MOP
@@ -44,9 +45,6 @@ my @modules = qw/
   Digest::CRC
 /;
 
-no warnings;
-
-print "\nHere we go..\n\n";
 for my $module (@modules) {
   my $rv = $cb->install(modules => [$module]);
 }

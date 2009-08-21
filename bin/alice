@@ -4,34 +4,46 @@ use strict;
 use warnings;
 
 use FindBin;
-use YAML qw/LoadFile/;
+use YAML qw/LoadFile DumpFile/;
 use File::ShareDir qw/dist_dir/;
 
 my $assetdir;
+
+# Check if we are installed locally
 if ($FindBin::Bin =~ /.*alice.*\/bin$/i) {
   require lib;
   lib->import("$FindBin::Bin/../lib");
   $assetdir = "$FindBin::Bin/../share";
+  if (-e "$FindBin::Bin/../extdir") {
+    lib->import("$FindBin::Bin/../extdir");
+    local::lib->import("$FindBin::Bin/../extdir");
+  }
 }
+
+# or actually installed
 else {
   $assetdir = dist_dir('App-Alice');
 }
 
 require App::Alice;
-
 $0 = "Alice\0";
+binmode(STDERR, ":utf8");
+binmode(STDOUT, ":utf8");
 
 my $config = {
   port  => 8080,
   debug => 0,
   style => 'default',
 };
+
 if (-e $ENV{HOME}.'/.alice.yaml') {
   eval { $config = LoadFile($ENV{HOME}.'/.alice.yaml') };
 }
+else {
+  DumpFile($ENV{HOME}.'/.alice.yaml', $config)
+    or die "Can not write config file\n";
+}
   
-binmode(STDERR, ":utf8");
-binmode(STDOUT, ":utf8");
 print STDERR "You can view your IRC session at: http://localhost:"
             . $config->{port}."/view\n";
 
