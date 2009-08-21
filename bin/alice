@@ -26,7 +26,8 @@ else {
   $assetdir = dist_dir('App-Alice');
 }
 
-#use YAML qw/LoadFile DumpFile/;
+require YAML;
+YAML->import(qw/DumpFile LoadFile/);
 require App::Alice;
 
 $0 = "Alice\0";
