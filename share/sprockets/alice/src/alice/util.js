@@ -45,8 +45,7 @@ Object.extend(Alice, {
 			16,27,9,32,13,8,145,20,144,19,45,36,46,35,33,34,37,38,39,
 			40,17,18,91,112,113,114,115,116,117,118,119,120,121,122,123
 		];
-		if (special_keys.indexOf(keyCode) == -1) return false;
-		return true;
+		return special_keys.indexOf(keyCode) > -1;
   },
 });
 

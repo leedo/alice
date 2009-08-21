@@ -13,26 +13,24 @@ App::Alice - an Altogether Lovely Internet Chatting Experience
 
 Alice is an IRC client that can be run either locally or remotely, and
 can be viewed in multiple web browsers at the same time. The alice server
-stores a message buffer, so when you load your browser you will get
-the most recent 100 lines for each channel. This way you can close the 
-web page and continue to collect messages to be read later.
+maintains a message buffer, so when a browser connects it is sent
+the 100 most recent lines from each channel. This allows the user to
+close their browser and alice will continue to aggregate messages.
 
 Alice's built in web server maintains a long streaming HTTP response
 to each connected browser. It uses this connection to push IRC messages
-to the browsers in realtime. Sending messages and events to a channel
-is done through a simple HTTP request back to the alice server.
+to the browsers in realtime. Sending messages or commands is done
+through an HTTP request back to alice's server.
 
 =head1 USAGE
 
 After installing, there should be a new `alice' command available. Run
-this command to start the alice server. The first run won't find
-a config file (~/.alice.yaml), so it won't be connecting to any
-IRC servers. Open your browser and connect to the URL that was printed
-to your terminal (probably http://localhost:8080/view). You will see a
-small icon in the bottom corner; this button will bring up the connection
-configuration window. Add your IRC servers and channels in this window
-and save. This will get you connected to those servers, and your channels
-should appear as tabs at the bottom of the screen.
+this command to start the alice server. Open your browser and connect to 
+the URL that was printed to your terminal (likely http://localhost:8080/view). 
+You will see a small icon in the bottom corner; this button will bring up the
+connection configuration window. Add one more more IRC servers and channels in this
+window and save. Alice will then connect to those servers, and the channels
+will appear as tabs at the bottom of the screen.
 
 =head1 COMMANDS
 
