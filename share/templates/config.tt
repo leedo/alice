@@ -125,7 +125,7 @@
 		    </div>
 		    <div class="field clear">
 		      <label>Channels
-		        <span style="font-size:0.8em">(e.g. <span style="font-family:monospace">#alice</span>)</span>
+		        <span style="font-size:0.8em">(e.g. <span style="font-family:monospace;font-size:1em">#alice</span>)</span>
 		      </label>
 		      <select name="[% sessionid %]_channels" multiple="multiple" id="channels_[% sessionid %]" class="channelselect">
 		        [% FOR channel IN connection.config.channels %]
