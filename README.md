@@ -26,13 +26,13 @@ through an HTTP request back to alice's server.
 
 ##USAGE
 
-After installing, there should be a new `alice' command available. Run
+After installation, there will be a new `alice' command available. Run
 this command to start the alice server. Open your browser and connect to 
 the URL that was printed to your terminal (likely http://localhost:8080/view). 
 You will see a small icon in the bottom corner; this button will bring up the
 connection configuration window. Add one more more IRC servers and channels in this
-window and save. Alice will then connect to those servers, and the channels
-will appear as tabs at the bottom of the screen.
+window and save. Alice will then connect to those servers, the channels appearing
+as tabs at the bottom of the window.
 
 ##COMMANDS
 

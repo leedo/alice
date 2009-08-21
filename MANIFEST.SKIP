@@ -49,3 +49,4 @@
 # Avoid archives of this distribution
 \bshare/sprockets
 App-Alice
+README.md
