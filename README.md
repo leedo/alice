@@ -4,6 +4,16 @@ an Altogether Lovely Internet Chatting Experience
 ##SYNPOSIS
 
   First time:
+    $ tar -xvzf extlib-osx-leopard.tar.gz
+  or install the dependencies from CPAN if you aren't on Leopard
+    $ ./bin/installdeps.pl
+  Then:
+    $ ./bin/alice
+  You can view your IRC session at: http://localhost:8080/view
+
+DESCRIPTION
+    Alice is an IRC client that can be run either locally or remotely, and
+  or
     $ ./bin/installdeps.pl
   Then:
     $ ./bin/alice

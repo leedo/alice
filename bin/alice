@@ -7,7 +7,7 @@ use FindBin;
 
 my $assetdir;
 
-# Check if we are installed locally
+# Check if we are running from the source dir
 if ($FindBin::Bin =~ /.*alice.*\/bin$/i) {
   require lib;
   lib->import("$FindBin::Bin/../lib");

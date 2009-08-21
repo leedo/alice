@@ -22,6 +22,7 @@ no_index:
     - t
 requires:
   DateTime: 0.49
+  DateTime::TimeZone: 0.96
   Digest::CRC: 0.14
   ExtUtils::Depends: 0
   File::ShareDir: 0.01

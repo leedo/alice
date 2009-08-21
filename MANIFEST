@@ -1,5 +1,4 @@
 .gitmodules
-alice.example.yaml
 bin/alice
 bin/cpanp-run-perl
 bin/installdeps.pl
@@ -87,7 +86,6 @@ cpanp/version.pm
 cpanp/version.pod
 cpanp/version/typemap
 cpanp/version/vpp.pm
-extlib/.modulebuildrc
 inc/Module/Install.pm
 inc/Module/Install/Base.pm
 inc/Module/Install/Can.pm
@@ -109,14 +107,11 @@ lib/App/Alice/Notifier/Growl.pm
 lib/App/Alice/Notifier/LibNotify.pm
 lib/App/Alice/Window.pm
 Makefile.PL
-Makefile.pl
-MANIFEST
+MANIFEST			This list of files
 MANIFEST.SKIP
 META.yml
 README
 README.md
-script/alice
-script/installdeps.pl
 share/static/config.css
 share/static/site.css
 share/static/site.js
