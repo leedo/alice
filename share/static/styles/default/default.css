@@ -12,8 +12,9 @@ a:hover {
 div.window {
   position:fixed;
   top: 0px;
+  left: 0px;
+  right: 0px;
   bottom: 23px;
-  width: 100%;
 }
 
 div.window table {
@@ -149,7 +150,6 @@ ul.messages {
   margin: 0;
   padding: 0;
   height: 100%;
-  width: 100%;
   overflow-x: none;
   overflow-y: auto;
   background: #fff;
@@ -159,7 +159,7 @@ ul.messages li {
   background: #efefef;
   font-size: 13px;
   clear: both;
-  width: 100%;
+  display: block;
   overflow: hidden;
 }
 
