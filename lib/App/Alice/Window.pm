@@ -45,6 +45,12 @@ class App::Alice::Window {
     isa      => 'Str',
     required => 1,
   );
+  
+  has buffersize => (
+    is      => 'ro',
+    isa     => 'Int',
+    default => 100,
+  );
 
   has id => (
     is      => 'ro',
@@ -125,7 +131,7 @@ class App::Alice::Window {
 
   method add_message (HashRef $message) {
     push @{$self->msgbuffer}, $message;
-    if (@{$self->msgbuffer} > 100) {
+    if (@{$self->msgbuffer} > $self->buffersize) {
       shift @{$self->msgbuffer};
     }
   }
