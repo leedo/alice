@@ -12,6 +12,7 @@ class App::Alice::HTTPD {
   use Template;
   use URI::QueryParam;
   use YAML qw/DumpFile/;
+  use Compress::Zlib;
 
   has 'app' => (
     is  => 'ro',
@@ -129,6 +130,9 @@ class App::Alice::HTTPD {
 
     # XHR tries to reconnect again with this header for some reason
     return 200 if defined $req->header('error');
+    
+    $req->header(Connection => 'close');
+    $res->header(Connection => 'close');
     
     my $local_time = time;
     my $remote_time = $local_time;
@@ -337,13 +341,19 @@ class App::Alice::HTTPD {
     print STDERR join " ", @_, "\n";
   } 
   
-  for my $method (qw/send_config save_config send_index setup_stream
+  for my $method (qw/send_config save_config send_index
                   not_found handle_message handle_static server_config/) {
     Moose::Util::add_method_modifier(__PACKAGE__, "before", [$method, sub {
       $_[1]->header(Connection => 'close');
       $_[2]->header(Connection => 'close');
       $_[2]->streaming(0);
       $_[2]->code(200);
-    }])
+    }]);
+    Moose::Util::add_method_modifier(__PACKAGE__, "after", [$method, sub {
+      if (my $content = Compress::Zlib::memGzip($_[2]->content)) {
+        $_[2]->header('Content-Encoding' => 'gzip');
+        $_[2]->content($content)
+      }
+    }]);
   }
 }
