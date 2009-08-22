@@ -9,13 +9,14 @@ class App::Alice::InfoWindow extends App::Alice::Window {
   has 'topic' => (is => 'ro', isa => 'HashRef', default => sub {{Value => 'info'}});
   has '+buffersize' => ( default => 300 );
   
-  method render_message (Str $from, Str $body) {
+  method render_message (Str $from, Str $body, Bool :$highlight = 0) {
     my $message = {
       type   => "message",
       event  => "say",
       nick   => $from,
       window => $self->serialized,
       body   => $body,
+      self   => $highlight,
       html   => $body,
       msgid  => $self->next_msgid,
     };
