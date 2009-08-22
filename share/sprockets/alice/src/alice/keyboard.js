@@ -36,6 +36,7 @@ Alice.Keyboard = Class.create({
 
   onCmdK: function() {
     this.activeWindow.messages.update("");
+    this.activeWindow.lastNick = "";
   },
   
   onCmdB: function() {

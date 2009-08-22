@@ -132,7 +132,10 @@ Alice.Application = Class.create({
         break;
       case "clear":
         var win = this.getWindow(action['window'].id);
-        if (win) win.messages.update("");
+        if (win) {
+          win.messages.update("");
+          win.lastNick = "";
+        }
         break;
       default:
         break;
