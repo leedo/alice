@@ -3,6 +3,7 @@ use MooseX::Declare;
 
 class App::Alice {
   use App::Alice::Window;
+  use App::Alice::InfoWindow;
   use App::Alice::HTTPD;
   use App::Alice::IRC;
   use MooseX::AttributeHelpers;
@@ -64,7 +65,7 @@ class App::Alice {
 
   has window_map => (
     metaclass => 'Collection::Hash',
-    isa       => 'HashRef[App::Alice::Window]',
+    isa       => 'HashRef[App::Alice::Window|App::Alice::InfoWindow]',
     default   => sub {{}},
     provides  => {
       values => 'windows',
@@ -75,6 +76,39 @@ class App::Alice {
       keys   => 'window_ids',
     }
   );
+  
+  has 'tt' => (
+    is => 'ro',
+    isa => 'Template',
+    lazy => 1,
+    default => sub {
+      my $self = shift;
+      Template->new(
+        INCLUDE_PATH => $self->assetdir . '/templates',
+        ENCODING     => 'UTF8'
+      );
+    },
+  );
+  
+  has 'info_window' => (
+    is => 'ro',
+    isa => 'App::Alice::InfoWindow',
+    lazy => 1,
+    default => sub {
+      my $self = shift;
+      my $info = App::Alice::InfoWindow->new(
+        assetdir => $self->assetdir,
+        tt       => $self->tt,
+      );
+      $self->add_window($info->title, $info);
+      return $info;
+    }
+  );
+  
+  sub BUILD {
+    my $self = shift;
+    $self->tt;
+  }
   
   method dispatch (Str $command, App::Alice::Window $window) {
     $self->dispatcher->handle($command, $window);
@@ -101,6 +135,7 @@ class App::Alice {
       title      => $title,
       connection => $connection,
       assetdir   => $self->assetdir,
+      tt         => $self->tt,
     );  
     $self->add_window($id, $window);
   }
@@ -122,10 +157,15 @@ class App::Alice {
   }
 
   method run {
+    $self->tt;
     $self->httpd;
     $self->add_irc_server($_, $self->config->{servers}{$_})
       for keys %{$self->config->{servers}};
     POE::Kernel->run;
+  }
+  
+  method send_info (Str $session, Str $body) {
+    $self->send($self->info_window->render_message($session, $body));
   }
 
   sub send {

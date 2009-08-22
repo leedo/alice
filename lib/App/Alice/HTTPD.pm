@@ -42,6 +42,7 @@ class App::Alice::HTTPD {
   has 'assetdir' => (
     is => 'ro',
     isa => 'Str',
+    lazy => 1,
     default => sub { shift->app->assetdir }
   );
   
@@ -49,13 +50,7 @@ class App::Alice::HTTPD {
     is => 'ro',
     isa => 'Template',
     lazy => 1,
-    default => sub {
-      my $self = shift;
-      Template->new(
-        INCLUDE_PATH => $self->assetdir . '/templates',
-        ENCODING     => 'UTF8'
-      );
-    },
+    default => sub { shift->app->tt }
   );
 
   sub BUILD {
@@ -240,11 +235,10 @@ class App::Alice::HTTPD {
     $res->content_type('text/html; charset=utf-8');
     my $output = '';
     my $channels = [];
-    for my $window ($self->app->windows) {
+    for my $window (sort {$a->title cmp $b->title} $self->app->windows) {
       push @$channels, {
         window  => $window->serialized(encoded => 1),
         topic   => $window->topic,
-        server  => $window->connection,
       }
     }
     $self->tt->process('index.tt', {

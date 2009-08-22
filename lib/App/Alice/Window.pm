@@ -87,15 +87,9 @@ class App::Alice::Window {
   );
   
   has 'tt' => (
-    is      => 'ro',
-    isa     => 'Template',
-    lazy    => 1,
-    default => sub {
-      Template->new(
-        INCLUDE_PATH => shift->assetdir . '/templates',
-        ENCODING     => 'UTF8'
-      );
-    },
+    is       => 'ro',
+    isa      => 'Template',
+    required => 1,
   );
   
   method rename_nick (Str $nick, Str $new_nick) {

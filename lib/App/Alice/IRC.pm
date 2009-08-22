@@ -78,6 +78,7 @@ class App::Alice::IRC {
   event irc_001 => sub {
     my $self = shift;
     $self->log_info("connected to " . $self->alias);
+    $self->app->send_info($self->alias, "connected");
     for (@{$self->config->{on_connect}}) {
       $self->log_debug("sending $_");
       $self->connection->yield( quote => $_ );
@@ -90,6 +91,7 @@ class App::Alice::IRC {
   
   event irc_353 => sub {
     my ($self, $server, $msg, $msglist) = @_;
+    $self->app->send_info($self->alias, $msg);
     my $channel = $msglist->[1];
     my $window = $self->window($channel);
     return unless $window;
@@ -117,12 +119,14 @@ class App::Alice::IRC {
 
   event irc_disconnected => sub {
     my $self = shift;
+    $self->app->send_info($self->alias, "disconnected");
     $self->log_info("disconnected from " . $self->alias);
   };
 
   event irc_public => sub {
     my ($self, $who, $where, $what) = @_;
     my $nick = ( split /!/, $who )[0];
+    $self->app->send_info($self->alias, "got a public message from $nick.");
     my $window = $self->window($where->[0]);
     $self->app->send($window->render_message($nick, $what));
   };
@@ -130,6 +134,7 @@ class App::Alice::IRC {
   event irc_msg => sub {
     my ($self, $who, $recp, $what) = @_;
     my $nick = ( split /!/, $who)[0];
+    $self->app->send_info($self->alias, "got a private message from $nick.");
     my $window = $self->window($nick);
     $self->app->send($window->render_message($nick, $what));
   };
