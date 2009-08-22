@@ -72,11 +72,12 @@ Alice.Window = Class.create({
         }
         else {
           this.messages.insert(this.application.applyFilters(message.full_html));
-          this.lastNick = "";
-          if (message.event == "say" && message.nick)
-            this.lastNick = message.nick;
         }
       }
+
+      this.lastNick = "";
+      if (message.event == "say" && message.nick)
+        this.lastNick = message.nick;
       
       this.messages.redraw();
       
