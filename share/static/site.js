@@ -7531,12 +7531,16 @@ Alice.Window = Class.create({
     this.active = true;
     this.tab.addClassName('active');
     this.element.addClassName('active');
-    this.tab.removeClassName("unread");
-    this.tab.removeClassName("highlight");
+    this.markRead();
     this.tab.removeClassName("leftof_active");
     if (this.tab.previous()) this.tab.previous().addClassName("leftof_active");
     this.scrollToBottom(true);
     if (!Prototype.Browser.MobileSafari) this.input.focus();
+  },
+
+  markRead: function () {
+    this.tab.removeClassName("unread");
+    this.tab.removeClassName("highlight");
   },
 
   close: function(event) {
@@ -7793,7 +7797,7 @@ Alice.Keyboard = Class.create({
   },
 
   onCmdShiftM: function() {
-    $$('ul#tabs li').invoke('removeClassName','unread');
+    this.application.windows.values().invoke('markRead');
   },
 
   onCmdB: function() {
