@@ -9,8 +9,7 @@ SITE_JS := $(BUILD)/site.js
 ALICE_JS := $(SOURCE)/alice/src/alice.js
 
 define build_submodules
-	#git submodule init
-	#git submodule update
+	sh -c "cd .. && git submodule init && git submodule update"
 endef
 
 all: $(SITE_JS)
