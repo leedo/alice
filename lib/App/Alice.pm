@@ -164,7 +164,8 @@ class App::Alice {
     POE::Kernel->run;
   }
   
-  method send_info (Str $session, Str $body) {
+  method log_info (Str $session, Str $body) {
+    print STDERR "$session: $body\n";
     $self->send($self->info_window->render_message($session, $body));
   }
 
@@ -177,8 +178,7 @@ class App::Alice {
     }
   }
 
-  sub log_debug {
-    shift;
-    print STDERR join(" ", @_) . "\n";
+  method log_debug {
+    print STDERR join(" ", @_) . "\n" if $self->config->{debug};
   }
 }
