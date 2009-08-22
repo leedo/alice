@@ -7841,7 +7841,7 @@ Alice.Completion = Class.create({
     if (++this.matchIndex == this.matches.length) this.matchIndex = 0;
 
     var match = this.matches[this.matchIndex];
-    if (this.leftOffset == 0) match += ": ";
+    match += this.leftOffset == 0 ? ": " : " ";
     this.restore(match, this.leftOffset + match.length);
   },
 
