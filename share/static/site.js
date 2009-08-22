@@ -7763,6 +7763,7 @@ Alice.Keyboard = Class.create({
     this.shortcut("Opt+Up");
     this.shortcut("Opt+Down");
     this.shortcut("Opt+Enter");
+    this.shortcut("Cmd+Shift+M");
     this.shortcut("Enter");
     this.shortcut("Esc");
     this.shortcut("Tab");
@@ -7770,7 +7771,7 @@ Alice.Keyboard = Class.create({
 
   shortcut: function(name, options) {
     var keystroke = name.replace("Cmd", "Meta").replace("Opt", "Alt"),
-        method = "on" + name.replace("+", "");
+        method = "on" + name.replace(/\+/g, "");
 
     window.shortcut.add(keystroke, function(event) {
       if (this.enabled) {
@@ -7790,6 +7791,10 @@ Alice.Keyboard = Class.create({
   onCmdK: function() {
     this.activeWindow.messages.update("");
     this.activeWindow.lastNick = "";
+  },
+
+  onCmdShiftM: function() {
+    $$('ul#tabs li').invoke('removeClassName','unread');
   },
 
   onCmdB: function() {
