@@ -157,8 +157,10 @@ class App::Alice {
   }
 
   method run {
+    # initialize tt and httpd because they are lazy
     $self->tt;
     $self->httpd;
+    
     $self->add_irc_server($_, $self->config->{servers}{$_})
       for keys %{$self->config->{servers}};
     POE::Kernel->run;
@@ -171,7 +173,13 @@ class App::Alice {
 
   sub send {
     my ($self, @messages) = @_;
+    
+    # add any highlighted messages to the log window
+    push @messages, map {$self->log_info($_->{nick}, $_->{body})}
+                    grep {$_->{highlight}} @messages;
+                    
     $self->httpd->send(@messages);
+    
     return unless $self->notifier and ! $self->httpd->has_clients;
     for my $message (@messages) {
       $self->notifier->display($message) if $message->{highlight};
