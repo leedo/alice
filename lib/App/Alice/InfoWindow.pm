@@ -7,6 +7,7 @@ class App::Alice::InfoWindow extends App::Alice::Window {
   has '+connection' => ( required => 0 );
   has '+session' => ( isa => 'Undef', default => undef );
   has 'topic' => (is => 'ro', isa => 'HashRef', default => sub {{Value => 'info'}});
+  has '+buffersize' => ( default => 300 );
   
   method render_message (Str $from, Str $body) {
     my $message = {
