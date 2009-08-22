@@ -41,7 +41,7 @@ Alice.Keyboard = Class.create({
   },
   
   onCmdShiftM: function() {
-    $$('ul#tabs li').invoke('removeClassName','unread');
+    this.application.windows.values().invoke('markRead');
   },
   
   onCmdB: function() {
