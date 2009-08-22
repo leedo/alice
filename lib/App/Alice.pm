@@ -166,16 +166,16 @@ class App::Alice {
     POE::Kernel->run;
   }
   
-  method log_info (Str $session, Str $body) {
+  method log_info (Str $session, Str $body, Bool :$highlight = 0) {
     print STDERR "$session: $body\n";
-    $self->send($self->info_window->render_message($session, $body));
+    $self->info_window->render_message($session, $body, highlight => $highlight);
   }
 
   sub send {
     my ($self, @messages) = @_;
     
     # add any highlighted messages to the log window
-    push @messages, map {$self->log_info($_->{nick}, $_->{body})}
+    push @messages, map {$self->log_info($_->{nick}, $_->{body}, highlight => 1)}
                     grep {$_->{highlight}} @messages;
                     
     $self->httpd->send(@messages);
