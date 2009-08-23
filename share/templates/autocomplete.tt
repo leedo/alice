@@ -1,5 +1,0 @@
-<ul>
-  [% FOR match IN matches %]
-  <li>[% match %]</li>
-  [% END %]
-</ul>

@@ -8,6 +8,7 @@ class App::Alice {
   use App::Alice::IRC;
   use MooseX::AttributeHelpers;
   use Digest::CRC qw/crc16/;
+  use Encode;
   use POE;
 
   our $VERSION = '0.01';
@@ -184,6 +185,23 @@ class App::Alice {
     for my $message (@messages) {
       $self->notifier->display($message) if $message->{highlight};
     }
+  }
+  
+  method render_notice  (Str $event, Str $nick, Str $body) {
+    $body = decode("utf8", $body, Encode::FB_WARN);
+    my $message = {
+      type      => "action",
+      event     => $event,
+      nick      => $nick,
+      body      => $body,
+      msgid     => App::Alice::Window->next_msgid,
+    };
+
+    my $html = '';
+    $self->tt->process("event.tt", $message, \$html);
+    $message->{full_html} = $html;
+    $message->{event} = "notice";
+    return $message;
   }
 
   sub log_debug {

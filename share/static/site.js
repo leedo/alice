@@ -7339,6 +7339,9 @@ Alice.Application = Class.create({
         var win = this.getWindow(action['window'].id);
         if (win) win.nicks = action.nicks;
         break;
+      case "notice":
+        this.activeWindow().addMessage(action);
+        break;
       case "clear":
         var win = this.getWindow(action['window'].id);
         if (win) {
@@ -7434,6 +7437,7 @@ Alice.Connection = Class.create({
       data = data.evalJSON();
       if (data.msgs.length)
         this.msgid = data.msgs[data.msgs.length - 1].msgid;
+      console.log(data);
       this.application.handleActions(data.actions);
       this.application.displayMessages(data.msgs);
     }
@@ -7540,6 +7544,7 @@ Alice.Window = Class.create({
     if (this.tab.previous()) this.tab.previous().addClassName("leftof_active");
     this.scrollToBottom(true);
     if (!Prototype.Browser.MobileSafari) this.input.focus();
+    this.element.redraw();
   },
 
   markRead: function () {
@@ -7581,8 +7586,6 @@ Alice.Window = Class.create({
       if (message.event == "say" && message.nick)
         this.lastNick = message.nick;
 
-      this.messages.redraw();
-
       if (!this.application.isFocused && message.highlight)
         Alice.growlNotify(message);
 
@@ -7599,6 +7602,8 @@ Alice.Window = Class.create({
 
     var messages = this.messages.childElements();
     if (messages.length > 250) messages.first().remove();
+
+    this.element.redraw();
   },
 
   scrollToBottom: function(force) {
@@ -7609,8 +7614,10 @@ Alice.Window = Class.create({
       var bottom = this.messages.scrollTop + this.messages.offsetHeight;
       var height = this.messages.scrollHeight;
     }
-    if (force || bottom + msgheight + 100 >= height)
+    if (force || bottom + msgheight + 100 >= height) {
       this.messages.scrollTop = this.messages.scrollHeight;
+      this.element.redraw();
+    }
   },
 
   getNicknames: function() {
@@ -7733,8 +7740,8 @@ Alice.Input = Class.create({
         this.element.setStyle({ height: height + "px", top: "-1px" });
         this.window.scrollToBottom();
       }
+      this.window.element.redraw();
     }).bind(this).defer();
-    this.window.element.redraw();
   },
 
   getContentHeight: function() {

@@ -114,8 +114,8 @@ Alice.Input = Class.create({
         this.element.setStyle({ height: height + "px", top: "-1px" });
         this.window.scrollToBottom();
       }
+      this.window.element.redraw();
     }).bind(this).defer();
-    this.window.element.redraw();
   },
   
   getContentHeight: function() {
