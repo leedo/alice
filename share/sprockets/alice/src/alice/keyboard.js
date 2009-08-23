@@ -11,6 +11,7 @@ Alice.Keyboard = Class.create({
     this.shortcut("Opt+Down");
     this.shortcut("Opt+Enter");
     this.shortcut("Cmd+Shift+M");
+    this.shortcut("Cmd+Shift+J");
     this.shortcut("Enter");
     this.shortcut("Esc");
     this.shortcut("Tab");
@@ -42,6 +43,11 @@ Alice.Keyboard = Class.create({
   
   onCmdShiftM: function() {
     this.application.windows().invoke('markRead');
+  },
+  
+  onCmdShiftJ: function() {
+    console.log(this.activeWindow);
+    this.activeWindow.scrollToBottom(1);
   },
   
   onCmdB: function() {
