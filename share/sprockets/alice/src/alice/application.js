@@ -1,7 +1,7 @@
 Alice.Application = Class.create({
   initialize: function() {
     this.isFocused = true;
-    this.windows = new Hash();
+    this.window_map = new Hash();
     this.previousFocus = 0;
     this.connection = new Alice.Connection(this);
     this.filters = [ Alice.makeLinksClickable ];
@@ -25,6 +25,10 @@ Alice.Application = Class.create({
     e.stop();
   },
   
+  windows: function () {
+    return this.window_map.values();
+  },
+  
   submitConfig: function(form) {
     $$('#config .channelselect').each(function(select) {
       $A(select.options).each(function(option) {
@@ -44,22 +48,22 @@ Alice.Application = Class.create({
   },
   
   addWindow: function(win) {
-    this.windows.set(win.id, win);
+    this.window_map.set(win.id, win);
   },
   
   removeWindow: function(win) {
     if (win.active) this.focusLast();
-    this.windows.unset(win.id);
+    this.window_map.unset(win.id);
     this.connection.closeWindow(win);
     win = null;
   },
   
   getWindow: function(windowId) {
-    return this.windows.get(windowId);
+    return this.window_map.get(windowId);
   },
   
   activeWindow: function() {
-    var windows = this.windows.values();
+    var windows = this.windows();
     for (var i=0; i < windows.length; i++) {
       if (windows[i].active) return windows[i];
     }

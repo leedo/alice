@@ -7206,7 +7206,7 @@ Element.addMethods({
 Alice.Application = Class.create({
   initialize: function() {
     this.isFocused = true;
-    this.windows = new Hash();
+    this.window_map = new Hash();
     this.previousFocus = 0;
     this.connection = new Alice.Connection(this);
     this.filters = [ Alice.makeLinksClickable ];
@@ -7230,6 +7230,10 @@ Alice.Application = Class.create({
     e.stop();
   },
 
+  windows: function () {
+    return this.window_map.values();
+  },
+
   submitConfig: function(form) {
     $$('#config .channelselect').each(function(select) {
       $A(select.options).each(function(option) {
@@ -7249,22 +7253,22 @@ Alice.Application = Class.create({
   },
 
   addWindow: function(win) {
-    this.windows.set(win.id, win);
+    this.window_map.set(win.id, win);
   },
 
   removeWindow: function(win) {
     if (win.active) this.focusLast();
-    this.windows.unset(win.id);
+    this.window_map.unset(win.id);
     this.connection.closeWindow(win);
     win = null;
   },
 
   getWindow: function(windowId) {
-    return this.windows.get(windowId);
+    return this.window_map.get(windowId);
   },
 
   activeWindow: function() {
-    var windows = this.windows.values();
+    var windows = this.windows();
     for (var i=0; i < windows.length; i++) {
       if (windows[i].active) return windows[i];
     }
@@ -7768,6 +7772,7 @@ Alice.Keyboard = Class.create({
     this.shortcut("Opt+Down");
     this.shortcut("Opt+Enter");
     this.shortcut("Cmd+Shift+M");
+    this.shortcut("Cmd+Shift+J");
     this.shortcut("Enter");
     this.shortcut("Esc");
     this.shortcut("Tab");
@@ -7798,7 +7803,12 @@ Alice.Keyboard = Class.create({
   },
 
   onCmdShiftM: function() {
-    this.application.windows.values().invoke('markRead');
+    this.application.windows().invoke('markRead');
+  },
+
+  onCmdShiftJ: function() {
+    console.log(this.activeWindow);
+    this.activeWindow.scrollToBottom(1);
   },
 
   onCmdB: function() {
@@ -7912,7 +7922,7 @@ if (window == window.parent) {
     if (alice.activeWindow()) alice.activeWindow().input.focus()
 
     setTimeout(function () {
-      if (!alice.windows) alice.toggleConfig.bind(alice), 2000});
+      if (!alice.windows()) alice.toggleConfig.bind(alice), 2000});
 
     window.onkeydown = function (e) {
       if (alice.activeWindow() && !$('config') && !Alice.isSpecialKey(e.which))
