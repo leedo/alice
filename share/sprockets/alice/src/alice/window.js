@@ -42,6 +42,7 @@ Alice.Window = Class.create({
     if (this.tab.previous()) this.tab.previous().addClassName("leftof_active");
     this.scrollToBottom(true);
     if (!Prototype.Browser.MobileSafari) this.input.focus();
+    this.element.redraw();
   },
   
   markRead: function () {
@@ -83,8 +84,6 @@ Alice.Window = Class.create({
       if (message.event == "say" && message.nick)
         this.lastNick = message.nick;
       
-      this.messages.redraw();
-      
       if (!this.application.isFocused && message.highlight)
         Alice.growlNotify(message);
       
@@ -102,6 +101,8 @@ Alice.Window = Class.create({
 
     var messages = this.messages.childElements();
     if (messages.length > 250) messages.first().remove();
+    
+    this.element.redraw();
   },
   
   scrollToBottom: function(force) {
@@ -112,8 +113,10 @@ Alice.Window = Class.create({
       var bottom = this.messages.scrollTop + this.messages.offsetHeight;
       var height = this.messages.scrollHeight;
     }
-    if (force || bottom + msgheight + 100 >= height)
+    if (force || bottom + msgheight + 100 >= height) {
       this.messages.scrollTop = this.messages.scrollHeight;
+      this.element.redraw();
+    }
   },
   
   getNicknames: function() {

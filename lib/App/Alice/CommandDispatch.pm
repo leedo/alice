@@ -11,15 +11,15 @@ class App::Alice::CommandDispatch {
       my $self = shift;
       [
         {method => '_say',     re => qr{^([^/].*)}s},
-        {method => 'query',    re => qr{^/query\s+(.+)}},
+        {method => 'query',    re => qr{^/query\s+(.+)\s?}},
         {method => 'names',    re => qr{^/n(?:ames)?}, in_channel => 1},
-        {method => '_join',    re => qr{^/j(?:oin)?\s+(.+)}},
+        {method => '_join',    re => qr{^/j(?:oin)?\s+(.+)\s?}},
         {method => 'part',     re => qr{^/part}, in_channel => 1},
-        {method => 'create',   re => qr{^/create (.+)}},
+        {method => 'create',   re => qr{^/create (.+)\s?}},
         {method => 'close',    re => qr{^/close}},
         {method => 'clear',    re => qr{^/clear}},
         {method => 'topic',    re => qr{^/topic(?:\s+(.+))?}, in_channel => 1},
-        {method => 'whois',    re => qr{^/whois (.+)}},
+        {method => 'whois',    re => qr{^/whois\s+(.+)\s?}},
         {method => 'me',       re => qr{^/me (.+)}},
         {method => 'quote',    re => qr{^/(?:quote|raw) (.+)}},
         {method => 'notfound', re => qr{^/(.+)(?:\s.*)?}}
@@ -94,9 +94,7 @@ class App::Alice::CommandDispatch {
   }
 
   method clear (App::Alice::Window $window, $?) {
-    if ($window->is_channel) {
-      $window->msgbuffer([]);
-    }
+    $window->msgbuffer([]);
     $self->app->send($window->clear_action);
   }
 

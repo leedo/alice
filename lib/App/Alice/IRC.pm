@@ -185,6 +185,13 @@ class App::Alice::IRC {
     } @$channels;
     $self->app->send(@events);
   };
+  
+  event irc_invite => sub {
+    my ($self, $who, $where) = @_;
+    my $nick = ( split /!/, $who)[0];
+    $self->app->log_info($self->alias, "$nick has invited you to join $where");
+    $self->app->send($self->app->render_notice("invite", $nick, $where));
+  };
 
   event irc_topic => sub {
     my ($self, $who, $channel, $topic) = @_;

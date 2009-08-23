@@ -9,6 +9,8 @@
 
   [% IF event == "topic" %]
     Topic changed to "[% body %]" by <a href="javascript:alice.connection.requestWindow('[% nick %]','[% window.id %]')" class="nick">[% nick %]</a>[% IF eventtime %] at [% eventtime %][% END %].
+  [% ELSIF event == "invite" %]
+    [% nick %] has invited you to join [% body %]
   [% ELSIF event == "joined" || event == "left" %]
     <a href="javascript:alice.connection.requestWindow('[% nick %]','[% window.id %]')" class="nick">[% nick %]</a> [% event %] the chat room.[% IF body %] ([% body %])[% END %]
   [% ELSIF event == "nick" %]
