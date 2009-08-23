@@ -181,6 +181,7 @@ class App::Alice::IRC {
     my $nick = ( split /!/, $who)[0];
     my @events = map {
       my $window = $self->window($_);
+      $window->remove_nick($nick);
       $window->render_event("left", $nick, $msg);
     } @$channels;
     $self->app->send(@events);
