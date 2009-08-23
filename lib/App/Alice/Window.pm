@@ -18,13 +18,23 @@ class App::Alice::Window {
     }
   );
   
+  has type => (
+    is      => 'ro',
+    isa     => 'Str',
+    lazy    => 1,
+    default => sub {
+      my $self = shift;
+      return $self->title =~ /^[#&]/ ? "channel" : "privmsg";
+    }
+  );
+  
   has is_channel => (
     is      => 'ro',
     isa     => 'Bool',
     lazy    => 1,
     default => sub {
       my $self = shift;
-      return $self->title =~ /^[#&]/;
+      return $self->type eq "channel"
     }
   );
 
@@ -111,6 +121,7 @@ class App::Alice::Window {
       session    => $self->session,
       title      => $encoded ? encode('utf8', $self->title) : $self->title,
       is_channel => $self->is_channel,
+      type       => $self->type,
     };
   }
 
