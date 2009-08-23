@@ -25,7 +25,7 @@ if (window == window.parent) {
     if (alice.activeWindow()) alice.activeWindow().input.focus()
 
     setTimeout(function () {
-      if (!alice.windows) alice.toggleConfig.bind(alice), 2000});
+      if (!alice.windows()) alice.toggleConfig.bind(alice), 2000});
 
     window.onkeydown = function (e) {
       if (alice.activeWindow() && !$('config') && !Alice.isSpecialKey(e.which))

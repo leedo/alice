@@ -41,7 +41,7 @@ Alice.Keyboard = Class.create({
   },
   
   onCmdShiftM: function() {
-    this.application.windows.values().invoke('markRead');
+    this.application.windows().invoke('markRead');
   },
   
   onCmdB: function() {
