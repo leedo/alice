@@ -186,7 +186,8 @@ class App::Alice {
     }
   }
 
-  method log_debug {
+  sub log_debug {
+    my $self = shift;
     print STDERR join(" ", @_) . "\n" if $self->config->{debug};
   }
 }

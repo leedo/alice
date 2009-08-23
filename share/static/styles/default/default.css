@@ -258,11 +258,26 @@ a.nick {
 }
 
 div.tab_button {
-  background: url(image/roomTab.png);
   width: 16px;
   height: 16px;
   float: left;
   margin-right: 4px;
+}
+
+li.channel_tab div.tab_button {
+  background: url(image/roomTab.png);
+}
+
+li.privmsg_tab div.tab_button {
+  background: url(image/privateChatTab.png);
+}
+
+li.info_tab div.tab_button {
+  background: url(image/smartTranscriptTab.png);
+}
+
+li.info_tab div.tab_button {
+  background: url(image/smartTranscriptTab.png);
 }
 
 ul#tabs li div.tab_button:hover,
@@ -273,11 +288,19 @@ ul#tabs li.highlight div.tab_button:hover
 }
 
 
-ul#tabs li.unread div.tab_button {
+ul#tabs li.unread.channel_tab div.tab_button {
   background: url(image/roomTabNewMessage.png);
 }
 
-ul#tabs li.highlight div.tab_button {
+ul#tabs li.unread.privmsg_tab div.tab_button {
+  background: url(image/privateChatTabNewMessage.png);
+}
+
+ul#tabs li.unread.info_tab div.tab_button {
+  background: url(image/smartTranscriptTabActivity.png);
+}
+
+ul#tabs li.highlight.channel_tab div.tab_button {
   background: url(image/roomTabNewHighlightMessage.png);
 }
 
