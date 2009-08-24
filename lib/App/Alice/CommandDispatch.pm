@@ -16,7 +16,7 @@ class App::Alice::CommandDispatch {
         {method => '_join',    re => qr{^/j(?:oin)?\s+(.+)\s?}},
         {method => 'part',     re => qr{^/part}, in_channel => 1},
         {method => 'create',   re => qr{^/create (.+)\s?}},
-        {method => 'close',    re => qr{^/close}},
+        {method => 'close',    re => qr{^/(?:close|wc)}},
         {method => 'clear',    re => qr{^/clear}},
         {method => 'topic',    re => qr{^/topic(?:\s+(.+))?}, in_channel => 1},
         {method => 'whois',    re => qr{^/whois\s+(.+)\s?}},
