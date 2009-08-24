@@ -53,7 +53,7 @@ class App::Alice::IRC {
     $self->add_plugins;
     $self->connection->yield(register => 'all');
     
-    $self->app->log_info($self->alias, "connecting");
+    $self->app->send($self->app->log_info($self->alias, "connecting"));
     $self->connection->yield(connect => {});
   }
   
@@ -77,20 +77,22 @@ class App::Alice::IRC {
 
   event irc_001 => sub {
     my $self = shift;
-    $self->app->log_info($self->alias, "connected");
+    my @log;
+    push @log, $self->app->log_info($self->alias, "connected");
     for (@{$self->config->{on_connect}}) {
-      $self->app->log_info($self->alias, "sending $_");
+      push @log, $self->app->log_info($self->alias, "sending $_");
       $self->connection->yield( quote => $_ );
     }
     for (@{$self->config->{channels}}) {
-      $self->app->log_info($self->alias, "joining $_");
+      push @log, $self->app->log_info($self->alias, "joining $_");
       $self->connection->yield( join => $_ );
     }
+    $self->app->send(@log);
   };
   
   event irc_353 => sub {
     my ($self, $server, $msg, $msglist) = @_;
-    $self->app->log_info($self->alias, $msg);
+    $self->app->send($self->app->log_info($self->alias, $msg));
     my $channel = $msglist->[1];
     my $window = $self->window($channel);
     return unless $window;
@@ -118,7 +120,7 @@ class App::Alice::IRC {
 
   event irc_disconnected => sub {
     my $self = shift;
-    $self->app->log_info($self->alias, "disconnected");
+    $self->send($self->app->log_info($self->alias, "disconnected"));
   };
 
   event irc_public => sub {
@@ -190,8 +192,10 @@ class App::Alice::IRC {
   event irc_invite => sub {
     my ($self, $who, $where) = @_;
     my $nick = ( split /!/, $who)[0];
-    $self->app->log_info($self->alias, "$nick has invited you to join $where");
-    $self->app->send($self->app->render_notice("invite", $nick, $where));
+    $self->app->send(
+      $self->app->log_info($self->alias, "$nick has invited you to join $where"),
+      $self->app->render_notice("invite", $nick, $where)
+    );
   };
 
   event irc_topic => sub {
