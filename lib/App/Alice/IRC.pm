@@ -120,7 +120,7 @@ class App::Alice::IRC {
 
   event irc_disconnected => sub {
     my $self = shift;
-    $self->send($self->app->log_info($self->alias, "disconnected"));
+    $self->app->send($self->app->log_info($self->alias, "disconnected"));
   };
 
   event irc_public => sub {

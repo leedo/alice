@@ -107,8 +107,8 @@ class App::Alice::HTTPD {
       $auth =~ s/^Basic //;
       $auth = decode_base64($auth);
       my ($user,$password)  = split(/:/, $auth);
-      if ($self->{config}->{auth}->{username} eq $user &&
-          $self->{config}->{auth}->{password} eq $password) {
+      if ($self->config->{auth}{username} eq $user &&
+          $self->config->{auth}{password} eq $password) {
         return RC_OK;
       }
       else {
