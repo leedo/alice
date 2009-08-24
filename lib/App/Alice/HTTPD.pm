@@ -122,12 +122,8 @@ class App::Alice::HTTPD {
   }
 
   method setup_stream ($req, $res) {
-
     # XHR tries to reconnect again with this header for some reason
     return 200 if defined $req->header('error');
-    
-    $req->header(Connection => 'close');
-    $res->header(Connection => 'close');
     
     my $local_time = time;
     my $remote_time = $local_time;
@@ -155,7 +151,7 @@ class App::Alice::HTTPD {
   method handle_stream ($req, $res) {
     if ($res->is_error) {
       $self->end_stream($res);
-      return;
+      return 200;
     }
     if (@{$res->{msgs}} or @{$res->{actions}}) {
       my $output;
@@ -169,7 +165,7 @@ class App::Alice::HTTPD {
       $res->send($output . $padding . "\n" . $self->seperator . "\n");
       if ($res->is_error) {
         $self->end_stream($res);
-        return;
+        return 200;
       }
       else {
         $res->{msgs} = [];
@@ -335,7 +331,7 @@ class App::Alice::HTTPD {
     print STDERR join " ", @_, "\n";
   } 
   
-  for my $method (qw/send_config save_config send_index
+  for my $method (qw/send_config save_config send_index setup_stream
                   not_found handle_message handle_static server_config/) {
     Moose::Util::add_method_modifier(__PACKAGE__, "before", [$method, sub {
       $_[1]->header(Connection => 'close');
@@ -343,9 +339,11 @@ class App::Alice::HTTPD {
       $_[2]->streaming(0);
       $_[2]->code(200);
     }]);
+    next if $method eq "setup_stream";
     Moose::Util::add_method_modifier(__PACKAGE__, "after", [$method, sub {
-      if (my $content = Compress::Zlib::memGzip($_[2]->content)) {
-        $_[2]->header('Content-Encoding' => 'gzip');
+      if ($_[1]->header('Accept-Encoding') =~ /deflate/) {
+        my $content = Compress::Zlib::memGzip($_[2]->content);
+        $_[2]->header('Content-Encoding' => 'deflate');
         $_[2]->content($content)
       }
     }]);
