@@ -27,14 +27,6 @@ ul#controls {
   z-index: 904;
 }
 
-div.topic {
-  z-index: 901;
-}
-
-div.autocomplete {
-  z-index: 902;
-}
-
 ul#controls li.disabled {
   display: none;
 }
