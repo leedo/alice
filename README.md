@@ -17,26 +17,26 @@ an Altogether Lovely Internet Chatting Experience
 
 ##DESCRIPTION
 
-Alice is an IRC client that can be run either locally or remotely, and
-can be viewed in multiple web browsers at the same time. The alice server
-maintains a message buffer, so when a browser connects it is sent
-the 100 most recent lines from each channel. This allows the user to
-close their browser and alice will continue to aggregate messages.
+Alice is a browser-based IRC client that can be run locally or
+remotely. The alice server maintains a 100 message buffer for
+each channel, any time a browser connects it is sent a recent
+backlog. This allows a user to close their browser while alice 
+continues to collect messages. The effect is similar to
+irssi+screen, but viewed in the browser.
 
-Alice's built in web server maintains a long streaming HTTP response
-to each connected browser. It uses this connection to push IRC messages
+Alice's built in web server maintains long streaming HTTP responses
+to each connected browser. It uses these connections to push messages
 to the browsers in realtime. Sending messages or commands is done
-through an HTTP request back to alice's server.
+through a HTTP request back to alice's web server.
 
 ##USAGE
 
-After installation, there will be a new `alice' command available. Run
-this command to start the alice server. Open your browser and connect to 
+Installation will make available a new `alice' command. Run
+this command to start the server. Open a browser and connect to 
 the URL that was printed to your terminal (likely http://localhost:8080/view). 
-You will see a small icon in the bottom corner; this button will bring up the
-connection configuration window. Add one more more IRC servers and channels in this
-window and save. Alice will then connect to those servers, the channels appearing
-as tabs at the bottom of the window.
+A small gear icon in the bottom right corner of the page will bring up the
+connection configuration window. Configure any number of connections, and
+you will be automatically connected after clicking save.
 
 ##COMMANDS
 
@@ -91,12 +91,11 @@ Sends $string as an ACTION to the channel
 
 ##NOTIFICATIONS
 
-If you get a message with your nick in the body, and no browsers are
-connected, a notification will be sent to either Growl (if running on
-OS X) or using libnotify (on Linux.) Alice does not send any notifications
+If you get a message containing your nick, and no browsers are
+connected, a notification will be sent using either Growl (on
+OS X) or libnotify (on Linux.) Alice does not send any notifications
 if a browser is connected (the exception being if you are using the Fluid
-SSB which can access Growl). This is something that will probably become 
-configurable over time.
+SSB which can access Growl).
 
 ##RUNNING REMOTELY
 
@@ -107,7 +106,7 @@ remotely. So please let us know how your experience with it is.
 
 Surprisingly, alice works very well in Mobile Safari (the browser used
 by the iPhone.) It still needs a little work to be fully functional, though.
-The required style changes are automatically applied for mobile devices.
+Any help in this area would be much appreciated.
 
 ##AUTHORS
 
