@@ -128,6 +128,7 @@ class App::Alice {
   }
 
   method find_or_create_window (Str $title, $connection) {
+    return $self->info_window if $title eq "info";
     my $id = "win_" . crc16(lc($title . $connection->session_alias));
     if (my $window = $self->get_window($id)) {
       return $window;
