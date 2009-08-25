@@ -30,7 +30,7 @@ require YAML;
 YAML->import(qw/DumpFile LoadFile/);
 require App::Alice;
 
-$0 = "Alice\0";
+$0 = "aliced\0";
 binmode(STDERR, ":utf8");
 binmode(STDOUT, ":utf8");
 

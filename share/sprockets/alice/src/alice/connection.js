@@ -62,7 +62,6 @@ Alice.Connection = Class.create({
       data = data.evalJSON();
       if (data.msgs.length)
         this.msgid = data.msgs[data.msgs.length - 1].msgid;
-      console.log(data);
       this.application.handleActions(data.actions);
       this.application.displayMessages(data.msgs);
     }
