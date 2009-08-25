@@ -4,10 +4,14 @@ an Altogether Lovely Internet Chatting Experience
 ##SYNPOSIS
 
   First time:
+    $ perl Makefile.PL
+    $ sudo make (this will install dependencies from CPAN)
+    $ sudo make install
+    $ alice
+  *or* if you wish to avoid installing all of the dependencies,
+  you can extract your platform's extlib archive, and run alice
+  from the bin directory.
     $ tar -xvzf extlib-osx-leopard.tar.gz
-  *or* install the dependencies from CPAN if you aren't on Leopard
-    $ ./bin/installdeps.pl
-  Then:
     $ ./bin/alice
   You can view your IRC session at: http://localhost:8080/view
 

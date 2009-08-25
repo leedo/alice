@@ -1,13 +1,14 @@
 use inc::Module::Install;
 
-name        'App-Alice';
-author      'Lee Aylward <leedo@cpan.org>';
+name         'App-Alice';
+author       'Lee Aylward <leedo@cpan.org>';
 perl_version '5.008';
-all_from    'lib/App/Alice.pm';
-githubmeta;
-license 'perl';
+all_from     'lib/App/Alice.pm';
+readme_from  'lib/App/Alice.pm';
+license      'perl';
+
 auto_license;
-readme_from 'lib/App/Alice.pm';
+githubmeta;
 
 # need a recent version to detect POE Components
 configure_requires 'ExtUtils::MakeMaker'   => '6.54';
@@ -39,5 +40,5 @@ install_share  'share';
 install_script 'bin/alice';
 no_index    'directory' => 'share/sprockets';
 
-install_as_cpan;
+auto_install;
 WriteAll;
