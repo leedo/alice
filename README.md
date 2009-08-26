@@ -19,8 +19,8 @@ an Altogether Lovely Internet Chatting Experience
 
 Alice is a browser-based IRC client that can be run locally or
 remotely. The alice server maintains a 100 message buffer for
-each channel, any time a browser connects it is sent a recent
-backlog. This allows a user to close their browser while alice 
+each channel, so any time a browser connects it is sent a recent
+backlog. This allows the user to close their browser while alice 
 continues to collect messages. The effect is similar to
 irssi+screen, but viewed in the browser.
 
