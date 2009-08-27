@@ -341,7 +341,8 @@ class App::Alice::HTTPD {
     }]);
     next if $method eq "setup_stream";
     Moose::Util::add_method_modifier(__PACKAGE__, "after", [$method, sub {
-      if ($_[1]->header('Accept-Encoding') =~ /gzip/) {
+      my $accepts = $_[1]->header('Accept-Encoding');
+      if ($accepts and $accepts =~ /gzip/) {
         my $content = Compress::Zlib::memGzip($_[2]->content);
         $_[2]->header('Content-Encoding' => 'gzip');
         $_[2]->content($content)

@@ -18,7 +18,7 @@ requires    'ExtUtils::Depends'            => 0,
 # need a recent version for clean_subroutines
 requires    'namespace::clean'             => '0.11';
 
-requires    'YAML'                         => '0.70';
+requires    'YAML'                         => '0.68';
 requires    'MooseX::Declare'              => '0.23';
 requires    'MooseX::ClassAttribute'       => '0.09';
 requires    'POE::Component::IRC'          => '6.08';
