@@ -4,11 +4,6 @@ name         'App-Alice';
 author       'Lee Aylward <leedo@cpan.org>';
 perl_version '5.008';
 all_from     'lib/App/Alice.pm';
-readme_from  'lib/App/Alice.pm';
-license      'perl';
-
-auto_license();
-githubmeta();
 
 # need a recent version to detect POE Components
 configure_requires 'ExtUtils::MakeMaker'   => '6.54';
