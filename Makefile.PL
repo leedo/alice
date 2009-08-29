@@ -6,7 +6,7 @@ perl_version '5.008';
 all_from     'lib/App/Alice.pm';
 
 # need a recent version to detect POE Components
-configure_requires 'ExtUtils::MakeMaker'   => '6.54';
+requires 'ExtUtils::MakeMaker'   => '6.54';
 
 # need this for Devel::Declare (for MooseX::Declare)
 requires    'ExtUtils::Depends'            => 0,
