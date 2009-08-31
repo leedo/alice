@@ -204,14 +204,14 @@ class App::Alice::HTTPD {
       open my $fh, '<', $self->assetdir . "/$file";
       $self->log_debug("serving static file: $file");
       given ($ext) {
-        when (/\.(?:png|gif|jpg|jpeg)$/i) {
+        when (/^(?:png|gif|jpg|jpeg)$/i) {
           $res->content_type("image/$ext"); 
         }
-        when (/\.js$/) {
+        when (/^js$/) {
           $res->header("Cache-control" => "no-cache");
           $res->content_type("text/javascript");
         }
-        when (/\.css$/) {
+        when (/^css$/) {
           $res->header("Cache-control" => "no-cache");
           $res->content_type("text/css");
         }
