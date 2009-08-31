@@ -90,6 +90,11 @@ class App::Alice::IRC {
     $self->app->send(@log);
   };
   
+  event irc_005 => sub {
+    my ($self, $server, $msg, $msglist) = @_;
+    $self->app->send($self->app->log_info($self->alias, $msg));
+  };
+  
   event irc_353 => sub {
     my ($self, $server, $msg, $msglist) = @_;
     $self->app->send($self->app->log_info($self->alias, $msg));
@@ -98,7 +103,7 @@ class App::Alice::IRC {
     return unless $window;
     for my $nick (split " ", $msglist->[2]) {
       my ($priv, $name) = (undef, $nick);
-      if ($nick =~ /^([@&+])?(.+)/) {
+      if ($nick =~ /^([@&+~%])?(.+)/) {
         ($priv, $name) = ($1, $2);
       }
       $window->add_nick($name, $priv);
