@@ -1,7 +1,7 @@
-use 5.008001;
 use MooseX::Declare;
 
 class App::Alice {
+  use 5.10.0;
   use App::Alice::Window;
   use App::Alice::InfoWindow;
   use App::Alice::HTTPD;
@@ -52,13 +52,15 @@ class App::Alice {
     is      => 'ro',
     default => sub {
       eval {
-        if ($^O eq 'darwin') {
-          require App::Alice::Notifier::Growl;
-          App::Alice::Notifier::Growl->new;
-        }
-        elsif ($^O eq 'linux') {
-          require App::Alice::Notifier::LibNotify;
-          App::Alice::Notifier::LibNotify->new;
+        given ($^O) {
+          when ('darwin') {
+            require App::Alice::Notifier::Growl;
+            App::Alice::Notifier::Growl->new;
+          }
+          when ('linux') {
+            require App::Alice::Notifier::LibNotify;
+            App::Alice::Notifier::LibNotify->new;
+          }
         }
       }
     }
@@ -105,11 +107,6 @@ class App::Alice {
       return $info;
     }
   );
-  
-  sub BUILD {
-    my $self = shift;
-    $self->tt;
-  }
   
   method dispatch (Str $command, App::Alice::Window $window) {
     $self->dispatcher->handle($command, $window);
@@ -169,7 +166,7 @@ class App::Alice {
   }
   
   method log_info (Str $session, Str $body, Bool :$highlight = 0) {
-    print STDERR "$session: $body\n";
+    say STDERR "$session: $body";
     $self->info_window->render_message($session, $body, highlight => $highlight);
   }
 
@@ -207,6 +204,6 @@ class App::Alice {
 
   sub log_debug {
     my $self = shift;
-    print STDERR join(" ", @_) . "\n" if $self->config->{debug};
+    say STDERR join " ", @_ if $self->config->{debug};
   }
 }

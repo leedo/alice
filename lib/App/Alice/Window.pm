@@ -22,20 +22,14 @@ class App::Alice::Window {
     is      => 'ro',
     isa     => 'Str',
     lazy    => 1,
-    default => sub {
-      my $self = shift;
-      return $self->title =~ /^[#&]/ ? "channel" : "privmsg";
-    }
+    default => sub {return shift->title =~ /^[#&]/ ? "channel" : "privmsg"}
   );
   
   has is_channel => (
     is      => 'ro',
     isa     => 'Bool',
     lazy    => 1,
-    default => sub {
-      my $self = shift;
-      return $self->type eq "channel"
-    }
+    default => sub {return shift->type eq "channel"}
   );
 
   has assetdir => (
@@ -66,20 +60,14 @@ class App::Alice::Window {
     is      => 'ro',
     isa     => 'Str',
     lazy    => 1,
-    default => sub {
-      my $self = shift;
-      return "win_" . crc16(lc($self->title . $self->session));
-    }
+    default => sub {return "win_" . crc16(lc($_[0]->title . $_[0]->session))}
   );
 
   has session => (
     is      => 'ro',
     isa     => 'Str',
     lazy    => 1,
-    default => sub {
-      my $self = shift;
-      return $self->connection->session_alias;
-    }
+    default => sub {return shift->connection->session_alias}
   );
 
   has connection => (
@@ -135,9 +123,7 @@ class App::Alice::Window {
       $self->connection->yield(topic => $self->title, $string);
       return $string;
     }
-    else {
-      return $self->connection->channel_topic($self->title) || {};
-    }
+    return $self->connection->channel_topic($self->title) || {};
   }
 
   method add_message (HashRef $message) {
@@ -165,18 +151,18 @@ class App::Alice::Window {
   
   method nicks_action {
     return {
-      type      => "action",
-      event     => "nicks",
-      nicks     => [ $self->all_nicks ],
-      window    => $self->serialized,
+      type   => "action",
+      event  => "nicks",
+      nicks  => [ $self->all_nicks ],
+      window => $self->serialized,
     };
   }
 
   method clear_action {
     return {
-      type      => "action",
-      event     => "clear",
-      window    => $self->serialized,
+      type   => "action",
+      event  => "clear",
+      window => $self->serialized,
     };
   }
 
@@ -198,7 +184,6 @@ class App::Alice::Window {
       timestamp => $self->timestamp,
       nicks     => [ $self->all_nicks ],
     };
-
     my $html = '';
     $self->tt->process("event.tt", $message, \$html);
     $message->{full_html} = $html;
@@ -245,9 +230,9 @@ class App::Alice::Window {
 
   method close_action {
     my $action = {
-      type      => "action",
-      event     => "part",
-      window    => $self->serialized,
+      type   => "action",
+      event  => "part",
+      window => $self->serialized,
     };
     return $action;
   }
@@ -259,13 +244,9 @@ class App::Alice::Window {
 
   method whois_table (Str $nick) {
     my $info = $self->connection->nick_info($nick);
-    if ($info) {
-      return join "\n", (
-        map({"$_: $info->{$_}"} keys %$info),
-        "Channels: " . join " ", $self->connection->nick_channels($nick)
-      );
-    }
-    return "No info for user \"$nick\"";
+    return "No info for user \"$nick\"" if !$info;
+    return join "\n", (map({"$_: $info->{$_}"} keys %$info),
+      "Channels: " . join " ", $self->connection->nick_channels($nick));
   }
 
   method nick_table {

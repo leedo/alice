@@ -1,11 +1,11 @@
 use MooseX::Declare;
 
 class App::Alice::HTTPD {
+  use 5.10.0;
   use MooseX::POE::SweetArgs qw/event/;
   use POE::Component::Server::HTTP;
   use App::Alice::AsyncGet;
   use App::Alice::CommandDispatch;
-  use bytes;
   use MIME::Base64;
   use Time::HiRes qw/time/;
   use JSON;
@@ -18,6 +18,13 @@ class App::Alice::HTTPD {
     is  => 'ro',
     isa => 'App::Alice',
     required => 1,
+  );
+
+  has 'config' => (
+    is      => 'ro',
+    isa     => 'HashRef',
+    lazy    => 1,
+    default => sub {shift->app->config},
   );
 
   has 'streams' => (
@@ -92,12 +99,7 @@ class App::Alice::HTTPD {
     POE::Kernel->delay(ping => 15);
   };
 
-  method config {
-    return $self->app->config;
-  }
-
   method check_authentication ($req, $res) {
-
     return RC_OK unless ($self->config->{auth}
         and ref $self->config->{auth} eq 'HASH'
         and $self->config->{auth}{username}
@@ -126,19 +128,19 @@ class App::Alice::HTTPD {
     return 200 if defined $req->header('error');
     
     my $local_time = time;
-    my $remote_time = $local_time;
 
-    $self->log_debug("opening a streaming http connection");
     $res->streaming(1);
     $res->content_type('multipart/mixed; boundary=xalicex; charset=utf-8');
+
     $res->{msgs} = [];
+    # send the nicks in the initial load
     $res->{actions} = [ map {$_->nicks_action} $self->app->windows ];
     
-    if ($req->uri->query_param('t')) {
-      $remote_time = $req->uri->query_param('t')
-    }
+    my $remote_time = $req->uri->query_param('t') || $local_time;
+
     $res->{offset} = $local_time - $remote_time;
-    $self->log_debug("request time offset is " . $res->{offset});
+    $self->log_debug("opening a streaming http connection ("
+                     . $res->{offset} . " offset)");
 
     # populate the msg queue with any buffered messages
     if (defined (my $msgid = $req->uri->query_param('msgid'))) {
@@ -149,11 +151,9 @@ class App::Alice::HTTPD {
   }
 
   method handle_stream ($req, $res) {
-    if ($res->is_error) {
-      $self->end_stream($res);
-      return 200;
-    }
+    return $self->end_stream($res) if $res->is_error;
     if (@{$res->{msgs}} or @{$res->{actions}}) {
+      use bytes;
       my $output;
       if (! $res->{started}) {
         $res->{started} = 1;
@@ -161,17 +161,14 @@ class App::Alice::HTTPD {
       }
       $output .= to_json({msgs => $res->{msgs}, actions => $res->{actions},
                           time => time - $res->{offset}});
-      my $padding = " " x (1024 - bytes::length $output);
-      $res->send($output . $padding . "\n" . $self->seperator . "\n");
-      if ($res->is_error) {
-        $self->end_stream($res);
-        return 200;
-      }
-      else {
-        $res->{msgs} = [];
-        $res->{actions} = [];
-        $res->continue;
-      }
+      $output .= " " x (1024 - length $output) if length $output < 1024;
+      $res->send("$output\n" . $self->seperator . "\n");
+
+      return $self->end_stream($res) if $res->is_error;
+
+      $res->{msgs} = [];
+      $res->{actions} = [];
+      $res->continue;
     }
   }
 
@@ -184,6 +181,7 @@ class App::Alice::HTTPD {
     }
     $res->close;
     $res->continue;
+    return 200;
   }
 
 
@@ -205,25 +203,27 @@ class App::Alice::HTTPD {
     if (-e $self->assetdir . "/$file") {
       open my $fh, '<', $self->assetdir . "/$file";
       $self->log_debug("serving static file: $file");
-      if ($ext =~ /png|gif|jpg|jpeg/i) {
-        $res->content_type("image/$ext"); 
-      }
-      elsif ($ext =~ /js/) {
-        $res->header("Cache-control" => "no-cache");
-        $res->content_type("text/javascript");
-      }
-      elsif ($ext =~ /css/) {
-        $res->header("Cache-control" => "no-cache");
-        $res->content_type("text/css");
-      }
-      else {
-        $self->not_found($req, $res);
+      given ($ext) {
+        when (/^(?:png|gif|jpg|jpeg)$/i) {
+          $res->content_type("image/$ext"); 
+        }
+        when (/^js$/) {
+          $res->header("Cache-control" => "no-cache");
+          $res->content_type("text/javascript");
+        }
+        when (/^css$/) {
+          $res->header("Cache-control" => "no-cache");
+          $res->content_type("text/css");
+        }
+        default {
+          return $self->not_found($req, $res);
+        }
       }
       my @file = <$fh>;
       $res->content(join "", @file);
       return 200;
     }
-    $self->not_found($req, $res);
+    return $self->not_found($req, $res);
   }
 
   method send_index ($req, $res) {
@@ -238,8 +238,8 @@ class App::Alice::HTTPD {
       }
     }
     $self->tt->process('index.tt', {
-      windows   => $channels,
-      style     => $self->config->{style} || "default",
+      windows => $channels,
+      style   => $self->config->{style} || "default",
     }, \$output) or die $!;
     $res->content($output);
     return 200;
@@ -252,7 +252,7 @@ class App::Alice::HTTPD {
     $self->tt->process('config.tt', {
       style       => $self->config->{style} || "default",
       config      => $self->config,
-      connections => [ sort {$a->{alias} cmp $b->{alias}}
+      connections => [ sort {$a->session_alias cmp $b->session_alias}
                        $self->app->connections ],
     }, \$output);
     $res->content($output);
@@ -297,13 +297,13 @@ class App::Alice::HTTPD {
   }
 
   method not_found ($req, $res) {
-    $self->log_debug("serving 404:", $req->uri->path);
+    $self->log_debug("serving 404: ", $req->uri->path);
     $res->code(404);
     return 404;
   }
 
   method has_clients {
-    return scalar @{$self->streams};
+    return scalar @{$self->streams} > 0;
   }
 
   sub send {
@@ -311,11 +311,13 @@ class App::Alice::HTTPD {
     return unless $self->has_clients;
     for my $res (@{$self->streams}) {
       for my $item (@data) {
-        if ($item->{type} eq "message") {
-          push @{$res->{msgs}}, $item;
-        }
-        elsif ($item->{type} eq "action") {
-          push @{$res->{actions}}, $item;
+        given ($item->{type}) {
+          when ("message") {
+            push @{$res->{msgs}}, $item;
+          }
+          when ("action") {
+            push @{$res->{actions}}, $item;
+          }
         }
       }
     }
@@ -324,11 +326,11 @@ class App::Alice::HTTPD {
 
   sub log_debug {
     my $self = shift;
-    print STDERR join " ", @_, "\n" if $self->config->{debug};
+    say STDERR join " ", @_ if $self->config->{debug};
   }
 
   sub log_info {
-    print STDERR join " ", @_, "\n";
+    say STDERR join " ", @_;
   } 
   
   for my $method (qw/send_config save_config send_index setup_stream

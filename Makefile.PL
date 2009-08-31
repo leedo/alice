@@ -2,7 +2,7 @@ use inc::Module::Install;
 
 name         'App-Alice';
 author       'Lee Aylward <leedo@cpan.org>';
-perl_version '5.008';
+perl_version '5.010';
 all_from     'lib/App/Alice.pm';
 
 # need a recent version to detect POE Components
