@@ -1,6 +1,7 @@
 use MooseX::Declare;
 
 class App::Alice::IRC {
+  use 5.10.0;
   use MooseX::POE::SweetArgs qw/event/;
   use Encode;
   use POE::Component::IRC;
@@ -96,7 +97,6 @@ class App::Alice::IRC {
     $self->app->send($self->app->log_info($self->alias, $msg));
     my $channel = $msglist->[1];
     my $window = $self->window($channel);
-    return unless $window;
     for my $nick (split " ", $msglist->[2]) {
       my ($priv, $name) = (undef, $nick);
       if ($nick =~ /^([@&+])?(.+)/) {
@@ -110,7 +110,6 @@ class App::Alice::IRC {
     my ($self, $server, $msg, $msglist) = @_;
     my $channel = $msglist->[0];
     my $window = $self->window($channel);
-    return unless $window;
     my $topic = $window->topic;
     $self->app->send(
       $window->join_action,
@@ -169,14 +168,12 @@ class App::Alice::IRC {
     my ($self, $who, $where, $msg) = @_;
     my $nick = ( split /!/, $who)[0];
     my $window = $self->window($where);
-    return unless $window;
-    if ($nick ne $self->connection->nick_name) {
-      $window->remove_nick($nick);
-      $self->app->send($window->render_event("left", $nick, $msg));
-    }
-    else {
+    if ($nick eq $self->connection->nick_name) {
       $self->app->close_window($window);
+      return;
     }
+    $window->remove_nick($nick);
+    $self->app->send($window->render_event("left", $nick, $msg));
   };
 
   event irc_quit => sub {
@@ -208,6 +205,6 @@ class App::Alice::IRC {
 
   sub log_debug {
     my $self = shift;
-    print STDERR join " ", @_, "\n" if $self->config->{debug};
+    say STDERR join " ", @_ if $self->config->{debug};
   }
 }
