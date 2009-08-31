@@ -1,7 +1,7 @@
 use MooseX::Declare;
 
 class App::Alice {
-  use 5.10.0;
+  use feature ':5.10';
   use App::Alice::Window;
   use App::Alice::InfoWindow;
   use App::Alice::HTTPD;

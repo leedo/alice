@@ -1,7 +1,7 @@
 use MooseX::Declare;
 
 class App::Alice::IRC {
-  use 5.10.0;
+  use feature ':5.10';
   use MooseX::POE::SweetArgs qw/event/;
   use Encode;
   use POE::Component::IRC;

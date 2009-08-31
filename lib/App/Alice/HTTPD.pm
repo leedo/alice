@@ -1,7 +1,7 @@
 use MooseX::Declare;
 
 class App::Alice::HTTPD {
-  use 5.10.0;
+  use feature ':5.10';
   use MooseX::POE::SweetArgs qw/event/;
   use POE::Component::Server::HTTP;
   use App::Alice::AsyncGet;
