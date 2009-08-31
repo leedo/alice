@@ -20,6 +20,13 @@ class App::Alice::HTTPD {
     required => 1,
   );
 
+  has 'config' => (
+    is      => 'ro',
+    isa     => 'HashRef',
+    lazy    => 1,
+    default => sub {shift->app->config},
+  );
+
   has 'streams' => (
     is  => 'rw',
     isa => 'ArrayRef[POE::Component::Server::HTTP::Response]',
@@ -92,12 +99,7 @@ class App::Alice::HTTPD {
     POE::Kernel->delay(ping => 15);
   };
 
-  method config {
-    return $self->app->config;
-  }
-
   method check_authentication ($req, $res) {
-
     return RC_OK unless ($self->config->{auth}
         and ref $self->config->{auth} eq 'HASH'
         and $self->config->{auth}{username}
@@ -126,19 +128,19 @@ class App::Alice::HTTPD {
     return 200 if defined $req->header('error');
     
     my $local_time = time;
-    my $remote_time = $local_time;
 
-    $self->log_debug("opening a streaming http connection");
     $res->streaming(1);
     $res->content_type('multipart/mixed; boundary=xalicex; charset=utf-8');
+
     $res->{msgs} = [];
+    # send the nicks in the initial load
     $res->{actions} = [ map {$_->nicks_action} $self->app->windows ];
     
-    if ($req->uri->query_param('t')) {
-      $remote_time = $req->uri->query_param('t')
-    }
+    my $remote_time = $req->uri->query_param('t') || $local_time;
+
     $res->{offset} = $local_time - $remote_time;
-    $self->log_debug("request time offset is " . $res->{offset});
+    $self->log_debug("opening a streaming http connection ("
+                     . $res->{offset} . " offset)");
 
     # populate the msg queue with any buffered messages
     if (defined (my $msgid = $req->uri->query_param('msgid'))) {
@@ -149,10 +151,7 @@ class App::Alice::HTTPD {
   }
 
   method handle_stream ($req, $res) {
-    if ($res->is_error) {
-      $self->end_stream($res);
-      return 200;
-    }
+    return $self->end_stream($res) if $res->is_error;
     if (@{$res->{msgs}} or @{$res->{actions}}) {
       my $output;
       if (! $res->{started}) {
@@ -161,17 +160,16 @@ class App::Alice::HTTPD {
       }
       $output .= to_json({msgs => $res->{msgs}, actions => $res->{actions},
                           time => time - $res->{offset}});
-      my $padding = " " x (1024 - bytes::length $output);
-      $res->send($output . $padding . "\n" . $self->seperator . "\n");
-      if ($res->is_error) {
-        $self->end_stream($res);
-        return 200;
+      if (bytes::length $output < 1024) {
+        $output .= " " x (1024 - bytes::length $output);
       }
-      else {
-        $res->{msgs} = [];
-        $res->{actions} = [];
-        $res->continue;
-      }
+      $res->send("$output\n" . $self->seperator . "\n");
+
+      return $self->end_stream($res) if $res->is_error;
+
+      $res->{msgs} = [];
+      $res->{actions} = [];
+      $res->continue;
     }
   }
 
@@ -184,6 +182,7 @@ class App::Alice::HTTPD {
     }
     $res->close;
     $res->continue;
+    return 200;
   }
 
 

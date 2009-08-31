@@ -22,8 +22,9 @@ class App::Alice::IRC {
   
   has 'config' => (
     isa      => 'HashRef',
-    is       => 'rw',
-    required => 1,
+    is       => 'ro',
+    lazy     => 1,
+    default  => sub {shift->app->config},
   );
 
   has 'app' => (
@@ -207,6 +208,6 @@ class App::Alice::IRC {
 
   sub log_debug {
     my $self = shift;
-    print STDERR join " ", @_, "\n" if $self->app->config->{debug};
+    print STDERR join " ", @_, "\n" if $self->config->{debug};
   }
 }

@@ -106,11 +106,6 @@ class App::Alice {
     }
   );
   
-  sub BUILD {
-    my $self = shift;
-    $self->tt;
-  }
-  
   method dispatch (Str $command, App::Alice::Window $window) {
     $self->dispatcher->handle($command, $window);
   }
