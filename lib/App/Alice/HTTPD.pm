@@ -216,14 +216,14 @@ class App::Alice::HTTPD {
           $res->content_type("text/css");
         }
         default {
-          $self->not_found($req, $res);
+          return $self->not_found($req, $res);
         }
       }
       my @file = <$fh>;
       $res->content(join "", @file);
       return 200;
     }
-    $self->not_found($req, $res);
+    return $self->not_found($req, $res);
   }
 
   method send_index ($req, $res) {
