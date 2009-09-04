@@ -3,6 +3,8 @@ an Altogether Lovely Internet Chatting Experience
 
 ##SYNPOSIS
 
+  Alice require perl 5.10.
+
   First time:
     $ perl Makefile.PL
     $ sudo make (this will install dependencies from CPAN)

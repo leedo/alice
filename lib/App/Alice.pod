@@ -6,6 +6,8 @@ App::Alice - an Altogether Lovely Internet Chatting Experience
 
 =head1 SYNPOSIS
 
+Alice require perl 5.10.
+
   arthur:~ leedo$ alice
   You can view your IRC session at: http://localhost:8080/view
 
