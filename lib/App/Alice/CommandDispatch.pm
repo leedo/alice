@@ -11,15 +11,15 @@ class App::Alice::CommandDispatch {
       my $self = shift;
       [
         {method => '_say',     re => qr{^([^/].*)}s},
-        {method => 'query',    re => qr{^/query\s+(.+)\s?}},
+        {method => 'query',    re => qr{^/query\s+(\S+)}},
         {method => 'names',    re => qr{^/n(?:ames)?}, in_channel => 1},
-        {method => '_join',    re => qr{^/j(?:oin)?\s+(.+)\s?}},
+        {method => '_join',    re => qr{^/j(?:oin)?\s+(\S+)}},
         {method => 'part',     re => qr{^/part}, in_channel => 1},
-        {method => 'create',   re => qr{^/create (.+)\s?}},
+        {method => 'create',   re => qr{^/create (\S+)}},
         {method => 'close',    re => qr{^/(?:close|wc)}},
         {method => 'clear',    re => qr{^/clear}},
         {method => 'topic',    re => qr{^/topic(?:\s+(.+))?}, in_channel => 1},
-        {method => 'whois',    re => qr{^/whois\s+(.+)\s?}},
+        {method => 'whois',    re => qr{^/whois\s+(\S+)}},
         {method => 'me',       re => qr{^/me (.+)}},
         {method => 'quote',    re => qr{^/(?:quote|raw) (.+)}},
         {method => 'notfound', re => qr{^/(.+)(?:\s.*)?}}
