@@ -37,13 +37,13 @@ class App::Alice::IRC {
   has 'prefix' => (
     isa      => 'Str',
     is       => 'rw',
-    default  => '',
+    default  => '~&@%+',
   );
 
   has 'chantypes' => (
     isa      => 'Str',
     is       => 'rw',
-    default  => '',
+    default  => '#&',
   );
 
   sub START {
