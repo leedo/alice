@@ -141,7 +141,7 @@ class App::Alice {
 
   method close_window (App::Alice::Window $window) {
     return unless $window;
-    $self->send($window->close_action);
+    $self->send([$window->close_action]);
     $self->log_debug("sending a request to close a tab: " . $window->title)
       if $self->httpd->has_clients;
     $self->remove_window($window->id);
@@ -171,16 +171,16 @@ class App::Alice {
   }
 
   sub send {
-    my ($self, @messages) = @_;
+    my ($self, $messages, $force) = @_;
     
     # add any highlighted messages to the log window
-    push @messages, map {$self->log_info($_->{nick}, $_->{body}, highlight => 1)}
-                    grep {$_->{highlight}} @messages;
+    push @$messages, map {$self->log_info($_->{nick}, $_->{body}, highlight => 1)}
+                    grep {$_->{highlight}} @$messages;
     
-    POE::Kernel->post($self->httpd->session, "send", \@messages);
+    POE::Kernel->call($self->httpd->session, "send", $messages, $force);
     
     return unless $self->notifier and ! $self->httpd->has_clients;
-    for my $message (@messages) {
+    for my $message (@$messages) {
       $self->notifier->display($message) if $message->{highlight};
     }
   }

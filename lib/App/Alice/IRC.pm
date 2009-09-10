@@ -67,7 +67,7 @@ class App::Alice::IRC {
     $self->add_plugins;
     $self->connection->yield(register => 'all');
     
-    $self->app->send($self->app->log_info($self->alias, "connecting"));
+    $self->app->send([$self->app->log_info($self->alias, "connecting")]);
     $self->connection->yield(connect => {});
   }
   
@@ -101,7 +101,7 @@ class App::Alice::IRC {
       push @log, $self->app->log_info($self->alias, "joining $_");
       $self->connection->yield( join => $_ );
     }
-    $self->app->send(@log);
+    $self->app->send(\@log);
   };
   
   event irc_005 => sub {
@@ -110,17 +110,17 @@ class App::Alice::IRC {
     my ($prefix) = ($msg =~ /PREFIX=\([^)]*\)([^\s]*)\s/);
     $self->chantypes($chantypes) if $chantypes;
     $self->prefix($prefix) if $prefix;
-    $self->app->send($self->app->log_info($self->alias, $msg));
+    $self->app->send([$self->app->log_info($self->alias, $msg)]);
   };
   
   event irc_353 => sub {
     my ($self, $server, $msg, $msglist) = @_;
-    $self->app->send($self->app->log_info($self->alias, $msg));
+    $self->app->send([$self->app->log_info($self->alias, $msg)]);
     my $channel = $msglist->[1];
     my $window = $self->window($channel);
     for my $nick (split " ", $msglist->[2]) {
       my ($priv, $name) = (undef, $nick);
-      my $prefx = $self->prefix;
+      my $prefix = $self->prefix;
       if ($nick =~ /^([$prefix])?(.+)/) {
         ($priv, $name) = ($1, $2);
       }
@@ -133,47 +133,47 @@ class App::Alice::IRC {
     my $channel = $msglist->[0];
     my $window = $self->window($channel);
     my $topic = $window->topic;
-    $self->app->send(
+    $self->app->send([
       $window->join_action,
       $window->render_event("topic", $topic->{SetBy}||"", $topic->{Value}||""),
-    );
+    ]);
     $self->log_debug("requesting new tab for: $channel");
   };
 
   event irc_disconnected => sub {
     my $self = shift;
-    $self->app->send($self->app->log_info($self->alias, "disconnected"));
+    $self->app->send([$self->app->log_info($self->alias, "disconnected")]);
   };
 
   event irc_public => sub {
     my ($self, $who, $where, $what) = @_;
     my $nick = ( split /!/, $who )[0];
     my $window = $self->window($where->[0]);
-    $self->app->send($window->render_message($nick, $what));
+    $self->app->send([$window->render_message($nick, $what)]);
   };
 
   event irc_msg => sub {
     my ($self, $who, $recp, $what) = @_;
     my $nick = ( split /!/, $who)[0];
     my $window = $self->window($nick);
-    $self->app->send($window->render_message($nick, $what));
+    $self->app->send([$window->render_message($nick, $what)]);
   };
 
   event irc_ctcp_action => sub {
     my ($self, $who, $where, $what) = @_;
     my $nick = ( split /!/, $who )[0];
     my $window = $self->window($where->[0]);
-    $self->app->send($window->render_message($nick, "• $what"));
+    $self->app->send([$window->render_message($nick, "• $what")]);
   };
 
   event irc_nick => sub {
     my ($self, $who, $new_nick) = @_;
     my $nick = ( split /!/, $who )[0];
-    $self->app->send(
+    $self->app->send([
       map { $_->rename_nick($nick, $new_nick);
             $_->render_event("nick", $nick, $new_nick)
       } $self->app->nick_windows($nick)
-    );
+    ]);
   };
 
   event irc_join => sub {
@@ -182,7 +182,7 @@ class App::Alice::IRC {
     my $window = $self->window($where);
     if ($nick ne $self->connection->nick_name) {
       $window->add_nick($nick, undef);
-      $self->app->send($window->render_event("joined", $nick));
+      $self->app->send([$window->render_event("joined", $nick)]);
     }
   };
 
@@ -195,7 +195,7 @@ class App::Alice::IRC {
       return;
     }
     $window->remove_nick($nick);
-    $self->app->send($window->render_event("left", $nick, $msg));
+    $self->app->send([$window->render_event("left", $nick, $msg)]);
   };
 
   event irc_quit => sub {
@@ -206,23 +206,23 @@ class App::Alice::IRC {
       $window->remove_nick($nick);
       $window->render_event("left", $nick, $msg);
     } @$channels;
-    $self->app->send(@events);
+    $self->app->send(\@events);
   };
   
   event irc_invite => sub {
     my ($self, $who, $where) = @_;
     my $nick = ( split /!/, $who)[0];
-    $self->app->send(
+    $self->app->send([
       $self->app->log_info($self->alias, "$nick has invited you to join $where"),
       $self->app->render_notice("invite", $nick, $where)
-    );
+    ]);
   };
 
   event irc_topic => sub {
     my ($self, $who, $channel, $topic) = @_;
     my $nick = (split /!/, $who)[0];
     my $window = $self->window($channel);
-    $self->app->send($window->render_event("topic", $nick, $topic));
+    $self->app->send([$window->render_event("topic", $nick, $topic)]);
   };
 
   sub log_debug {

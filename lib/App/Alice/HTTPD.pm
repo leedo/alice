@@ -118,7 +118,7 @@ class App::Alice::HTTPD {
   };
   
   event send => sub {
-    my ($self, $data) = @_;
+    my ($self, $data, $force) = @_;
     return unless $self->has_clients;
     
     for my $res (@{$self->streams}) {
@@ -130,17 +130,17 @@ class App::Alice::HTTPD {
       }
     }
     
-    if (! $self->send_id) {
+    if (!$self->send_id and !$force) {
       $self->last_send(time);
       $self->send_id( POE::Kernel->delay_set(_send => 0.1) );
     }
     else {
-      if (time - $self->last_send < 1) {
-        POE::Kernel->delay_adjust(_send => 0.5);
-      }
-      else {
+      if ($force or time - $self->last_send > 1) {
         POE::Kernel->alarm_remove($self->send_id);
         $_->continue for @{$self->streams};
+      }
+      else {
+        POE::Kernel->delay_adjust(_send => 0.5);
       }
     }
   };
