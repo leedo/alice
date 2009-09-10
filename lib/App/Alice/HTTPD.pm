@@ -59,6 +59,23 @@ class App::Alice::HTTPD {
     lazy => 1,
     default => sub { shift->app->tt }
   );
+  
+  has 'last_send' => (
+    is => 'rw',
+    isa => 'Int',
+    default => sub {time},
+  );
+  
+  has 'session' => (
+    is => 'rw',
+    isa => 'Int'
+  );
+  
+  has 'send_delay' => (
+    is => 'rw',
+    isa => 'Int|Undef'
+    default => sub {undef}
+  );
 
   sub BUILD {
     my $self = shift;
@@ -84,7 +101,8 @@ class App::Alice::HTTPD {
   }
   
   sub START {
-    my $self = shift;
+    my ($self, $session) = @_;
+    $self->session($session->ID);
     POE::Kernel->delay(ping => 15);
   }
 
@@ -97,6 +115,40 @@ class App::Alice::HTTPD {
     push @{$_->{actions}}, $data for @{$self->streams};
     $_->continue for @{$self->streams};
     POE::Kernel->delay(ping => 15);
+  };
+  
+  event send => sub {
+    my ($self, $data) = @_;
+    return unless $self->has_clients;
+    
+    for my $res (@{$self->streams}) {
+      for my $item (@$data) {
+        given ($item->{type}) {
+          when ("message") { push @{$res->{msgs}}, $item }
+          when ("action") { push @{$res->{actions}}, $item }
+        }
+      }
+    }
+    
+    if (! $self->send_id) {
+      $self->last_send(time);
+      $self->send_id( POE::Kernel->delay_set(_send => 0.1) );
+    }
+    else {
+      if (time - $self->last_send < 1) {
+        POE::Kernel->delay_adjust(_send => 1);
+      }
+      else {
+        POE::Kernel->alarm_remove($self->send_id);
+        $_->continue for @{$self->streams};
+      }
+    }
+  };
+  
+  event _send => sub {
+    my $self = shift;
+    $self->send_id(undef);
+    $_->continue for @{$self->streams};
   };
 
   method check_authentication ($req, $res) {
@@ -161,13 +213,14 @@ class App::Alice::HTTPD {
       }
       $output .= to_json({msgs => $res->{msgs}, actions => $res->{actions},
                           time => time - $res->{offset}});
-      $output .= " " x (1024 - length $output) if length $output < 1024;
+      $output .= " " x (1024 - bytes::length $output) if bytes::length $output < 1024;
       $res->send("$output\n" . $self->seperator . "\n");
 
       return $self->end_stream($res) if $res->is_error;
 
       $res->{msgs} = [];
       $res->{actions} = [];
+      no bytes;
       $res->continue;
     }
   }
@@ -304,24 +357,6 @@ class App::Alice::HTTPD {
 
   method has_clients {
     return scalar @{$self->streams} > 0;
-  }
-
-  sub send {
-    my ($self, @data) = @_;
-    return unless $self->has_clients;
-    for my $res (@{$self->streams}) {
-      for my $item (@data) {
-        given ($item->{type}) {
-          when ("message") {
-            push @{$res->{msgs}}, $item;
-          }
-          when ("action") {
-            push @{$res->{actions}}, $item;
-          }
-        }
-      }
-    }
-    $_->continue for @{$self->streams};
   }
 
   sub log_debug {

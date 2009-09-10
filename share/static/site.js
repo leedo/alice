@@ -7386,8 +7386,8 @@ Alice.Connection = Class.create({
 
   closeConnection: function() {
     this.aborting = true;
-    if (this.request && this.request.transport)
-      this.request.transport.abort();
+    if (this.request)
+      this.request.abort();
     this.aborting = false;
   },
 
@@ -7398,6 +7398,7 @@ Alice.Connection = Class.create({
     clearTimeout(this.timer);
 
     console.log("opening new connection starting at message " + this.msgid);
+    /*
     this.request = new Ajax.Request('/stream', {
       method: 'get',
       parameters: {msgid: this.msgid, t: now.getTime() / 1000},
@@ -7405,6 +7406,24 @@ Alice.Connection = Class.create({
       onInteractive: this.handleUpdate.bind(this),
       onComplete: this.handleComplete.bind(this)
     });
+    */
+    this.request = new XMLHttpRequest();
+    this.request.onreadystatechange = function () {
+      if (this.request.readyState == 3) {
+        this.handleUpdate(this.request);
+      }
+      else if (this.request.readyState == 4) {
+        if (this.request.status == 200) {
+          this.handleComplete();
+        }
+        else {
+          this.handleException();
+        }
+      }
+    }.bind(this);
+    var params = {msgid: this.msgid, t: now.getTime() / 1000};
+    this.request.open("GET", "/stream?" + Object.toQueryString(params), true);
+    this.request.send("");
   },
 
   handleException: function(request, exception) {
@@ -7432,7 +7451,6 @@ Alice.Connection = Class.create({
     else return;
     this.len += (end + this.seperator.length) - start;
     data = data.slice(start, end);
-
     try {
       data = data.evalJSON();
       if (data.msgs.length)
