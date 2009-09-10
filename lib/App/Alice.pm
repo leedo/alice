@@ -177,7 +177,7 @@ class App::Alice {
     push @messages, map {$self->log_info($_->{nick}, $_->{body}, highlight => 1)}
                     grep {$_->{highlight}} @messages;
     
-    POE::Kernel->post($self->httpd->{session}, "send", \@messages);
+    POE::Kernel->post($self->httpd->session, "send", \@messages);
     
     return unless $self->notifier and ! $self->httpd->has_clients;
     for my $message (@messages) {

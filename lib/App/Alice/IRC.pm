@@ -34,6 +34,18 @@ class App::Alice::IRC {
     required => 1,
   );
 
+  has 'prefix' => (
+    isa      => 'Str',
+    is       => 'rw',
+    default  => '',
+  );
+
+  has 'chantypes' => (
+    isa      => 'Str',
+    is       => 'rw',
+    default  => '',
+  );
+
   sub START {
     my $self = shift;
     if ($self->config->{ssl}) {
@@ -94,6 +106,10 @@ class App::Alice::IRC {
   
   event irc_005 => sub {
     my ($self, $server, $msg, $msglist) = @_;
+    my ($chantypes) = ($msg =~ /CHANTYPES=([^\s]*)\s/);
+    my ($prefix) = ($msg =~ /PREFIX=\([^)]*\)([^\s]*)\s/);
+    $self->chantypes($chantypes) if $chantypes;
+    $self->prefix($prefix) if $prefix;
     $self->app->send($self->app->log_info($self->alias, $msg));
   };
   
@@ -104,7 +120,8 @@ class App::Alice::IRC {
     my $window = $self->window($channel);
     for my $nick (split " ", $msglist->[2]) {
       my ($priv, $name) = (undef, $nick);
-      if ($nick =~ /^([@&+~%])?(.+)/) {
+      my $prefx = $self->prefix;
+      if ($nick =~ /^([$prefix])?(.+)/) {
         ($priv, $name) = ($1, $2);
       }
       $window->add_nick($name, $priv);

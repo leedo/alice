@@ -62,7 +62,7 @@ class App::Alice::HTTPD {
   
   has 'last_send' => (
     is => 'rw',
-    isa => 'Int',
+    isa => 'Num',
     default => sub {time},
   );
   
@@ -71,9 +71,9 @@ class App::Alice::HTTPD {
     isa => 'Int'
   );
   
-  has 'send_delay' => (
+  has 'send_id' => (
     is => 'rw',
-    isa => 'Int|Undef'
+    isa => 'Int|Undef',
     default => sub {undef}
   );
 
@@ -136,7 +136,7 @@ class App::Alice::HTTPD {
     }
     else {
       if (time - $self->last_send < 1) {
-        POE::Kernel->delay_adjust(_send => 1);
+        POE::Kernel->delay_adjust(_send => 0.5);
       }
       else {
         POE::Kernel->alarm_remove($self->send_id);
