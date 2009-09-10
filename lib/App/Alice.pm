@@ -170,14 +170,13 @@ class App::Alice {
     $self->info_window->render_message($session, $body, highlight => $highlight);
   }
 
-  sub send {
-    my ($self, $messages, $force) = @_;
-    
+  method send (ArrayRef $messages, Bool $force) {
     # add any highlighted messages to the log window
     push @$messages, map {$self->log_info($_->{nick}, $_->{body}, highlight => 1)}
                     grep {$_->{highlight}} @$messages;
     
-    POE::Kernel->call($self->httpd->session, "send", $messages, $force);
+    my ($method) = $force ? "call" : "post";
+    POE::Kernel->$method($self->httpd->session, "send", $messages, $force);
     
     return unless $self->notifier and ! $self->httpd->has_clients;
     for my $message (@$messages) {

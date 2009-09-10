@@ -1,6 +1,9 @@
 use MooseX::Declare;
 
 class App::Alice::InfoWindow extends App::Alice::Window {
+  use Encode;
+  use IRC::Formatting::HTML;
+  
   has '+is_channel' => (lazy => 0, default => 0);
   has '+id' => (default => 'info');
   has '+title' => (required => 0, default => 'info');
@@ -11,6 +14,8 @@ class App::Alice::InfoWindow extends App::Alice::Window {
   has '+type' => (lazy => 0, default => 'info');
   
   method render_message (Str $from, Str $body, Bool :$highlight = 0) {
+    $body = decode("utf8", $body, Encode::FB_WARN);
+    my $html = IRC::Formatting::HTML->formatted_string_to_html($body);
     my $message = {
       type   => "message",
       event  => "say",
@@ -18,7 +23,7 @@ class App::Alice::InfoWindow extends App::Alice::Window {
       window => $self->serialized,
       body   => $body,
       self   => $highlight,
-      html   => $body,
+      html   => $html,
       msgid  => $self->next_msgid,
     };
     my $full_html = '';
