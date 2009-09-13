@@ -6,13 +6,12 @@ Alice.Connection = Class.create({
     this.request = null;
     this.seperator = "--xalicex\n";
     this.msgid = 0;
-    this.timer = null;
   },
   
   closeConnection: function() {
     this.aborting = true;
-    if (this.request)
-      this.request.abort();
+    if (this.request && this.request.transport)
+      this.request.transport.abort();
     this.aborting = false;
   },
   
@@ -20,10 +19,7 @@ Alice.Connection = Class.create({
     this.closeConnection();
     this.len = 0;
     var now = new Date();
-    clearTimeout(this.timer);
-
     console.log("opening new connection starting at message " + this.msgid);
-    /*
     this.request = new Ajax.Request('/stream', {
       method: 'get',
       parameters: {msgid: this.msgid, t: now.getTime() / 1000},
@@ -31,24 +27,6 @@ Alice.Connection = Class.create({
       onInteractive: this.handleUpdate.bind(this),
       onComplete: this.handleComplete.bind(this)
     });
-    */
-    this.request = new XMLHttpRequest();
-    this.request.onreadystatechange = function () {
-      if (this.request.readyState == 3) {
-        this.handleUpdate(this.request);
-      }
-      else if (this.request.readyState == 4) {
-        if (this.request.status == 200) {
-          this.handleComplete();
-        }
-        else {
-          this.handleException();
-        }
-      }
-    }.bind(this);
-    var params = {msgid: this.msgid, t: now.getTime() / 1000};
-    this.request.open("GET", "/stream?" + Object.toQueryString(params), true);
-    this.request.send("");
   },
 
   handleException: function(request, exception) {
@@ -62,7 +40,7 @@ Alice.Connection = Class.create({
     if (!this.aborting)
       setTimeout(this.connect.bind(this), 2000);
   },
-
+  
   handleUpdate: function(transport) {
     var time = new Date();
     var data = transport.responseText.slice(this.len);

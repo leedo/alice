@@ -107,13 +107,10 @@ class App::Alice::HTTPD {
   }
 
   event ping => sub {
-    my $self = shift;
-    my $data = {
+    POE::Kernel->yield(send => [{
       type  => "action",
       event => "ping",
-    };
-    push @{$_->{actions}}, $data for @{$self->streams};
-    $_->continue for @{$self->streams};
+    }]);
     POE::Kernel->delay(ping => 15);
   };
   
@@ -130,24 +127,20 @@ class App::Alice::HTTPD {
       }
     }
     
-    if (!$self->send_id and !$force) {
-      $self->last_send(time);
-      $self->send_id( POE::Kernel->delay_set(_send => 0.1) );
+    my $time = time;
+    my $diff = $time - $self->last_send;
+    if ($force or $diff > 1) {
+      POE::Kernel->yield("broadcast");
     }
-    else {
-      if ($force or time - $self->last_send > 1) {
-        POE::Kernel->alarm_remove($self->send_id);
-        $_->continue for @{$self->streams};
-      }
-      else {
-        POE::Kernel->delay_adjust(_send => 0.5);
-      }
+    elsif (!$self->send_id) {
+      $self->send_id( POE::Kernel->alarm_set("broadcast", time + (1 - $diff)) );
     }
   };
   
-  event _send => sub {
+  event broadcast => sub {
     my $self = shift;
     $self->send_id(undef);
+    $self->last_send(time);
     $_->continue for @{$self->streams};
   };
 

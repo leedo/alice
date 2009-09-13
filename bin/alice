@@ -64,7 +64,7 @@ $SIG{INT} = sub {
   }
   print STDERR "closing connections, ^C again to quit\n";
   for ($alice->connections) {
-    $_->call(quit => "alice.");
+    $_->call(shutdown => "alice.");
   }
 };
 
