@@ -14,7 +14,6 @@ class App::Alice::InfoWindow extends App::Alice::Window {
   has '+type' => (lazy => 0, default => 'info');
   
   method render_message (Str $from, Str $body, Bool :$highlight = 0) {
-    $body = decode("utf8", $body, Encode::FB_WARN);
     my $html = IRC::Formatting::HTML->formatted_string_to_html($body);
     my $message = {
       type   => "message",
