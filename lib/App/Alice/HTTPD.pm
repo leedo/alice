@@ -187,9 +187,9 @@ class App::Alice::HTTPD {
     
     if (@{$res->{msgs}} or @{$res->{actions}}) {
       my $diff = time - $res->{last_send};
-      if ($diff < 1 and !$res->{resend_id}) {
+      if ($diff < 0.1 and !$res->{resend_id}) {
         $res->{delayed} = 1;
-        POE::Kernel->call($self->session, "delay_resend", $req, $res, 1 - $diff);
+        POE::Kernel->call($self->session, "delay_resend", $req, $res, 0.1 - $diff);
         return;
       }
       
