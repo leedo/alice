@@ -272,7 +272,7 @@ class App::Alice::HTTPD {
     $res->content_type('text/html; charset=utf-8');
     my $output = '';
     my $channels = [];
-    for my $window (sort {$a->title cmp $b->title} $self->app->windows) {
+    for my $window ($self->sorted_windows) {
       push @$channels, {
         window  => $window->serialized(encoded => 1),
         topic   => $window->topic,
@@ -284,6 +284,25 @@ class App::Alice::HTTPD {
     }, \$output) or die $!;
     $res->content($output);
     return RC_OK;
+  }
+  
+  method sorted_windows {
+    my %order;
+    if ($self->config->{order}) {
+      %order = map {$self->config->{order}->[$_] => $_}
+               0 .. @{$self->config->{order}} - 1;
+    }
+    $order{info} = "##";
+    sort {
+      my ($c, $d) = ($a->title, $b->title);
+      if ($order{$a->title}) {
+        $c = $order{$a->title} . $a->title;
+      }
+      if ($order{$b->title}) {
+        $d = $order{$b->title} . $b->title;
+      }
+      $c cmp $d;
+    } $self->app->windows
   }
 
   method send_config ($req, $res) {
@@ -334,7 +353,7 @@ class App::Alice::HTTPD {
   
   method tab_order ($req, $res) {
     $self->log_debug("updating tab order");
-    $self->app->set_tab_order([$req->uri->query_param("tabs")]);
+    $self->app->tab_order([$req->uri->query_param("tabs")]);
     return RC_OK;
   }
 

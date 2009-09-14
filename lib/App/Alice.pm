@@ -129,14 +129,16 @@ class App::Alice {
   }
   
   method tab_order (ArrayRef $window_ids) {
+    my $order = [];
     for my $count (0 .. scalar @$window_ids - 1) {
       if (my $window = $self->get_window($window_ids->[$count])) {
         next unless $window->is_channel
-             and $self->config->{servers}{$window->connection->alias}
-             and $self->config->{servers}{$window->connection->alias}{$window->title};
-        $self->config->{servers}{$window->connection->alias}{$window->title} = $count;
+             and $self->config->{servers}{$window->connection->session_alias};
+        push @$order, $window->title;
       }
     }
+    $self->config->{order} = $order;
+    $self->write_config;
   }
   
   method nick_windows (Str $nick) {
@@ -227,7 +229,8 @@ class App::Alice {
     return $message;
   }
 
-  method log_debug {
+  sub log_debug {
+    my $self = shift;
     say STDERR join " ", @_ if $self->config->{debug};
   }
 }

@@ -7172,8 +7172,11 @@ Object.extend(Alice, {
       format: /(.+)/,
       onUpdate: function (res) {
         var tabs = res.childElements();
-        var order = tabs.collect(function(t){return t.id.match(/(?:win_)?(.+)_tab/)[1]});
-        alice.connection.sendTabOrder(order);
+        var order = tabs.collect(function(t){
+          var m = t.id.match(/(win_\d+)_tab/);
+          if (m) return m[1]
+        });
+        if (order.length) alice.connection.sendTabOrder(order);
         tabs.invoke('removeClassName','leftof_active');
         for (var i=0; i < tabs.length; i++) {
           if (tabs[i].hasClassName('active')) {
@@ -7494,7 +7497,7 @@ Alice.Connection = Class.create({
   },
 
   sendTabOrder: function (windows) {
-    new Ajax.Request('/taborder', {
+    new Ajax.Request('/tabs', {
       method: 'get',
       parameters: {tabs: windows}
     });
