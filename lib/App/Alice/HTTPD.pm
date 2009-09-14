@@ -11,7 +11,6 @@ class App::Alice::HTTPD {
   use JSON;
   use Template;
   use URI::QueryParam;
-  use YAML qw/DumpFile/;
   use Compress::Zlib;
 
   has 'app' => (
@@ -60,21 +59,9 @@ class App::Alice::HTTPD {
     default => sub { shift->app->tt }
   );
   
-  has 'last_send' => (
-    is => 'rw',
-    isa => 'Num',
-    default => sub {time},
-  );
-  
   has 'session' => (
     is => 'rw',
     isa => 'Int'
-  );
-  
-  has 'send_id' => (
-    is => 'rw',
-    isa => 'Int|Undef',
-    default => sub {undef}
   );
 
   sub BUILD {
@@ -89,6 +76,7 @@ class App::Alice::HTTPD {
         '/serverconfig' => sub{$self->server_config(@_)},
         '/config'       => sub{$self->send_config(@_)},
         '/save'         => sub{$self->save_config(@_)},
+        '/tabs'         => sub{$self->tab_order(@_)},
         '/view'         => sub{$self->send_index(@_)},
         '/stream'       => sub{$self->setup_stream(@_)},
         '/favicon.ico'  => sub{$self->not_found(@_)},
@@ -126,22 +114,19 @@ class App::Alice::HTTPD {
         }
       }
     }
-    
-    my $time = time;
-    my $diff = $time - $self->last_send;
-    if ($force or $diff > 1) {
-      POE::Kernel->yield("broadcast");
-    }
-    elsif (!$self->send_id) {
-      $self->send_id( POE::Kernel->alarm_set("broadcast", time + (1 - $diff)) );
-    }
+    $_->continue for @{$self->streams};
   };
   
-  event broadcast => sub {
-    my $self = shift;
-    $self->send_id(undef);
-    $self->last_send(time);
-    $_->continue for @{$self->streams};
+  event delay_resend => sub {
+    my ($self, $req, $res, $delay) = @_;
+    return if $res->{resend_id};
+    $res->{resend_id} = POE::Kernel->alarm_set("resend", time + $delay, $req, $res);
+  };
+  
+  event resend => sub {
+    my ($self, $req, $res) = @_;
+    $res->{delayed} = 0;
+    $res->continue;
   };
 
   method check_authentication ($req, $res) {
@@ -170,7 +155,7 @@ class App::Alice::HTTPD {
 
   method setup_stream ($req, $res) {
     # XHR tries to reconnect again with this header for some reason
-    return 200 if defined $req->header('error');
+    return RC_OK if defined $req->header('error');
     
     my $local_time = time;
 
@@ -184,6 +169,7 @@ class App::Alice::HTTPD {
     my $remote_time = $req->uri->query_param('t') || $local_time;
 
     $res->{offset} = $local_time - $remote_time;
+    $res->{last_send} = 0;
     $self->log_debug("opening a streaming http connection ("
                      . $res->{offset} . " offset)");
 
@@ -192,12 +178,21 @@ class App::Alice::HTTPD {
       $res->{msgs} = $self->app->buffered_messages($msgid);
     }
     push @{$self->streams}, $res;
-    return 200;
+    return RC_OK;
   }
 
   method handle_stream ($req, $res) {
     return $self->end_stream($res) if $res->is_error;
+    return if $res->{delayed};
+    
     if (@{$res->{msgs}} or @{$res->{actions}}) {
+      my $diff = time - $res->{last_send};
+      if ($diff < 1 and !$res->{resend_id}) {
+        $res->{delayed} = 1;
+        POE::Kernel->call($self->session, "delay_resend", $req, $res, 1 - $diff);
+        return;
+      }
+      
       use bytes;
       my $output;
       if (! $res->{started}) {
@@ -208,14 +203,16 @@ class App::Alice::HTTPD {
                           time => time - $res->{offset}});
       $output .= " " x (1024 - bytes::length $output) if bytes::length $output < 1024;
       $res->send("$output\n" . $self->seperator . "\n");
-
       return $self->end_stream($res) if $res->is_error;
 
       $res->{msgs} = [];
       $res->{actions} = [];
+      $res->{last_send} = time;
       no bytes;
-      $res->continue;
     }
+    
+    POE::Kernel->alarm_remove($res->{resend_id}) if $res->{resend_id};
+    $res->{resend_id} = undef;
   }
 
   method end_stream ($res) {
@@ -227,7 +224,6 @@ class App::Alice::HTTPD {
     }
     $res->close;
     $res->continue;
-    return 200;
   }
 
 
@@ -240,7 +236,7 @@ class App::Alice::HTTPD {
       eval {$self->app->dispatch($_, $window) if length $_};
       if ($@) {$self->log_debug($@)}
     }
-    return 200;
+    return RC_OK;
   }
 
   method handle_static ($req, $res) {
@@ -248,7 +244,6 @@ class App::Alice::HTTPD {
     my ($ext) = ($file =~ /[^\.]\.(.+)$/);
     if (-e $self->assetdir . "/$file") {
       open my $fh, '<', $self->assetdir . "/$file";
-      $self->log_debug("serving static file: $file");
       given ($ext) {
         when (/^(?:png|gif|jpg|jpeg)$/i) {
           $res->content_type("image/$ext"); 
@@ -267,7 +262,7 @@ class App::Alice::HTTPD {
       }
       my @file = <$fh>;
       $res->content(join "", @file);
-      return 200;
+      return RC_OK;
     }
     return $self->not_found($req, $res);
   }
@@ -288,7 +283,7 @@ class App::Alice::HTTPD {
       style   => $self->config->{style} || "default",
     }, \$output) or die $!;
     $res->content($output);
-    return 200;
+    return RC_OK;
   }
 
   method send_config ($req, $res) {
@@ -302,7 +297,7 @@ class App::Alice::HTTPD {
                        $self->app->connections ],
     }, \$output);
     $res->content($output);
-    return 200;
+    return RC_OK;
   }
 
   method server_config ($req, $res) {
@@ -315,13 +310,12 @@ class App::Alice::HTTPD {
     my $listitem = '';
     $self->tt->process('server_listitem.tt', {name => $name}, \$listitem);
     $res->content(to_json({config => $config, listitem => $listitem}));
-    return 200;
+    return RC_OK;
   }
 
   method save_config ($req, $res) {
     $self->log_debug("saving config");
     my $new_config = {};
-    my $servers;
     for my $name ($req->uri->query_param) {
       next unless $req->uri->query_param($name);
       if ($name =~ /^(.+?)_(.+)/) {
@@ -333,19 +327,21 @@ class App::Alice::HTTPD {
         }
       }
     }
-    for my $newserver (values %$new_config) {
-      if (! exists $self->config->{servers}{$newserver->{name}}) {
-        $self->app->add_irc_server($newserver->{name}, $newserver);
-      }
-      $self->config->{servers}{$newserver->{name}} = $newserver;
-    }
-    DumpFile($ENV{HOME}.'/.alice.yaml', $self->config);
+    $self->app->merge_config($new_config);
+    $self->app->write_config();
+    return RC_OK;
+  }
+  
+  method tab_order ($req, $res) {
+    $self->log_debug("updating tab order");
+    $self->app->set_tab_order([$req->uri->query_param("tabs")]);
+    return RC_OK;
   }
 
   method not_found ($req, $res) {
     $self->log_debug("serving 404: ", $req->uri->path);
     $res->code(404);
-    return 404;
+    return RC_OK;
   }
 
   method has_clients {
@@ -361,7 +357,7 @@ class App::Alice::HTTPD {
     say STDERR join " ", @_;
   } 
   
-  for my $method (qw/send_config save_config send_index setup_stream
+  for my $method (qw/send_config save_config tab_order send_index setup_stream
                   not_found handle_message handle_static server_config/) {
     Moose::Util::add_method_modifier(__PACKAGE__, "before", [$method, sub {
       $_[1]->header(Connection => 'close');

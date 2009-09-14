@@ -9,6 +9,7 @@ class App::Alice {
   use MooseX::AttributeHelpers;
   use Digest::CRC qw/crc16/;
   use Encode;
+  use YAML qw/DumpFile/;
   use POE;
 
   our $VERSION = '0.01';
@@ -112,6 +113,32 @@ class App::Alice {
     $self->dispatcher->handle($command, $window);
   }
   
+  method write_config {
+    DumpFile($ENV{HOME}.'/.alice.yaml', $self->config);
+  }
+  
+  method merge_config (HashRef $new_config) {
+    for my $newserver (values %$new_config) {
+      if (! exists $self->config->{servers}{$newserver->{name}}) {
+        $self->add_irc_server($newserver->{name}, $newserver);
+      }
+      for my $key (keys %$newserver) {
+        $self->config->{servers}{$newserver->{name}}{$key} = $newserver->{$key};
+      }
+    }
+  }
+  
+  method tab_order (ArrayRef $window_ids) {
+    for my $count (0 .. scalar @$window_ids - 1) {
+      if (my $window = $self->get_window($window_ids->[$count])) {
+        next unless $window->is_channel
+             and $self->config->{servers}{$window->connection->alias}
+             and $self->config->{servers}{$window->connection->alias}{$window->title};
+        $self->config->{servers}{$window->connection->alias}{$window->title} = $count;
+      }
+    }
+  }
+  
   method nick_windows (Str $nick) {
     return grep {$_->includes_nick($nick)} $self->windows;
   }
@@ -175,8 +202,7 @@ class App::Alice {
     push @$messages, map {$self->log_info($_->{nick}, $_->{body}, highlight => 1)}
                     grep {$_->{highlight}} @$messages;
     
-    my ($method) = $force ? "call" : "post";
-    POE::Kernel->$method($self->httpd->session, "send", $messages, $force);
+    POE::Kernel->post($self->httpd->session, "send", $messages, $force);
     
     return unless $self->notifier and ! $self->httpd->has_clients;
     for my $message (@$messages) {
@@ -201,8 +227,7 @@ class App::Alice {
     return $message;
   }
 
-  sub log_debug {
-    my $self = shift;
+  method log_debug {
     say STDERR join " ", @_ if $self->config->{debug};
   }
 }

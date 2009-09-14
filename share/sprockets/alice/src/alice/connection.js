@@ -117,6 +117,13 @@ Alice.Connection = Class.create({
     });
   },
   
+  sendTabOrder: function (windows) {
+    new Ajax.Request('/tabs', {
+      method: 'get',
+      parameters: {tabs: windows}
+    });
+  },
+  
   sendPing: function() {
     new Ajax.Request('/ping');
   }

@@ -28,6 +28,8 @@ Object.extend(Alice, {
       format: /(.+)/,
       onUpdate: function (res) {
         var tabs = res.childElements();
+        var order = tabs.collect(function(t){return t.id.match(/(?:win_)?(.+)_tab/)[1]});
+        alice.connection.sendTabOrder(order);
         tabs.invoke('removeClassName','leftof_active');
         for (var i=0; i < tabs.length; i++) {
           if (tabs[i].hasClassName('active')) {
