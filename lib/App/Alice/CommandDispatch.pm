@@ -12,7 +12,7 @@ class App::Alice::CommandDispatch {
       [
         {method => '_say',     re => qr{^([^/].*)}s},
         {method => 'query',    re => qr{^/query\s+(\S+)}},
-        {method => 'names',    re => qr{^/n(?:ames)?}, in_channel => 1},
+        {method => 'names',    re => qr{^/n(?:ames)?\s*$}, in_channel => 1},
         {method => '_join',    re => qr{^/j(?:oin)?\s+(\S+)}},
         {method => 'part',     re => qr{^/part}, in_channel => 1},
         {method => 'create',   re => qr{^/create (\S+)}},
@@ -21,8 +21,9 @@ class App::Alice::CommandDispatch {
         {method => 'topic',    re => qr{^/topic(?:\s+(.+))?}, in_channel => 1},
         {method => 'whois',    re => qr{^/whois\s+(\S+)}},
         {method => 'me',       re => qr{^/me (.+)}},
+        {method => 'nick',     re => qr{^/nick\s+(\S+)}},
         {method => 'quote',    re => qr{^/(?:quote|raw) (.+)}},
-        {method => 'notfound', re => qr{^/(.+)(?:\s.*)?}}
+        {method => 'notfound', re => qr{^/(.+)(?:\s.*)?}},
       ]
     }
   );
@@ -85,6 +86,10 @@ class App::Alice::CommandDispatch {
     else {
       $self->app->close_window($window);
     }
+  }
+  
+  method nick (App::Alice::Window $window, Str $arg) {
+    $window->connection->yield(nick => $arg);
   }
 
   method create (App::Alice::Window $window, Str $arg) {
