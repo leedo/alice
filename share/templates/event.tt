@@ -8,13 +8,13 @@
   [% END %]
 
   [% IF event == "topic" %]
-    Topic changed to "[% body %]" by <a href="javascript:alice.connection.requestWindow('[% nick %]','[% window.id %]')" class="nick">[% nick %]</a>[% IF eventtime %] at [% eventtime %][% END %].
+    Topic changed to "[% body | html %]" by <a href="javascript:alice.connection.requestWindow('[% nick %]','[% window.id %]')" class="nick">[% nick | html %]</a>[% IF eventtime %] at [% eventtime %][% END %].
   [% ELSIF event == "invite" %]
-    [% nick %] has invited you to join [% body %]
+    [% nick %] has invited you to join [% body | html %]
   [% ELSIF event == "joined" || event == "left" %]
-    <a href="javascript:alice.connection.requestWindow('[% nick %]','[% window.id %]')" class="nick">[% nick %]</a> [% event %] the chat room.[% IF body %] ([% body %])[% END %]
+    <a href="javascript:alice.connection.requestWindow('[% nick %]','[% window.id %]')" class="nick">[% nick | html %]</a> [% event %] the chat room.[% IF body %] ([% body | html %])[% END %]
   [% ELSIF event == "nick" %]
-    [% nick %] is now known as <a href="javascript:alice.connection.requestWindow('[% body %]','[% window.id %]')" class="nick">[% body %]</a>.
+    [% nick %] is now known as <a href="javascript:alice.connection.requestWindow('[% body %]','[% window.id %]')" class="nick">[% body | html %]</a>.
   [% END %]
   </div>
 </li>

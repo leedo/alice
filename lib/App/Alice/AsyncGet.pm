@@ -99,7 +99,6 @@ sub return_object {
 sub sig_child {
   my ($pid, $exit)  = @_[ARG1,ARG2];
   delete $children{$pid};
-  print STDERR "PID $pid exited with status $exit\n";
 
   if (my $next  = shift(@pending)) {
     async_fetch($next->{res},$next->{uri});

@@ -295,12 +295,10 @@ class App::Alice::HTTPD {
     $order{info} = "##";
     sort {
       my ($c, $d) = ($a->title, $b->title);
-      if ($order{$a->title}) {
-        $c = $order{$a->title} . $a->title;
-      }
-      if ($order{$b->title}) {
-        $d = $order{$b->title} . $b->title;
-      }
+      $c =~ s/^#//;
+      $d =~ s/^#//;
+      $c = $order{$a->title} . $c if exists $order{$a->title};
+      $d = $order{$b->title} . $d if exists $order{$b->title};
       $c cmp $d;
     } $self->app->windows
   }

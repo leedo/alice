@@ -1,6 +1,6 @@
 <div class="channel[% IF loop.first %] active[% END %]" id="[% chanid %]">
   <div class="topic" id="[% chanid %]_topic">
-    [% topic.Value || "(no topic set)" %]
+    [% topic.Value | html %]
   </div>
   <ul class="messages" id="[% chanid %]_messages">
   </ul>

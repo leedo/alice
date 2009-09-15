@@ -110,12 +110,10 @@ class App::Alice::IRC {
     my ($prefix) = ($msg =~ /PREFIX=\([^)]*\)([^\s]*)\s/);
     $self->chantypes($chantypes) if $chantypes;
     $self->prefix($prefix) if $prefix;
-    $self->app->send([$self->app->log_info($self->alias, $msg)]);
   };
   
   event irc_353 => sub {
     my ($self, $server, $msg, $msglist) = @_;
-    $self->app->send([$self->app->log_info($self->alias, $msg)]);
     my $channel = $msglist->[1];
     my $window = $self->window($channel);
     for my $nick (split " ", $msglist->[2]) {
