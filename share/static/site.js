@@ -7601,10 +7601,12 @@ Alice.Window = Class.create({
 
       if (this.element.hasClassName('active'))
         this.scrollToBottom();
-      else if (message.event == "say" && message.highlight)
-        this.tab.addClassName("highlight");
-      else if (message.event == "say")
-        this.tab.addClassName("unread");
+      else if (this.title != "info") {
+        if (message.event == "say" && message.highlight)
+          this.tab.addClassName("highlight");
+        else if (message.event == "say")
+          this.tab.addClassName("unread");
+      }
     }
 
     var messages = this.messages.childElements();
