@@ -97,7 +97,13 @@ class App::Alice::IRC {
       push @log, $self->app->log_info($self->alias, "sending $_");
       $self->connection->yield( quote => $_ );
     }
-    for (@{$self->config->{channels}}) {
+
+    # combine current channels with config channels,
+    # easiest way to remove dupes is as hash keys
+    my %channels = map {$_ => undef}
+      (@{$self->config->{channels}}, keys %{$self->connection->channels});
+
+    for (keys %channels) {
       push @log, $self->app->log_info($self->alias, "joining $_");
       $self->connection->yield( join => $_ );
     }
@@ -131,9 +137,10 @@ class App::Alice::IRC {
     my $channel = $msglist->[0];
     my $window = $self->window($channel);
     my $topic = $window->topic;
+    my $nick = ( split /!/, $topic->{SetBy} )[0];
     $self->app->send([
       $window->join_action,
-      $window->render_event("topic", $topic->{SetBy}||"", $topic->{Value}||""),
+      $window->render_event("topic", $nick||"", $topic->{Value}||""),
     ]);
     $self->log_debug("requesting new tab for: $channel");
   };
