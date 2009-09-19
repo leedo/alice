@@ -109,8 +109,9 @@ class App::Alice::CommandDispatch {
     }
     else {
       my $topic = $window->topic;
+      my $nick = ( split /!/, $topic->{SetBy} )[0];
       $self->app->send([
-        $window->render_event("topic", $topic->{SetBy}, $topic->{Value})
+        $window->render_event("topic", $nick, $topic->{Value})
       ]);
     }
   }
