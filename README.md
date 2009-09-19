@@ -13,7 +13,7 @@ an Altogether Lovely Internet Chatting Experience
   *or* if you wish to avoid installing all of the dependencies,
   you can extract your platform's extlib archive, and run alice
   from the bin directory.
-    $ tar -xvzf extlib-osx-leopard.tar.gz
+    $ tar -xvzf extlib-osx-snow-leopard.tar.gz
     $ ./bin/alice
   You can view your IRC session at: http://localhost:8080/view
 
