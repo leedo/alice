@@ -8,7 +8,7 @@
   [% END %]
 
   [% IF event == "topic" %]
-    Topic changed to "[% body | html %]" by <a href="javascript:alice.connection.requestWindow('[% nick %]','[% window.id %]')" class="nick">[% nick | html %]</a>[% IF eventtime %] at [% eventtime %][% END %].
+    Topic changed to "[% body | html %]"[% IF nick %] by <a href="javascript:alice.connection.requestWindow('[% nick %]','[% window.id %]')" class="nick">[% nick | html %]</a>[% END %][% IF eventtime %] at [% eventtime %][% END %].
   [% ELSIF event == "invite" %]
     [% nick %] has invited you to join [% body | html %]
   [% ELSIF event == "joined" || event == "left" %]

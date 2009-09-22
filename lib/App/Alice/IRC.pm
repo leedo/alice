@@ -137,10 +137,10 @@ class App::Alice::IRC {
     my $channel = $msglist->[0];
     my $window = $self->window($channel);
     my $topic = $window->topic;
-    my $nick = ( split /!/, $topic->{SetBy} )[0];
+    my $nick = ( split /!/, $topic->{SetBy} )[0] || "";
     $self->app->send([
       $window->join_action,
-      $window->render_event("topic", $nick||"", $topic->{Value}||""),
+      $window->render_event("topic", $nick, $topic->{Value}),
     ]);
     $self->log_debug("requesting new tab for: $channel");
   };

@@ -123,7 +123,11 @@ class App::Alice::Window {
       $self->connection->yield(topic => $self->title, $string);
       return $string;
     }
-    return $self->connection->channel_topic($self->title) || {};
+    my $topic = $self->connection->channel_topic($self->title);
+    return {
+      SetBy => $topic->{SetBy} || "",
+      Value => $topic->{Value} || "(no topic set)"
+    };
   }
 
   method add_message (HashRef $message) {
