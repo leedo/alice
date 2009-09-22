@@ -13,7 +13,7 @@ class App::Alice::CommandDispatch {
         {method => '_say',     re => qr{^([^/].*)}s},
         {method => 'query',    re => qr{^/query\s+(\S+)}},
         {method => 'names',    re => qr{^/n(?:ames)?\s*$}, in_channel => 1},
-        {method => '_join',    re => qr{^/j(?:oin)?\s+(\S+)}},
+        {method => '_join',    re => qr{^/j(?:oin)?\s+(?:-(\S+)\s+)?(\S+)}},
         {method => 'part',     re => qr{^/part}, in_channel => 1},
         {method => 'create',   re => qr{^/create (\S+)}},
         {method => 'close',    re => qr{^/(?:close|wc)}},
@@ -38,7 +38,7 @@ class App::Alice::CommandDispatch {
     for my $handler (@{$self->handlers}) {
       my $re = $handler->{re};
       if ($command =~ /$re/) {
-        my $arg = $1;
+        my @args = grep {defined $_} ($5, $4, $3, $2, $1); # up to 5 captures
         if ($handler->{in_channel} and ! $window->is_channel) {
           $self->app->send([
             $window->render_announcement("$command can only be used in a channel")
@@ -46,14 +46,14 @@ class App::Alice::CommandDispatch {
         }
         else {
           my $method = $handler->{method};
-          $self->$method($window, $arg);
+          $self->$method($window, @args);
         }
         return;
       }
     }
   }
 
-  method names (App::Alice::Window $window, $?) {
+  method names (App::Alice::Window $window) {
     $self->app->send([$window->render_announcement($window->nick_table)]);
   }
 
@@ -68,18 +68,23 @@ class App::Alice::CommandDispatch {
     $self->app->send([$new_window->join_action]);
   }
 
-  method _join (App::Alice::Window $window, Str $arg) {
-    $arg = decode("utf8", $arg, Encode::FB_WARN);
-    $window->connection->yield("join", $arg);
+  method _join (App::Alice::Window $window, Str $arg1, Str $arg2?) {
+    if ($arg2 and $self->app->ircs->{$arg2}) {
+      $window = $self->app->ircs->{$arg2};
+    }
+    if ($arg1 =~ /^[#&]/) {
+      $arg1 = decode("utf8", $arg1, Encode::FB_WARN);
+      $window->connection->yield("join", $arg1);
+    }
   }
 
-  method part (App::Alice::Window $window, $?) {
+  method part (App::Alice::Window $window) {
     if ($window->is_channel) {
       $window->part;
     }
   }
 
-  method close (App::Alice::Window $window, $?) {
+  method close (App::Alice::Window $window) {
     if ($window->is_channel) {
       $window->part;
     }
@@ -98,7 +103,7 @@ class App::Alice::CommandDispatch {
     $self->app->send([$new_window->join_action]);
   }
 
-  method clear (App::Alice::Window $window, $?) {
+  method clear (App::Alice::Window $window) {
     $window->msgbuffer([]);
     $self->app->send([$window->clear_action]);
   }
