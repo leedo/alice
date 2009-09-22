@@ -7601,7 +7601,7 @@ Alice.Window = Class.create({
 
       if (this.element.hasClassName('active'))
         this.scrollToBottom();
-      else if (this.title != "info") {
+      else if (!message.buffered && this.title != "info") {
         if (message.event == "say" && message.highlight)
           this.tab.addClassName("highlight");
         else if (message.event == "say")

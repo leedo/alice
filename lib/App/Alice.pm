@@ -146,7 +146,10 @@ class App::Alice {
   }
 
   method buffered_messages (Int $min) {
-    return [ grep {$_->{msgid} > $min} map {@{$_->msgbuffer}} $self->windows ];
+    return [ map {$_->{buffered} = 1; $_;}
+             grep {$_->{msgid} > $min}
+             map {@{$_->msgbuffer}} $self->windows
+           ];
   }
 
   method connections {
