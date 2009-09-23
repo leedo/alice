@@ -128,7 +128,7 @@ class App::Alice::IRC {
       if ($nick =~ /^([$prefix])?(.+)/) {
         ($priv, $name) = ($1, $2);
       }
-      $window->add_nick($name, $priv);
+      $window->add_nick($name);
     }
   };
   
@@ -186,7 +186,7 @@ class App::Alice::IRC {
     my $nick = ( split /!/, $who)[0];
     my $window = $self->window($where);
     if ($nick ne $self->connection->nick_name) {
-      $window->add_nick($nick, undef);
+      $window->add_nick($nick);
       $self->app->send([$window->render_event("joined", $nick)]);
     }
   };

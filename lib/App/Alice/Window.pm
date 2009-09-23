@@ -4,6 +4,7 @@ class App::Alice::Window {
   use Encode;
   use DateTime;
   use Digest::CRC qw/crc16/;
+  use Digest::MD5 qw/md5_hex/;
   use MooseX::ClassAttribute;
   use MooseX::AttributeHelpers;
   use IRC::Formatting::HTML;
@@ -78,15 +79,15 @@ class App::Alice::Window {
   
   has nicks => (
     metaclass => 'Collection::Hash',
-    isa       => 'HashRef[Str|Undef]',
+    isa       => 'HashRef[HashRef|Undef]',
     default   => sub {{}},
     provides  => {
       delete   => 'remove_nick',
       exists   => 'includes_nick',
-      get      => 'nick_info',
+      get      => 'get_nick_info',
       keys     => 'all_nicks',
       kv       => 'all_nick_info',
-      set      => 'add_nick',
+      set      => 'set_nick_info',
     }
   );
   
@@ -99,8 +100,29 @@ class App::Alice::Window {
   method rename_nick (Str $nick, Str $new_nick) {
     return unless $self->includes_nick($nick);
     my $info = $self->nick_info($nick);
-    $self->add_nick($new_nick, $info);
+    $self->set_nick_info($new_nick, $info);
     $self->remove_nick($nick);
+  }
+  
+  method add_nick (Str $nick) {
+    $self->set_nick_info($nick, undef);
+  }
+  
+  method nick_info (Str $nick) {
+    my $info = $self->get_nick_info($nick);
+    if (!$info) {
+      $info = $self->connection->nick_info($nick);
+      $self->set_nick_info($nick, $info);
+    }
+    return $info;
+  }
+  
+  method nick_avatar (Str $nick) {
+    my $info = $self->nick_info($nick);
+    if ($info and $info->{Real} and $info->{Real} =~ /.+@.+/) {
+      return md5_hex($info->{Real});
+    }
+    return undef;
   }
 
   method serialized (Bool :$encoded = 0) {
@@ -203,11 +225,12 @@ class App::Alice::Window {
       type      => "message",
       event     => "say",
       nick      => $nick,
+      avatar    => $self->nick_avatar($nick),
       window    => $self->serialized,
       body      => $body,
       highlight => $body =~ /\b$own_nick\b/i ? 1 : 0,
       html      => $html,
-      self      => $self->nick eq $nick,
+      self      => $own_nick eq $nick,
       msgid     => $self->next_msgid,
       timestamp => $self->timestamp,
     };
@@ -247,7 +270,7 @@ class App::Alice::Window {
   }
 
   method whois_table (Str $nick) {
-    my $info = $self->connection->nick_info($nick);
+    my $info = $self->nick_info($nick);
     return "No info for user \"$nick\"" if !$info;
     return join "\n", (map({"$_: $info->{$_}"} keys %$info),
       "Channels: " . join " ", $self->connection->nick_channels($nick));
