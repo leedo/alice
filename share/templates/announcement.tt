@@ -1,3 +1,4 @@
 <li class="message">
   <div class="msg announce">[% message %]</div>
+  <hr />
 </li>

@@ -169,7 +169,7 @@ ul.messages li:first-child {
 }
 
 ul.messages li.self {
-  background: url(image/background-self.png) top left repeat-y #fff;
+  background: url(image/background-self.png) top left repeat-y #fffbd0;
 }
 
 ul.messages li.self div.msg {
@@ -179,7 +179,7 @@ ul.messages li.self div.msg {
 ul.messages li hr {
   position: absolute;
   bottom: 0px;
-  left: 132px;
+  left: 131px;
   right: 0px;
   border: none;
   height: 0px;

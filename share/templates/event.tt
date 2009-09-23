@@ -17,4 +17,5 @@
     [% nick %] is now known as <a href="javascript:alice.connection.requestWindow('[% body %]','[% window.id %]')" class="nick">[% body | html %]</a>.
   [% END %]
   </div>
+  <hr />
 </li>
