@@ -224,13 +224,13 @@ ul.messages li:hover div.left span.nickhint {
 
 div.left span.nickhint {
   position: absolute;
-  right: 3px;
+  right: 4px;
   top: 5px;
-  padding-right: 2px;
+  padding: 0 2px;
   min-width: 32px;
-  background: rgba(255, 255, 255, 0.65);
-  color: #000;
-  text-shadow: rgba( 255, 255, 255, 1 ) 0 -1px 1px;
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  text-shadow: rgba( 0, 0, 0, 0.3 ) 0 1px 1px;
   opacity: 0;
   -webkit-transition: opacity 0.2s ease-in-out;
 }
