@@ -225,6 +225,7 @@ div.left span.nickhint {
   min-width: 32px;
   background: rgba(255, 255, 255, 0.65);
   color: #000;
+  text-shadow: rgba( 255, 255, 255, 1 ) 0 1px 1px;
   display: none;
 }
 
