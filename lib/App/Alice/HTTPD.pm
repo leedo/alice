@@ -280,7 +280,8 @@ class App::Alice::HTTPD {
     }
     $self->tt->process('index.tt', {
       windows => $channels,
-      style   => $self->config->{style} || "default",
+      style   => $self->config->{style}  || "default",
+      images  => $self->config->{images},
     }, \$output) or die $!;
     $res->content($output);
     return RC_OK;
