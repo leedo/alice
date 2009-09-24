@@ -1,5 +1,5 @@
 <li class="message [% nick | html %][% IF self %] self[% END %]" id="[% msgid %]">
-  <div class="left"><a href="javascript:alice.connection.requestWindow('[% nick %]','[% window.id %]')" class="nick">[% IF avatar %]<img src="//www.gravatar.com/avatar/[% avatar %]?s=40&amp;r=x" alt="[% nick | html %]" title="[% nick | html %]">[% ELSE %][% nick | html %][% END %]</a></div>
+  <div class="left"><a href="javascript:alice.connection.requestWindow('[% nick %]','[% window.id %]')" class="nick">[% IF avatar %]<img src="//www.gravatar.com/avatar/[% avatar %]?s=32&amp;r=x" alt="[% nick | html %]" title="[% nick | html %]">[% ELSE %][% nick | html %][% END %]</a></div>
   <div class="msg[% IF nick == "Shaniqua" || nick == "root" || nick == "p6eval" %] monospace[% END %]">[% html %]</div>
   <hr />
 </li>

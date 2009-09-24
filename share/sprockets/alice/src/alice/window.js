@@ -67,8 +67,8 @@ Alice.Window = Class.create({
           this.messages.down('li:last-child div.msg').insert(
             "<br>" + this.application.applyFilters(message.html));
         else if (message.event == "say")
-          this.messages.insert(
-            Alice.stripNick(this.application.applyFilters(message.full_html)));
+          this.messages.down('li:last-child div.msg').insert(
+            Alice.stripNick(this.application.applyFilters("<hr class=\"consecutive\">"+message.html)));
       }
       else {
         if (message.event == "topic") {

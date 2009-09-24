@@ -188,6 +188,14 @@ ul.messages li hr {
   padding: 0;
 }
 
+ul.messages li hr.consecutive {
+  position: relative;
+  bottom: auto;
+  left: auto;
+  right: auto;
+  margin: 5px 0 5px -5px;
+}
+
 div.left {
   float: left;
   width: 120px;
