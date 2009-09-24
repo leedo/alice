@@ -125,8 +125,8 @@ class App::Alice::Window {
           return "//www.gravatar.com/avatar/"
                . md5_hex($info->{Real}) . "?s=32&amp;r=x";
         }
-        when (/^https?:\/\/\S+(?:jpe?g|png|gif)/) {
-          return $info->{Real};
+        when (/^https?:(\/\/\S+(?:jpe?g|png|gif))/) {
+          return $1;
         }
         default {
           return undef;
