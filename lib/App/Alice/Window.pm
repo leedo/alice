@@ -119,10 +119,20 @@ class App::Alice::Window {
   
   method nick_avatar (Str $nick) {
     my $info = $self->nick_info($nick);
-    if ($info and $info->{Real} and $info->{Real} =~ /.+@.+/) {
-      return md5_hex($info->{Real});
+    if ($info and $info->{Real}) {
+      given ($info->{Real}) {
+        when (/.+@.+/) {
+          return "//www.gravatar.com/avatar/"
+               . md5_hex($info->{Real}) . "?s=32&amp;r=x";
+        }
+        when (/^https?:\/\/\S+(?:jpe?g|png|gif)/) {
+          return $info->{Real};
+        }
+        default {
+          return undef;
+        }
+      }
     }
-    return undef;
   }
 
   method serialized (Bool :$encoded = 0) {
