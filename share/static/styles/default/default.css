@@ -209,6 +209,8 @@ div.left {
 div.left img {
   display: block;
   float: right;
+  width: 32px;
+  height: 32px;
 }
 
 div.msg {
