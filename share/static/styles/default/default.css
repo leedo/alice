@@ -209,24 +209,30 @@ div.left {
 }
 
 div.left img {
+  border: 1px solid #fff;
   display: block;
   float: right;
+  margin-right: -2px;
+  margin-top: -1px;
   width: 32px;
   height: 32px;
 }
 
 ul.messages li:hover div.left span.nickhint {
-  display: block;
+  opacity: 1;
 }
 
 div.left span.nickhint {
   position: absolute;
-  right: 5px;
+  right: 3px;
+  top: 5px;
+  padding-right: 2px;
   min-width: 32px;
   background: rgba(255, 255, 255, 0.65);
   color: #000;
-  text-shadow: rgba( 255, 255, 255, 1 ) 0 1px 1px;
-  display: none;
+  text-shadow: rgba( 255, 255, 255, 1 ) 0 -1px 1px;
+  opacity: 0;
+  -webkit-transition: opacity 0.2s ease-in-out;
 }
 
 div.msg {
