@@ -44,6 +44,7 @@ tr.input textarea {
   font-size: 12px;
   overflow: hidden;
   resize: none;
+  font-family: "Lucida Grande", Helvetica, sans-serif;
 }
 
 ul#tabs {
@@ -179,7 +180,7 @@ ul.messages li.self div.msg {
 ul.messages li hr {
   position: absolute;
   bottom: 0px;
-  left: 131px;
+  left: 132px;
   right: 0px;
   border: none;
   height: 0px;
@@ -191,9 +192,9 @@ ul.messages li hr {
 ul.messages li hr.consecutive {
   position: relative;
   bottom: auto;
-  left: auto;
+  left: -5px;
   right: auto;
-  margin: 5px 0 5px -5px;
+  margin: 5px 0;
 }
 
 div.left {
@@ -204,13 +205,34 @@ div.left {
   padding: 5px;
   overflow: hidden;
   text-overflow: ellipsis;
+  position: relative;
 }
 
 div.left img {
+  border: 1px solid #fff;
   display: block;
   float: right;
+  margin-right: -2px;
+  margin-top: -1px;
   width: 32px;
   height: 32px;
+}
+
+ul.messages li:hover div.left span.nickhint {
+  opacity: 1;
+}
+
+div.left span.nickhint {
+  position: absolute;
+  right: 4px;
+  top: 5px;
+  padding: 0 2px;
+  min-width: 28px;
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  text-shadow: rgba( 0, 0, 0, 0.3 ) 0 1px 1px;
+  opacity: 0;
+  -webkit-transition: opacity 0.2s ease-in-out;
 }
 
 div.msg {

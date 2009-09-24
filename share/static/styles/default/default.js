@@ -1,5 +1,20 @@
+var options = {
+  images: true
+};
+
+var js = /default\.js\?(.*)?$/;
+$$('head script[src]').findAll(function(s) {
+    return s.src.match(js);
+}).each(function(s) {
+  var params = s.src.match(js)[1];
+  params.split("&").each(function(o) {
+    var kv = o.split("=");
+    options[kv[0]] = kv[1];
+  });
+}); 
+
 alice.addFilters([
-  function (content) {
+  function(content) {
     var filtered = content;
     filtered = filtered.replace(
       /(<a href=\"(:?.*?\.(:?wav|mp3|ogg|aiff))")/gi,
@@ -7,14 +22,19 @@ alice.addFilters([
       "onclick=\"playAudio(this)\" class=\"audio\"/>$1");
     return filtered;
   },
-  function (content) {
-    var filtered = content;
-    filtered = filtered.replace(
-      /(<a[^>]*>)([^<]*\.(:?jpe?g|gif|png|bmp|svg)(:?\?v=0)?)</gi,
-      "$1<img src=\"$2\" onload=\"loadInlineImage(this)\" " +
-      "height=\"14\" alt=\"Loading Image...\" title=\"$2\" /><");
-    return filtered;
-  }
+  function() {
+    if (options.images != 0) {
+      return function (content) {
+        var filtered = content;
+        filtered = filtered.replace(
+          /(<a[^>]*>)([^<]*\.(:?jpe?g|gif|png|bmp|svg)(:?\?v=0)?)</gi,
+          "$1<img src=\"$2\" onload=\"loadInlineImage(this)\" " +
+            "height=\"14\" alt=\"Loading Image...\" title=\"$2\" /><");
+        return filtered;
+      };
+    }
+    return function(a) {return a};
+  }()
 ]);
 
 function loadInlineImage(image) {

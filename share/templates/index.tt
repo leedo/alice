@@ -3,7 +3,7 @@
   <head>
     <title>[% windows.0.window.title %]</title>
     <script type="text/javascript" src="/static/site.js"></script>
-    <script type="text/javascript" src="/static/styles/[% style %]/default.js"></script>
+    <script type="text/javascript" src="/static/styles/[% style %]/default.js?images=[% images || 1 %]"></script>
     <link type="text/css" rel="stylesheet" href="/static/site.css" />
     <link type="text/css" rel="stylesheet" href="/static/config.css" />
     <link type="text/css" rel="stylesheet" href="/static/styles/[% style %]/default.css" />
