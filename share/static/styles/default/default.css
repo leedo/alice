@@ -205,6 +205,7 @@ div.left {
   padding: 5px;
   overflow: hidden;
   text-overflow: ellipsis;
+  position: relative;
 }
 
 div.left img {
@@ -212,6 +213,19 @@ div.left img {
   float: right;
   width: 32px;
   height: 32px;
+}
+
+ul.messages li:hover div.left span.nickhint {
+  display: block;
+}
+
+div.left span.nickhint {
+  position: absolute;
+  right: 5px;
+  min-width: 32px;
+  background: rgba(255, 255, 255, 0.65);
+  color: #000;
+  display: none;
 }
 
 div.msg {
