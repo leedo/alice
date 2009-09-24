@@ -110,7 +110,7 @@ class App::Alice::Window {
   
   method nick_info (Str $nick) {
     my $info = $self->get_nick_info($nick);
-    if (!$info) {
+    if (!$info or !$info->{Real}) {
       $info = $self->connection->nick_info($nick);
       $self->set_nick_info($nick, $info);
     }
