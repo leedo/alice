@@ -198,6 +198,11 @@ div.left {
   text-overflow: ellipsis;
 }
 
+div.left img {
+  display: block;
+  float: right;
+}
+
 div.msg {
   min-height: 1.2em;
   margin-left: 132px;
