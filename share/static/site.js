@@ -7145,7 +7145,7 @@ var Alice = { };
 Object.extend(Alice, {
   makeLinksClickable: function(content) {
     return content.replace(
-      /(https?\:\/\/[\w\d$\-_.+!*'(),%\/?=&;~#:@]*)/gi,
+      /(https?\:\/\/[^<"\s]*[^<"\s.,)\]])/gi,
       "<a href=\"$1\">$1</a>"
     );
   },
