@@ -7554,7 +7554,7 @@ Alice.Window = Class.create({
         span.style.webkitTransition = "opacity 0.1s ease-in-out";
         span.style.opacity = 1;
         setTimeout(function(){
-          span.style.webkitTransition = "opacity 1.5s ease-in";
+          span.style.webkitTransition = "opacity 1s ease-in";
           span.style.opacity = 0
         } , 600);
       }
