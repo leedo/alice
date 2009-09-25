@@ -7526,12 +7526,14 @@ Alice.Window = Class.create({
     this.messages = $(this.id + "_messages");
     this.submit = $(this.id + "_submit");
     this.lastNick = "";
+    this.visibleNick = "";
     this.nicks = [];
 
     this.submit.observe("click", function (e) {this.input.send(); e.stop()}.bind(this));
     this.tab.observe("mousedown", this.focus.bind(this));
     this.tabButton.observe("click", function(e) { this.close() && e.stop() }.bind(this));
     this.tabButton.observe("mousedown", function(e) { e.stop() });
+    document.observe("mouseover", this.showNick.bind(this));
   },
 
   unFocus: function() {
@@ -7540,6 +7542,22 @@ Alice.Window = Class.create({
     this.element.removeClassName('active');
     this.tab.removeClassName('active');
     if (this.tab.previous()) this.tab.previous().removeClassName("leftof_active");
+  },
+
+  showNick: function (e) {
+    var li = e.findElement("ul.messages li.message");
+    if (li) {
+      if (li == this.visibleNick) return;
+      this.visibleNick = li;
+      var span = li.down().down(2);
+      if (span) {
+        span.style.opacity = 1;
+        setTimeout(function(){span.style.opacity = 0} , 600);
+      }
+    }
+    else {
+      this.visibleNick = "";
+    }
   },
 
   focus: function(event) {

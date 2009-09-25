@@ -218,10 +218,6 @@ div.left img {
   height: 32px;
 }
 
-ul.messages li:hover div.left span.nickhint {
-  opacity: 1;
-}
-
 div.left span.nickhint {
   position: absolute;
   right: 4px;
@@ -232,7 +228,7 @@ div.left span.nickhint {
   color: #fff;
   text-shadow: rgba( 0, 0, 0, 0.3 ) 0 1px 1px;
   opacity: 0;
-  -webkit-transition: opacity 0.2s ease-in-out;
+  -webkit-transition: opacity 0.3s ease-in-out;
 }
 
 div.msg {
