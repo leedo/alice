@@ -55,21 +55,7 @@ else {
 print STDERR "You can view your IRC session at: http://localhost:"
             . $config->{port}."/view\n";
 
-my $alice = App::Alice->new(
+App::Alice->new(
   config   => $config,
   assetdir => $assetdir
-);
-
-$SIG{INT} = sub {
-  my @connections = grep {$_->connected} $alice->connections;
-  if (! @connections) {
-    print STDERR "Bye!\n";
-    exit(0);
-  }
-  print STDERR "closing connections, ^C again to quit\n";
-  for ($alice->connections) {
-    $_->call(shutdown => "alice.");
-  }
-};
-
-$alice->run;
+)->run;

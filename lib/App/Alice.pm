@@ -6,11 +6,11 @@ class App::Alice {
   use App::Alice::InfoWindow;
   use App::Alice::HTTPD;
   use App::Alice::IRC;
+  use App::Alice::Signal;
   use MooseX::AttributeHelpers;
   use Digest::CRC qw/crc16/;
   use Encode;
   use YAML qw/DumpFile/;
-  use POE;
 
   our $VERSION = '0.01';
 
@@ -108,6 +108,11 @@ class App::Alice {
       return $info;
     }
   );
+  
+  sub BUILD {
+    my $self = shift;
+    $SIG{INT} = sub {App::Alice::Signal->new(app => $self, type => "INT")};
+  }
   
   method dispatch (Str $command, App::Alice::Window $window) {
     $self->dispatcher->handle($command, $window);

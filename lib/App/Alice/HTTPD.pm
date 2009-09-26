@@ -95,7 +95,8 @@ class App::Alice::HTTPD {
   }
 
   event ping => sub {
-    POE::Kernel->yield(send => [{
+    my $self = shift;
+    $self->yield(send => [{
       type  => "action",
       event => "ping",
     }]);
@@ -189,7 +190,7 @@ class App::Alice::HTTPD {
       my $diff = time - $res->{last_send};
       if ($diff < 0.1 and !$res->{resend_id}) {
         $res->{delayed} = 1;
-        POE::Kernel->call($self->session, "delay_resend", $req, $res, 0.1 - $diff);
+        $self->call("delay_resend", $req, $res, 0.1 - $diff);
         return;
       }
       
