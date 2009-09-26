@@ -12,6 +12,7 @@ Alice.Keyboard = Class.create({
     this.shortcut("Opt+Enter");
     this.shortcut("Cmd+Shift+M");
     this.shortcut("Cmd+Shift+J");
+    this.shortcut("Cmd+Shift+K");
     this.shortcut("Enter");
     this.shortcut("Esc");
     this.shortcut("Tab");
@@ -46,8 +47,11 @@ Alice.Keyboard = Class.create({
   },
   
   onCmdShiftJ: function() {
-    console.log(this.activeWindow);
     this.activeWindow.scrollToBottom(1);
+  },
+  
+  onCmdShiftK: function() {
+    this.activeWindow.toggleNicks();
   },
   
   onCmdB: function() {

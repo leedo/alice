@@ -15,6 +15,7 @@ Alice.Window = Class.create({
     this.messages = $(this.id + "_messages");
     this.submit = $(this.id + "_submit");
     this.lastNick = "";
+    this.nicksVisible = false;
     this.visibleNick = "";
     this.visibleNickTimeout = "";
     this.nicks = [];
@@ -58,6 +59,22 @@ Alice.Window = Class.create({
     else {
       this.visibleNick = "";
     }
+  },
+  
+  toggleNicks: function () {
+    if (this.nicksVisible) {
+      this.messages.select("span.nickhint").each(function(span){
+        span.style.webkitTransition = "opacity 0.1s ease-in";
+        span.style.opacity = 0;
+      });
+    }
+    else {
+      this.messages.select("span.nickhint").each(function(span){
+        span.style.webkitTransition = "opacity 0.1s ease-in-out";
+        span.style.opacity = 1;
+      })
+    }
+    this.nicksVisible = !this.nicksVisible;
   },
 
   focus: function(event) {

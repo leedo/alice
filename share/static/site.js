@@ -7526,6 +7526,7 @@ Alice.Window = Class.create({
     this.messages = $(this.id + "_messages");
     this.submit = $(this.id + "_submit");
     this.lastNick = "";
+    this.nicksVisible = false;
     this.visibleNick = "";
     this.visibleNickTimeout = "";
     this.nicks = [];
@@ -7569,6 +7570,22 @@ Alice.Window = Class.create({
     else {
       this.visibleNick = "";
     }
+  },
+
+  toggleNicks: function () {
+    if (this.nicksVisible) {
+      this.messages.select("span.nickhint").each(function(span){
+        span.style.webkitTransition = "opacity 0.1s ease-in";
+        span.style.opacity = 0;
+      });
+    }
+    else {
+      this.messages.select("span.nickhint").each(function(span){
+        span.style.webkitTransition = "opacity 0.1s ease-in-out";
+        span.style.opacity = 1;
+      })
+    }
+    this.nicksVisible = !this.nicksVisible;
   },
 
   focus: function(event) {
@@ -7820,6 +7837,7 @@ Alice.Keyboard = Class.create({
     this.shortcut("Opt+Enter");
     this.shortcut("Cmd+Shift+M");
     this.shortcut("Cmd+Shift+J");
+    this.shortcut("Cmd+Shift+K");
     this.shortcut("Enter");
     this.shortcut("Esc");
     this.shortcut("Tab");
@@ -7854,8 +7872,11 @@ Alice.Keyboard = Class.create({
   },
 
   onCmdShiftJ: function() {
-    console.log(this.activeWindow);
     this.activeWindow.scrollToBottom(1);
+  },
+
+  onCmdShiftK: function() {
+    this.activeWindow.toggleNicks();
   },
 
   onCmdB: function() {
