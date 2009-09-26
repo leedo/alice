@@ -1,5 +1,5 @@
 var options = {
-  images: true
+  images: 'show'
 };
 
 var js = /default\.js\?(.*)?$/;
@@ -13,6 +13,8 @@ $$('head script[src]').findAll(function(s) {
   });
 }); 
 
+alice.options = options;
+
 alice.addFilters([
   function(content) {
     var filtered = content;
@@ -22,19 +24,16 @@ alice.addFilters([
       "onclick=\"playAudio(this)\" class=\"audio\"/>$1");
     return filtered;
   },
-  function() {
-    if (options.images != 0) {
-      return function (content) {
-        var filtered = content;
-        filtered = filtered.replace(
-          /(<a[^>]*>)([^<]*\.(:?jpe?g|gif|png|bmp|svg)(:?\?v=0)?)</gi,
-          "$1<img src=\"$2\" onload=\"loadInlineImage(this)\" " +
-            "height=\"14\" alt=\"Loading Image...\" title=\"$2\" /><");
-        return filtered;
-      };
+  function (content) {
+    var filtered = content;
+    if (alice.options.images == "show") {
+      filtered = filtered.replace(
+        /(<a[^>]*>)([^<]*\.(:?jpe?g|gif|png|bmp|svg)(:?\?v=0)?)</gi,
+        "$1<img src=\"$2\" onload=\"loadInlineImage(this)\" " +
+        "height=\"14\" alt=\"Loading Image...\" title=\"$2\" /><");
     }
-    return function(a) {return a};
-  }()
+    return filtered;
+  }
 ]);
 
 function loadInlineImage(image) {

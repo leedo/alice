@@ -16,7 +16,7 @@ body {
 }
 
 ul#tabs {
-  z-index: 900;
+  z-index: 20
 }
 
 ul#tabs li:hover {
@@ -24,7 +24,7 @@ ul#tabs li:hover {
 }
 
 ul#controls {
-  z-index: 904;
+  z-index: 30;
 }
 
 ul#controls li.disabled {

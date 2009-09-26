@@ -41,7 +41,7 @@ my $config = {
   port  => 8080,
   debug => 0,
   style => 'default',
-  images => 1,
+  images => 'show',
 };
 
 if (-e $ENV{HOME}.'/.alice.yaml') {
