@@ -39,27 +39,20 @@ Alice.Window = Class.create({
     if (li) {
       if (li == this.visibleNick) return;
 
-      // remove any timeouts on the old nick and hide it
-      if (this.visibleNick) {
-        var span = this.visibleNick.down().down(2);
-        if (this.visibleNick && this.visibleNick.style.opacity > 0) {
-          span.style.webkitTransition = "opacity 1s ease-in";
-          span.style.opacity = 0
-        }
-      }
+      clearTimeout(this.visibleNickTimeout);
 
       this.visibleNick = li;
       var span = li.down().down(2);
 
       if (span) {
-        this.visibleNickTimeout = setTimeout(function() {
+        this.visibleNickTimeout = setTimeout(function(span) {
           span.style.webkitTransition = "opacity 0.1s ease-in-out";
           span.style.opacity = 1;
-          this.visibleNickTimeout = setTimeout(function(){
-            span.style.webkitTransition = "opacity 1s ease-in";
+          setTimeout(function(){
+            span.style.webkitTransition = "opacity 0.25s ease-in";
             span.style.opacity = 0
-          }.bind(this) , 600);
-      }.bind(this), 500);
+          }.bind(this,span) , 1000);
+        }.bind(this,span), 500);
       }
     }
     else {
