@@ -16,6 +16,7 @@ Alice.Window = Class.create({
     this.submit = $(this.id + "_submit");
     this.lastNick = "";
     this.visibleNick = "";
+    this.visibleNickTimeout = "";
     this.nicks = [];
     
     this.submit.observe("click", function (e) {this.input.send(); e.stop()}.bind(this));
@@ -37,15 +38,28 @@ Alice.Window = Class.create({
     var li = e.findElement("ul.messages li.message");
     if (li) {
       if (li == this.visibleNick) return;
-      this.visibleNick = li;
-      var span = li.down().down(2);
-      if (span) {
-        span.style.webkitTransition = "opacity 0.1s ease-in-out";
-        span.style.opacity = 1;
-        setTimeout(function(){
+
+      // remove any timeouts on the old nick and hide it
+      if (this.visibleNick) {
+        var span = this.visibleNick.down().down(2);
+        if (this.visibleNick && this.visibleNick.style.opacity > 0) {
           span.style.webkitTransition = "opacity 1s ease-in";
           span.style.opacity = 0
-        } , 600);
+        }
+      }
+
+      this.visibleNick = li;
+      var span = li.down().down(2);
+
+      if (span) {
+        this.visibleNickTimeout = setTimeout(function() {
+          span.style.webkitTransition = "opacity 0.1s ease-in-out";
+          span.style.opacity = 1;
+          this.visibleNickTimeout = setTimeout(function(){
+            span.style.webkitTransition = "opacity 1s ease-in";
+            span.style.opacity = 0
+          }.bind(this) , 600);
+      }.bind(this), 500);
       }
     }
     else {
