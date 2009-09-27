@@ -6,6 +6,17 @@ Object.extend(Alice, {
     );
   },
   
+  uncacheGravatar: function(content) {
+    if (!this.timestamp) {
+      var date = new Date();
+      this.timestamp = date.getTime();
+    }
+    return content.replace(
+      /(src=".*?gravatar.com\/avatar\/[^?]*\?)/gi,
+      "$1time=" + this.timestamp + "&"
+    ); 
+  },
+  
   stripNick: function(html) {
     return html.replace(/<div class="left">.*<\/div>/, '');
   },

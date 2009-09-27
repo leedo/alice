@@ -4,7 +4,7 @@ Alice.Application = Class.create({
     this.window_map = new Hash();
     this.previousFocus = 0;
     this.connection = new Alice.Connection(this);
-    this.filters = [ Alice.makeLinksClickable ];
+    this.filters = [ Alice.makeLinksClickable, Alice.uncacheGravatar ];
     this.monospaceNicks = ['Shaniqua', 'root', 'p6eval'];
     this.keyboard = new Alice.Keyboard(this);
     setTimeout(this.connection.connect.bind(this.connection), 1000);
