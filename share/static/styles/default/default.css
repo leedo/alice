@@ -195,6 +195,7 @@ ul.messages li hr.consecutive {
   left: -5px;
   right: auto;
   margin: 5px 0;
+  border: none;
 }
 
 div.left {
