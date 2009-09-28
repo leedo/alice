@@ -98,21 +98,23 @@ class App::Alice::Config {
       $config = LoadFile($self->fullpath);
     }
     elsif (-e $ENV{HOME}.'/.alice.yaml') {
-      say STDERR "Found config in old location, moving it to ~/.alice/config.yaml";
+      say STDERR "Found config in old location, moving it to ".$self->fullpath;
       $config = LoadFile($ENV{HOME}.'/.alice.yaml');
       unlink $ENV{HOME}.'/.alice.yaml';
-      DumpFile($self->fullpath, $config) or die "Can not write config file: $!\n";
+      DumpFile($self->fullpath, $config)
+        or die "Can not write config file: $!\n";
     }
     else {
-      say STDERR "No config found, writing a few config to ~/.alice/config.yaml";
-      DumpFile($self->fullpath, $config) or die "Can not write config file: $!\n";
+      say STDERR "No config found, writing a few config to ".$self->fullpath;
+      DumpFile($self->fullpath, $config)
+        or die "Can not write config file: $!\n";
     }
     $self->merge($config);
   }
 
   method merge (HashRef $config) {
     for my $key (keys %$config) {
-      if (exists $config->{$key}) {
+      if (exists $config->{$key} and $self->meta->has_attribute($key)) {
         $self->$key($config->{$key});
       }
     }

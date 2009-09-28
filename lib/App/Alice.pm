@@ -1,3 +1,8 @@
+use metaclass (
+  metaclass   => 'Moose::Meta::Class',
+  error_class => 'Moose::Error::Croak',
+);
+
 use MooseX::Declare;
 
 class App::Alice {
