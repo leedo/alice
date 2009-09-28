@@ -2,60 +2,15 @@
 
 use strict;
 use warnings;
-
 use 5.010_000;
-use feature ':5.10';
 
 use FindBin;
-
-my $assetdir;
-
-# Check if we are running from the source dir
-if ($FindBin::Bin =~ /.*alice.*\/bin$/i) {
-  require lib;
-  lib->import("$FindBin::Bin/../lib");
-  $assetdir = "$FindBin::Bin/../share";
-  if (-e "$FindBin::Bin/../extlib") {
-    lib->import("$FindBin::Bin/../extlib/lib/perl5");
-    require local::lib;
-    local::lib->import("$FindBin::Bin/../extlib");
-  }
-}
-
-# or actually installed
-else {
-  require File::ShareDir;
-  File::ShareDir->import('dist_dir');
-  $assetdir = dist_dir('App-Alice');
-}
-
-require YAML;
-YAML->import(qw/DumpFile LoadFile/);
-require App::Alice;
+use lib ("$FindBin::Bin/../lib","$FindBin::Bin/../extlib");
+use local::lib "$FindBin::Bin/../extlib";
+use App::Alice;
 
 $0 = "aliced\0";
 binmode(STDERR, ":utf8");
 binmode(STDOUT, ":utf8");
-
-my $config = {
-  port  => 8080,
-  debug => 0,
-  style => 'default',
-  images => 'show',
-};
-
-if (-e $ENV{HOME}.'/.alice.yaml') {
-  eval { $config = LoadFile($ENV{HOME}.'/.alice.yaml') };
-}
-else {
-  DumpFile($ENV{HOME}.'/.alice.yaml', $config)
-    or die "Can not write config file\n";
-}
   
-print STDERR "You can view your IRC session at: http://localhost:"
-            . $config->{port}."/view\n";
-
-App::Alice->new(
-  config   => $config,
-  assetdir => $assetdir
-)->run;
+App::Alice->new->run;

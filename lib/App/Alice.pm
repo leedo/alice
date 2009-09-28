@@ -7,6 +7,7 @@ class App::Alice {
   use App::Alice::HTTPD;
   use App::Alice::IRC;
   use App::Alice::Signal;
+  use App::Alice::Config;
   use MooseX::AttributeHelpers;
   use Digest::CRC qw/crc16/;
   use Encode;
@@ -16,14 +17,8 @@ class App::Alice {
 
   has config => (
     is       => 'ro',
-    isa      => 'HashRef',
-    required => 1,
-  );
-
-  has assetdir => (
-    is        => 'ro',
-    isa       => 'Str',
-    required  => 1,
+    isa      => 'App::Alice::Config',
+    default  => sub {App::Alice::Config->new},
   );
 
   has ircs => (
@@ -88,7 +83,7 @@ class App::Alice {
     default => sub {
       my $self = shift;
       Template->new(
-        INCLUDE_PATH => $self->assetdir . '/templates',
+        INCLUDE_PATH => $self->config->assetdir . '/templates',
         ENCODING     => 'UTF8'
       );
     },
@@ -101,7 +96,7 @@ class App::Alice {
     default => sub {
       my $self = shift;
       my $info = App::Alice::InfoWindow->new(
-        assetdir => $self->assetdir,
+        assetdir => $self->config->assetdir,
         tt       => $self->tt,
       );
       $self->add_window($info->title, $info);
@@ -118,17 +113,13 @@ class App::Alice {
     $self->dispatcher->handle($command, $window);
   }
   
-  method write_config {
-    DumpFile($ENV{HOME}.'/.alice.yaml', $self->config);
-  }
-  
   method merge_config (HashRef $new_config) {
     for my $newserver (values %$new_config) {
-      if (! exists $self->config->{servers}{$newserver->{name}}) {
+      if (! exists $self->config->servers->{$newserver->{name}}) {
         $self->add_irc_server($newserver->{name}, $newserver);
       }
       for my $key (keys %$newserver) {
-        $self->config->{servers}{$newserver->{name}}{$key} = $newserver->{$key};
+        $self->config->servers->{$newserver->{name}}{$key} = $newserver->{$key};
       }
     }
   }
@@ -138,12 +129,12 @@ class App::Alice {
     for my $count (0 .. scalar @$window_ids - 1) {
       if (my $window = $self->get_window($window_ids->[$count])) {
         next unless $window->is_channel
-             and $self->config->{servers}{$window->connection->session_alias};
+             and $self->config->servers->{$window->connection->session_alias};
         push @$order, $window->title;
       }
     }
-    $self->config->{order} = $order;
-    $self->write_config;
+    $self->config->order($order);
+    $self->config->write;
   }
   
   method nick_windows (Str $nick) {
@@ -170,7 +161,7 @@ class App::Alice {
     my $window = App::Alice::Window->new(
       title      => $title,
       connection => $connection,
-      assetdir   => $self->assetdir,
+      assetdir   => $self->config->assetdir,
       tt         => $self->tt,
     );  
     $self->add_window($id, $window);
@@ -197,8 +188,12 @@ class App::Alice {
     $self->tt;
     $self->httpd;
     
-    $self->add_irc_server($_, $self->config->{servers}{$_})
-      for keys %{$self->config->{servers}};
+    say STDERR "You can view your IRC session at: http://localhost:"
+                 . $self->config->port."/view";
+
+    $self->add_irc_server($_, $self->config->servers->{$_})
+      for keys %{$self->config->servers};
+
     POE::Kernel->run;
   }
   
@@ -239,6 +234,6 @@ class App::Alice {
 
   sub log_debug {
     my $self = shift;
-    say STDERR join " ", @_ if $self->config->{debug};
+    say STDERR join " ", @_ if $self->config->debug;
   }
 }

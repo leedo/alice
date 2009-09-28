@@ -19,13 +19,6 @@ class App::Alice::HTTPD {
     required => 1,
   );
 
-  has 'config' => (
-    is      => 'ro',
-    isa     => 'HashRef',
-    lazy    => 1,
-    default => sub {shift->app->config},
-  );
-
   has 'streams' => (
     is  => 'rw',
     isa => 'ArrayRef[POE::Component::Server::HTTP::Response]',
@@ -45,13 +38,6 @@ class App::Alice::HTTPD {
     lazy => 1,
   );
   
-  has 'assetdir' => (
-    is => 'ro',
-    isa => 'Str',
-    lazy => 1,
-    default => sub { shift->app->assetdir }
-  );
-  
   has 'tt' => (
     is => 'ro',
     isa => 'Template',
@@ -67,8 +53,8 @@ class App::Alice::HTTPD {
   sub BUILD {
     my $self = shift;
     POE::Component::Server::HTTP->new(
-      Port            => $self->config->{port},
-      Address         => $self->config->{address},
+      Port            => $self->config->port,
+      Address         => $self->config->address,
       PreHandler      => {
         '/'             => sub{$self->check_authentication(@_)},
       },
@@ -92,6 +78,10 @@ class App::Alice::HTTPD {
     my ($self, $session) = @_;
     $self->session($session->ID);
     POE::Kernel->delay(ping => 15);
+  }
+
+  method config {
+    return $self->app->config;
   }
 
   event ping => sub {
@@ -131,17 +121,17 @@ class App::Alice::HTTPD {
   };
 
   method check_authentication ($req, $res) {
-    return RC_OK unless ($self->config->{auth}
-        and ref $self->config->{auth} eq 'HASH'
-        and $self->config->{auth}{username}
-        and $self->config->{auth}{password});
+    return RC_OK unless ($self->config->auth
+        and ref $self->config->auth eq 'HASH'
+        and $self->config->auth->{username}
+        and $self->config->auth->{password});
 
     if (my $auth  = $req->header('authorization')) {
       $auth =~ s/^Basic //;
       $auth = decode_base64($auth);
       my ($user,$password)  = split(/:/, $auth);
-      if ($self->config->{auth}{username} eq $user &&
-          $self->config->{auth}{password} eq $password) {
+      if ($self->config->auth->{username} eq $user &&
+          $self->config->auth->{password} eq $password) {
         return RC_OK;
       }
       else {
@@ -243,8 +233,8 @@ class App::Alice::HTTPD {
   method handle_static ($req, $res) {
     my $file = $req->uri->path;
     my ($ext) = ($file =~ /[^\.]\.(.+)$/);
-    if (-e $self->assetdir . "/$file") {
-      open my $fh, '<', $self->assetdir . "/$file";
+    if (-e $self->config->assetdir . "/$file") {
+      open my $fh, '<', $self->config->assetdir . "/$file";
       given ($ext) {
         when (/^(?:png|gif|jpg|jpeg)$/i) {
           $res->content_type("image/$ext"); 
@@ -281,8 +271,8 @@ class App::Alice::HTTPD {
     }
     $self->tt->process('index.tt', {
       windows => $channels,
-      style   => $self->config->{style}  || "default",
-      images  => $self->config->{images},
+      style   => $self->config->style  || "default",
+      images  => $self->config->images,
     }, \$output) or die $!;
     $res->content($output);
     return RC_OK;
@@ -290,9 +280,9 @@ class App::Alice::HTTPD {
   
   method sorted_windows {
     my %order;
-    if ($self->config->{order}) {
-      %order = map {$self->config->{order}->[$_] => $_}
-               0 .. @{$self->config->{order}} - 1;
+    if ($self->config->order) {
+      %order = map {$self->config->order->[$_] => $_}
+               0 .. @{$self->config->order} - 1;
     }
     $order{info} = "##";
     sort {
@@ -310,8 +300,8 @@ class App::Alice::HTTPD {
     $res->header("Cache-control" => "no-cache");
     my $output = '';
     $self->tt->process('config.tt', {
-      style       => $self->config->{style} || "default",
-      config      => $self->config,
+      style       => $self->config->style || "default",
+      config      => $self->config->serialized,
       connections => [ sort {$a->session_alias cmp $b->session_alias}
                        $self->app->connections ],
     }, \$output);
@@ -346,8 +336,8 @@ class App::Alice::HTTPD {
         }
       }
     }
-    $self->app->merge_config($new_config);
-    $self->app->write_config();
+    $self->config->merge($new_config);
+    $self->config->write;
     return RC_OK;
   }
   
@@ -369,7 +359,7 @@ class App::Alice::HTTPD {
 
   sub log_debug {
     my $self = shift;
-    say STDERR join " ", @_ if $self->config->{debug};
+    say STDERR join " ", @_ if $self->config->debug;
   }
 
   sub log_info {
