@@ -1,8 +1,3 @@
-use metaclass (
-  metaclass   => 'Moose::Meta::Class',
-  error_class => 'Moose::Error::Croak',
-);
-
 use MooseX::Declare;
 
 class App::Alice {
@@ -13,10 +8,8 @@ class App::Alice {
   use App::Alice::IRC;
   use App::Alice::Signal;
   use App::Alice::Config;
-  use MooseX::AttributeHelpers;
   use Digest::CRC qw/crc16/;
   use Encode;
-  use YAML qw/DumpFile/;
 
   our $VERSION = '0.01';
 
@@ -56,11 +49,11 @@ class App::Alice {
         given ($^O) {
           when ('darwin') {
             require App::Alice::Notifier::Growl;
-            App::Alice::Notifier::Growl->new;
+            return App::Alice::Notifier::Growl->new;
           }
           when ('linux') {
             require App::Alice::Notifier::LibNotify;
-            App::Alice::Notifier::LibNotify->new;
+            return App::Alice::Notifier::LibNotify->new;
           }
         }
       }
@@ -68,16 +61,16 @@ class App::Alice {
   );
 
   has window_map => (
-    metaclass => 'Collection::Hash',
+    traits    => ['Hash'],
     isa       => 'HashRef[App::Alice::Window|App::Alice::InfoWindow]',
     default   => sub {{}},
-    provides  => {
-      values => 'windows',
-      set    => 'add_window',
-      exists => 'has_window',
-      get    => 'get_window',
-      delete => 'remove_window',
-      keys   => 'window_ids',
+    handles   => {
+      windows       => 'values',
+      add_window    => 'set',
+      has_window    => 'exists',
+      get_window    => 'get',
+      remove_window => 'delete',
+      window_ids    => 'keys',
     }
   );
   
@@ -111,7 +104,22 @@ class App::Alice {
   
   sub BUILD {
     my $self = shift;
+    $self->meta->error_class('Moose::Error::Croak');
     $SIG{INT} = sub {App::Alice::Signal->new(app => $self, type => "INT")};
+  }
+  
+  method run {
+    # initialize tt and httpd because they are lazy
+    $self->tt;
+    $self->httpd;
+    
+    say STDERR "You can view your IRC session at: http://localhost:"
+                 . $self->config->port."/view";
+
+    $self->add_irc_server($_, $self->config->servers->{$_})
+      for keys %{$self->config->servers};
+
+    POE::Kernel->run;
   }
   
   method dispatch (Str $command, App::Alice::Window $window) {
@@ -187,20 +195,6 @@ class App::Alice {
       config => $config
     );
   }
-
-  method run {
-    # initialize tt and httpd because they are lazy
-    $self->tt;
-    $self->httpd;
-    
-    say STDERR "You can view your IRC session at: http://localhost:"
-                 . $self->config->port."/view";
-
-    $self->add_irc_server($_, $self->config->servers->{$_})
-      for keys %{$self->config->servers};
-
-    POE::Kernel->run;
-  }
   
   method log_info (Str $session, Str $body, Bool :$highlight = 0) {
     say STDERR "$session: $body";
@@ -229,7 +223,6 @@ class App::Alice {
       body      => $body,
       msgid     => App::Alice::Window->next_msgid,
     };
-
     my $html = '';
     $self->tt->process("event.tt", $message, \$html);
     $message->{full_html} = $html;

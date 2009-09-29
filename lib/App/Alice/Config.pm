@@ -3,14 +3,17 @@ use MooseX::Declare;
 class App::Alice::Config {
   use FindBin;
   use YAML qw/LoadFile DumpFile/;
-  use File::ShareDir;
+  use File::ShareDir qw/dist_dir/;
   
   has assetdir => (
     is      => 'ro',
     isa     => 'Str',
     default => sub {
-      if ($FindBin::Bin =~ /.*alice.*\/bin$/i) {
+      if (-e "$FindBin::Bin/../share/templates") {
         return "$FindBin::Bin/../share";
+      }
+      elsif ($FindBin::Script eq "script") {
+        return "$FindBin::Bin/share";
       }
       else {
         return dist_dir('App-Alice');
@@ -87,6 +90,7 @@ class App::Alice::Config {
 
   sub BUILD {
     my $self = shift;
+    $self->meta->error_class('Moose::Error::Croak');
     $self->load;
   }
 
@@ -116,6 +120,9 @@ class App::Alice::Config {
     for my $key (keys %$config) {
       if (exists $config->{$key} and $self->meta->has_attribute($key)) {
         $self->$key($config->{$key});
+      }
+      else {
+        say STDERR "$key is not a valid config option";
       }
     }
   }

@@ -17,6 +17,7 @@ class App::Alice::Signal {
   
   sub START {
     my $self = shift;
+    $self->meta->error_class('Moose::Error::Croak');
     $self->call("sig" . lc $self->type);
   }
   

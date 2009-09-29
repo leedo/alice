@@ -6,16 +6,15 @@ class App::Alice::Window {
   use Digest::CRC qw/crc16/;
   use Digest::MD5 qw/md5_hex/;
   use MooseX::ClassAttribute;
-  use MooseX::AttributeHelpers;
   use IRC::Formatting::HTML;
   
   class_has msgid => (
-    metaclass => 'Counter',
+    traits    => ['Counter'],
     is        => 'rw',
     isa       => 'Int',
-    default   => sub {1},
-    provides  => {
-      inc => 'next_msgid',
+    default   => 1,
+    handles   => {
+      next_msgid => 'inc',
     }
   );
   
@@ -78,16 +77,17 @@ class App::Alice::Window {
   );
   
   has nicks => (
-    metaclass => 'Collection::Hash',
+    traits    => ['Hash'],
+    is        => 'rw',
     isa       => 'HashRef[HashRef|Undef]',
     default   => sub {{}},
-    provides  => {
-      delete   => 'remove_nick',
-      exists   => 'includes_nick',
-      get      => 'get_nick_info',
-      keys     => 'all_nicks',
-      kv       => 'all_nick_info',
-      set      => 'set_nick_info',
+    handles   => {
+      remove_nick   => 'delete',
+      includes_nick => 'exists',
+      get_nick_info => 'get',
+      all_nicks     => 'keys',
+      all_nick_info => 'kv',
+      set_nick_info => 'set',
     }
   );
   
@@ -96,6 +96,10 @@ class App::Alice::Window {
     isa      => 'Template',
     required => 1,
   );
+  
+  sub BUILD {
+    shift->meta->error_class('Moose::Error::Croak');
+  }
   
   method rename_nick (Str $nick, Str $new_nick) {
     return unless $self->includes_nick($nick);

@@ -6,6 +6,7 @@ perl_version '5.010';
 all_from     'lib/App/Alice.pm';
 
 requires    'YAML'                         => '0.66';
+requires    'Moose'                        => '0.90';
 requires    'MooseX::Declare'              => '0.22';
 requires    'MooseX::ClassAttribute'       => '0.09';
 requires    'POE::Component::IRC'          => '5.88';
@@ -27,5 +28,4 @@ install_share  'share';
 install_script 'bin/alice';
 no_index    'directory' => 'share/sprockets';
 
-auto_install;
 WriteAll;

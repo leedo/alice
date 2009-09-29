@@ -48,19 +48,20 @@ class App::Alice::IRC {
 
   sub START {
     my $self = shift;
+    $self->meta->error_class('Moose::Error::Croak');
     if ($self->config->{ssl}) {
       eval { require POE::Component::SSLify };
       die "Missing module POE::Component::SSLify" if ($@);
     }
     my $irc = POE::Component::IRC::State->spawn(
-      alias    => $self->alias,
-      nick     => $self->config->{nick},
-      ircname  => $self->config->{ircname},
-      server   => $self->config->{host},
-      port     => $self->config->{port},
-      password => $self->config->{password},
-      username => $self->config->{username},
-      UseSSL   => $self->config->{ssl},
+      alias      => $self->alias,
+      nick       => $self->config->{nick},
+      ircname    => $self->config->{ircname},
+      server     => $self->config->{host},
+      port       => $self->config->{port},
+      password   => $self->config->{password},
+      username   => $self->config->{username},
+      UseSSL     => $self->config->{ssl},
       msg_length => 1024,
     );
     $self->connection($irc);

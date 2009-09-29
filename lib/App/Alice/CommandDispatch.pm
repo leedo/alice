@@ -1,7 +1,6 @@
 use MooseX::Declare;
 
 class App::Alice::CommandDispatch {
-  
   use Encode;
   
   has 'handlers' => (
@@ -33,6 +32,10 @@ class App::Alice::CommandDispatch {
     isa      => 'App::Alice',
     required => 1,
   );
+  
+  sub BUILD {
+    shift->meta->error_class('Moose::Error::Croak');
+  }
 
   method handle (Str $command, App::Alice::Window $window) {
     for my $handler (@{$self->handlers}) {

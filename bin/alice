@@ -5,9 +5,24 @@ use warnings;
 use 5.010_000;
 
 use FindBin;
-use lib ("$FindBin::Bin/../lib","$FindBin::Bin/../extlib");
-use local::lib "$FindBin::Bin/../extlib";
-use App::Alice;
+require lib;
+
+if (-e "$FindBin::Bin/../lib/App/Alice") {
+  lib->import("$FindBin::Bin/../lib");
+  if (-e "$FindBin::Bin/../extlib/lib/perl5") {
+    lib->import("$FindBin::Bin/../extlib/lib/perl5");
+    require local::lib;
+    local::lib->import("$FindBin::Bin/../extlib");
+  }
+}
+elsif ($FindBin::Script eq "script") {
+  lib->import("$FindBin::Bin/lib");
+  lib->import("$FindBin::Bin/extlib/lib/perl5");
+  require local::lib;
+  local::lib->import("$FindBin::Bin/extlib");
+}
+
+require App::Alice;
 
 $0 = "aliced\0";
 binmode(STDERR, ":utf8");

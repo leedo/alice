@@ -45,6 +45,13 @@ class App::Alice::HTTPD {
     default => sub { shift->app->tt }
   );
   
+  has 'config' => (
+    is => 'ro',
+    isa => 'App::Alice::Config',
+    lazy => 1,
+    default => sub {shift->app->config},
+  );
+  
   has 'session' => (
     is => 'rw',
     isa => 'Int'
@@ -52,6 +59,7 @@ class App::Alice::HTTPD {
 
   sub BUILD {
     my $self = shift;
+    $self->meta->error_class('Moose::Error::Croak');
     POE::Component::Server::HTTP->new(
       Port            => $self->config->port,
       Address         => $self->config->address,
@@ -78,10 +86,6 @@ class App::Alice::HTTPD {
     my ($self, $session) = @_;
     $self->session($session->ID);
     POE::Kernel->delay(ping => 15);
-  }
-
-  method config {
-    return $self->app->config;
   }
 
   event ping => sub {

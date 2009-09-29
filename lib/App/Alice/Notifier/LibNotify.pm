@@ -3,7 +3,7 @@ use MooseX::Declare;
 class App::Alice::Notifier::LibNotify {
   use Desktop::Notify;
 
-  has 'connection' => (
+  has 'client' => (
     is      => 'ro',
     isa     => 'Desktop::Notify',
     default => sub {
@@ -12,7 +12,7 @@ class App::Alice::Notifier::LibNotify {
   );
 
   method display (HashRef $message) {
-    my $notification = $self->connection->create(
+    my $notification = $self->client->create(
       summary => $message->{nick} . " in " . $message->{window}->{title},
       body    => $message->{body},
       timeout => 3000);
