@@ -118,8 +118,8 @@ class App::Alice::Config {
 
   method merge (HashRef $config) {
     for my $key (keys %$config) {
-      if (exists $config->{$key} and $self->meta->has_attribute($key)) {
-        $self->$key($config->{$key});
+      if (exists $config->{$key} and my $attr = $self->meta->get_attribute($key)) {
+        $self->$key($config->{$key}) if $attr->has_write_method;
       }
       else {
         say STDERR "$key is not a valid config option";
@@ -134,6 +134,12 @@ class App::Alice::Config {
   }
 
   method serialized {
-    { map {$_ => $self->$_} $self->meta->get_attribute_list };
+    {
+      map  {
+        my $name = $_->name;
+        $name => $self->$name;
+      } grep {$_->has_write_method}
+      $self->meta->get_all_attributes
+    };
   }
 }
