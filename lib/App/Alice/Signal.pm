@@ -24,7 +24,7 @@ class App::Alice::Signal {
   event sigint => sub {
     my $self = shift;
     say STDERR "Closing connections, please wait.";
-    $_->call(shutdown => "alice.") for $self->app->connections;
+    $_->call(shutdown => $app->config->quitmsg) for $self->app->connections;
     POE::Kernel->delay(force_shutdown => 5);
   };
 

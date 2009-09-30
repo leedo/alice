@@ -26,6 +26,12 @@ class App::Alice::Config {
     isa     => 'Str',
     default => "show",
   );
+  
+  has quitmsg => (
+    is      => 'rw',
+    isa     => 'Str',
+    default => 'alice.',
+  );
 
   has debug => (
     is      => 'rw',

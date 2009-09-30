@@ -21,7 +21,7 @@ has 'root' => (
 );
 
 has 'load_path' => (
-  traits  => ['Hash'],
+  traits  => ['List'],
   is      => 'rw',
   isa     => 'ArrayRef[Str]',
   default => sub {[]},
@@ -53,7 +53,7 @@ sub options {
 
 sub concatenation {
   my ($self, @files) = @_;
-  my $err = 1;
+  my $err = 1; # $err needs to be true for open3 to use it
   my $pid = open3(my $in, my $out, $err, $self->bin, $self->options, @files);
   waitpid $pid, 0;
   my $stdout = join "", <$out>;
