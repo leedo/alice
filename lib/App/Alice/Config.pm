@@ -141,7 +141,7 @@ class App::Alice::Config {
 
   method serialized {
     return {
-      map  {
+      map {
         my $name = $_->name;
         $name => $self->$name;
       } grep {$_->has_write_method}
