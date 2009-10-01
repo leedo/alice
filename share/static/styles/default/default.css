@@ -227,7 +227,7 @@ div.left span.nickhint {
   min-width: 28px;
   background: rgba(0, 0, 0, 0.5);
   color: #fff;
-  text-shadow: rgba( 0, 0, 0, 0.3 ) 0 1px 1px;
+  text-shadow: rgba( 0, 0, 0, 1 ) 0 1px 1px;
   opacity: 0;
   -webkit-transition: opacity 0.5s ease-in-out;
 }
