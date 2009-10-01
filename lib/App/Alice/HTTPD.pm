@@ -277,6 +277,7 @@ class App::Alice::HTTPD {
       windows => $channels,
       style   => $self->config->style  || "default",
       images  => $self->config->images,
+      monospace_nicks => $self->config->monospace_nicks,
     }, \$output) or die $!;
     $res->content($output);
     return RC_OK;

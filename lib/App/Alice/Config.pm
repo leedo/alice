@@ -74,6 +74,12 @@ class App::Alice::Config {
     isa     => 'ArrayRef[Str]',
     default => sub {[]},
   );
+  
+  has monospace_nicks => (
+    is      => 'rw',
+    isa     => 'ArrayRef[Str]',
+    default => sub {['Shaniqua']},
+  );
 
   has path => (
     is      => 'ro',

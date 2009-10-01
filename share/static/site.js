@@ -7580,6 +7580,7 @@ Alice.Window = Class.create({
     }
     else {
       this.visibleNick = "";
+      clearTimeout(this.visibleNickTimeout);
     }
   },
 
