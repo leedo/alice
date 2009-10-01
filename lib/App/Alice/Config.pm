@@ -140,7 +140,7 @@ class App::Alice::Config {
   }
 
   method serialized {
-    {
+    return {
       map  {
         my $name = $_->name;
         $name => $self->$name;

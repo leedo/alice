@@ -21,12 +21,14 @@ class App::Alice::Signal {
     $self->call("sig" . lc $self->type);
   }
   
-  event sigint => sub {
-    my $self = shift;
+  event sigint  => sub {$_[0]->shutdown};
+  event sigquit => sub {$_[0]->shutdown};
+  
+  method shutdown {
     say STDERR "Closing connections, please wait.";
-    $_->call(shutdown => $app->config->quitmsg) for $self->app->connections;
-    POE::Kernel->delay(force_shutdown => 5);
-  };
+    $_->call(shutdown => $self->app->config->quitmsg) for $self->app->connections;
+    POE::Kernel->delay(force_shutdown => 3);
+  }
 
   event force_shutdown => sub {
     exit(0);

@@ -106,6 +106,7 @@ class App::Alice {
     my $self = shift;
     $self->meta->error_class('Moose::Error::Croak');
     $SIG{INT} = sub {App::Alice::Signal->new(app => $self, type => "INT")};
+    $SIG{QUIT} = sub {App::Alice::Signal->new(app => $self, type => "QUIT")};
   }
   
   method run {
