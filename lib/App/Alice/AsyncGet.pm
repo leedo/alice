@@ -68,7 +68,7 @@ sub fetch_image {
   my $res     = $ua->get($path);
 
   my %ret;
-  if ($res->is_success) {
+  if ($res->is_success and $res->decoded_content) {
     %ret = (
       code    => $res->code,
       type    => $res->header('Content-Type'),
