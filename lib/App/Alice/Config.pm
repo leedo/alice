@@ -4,6 +4,7 @@ class App::Alice::Config {
   use FindBin;
   use YAML qw/LoadFile DumpFile/;
   use File::ShareDir qw/dist_dir/;
+  use Getopt::Long;
   
   has assetdir => (
     is      => 'ro',
@@ -125,6 +126,7 @@ class App::Alice::Config {
       DumpFile($self->fullpath, $config)
         or die "Can not write config file: $!\n";
     }
+    GetOptions("port=i" => \($config->{port}), "debug" => \($config->{debug}));
     $self->merge($config);
   }
 
