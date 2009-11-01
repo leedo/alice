@@ -1,5 +1,6 @@
 var options = {
-  images: 'show'
+  images: 'show',
+  avatars: 'show'
 };
 
 var js = /default\.js\?(.*)?$/;
@@ -11,7 +12,7 @@ $$('head script[src]').findAll(function(s) {
     var kv = o.split("=");
     options[kv[0]] = kv[1];
   });
-}); 
+});
 
 alice.options = options;
 
