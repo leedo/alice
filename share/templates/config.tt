@@ -70,7 +70,7 @@
 		    [% FOR connection IN connections %]
 		      [% sessionid = connection.session_id %]
 		    <li class="[% connection.connected ? "connected" : "disconnected" %][% IF loop.first %] active[% END %]"
-		        onclick="_.showConnection([% sessionid %])" id="menu_[% sessionid %]">
+		        onclick="_.showConnection('[% sessionid %]')" id="menu_[% sessionid %]">
 		      [% connection.alias %]
 		    </li>
 		    [% END %]
@@ -133,8 +133,8 @@
 		        [% END %]
 		      </select>
 		      <div class="controls">
-		        <a href="#" onclick="return _.addChannel([% sessionid %])">New</a>
-		        <a href="#" onclick="return _.removeChannels([% sessionid %])">Remove</a>
+		        <a href="#" onclick="return _.addChannel('[% sessionid %]')">New</a>
+		        <a href="#" onclick="return _.removeChannels('[% sessionid %]')">Remove</a>
 		      </div>
 		    </div>
 		    <div class="field">
@@ -145,8 +145,8 @@
 		        [% END %]
 		      </select>
 		      <div class="controls">
-		        <a href="#" onclick="return _.addCommand([% sessionid %])">New</a>
-		        <a href="#" onclick="return _.removeCommands([% sessionid %])">Remove</a>
+		        <a href="#" onclick="return _.addCommand('[% sessionid %]')">New</a>
+		        <a href="#" onclick="return _.removeCommands('[% sessionid %]')">Remove</a>
 		      </div>
 		    </div>
 		  </div>  
