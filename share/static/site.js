@@ -7571,6 +7571,7 @@ Alice.Window = Class.create({
           span.style.webkitTransition = "opacity 0.1s ease-in-out";
           span.style.opacity = 1;
           setTimeout(function(){
+            if (this.nicksVisible) return;
             span.style.webkitTransition = "opacity 0.25s ease-in";
             span.style.opacity = 0
           }.bind(this,span) , 1000);
