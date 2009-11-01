@@ -82,7 +82,7 @@
   
 		  <form id="config_data" onsubmit="return alice.submitConfig(this)">
 		  [% FOR connection IN connections %]
-		    [% sessionid = connection.session_id %]
+		    [% sessionid = connection.session_alias %]
 		  <div class="setting[% IF loop.first %] active[% END %]" id="setting_[% sessionid %]">
 		      [% connection.config = config.servers.${connection.alias} %]
 		    <div class="field" style="width:138px">

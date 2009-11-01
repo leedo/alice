@@ -334,11 +334,14 @@ class App::Alice::HTTPD {
       next unless $req->uri->query_param($name);
       if ($name =~ /^(.+?)_(.+)/) {
         if ($2 eq "channels" or $2 eq "on_connect") {
-          $new_config->{$1}{$2} = [$req->uri->query_param($name)];
+          $new_config->{servers}{$1}{$2} = [$req->uri->query_param($name)];
         }
         else {
-          $new_config->{$1}{$2} = $req->uri->query_param($name);
+          $new_config->{servers}{$1}{$2} = $req->uri->query_param($name);
         }
+      }
+      else {
+        $new_config->{$name} = $req->uri->query_param($name);
       }
     }
     $self->config->merge($new_config);
