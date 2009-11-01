@@ -30,7 +30,7 @@ alice.addFilters([
       filtered = filtered.replace(
         /(<a[^>]*>)([^<]*\.(:?jpe?g|gif|png|bmp|svg)(:?\?v=0)?)</gi,
         "$1<img src=\"$2\" onload=\"loadInlineImage(this)\" " +
-        "alt=\"Loading Image...\" title=\"$2\" style=\"height:0px\"/><");
+        "alt=\"Loading Image...\" title=\"$2\" style=\"visibility:hidden\"/><");
     }
     return filtered;
   }
@@ -40,8 +40,8 @@ function loadInlineImage(image) {
   var maxWidth = arguments.callee.maxWidth || 300;
   var maxHeight = arguments.callee.maxHeight || 300;
   image.style.visibility = 'hidden';
+  console.log(image.height + " " + image.width);
   if (image.height > image.width && image.height > maxHeight) {
-    console.log(image.height);
     image.style.width = 'auto';
     image.style.height = maxHeight + 'px';
   }
