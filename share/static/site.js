@@ -7558,10 +7558,9 @@ Alice.Window = Class.create({
   },
 
   showNick: function (e) {
-    var li = e.findElement("ul.messages li.message");
+    var li = e.findElement("#" + this.id + " ul.messages li.message");
     if (li) {
-      if (li == this.visibleNick) return;
-
+      if (this.nicksVisible || li == this.visibleNick) return;
       clearTimeout(this.visibleNickTimeout);
 
       this.visibleNick = li;
@@ -7646,8 +7645,8 @@ Alice.Window = Class.create({
         }
         else {
           this.messages.insert(this.application.applyFilters(message.full_html));
-          if (this.nicksVisible) {
-            var span = this.messages.down('li:last-child span.nickhint');
+          var span = this.messages.down('li:last-child span.nickhint');
+          if (span && this.nicksVisible) {
             span.style.webkitTransition = 'none 0 linear';
             span.style.opacity = 1;
           }
