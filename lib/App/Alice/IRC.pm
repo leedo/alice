@@ -25,7 +25,10 @@ class App::Alice::IRC {
     isa      => 'HashRef',
     is       => 'ro',
     lazy     => 1,
-    default  => sub {shift->app->config},
+    default  => sub {
+      my $self = shift;
+      return $self->app->config->{$self->alias};
+    },
   );
 
   has 'app' => (
@@ -98,12 +101,7 @@ class App::Alice::IRC {
       $self->connection->yield( quote => $_ );
     }
 
-    # combine current channels with config channels,
-    # easiest way to remove dupes is as hash keys
-    my %channels = map {$_ => undef}
-      (@{$self->config->{channels}}, keys %{$self->connection->channels});
-
-    for (keys %channels) {
+    for (@{$self->config->{channels}}) {
       push @log, $self->app->log_info($self->alias, "joining $_");
       $self->connection->yield( join => $_ );
     }

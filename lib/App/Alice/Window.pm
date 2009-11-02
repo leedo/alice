@@ -13,9 +13,7 @@ class App::Alice::Window {
     is        => 'rw',
     isa       => 'Int',
     default   => 1,
-    handles   => {
-      next_msgid => 'inc',
-    }
+    handles   => {next_msgid => 'inc'}
   );
   
   has type => (
@@ -173,13 +171,16 @@ class App::Alice::Window {
     }
   }
 
+  method clear_buffer {
+    $self->msgbuffer([]);
+  }
+
   method join_action {
     my $action = {
       type      => "action",
       event     => "join",
       window    => $self->serialized,
     };
-
     my $window_html = '';
     $self->tt->process("window.tt", $action, \$window_html);
     $action->{html}{window} = $window_html;
@@ -267,6 +268,12 @@ class App::Alice::Window {
     $self->tt->process('announcement.tt', $message, \$fullhtml);
     $message->{full_html} = $fullhtml;
     return $message;
+  }
+
+  method render_nicklist {
+    my $nicks = {
+      nicks => [map {$_->{avatar}} $self->all_nicks],
+    };
   }
 
   method close_action {

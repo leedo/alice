@@ -42,14 +42,20 @@ class App::Alice::CommandDispatch {
       my $re = $handler->{re};
       if ($command =~ /$re/) {
         my @args = grep {defined $_} ($5, $4, $3, $2, $1); # up to 5 captures
-        if ($handler->{in_channel} and ! $window->is_channel) {
+        if ($handler->{in_channel} and !$window->is_channel) {
           $self->app->send([
             $window->render_announcement("$command can only be used in a channel")
           ]);
         }
         else {
           my $method = $handler->{method};
-          $self->$method($window, @args);
+          if ($self->meta->find_method_by_name($method)) {
+            $self->$method($window, @args);
+          }
+          else {
+            $self->app->send($self->app->log_info(
+              "Error handling $command: $method method not found"));
+          }
         }
         return;
       }
@@ -82,18 +88,12 @@ class App::Alice::CommandDispatch {
   }
 
   method part (App::Alice::Window $window) {
-    if ($window->is_channel) {
-      $window->part;
-    }
+    $window->part if $window->is_channel;
   }
 
   method close (App::Alice::Window $window) {
-    if ($window->is_channel) {
-      $window->part;
-    }
-    else {
-      $self->app->close_window($window);
-    }
+    $window->is_channel ?
+      $window->part : $self->app->close_window($window);
   }
   
   method nick (App::Alice::Window $window, Str $arg) {
@@ -101,13 +101,14 @@ class App::Alice::CommandDispatch {
   }
 
   method create (App::Alice::Window $window, Str $arg) {
+    return unless $window->is_channel;
     $arg = decode("utf8", $arg, Encode::FB_WARN);
     my $new_window = $self->app->find_or_create_window($arg, $window->connection);
     $self->app->send([$new_window->join_action]);
   }
 
   method clear (App::Alice::Window $window) {
-    $window->msgbuffer([]);
+    $window->clear_buffer;
     $self->app->send([$window->clear_action]);
   }
 

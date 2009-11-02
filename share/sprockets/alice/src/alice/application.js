@@ -161,7 +161,7 @@ Alice.Application = Class.create({
       win.addMessage(message);
     } else {
       this.connection.requestWindow(
-        message['window'].title, this.activeWindow().id, message
+        message['window'].title, message['window'].id, message
       );
     }
   },

@@ -114,11 +114,11 @@ class App::Alice {
     $self->tt;
     $self->httpd;
     
-    say STDERR "You can view your IRC session at: http://localhost:"
-                 . $self->config->port."/view";
-
     $self->add_irc_server($_, $self->config->servers->{$_})
       for keys %{$self->config->servers};
+
+    say STDERR "You can view your IRC session at: http://localhost:"
+                 . $self->config->port."/view";
 
     POE::Kernel->run;
   }
@@ -182,7 +182,6 @@ class App::Alice {
   }
 
   method close_window (App::Alice::Window $window) {
-    return unless $window;
     $self->send([$window->close_action]);
     $self->log_debug("sending a request to close a tab: " . $window->title)
       if $self->httpd->has_clients;
@@ -198,7 +197,6 @@ class App::Alice {
   }
   
   method log_info (Str $session, Str $body, Bool :$highlight = 0) {
-    say STDERR "$session: $body";
     $self->info_window->render_message($session, $body, highlight => $highlight);
   }
 
