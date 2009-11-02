@@ -101,7 +101,7 @@ class App::Alice::CommandDispatch {
   }
 
   method create (App::Alice::Window $window, Str $arg) {
-    return unless $window->is_channel;
+    return unless $window->connection;
     $arg = decode("utf8", $arg, Encode::FB_WARN);
     my $new_window = $self->app->find_or_create_window($arg, $window->connection);
     $self->app->send([$new_window->join_action]);
