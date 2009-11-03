@@ -21,9 +21,10 @@ Alice.Window = Class.create({
     this.nicks = [];
     
     this.submit.observe("click", function (e) {this.input.send(); e.stop()}.bind(this));
-    this.tab.observe("mousedown", this.focus.bind(this));
-    this.tabButton.observe("click", function(e) { this.close() && e.stop() }.bind(this));
-    this.tabButton.observe("mousedown", function(e) { e.stop() });
+    this.tab.observe("mousedown", function(e) {
+      if (!this.active) {this.focus(); this.active = false}}.bind(this));
+    this.tab.observe("click", function(e) {this.active = true}.bind(this));
+    this.tabButton.observe("click", function(e) {if (this.active) this.close()}.bind(this));
     document.observe("mouseover", this.showNick.bind(this));
   },
   

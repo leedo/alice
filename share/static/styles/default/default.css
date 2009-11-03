@@ -321,14 +321,7 @@ li.info_tab div.tab_button {
   background: url(image/smartTranscriptTab.png);
 }
 
-ul#tabs li div.tab_button:hover,
-ul#tabs li.unread.info_tab div.tab_button:hover,
-ul#tabs li.unread.channel_tab div.tab_button:hover,
-ul#tabs li.unread div.tab_button:hover,
-ul#tabs li.highlight.info_tab div.tab_button:hover,
-ul#tabs li.highlight.channel_tab div.tab_button:hover,
-ul#tabs li.highlight div.tab_button:hover
-{
+ul#tabs li.active div.tab_button:hover {
   background: url(image/aquaTabClose.png) no-repeat center;
 }
 
