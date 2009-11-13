@@ -114,13 +114,15 @@ class App::Alice {
     $self->tt;
     $self->httpd;
     
+    my $c = AnyEvent->condvar;
+
     $self->add_irc_server($_, $self->config->servers->{$_})
       for keys %{$self->config->servers};
 
     say STDERR "You can view your IRC session at: http://localhost:"
                  . $self->config->port."/view";
 
-    POE::Kernel->run;
+    $c->wait;
   }
   
   method dispatch (Str $command, App::Alice::Window $window) {
