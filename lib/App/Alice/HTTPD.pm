@@ -2,10 +2,9 @@ use MooseX::Declare;
 
 class App::Alice::HTTPD {
   use feature ':5.10';
-  use MooseX::POE::SweetArgs qw/event/;
-  use POE::Component::Server::HTTP;
   use App::Alice::AsyncGet;
   use App::Alice::CommandDispatch;
+  use AnyEvent::HTTPD;
   use MIME::Base64;
   use Time::HiRes qw/time/;
   use JSON;
@@ -21,7 +20,7 @@ class App::Alice::HTTPD {
 
   has 'streams' => (
     is  => 'rw',
-    isa => 'ArrayRef[POE::Component::Server::HTTP::Response]',
+    isa => 'ArrayRef[]',
     default => sub {[]},
   );
 
@@ -31,13 +30,6 @@ class App::Alice::HTTPD {
     default => '--xalicex',
   );
 
-  has 'commands' => (
-    is => 'ro',
-    isa => 'ArrayRef[Str]',
-    default => sub { [qw/join part names topic me query/] },
-    lazy => 1,
-  );
-  
   has 'tt' => (
     is => 'ro',
     isa => 'Template',
@@ -52,49 +44,30 @@ class App::Alice::HTTPD {
     default => sub {shift->app->config},
   );
   
-  has 'session' => (
-    is => 'rw',
-    isa => 'Int'
-  );
-
   sub BUILD {
     my $self = shift;
     $self->meta->error_class('Moose::Error::Croak');
-    POE::Component::Server::HTTP->new(
-      Port            => $self->config->port,
-      Address         => $self->config->address,
-      PreHandler      => {
-        '/'             => sub{$self->check_authentication(@_)},
-      },
-      ContentHandler  => {
-        '/serverconfig' => sub{$self->server_config(@_)},
-        '/config'       => sub{$self->send_config(@_)},
-        '/save'         => sub{$self->save_config(@_)},
-        '/tabs'         => sub{$self->tab_order(@_)},
-        '/view'         => sub{$self->send_index(@_)},
-        '/stream'       => sub{$self->setup_stream(@_)},
-        '/favicon.ico'  => sub{$self->not_found(@_)},
-        '/say'          => sub{$self->handle_message(@_)},
-        '/static/'      => sub{$self->handle_static(@_)},
-        '/get/'         => sub{async_fetch($_[1],$_[0]->uri); return RC_WAIT;},
-      },
-      StreamHandler    => sub{$self->handle_stream(@_)},
+    my $httpd = AnyEvent::HTTPD->new(
+      port => $self->config->port,
+    );
+    $httpd->reg_cb(
+      '/serverconfig' => sub{$self->server_config(@_)},
+      '/config'       => sub{$self->send_config(@_)},
+      '/save'         => sub{$self->save_config(@_)},
+      '/tabs'         => sub{$self->tab_order(@_)},
+      '/view'         => sub{$self->send_index(@_)},
+      '/stream'       => sub{$self->setup_stream(@_)},
+      '/favicon.ico'  => sub{$self->not_found(@_)},
+      '/say'          => sub{$self->handle_message(@_)},
+      '/static'       => sub{$self->handle_static(@_)},
     );
   }
   
-  sub START {
-    my ($self, $session) = @_;
-    $self->session($session->ID);
-    POE::Kernel->delay(ping => 15);
-  }
-
-  event ping => sub {
-    my $self = shift;
+  method ping {
     $self->yield(send => [{
       type  => "action",
       event => "ping",
     }]);
-    POE::Kernel->delay(ping => 15);
   };
   
   event send => sub {

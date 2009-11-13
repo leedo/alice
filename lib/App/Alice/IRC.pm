@@ -6,15 +6,10 @@ class App::Alice::IRC {
   use AnyEvent;
   use AnyEvent::IRC::Client;
 
-  has 'con' => (
+  has 'cl' => (
     is      => 'rw',
     isa     => 'AnyEvent::IRC::Client',
     default => sub {AnyEvent::IRC::Client->new},
-  );
-
-  has 'c' => (
-    is      => 'ro',
-    default => sub {AnyEvent->condvar},
   );
 
   has 'alias' => (
@@ -47,9 +42,21 @@ class App::Alice::IRC {
       [$self->app->log_info($self->alias, "connecting")]
     );
 
-    $self->con->enable_ssl(1) if $self->config->{ssl};
-    $self->con->reg_cb(registered => sub{$self->registered(@_)});
-    $self->con->reg_cb(connect => sub{$self->connect(@_)});
+    $self->cl->enable_ssl(1) if $self->config->{ssl};
+    $self->con->reg_cb(
+      registered     => sub{$self->registered(@_)},
+      channel_add    => sub{$self->channel_add(@_)},
+      channel_remove => sub{$self->channel_remove(@_)},
+      channel_topic  => sub{$self->channel_topic(@_)},
+      join           => sub{$self->_join(@_)},
+      part           => sub{$self->part(@_)},
+      nick_change    => sub{$self->nick_change(@_)},
+      ctcp_action    => sub{$self->ctcp_action(@_)},
+      quit           => sub{$self->quit(@_)},
+      publicmsg      => sub{$self->publicmsg(@_)},
+      privatemsg     => sub{$self->privatemsg(@_)},
+      connect        => sub{$self->_connect(@_)},
+    );
     $self->con->connect(
       $self->config->{host}, $self->config->{port},
       {
@@ -59,7 +66,6 @@ class App::Alice::IRC {
         user     => $self->config->{username},
       }
     );
-    $self->c->wait;  
   }
 
   method window (Str $title){
@@ -68,8 +74,7 @@ class App::Alice::IRC {
              $title, $self->con);
   }
 
-  method connect {
-    my ($con, $err) = @_;
+  method _connect ($con, $err) {
     if (defined $err) {
       $self->app->send([
         $self->app->log_info($self->alias, "connect error: $err")
@@ -92,47 +97,37 @@ class App::Alice::IRC {
     $self->app->send(\@log);
   };
   
-  method quit {
-    $self->con->disconnect;
-    $self->c->broadcast;
-  }
-
   method disconnected {
     $self->app->send(
       [$self->app->log_info($self->alias, "disconnected")]
     );
   };
 
-  method publicmsg {
-    my ($channel, $msg) = @_;
+  method publicmsg ($channel, $msg) {
     my $nick = ( split /!/, $who )[0];
     my $window = $self->window($where->[0]);
     $self->app->send([$window->render_message($nick, $what)]);
   };
 
-  method privatemsg {
-    my ($nick, $msg) = @_;
+  method privatemsg ($nick, $msg) {
     my $window = $self->window($nick);
     $self->app->send([$window->render_message($nick, $what)]);
   };
 
-  method ctcp_action {
-    my ($nick, $channel, $msg, $type) = @_;
+  method ctcp_action ($nick, $channel, $msg, $type) {
     my $window = $self->window($channel);
     $self->app->send([$window->render_message($nick, "• $msg")]);
   };
 
-  method nick_change {
-    my ($old_nick, $new_nick, $is_self) = @_;
+  method nick_change ($old_nick, $new_nick, $is_self) {
     $self->app->send([
       map { $_->rename_nick($nick, $new_nick);
             $_->render_event("nick", $nick, $new_nick)
-      } $self->app->nick_windows($nick)
+      } $self->app->nick_windows($nick);
     ]);
   }
 
-  method _join {
-    my ($nick, $channel, $is_self) = @_;
+  method _join ($nick, $channel, $is_self) {
     my $window = $self->window($channel);
     if (!$is_self) {
       $window->add_nick($nick);
@@ -140,14 +135,12 @@ class App::Alice::IRC {
     }
   }
 
-  method channel_add {
-    my ($msg, $channel, @nicks) = @_;
+  method channel_add ($msg, $channel, @nicks) {
     my $window = $self->window($channel);
     $window->add_nicks(@nicks);
   }
 
-  method part {
-    my ($nick, $channel, $is_self, $msg) = @_;
+  method part ($nick, $channel, $is_self, $msg) {
     my $window = $self->window($where);
     if ($is_self) {
       $self->app->close_window($window);
@@ -158,33 +151,18 @@ class App::Alice::IRC {
     ]);
   }
 
-  method channel_remove {
-    my ($msg, $channel, @nicks) = @_;
+  method channel_remove ($msg, $channel, @nicks) {
     $window->remove_nicks(@nick);
   }
 
-  method quit {
-    my ($nick, $msg) = @_
-    # FIXME
-    #my @events = map {
-    #  my $window = $self->window($_);
-    #  $window->remove_nick($nick);
-    #  $window->render_event("left", $nick, $msg);
-    #} @$channels;
-    #$self->app->send(\@events);
+  method quit ($nick, $msg) {
+    $self->app->send([
+      map {$_->render_event("left", $nick, $msg)}
+          $self->app->nick_windows($nick);
+    ]);
   };
   
-  method invited {
-    # FIXME
-    #my ($self, $who, $where) = @_;
-    #$self->app->send([
-    #  $self->app->log_info($self->alias, "$nick has invited you to join $where"),
-    #  $self->app->render_notice("invite", $nick, $where)
-    #]);
-  };
-
-  method channel_topic {
-    my ($channel, $topic, $who) = @_;
+  method channel_topic ($channel, $topic, $who) {
     my $window = $self->window($channel);
     $self->app->send([
       $window->render_event("topic", $nick, $topic),
