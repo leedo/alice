@@ -30,7 +30,7 @@ alice.addFilters([
     if (alice.options.images == "show") {
       filtered = filtered.replace(
         /(<a[^>]*>)([^<]*\.(:?jpe?g|gif|png|bmp|svg)(:?\?v=0)?)</gi,
-        "$1<img src=\"$2\" onload=\"loadInlineImage(this)\" " +
+        "$1<img src=\"/get/$2\" onload=\"loadInlineImage(this)\" " +
         "alt=\"Loading Image...\" title=\"$2\" style=\"display:none\"/><");
     }
     return filtered;

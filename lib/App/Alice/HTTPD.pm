@@ -2,6 +2,7 @@ package App::Alice::HTTPD;
 
 use AnyEvent;
 use AnyEvent::HTTPD;
+use AnyEvent::HTTP;
 use Moose;
 use App::Alice::CommandDispatch;
 use MIME::Base64;
@@ -68,6 +69,7 @@ sub BUILD {
     '/favicon.ico'  => sub{$self->not_found($_[1])},
     '/say'          => sub{$self->handle_message(@_)},
     '/static'       => sub{$self->handle_static(@_)},
+    '/get'          => sub{$self->image_proxy(@_)},
     'client_disconnected' => sub{$self->purge_disconnects(@_)},
   );
   $self->httpd($httpd);
@@ -86,6 +88,16 @@ sub ping {
       })
     }
   );
+}
+
+sub image_proxy {
+  my ($self, $httpd, $req) = @_;
+  my $url = $req->url;
+  $url =~ s/^\/get\///;
+  http_get $url, sub {
+    my ($data, $headers) = @_;
+    $req->respond([$headers->{Status},$headers->{Reason},$headers,$data]);
+  };
 }
 
 sub broadcast {
