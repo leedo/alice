@@ -173,7 +173,7 @@ sub buffered_messages {
 
 sub connections {
   my $self = shift;
-  return map {$_->connection} values %{$self->ircs};
+  return values %{$self->ircs};
 }
 
 sub find_or_create_window {

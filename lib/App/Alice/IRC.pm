@@ -54,7 +54,7 @@ sub BUILD {
   $self->meta->error_class('Moose::Error::Croak');
 
   $self->app->send(
-    [$self->app->log_info($self->alias, "connecting")]
+    [$self->log_info("connecting")]
   );
 
   $self->cl->enable_ssl(1) if $self->config->{ssl};
@@ -71,9 +71,17 @@ sub BUILD {
     publicmsg      => sub{$self->publicmsg(@_)},
     privatemsg     => sub{$self->privatemsg(@_)},
     connect        => sub{$self->connected(@_)},
-    irc_352        => sub{$self->who(@_)},
+    irc_352        => sub{$self->who(@_)}, # WHO
+    irc_372        => sub{$self->log_info(@_)}, # MOTD
+    irc_377        => sub{$self->log_info(@_)}, # MOTD
+    irc_378        => sub{$self->log_info(@_)}, # MOTD
   );
   $self->connect;
+}
+
+sub log_info {
+  my ($self, $msg) = @_;
+  $self->app->log_info($self->alias, $msg);
 }
 
 sub window {
@@ -110,7 +118,7 @@ sub connected {
   my ($self, $cl, $con, $err) = @_;
   if (defined $err) {
     $self->app->send([
-      $self->app->log_info($self->alias, "connect error: $err")
+      $self->log_info("connect error: $err")
     ]);
   }
 }
@@ -119,17 +127,17 @@ sub registered {
   my $self = shift;
   my @log;
   $self->cl->enable_ping (60, sub {
-    $self->app->log_info($self->alias, "disconnected from server, reconnecting in 10 seconds");
+    $self->log_info("disconnected from server, reconnecting in 10 seconds");
     AnyEvent->timer(after => 10, cb => sub {shift->connect});
   });
-  push @log, $self->app->log_info($self->alias, "connected");
+  push @log, $self->log_info("connected");
   for (@{$self->config->{on_connect}}) {
-    push @log, $self->app->log_info($self->alias, "sending $_");
+    push @log, $self->log_info("sending $_");
     $self->cl->send_raw($_);
   }
 
   for (@{$self->config->{channels}}) {
-    push @log, $self->app->log_info($self->alias, "joining $_");
+    push @log, $self->log_info("joining $_");
     $self->cl->send_srv("JOIN", $_);
   }
   $self->app->send(\@log);
@@ -138,7 +146,7 @@ sub registered {
 sub disconnected {
   my $self = shift;
   $self->app->send(
-    [$self->app->log_info($self->alias, "disconnected")]
+    [$self->log_info("disconnected")]
   );
 };
 
@@ -153,7 +161,7 @@ sub publicmsg {
 sub privatemsg {
   my ($self, $cl, $nick, $msg) = @_;
   my $window = $self->window($nick);
-  $self->app->send([$window->render_message($nick, $msg)]);
+  $self->app->send([$window->render_message($nick, $msg->{params}[1])]);
 };
 
 sub ctcp_action {
@@ -204,6 +212,8 @@ sub part {
 
 sub channel_remove {
   my ($self, $cl, $msg, $channel, @nicks) = @_;
+  use Data::Dumper;
+  print STDERR Dumper $msg;
   my $window = $self->window($channel);
   $self->remove_nicks(@nicks);
 }

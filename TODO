@@ -1,7 +1,5 @@
 AnyEvent issues
-- private messages
 - quit messages
 - reconnecting
 - config window
-- tab order
 - parting channel leaves window

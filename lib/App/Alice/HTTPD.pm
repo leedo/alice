@@ -164,8 +164,7 @@ sub setup_stream {
   
   $stream->{res} = $res;
   
-  $self->log_debug("opening a streaming http connection ("
-                   . $stream->{offset} . " offset)");
+  $self->log_debug("opening new stream");
 
   # populate the msg queue with any buffered messages
   if (defined (my $msgid = $req->parm('msgid'))) {
@@ -306,7 +305,7 @@ sub send_config {
   $self->tt->process('config.tt', {
     style       => $self->config->style || "default",
     config      => $self->config->serialized,
-    connections => [ sort {$a->session_alias cmp $b->session_alias}
+    connections => [ sort {$a->alias cmp $b->alias}
                      $self->app->connections ],
   }, \$output);
 }
@@ -349,8 +348,11 @@ sub save_config {
 sub tab_order  {
   my ($self, $httpd, $req) = @_;
   $self->log_debug("updating tab order");
-  $self->app->tab_order([$req->parm("tabs")]);
-  $req->respond(200,'ok');
+  my %vars = $req->vars;
+  $self->app->tab_order([
+    grep {defined $_} @{$vars{tabs}}
+  ]);
+  $req->respond([200,'ok']);
 }
 
 sub not_found  {

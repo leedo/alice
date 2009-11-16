@@ -22,6 +22,20 @@ $view->signal_connect(
     return 0;
   }
 );
+$view->signal_connect(
+  new_window_policy_decision_requested => sub {
+    my ($view, $frame, $req, $action, $policy) = @_;
+    my $window = Gtk2::Window->new;
+    $window->set_title("alice preferences");
+    $window->resize(500, 600);
+    $view = Gtk2::WebKit::WebView->new;
+    $window->add($view);
+    $view->open($req->get_uri);
+    $window->show_all;
+    $policy->ignore;
+    return 1;
+  }
+);
 $window->add($view);
 $view->open('http://127.0.0.1:8081/view');
 $window->show_all;
