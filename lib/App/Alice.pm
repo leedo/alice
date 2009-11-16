@@ -155,17 +155,12 @@ sub tab_order {
   for my $count (0 .. scalar @$window_ids - 1) {
     if (my $window = $self->get_window($window_ids->[$count])) {
       next unless $window->is_channel
-           and $self->config->servers->{$window->connection->session_alias};
+           and $self->config->servers->{$window->irc->alias};
       push @$order, $window->title;
     }
   }
   $self->config->order($order);
   $self->config->write;
-}
-
-sub nick_windows {
-  my ($self, $nick) = @_;
-  return grep {$_->includes_nick($nick)} $self->windows;
 }
 
 sub buffered_messages {
@@ -226,7 +221,7 @@ sub send {
   push @$messages, map {$self->log_info($_->{nick}, $_->{body}, highlight => 1)}
                   grep {$_->{highlight}} @$messages;
   
-  $self->httpd->send($messages, $force);
+  $self->httpd->broadcast($messages, $force);
   
   return unless $self->notifier and ! $self->httpd->has_clients;
   for my $message (@$messages) {

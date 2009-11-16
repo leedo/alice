@@ -77,10 +77,10 @@ sub BUILD {
 sub ping {
   my $self = shift;
   AnyEvent->timer(
-    timer    => 0,
+    after    => 0,
     interval => 10,
     cb       => sub {
-      $self->send({
+      $self->broadcast({
         type => "action",
         event => "ping",
       })
@@ -88,7 +88,7 @@ sub ping {
   );
 }
 
-sub send {
+sub broadcast {
   my ($self, $data, $force) = @_;
   return unless $self->has_clients;
   
@@ -102,7 +102,7 @@ sub send {
       }
     }
   }
-  $self->broadcast($_->{data_cb}) for @{$self->streams};
+  $self->send_stream($_) for @{$self->streams};
 };
 
 sub check_authentication {
@@ -127,7 +127,7 @@ sub check_authentication {
       $self->log_debug("auth failed");
     }
   }
-  $req->respond(401, 'unauthorized', {'WWW-Authenticate' => 'Basic realm="Alice"'});
+  $req->respond([401, 'unauthorized', {'WWW-Authenticate' => 'Basic realm="Alice"'}]);
 }
 
 sub setup_stream {
@@ -142,6 +142,7 @@ sub setup_stream {
     actions   => [ map {$_->nicks_action} $self->app->windows ],
     offset    => $local_time - $remote_time,
     last_send => 0,
+    delayed   => 0,
     data_cb   => sub {print STDERR "no data cb setup yet\n"},
   };
   
@@ -159,30 +160,38 @@ sub setup_stream {
     $stream->{msgs} = $self->app->buffered_messages($msgid);
   }
   push @{$self->streams}, $stream;
-  $self->broadcast($stream->{data_cb});
+  $self->send_stream($stream);
 }
 
-sub broadcast {
-  my ($self, $cb) = @_;
-  for my $stream (@{$self->streams}) {
-    if (@{$stream->{msgs}} or @{$stream->{actions}}) {
-      use bytes;
-      my $output;
-      if (! $stream->{started}) {
-        $stream->{started} = 1;
-        $output .= '--'.$self->seperator."\n";
-      }
-      $output .= to_json({msgs => $stream->{msgs}, actions => $stream->{actions},
-                          time => time - $stream->{offset}});
-      $output .= " " x (1024 - bytes::length $output) if bytes::length $output < 1024;
-      $cb->("$output\n--" . $self->seperator . "\n");
-
-      $stream->{msgs} = [];
-      $stream->{actions} = [];
-      $stream->{last_send} = time;
-      no bytes;
-    }
+sub send_stream {
+  my ($self, $stream) = @_;
+  my $diff = time - $stream->{last_send};
+  if ($diff < 0.1 and !$stream->{resend_id}) {
+    $stream->{delayed} = 1;
+    $stream->{resend_id} = AnyEvent->timer(
+      after => 0.1 - $diff,
+      cb    => sub {$self->send_stream($stream)}
+    );
+    return;
   }
+  if (@{$stream->{msgs}} or @{$stream->{actions}}) {
+    use bytes;
+    my $output;
+    if (! $stream->{started}) {
+      $stream->{started} = 1;
+      $output .= '--'.$self->seperator."\n";
+    }
+    $output .= to_json({msgs => $stream->{msgs}, actions => $stream->{actions},
+                        time => time - $stream->{offset}});
+    $output .= " " x (1024 - bytes::length $output) if bytes::length $output < 1024;
+    $stream->{data_cb}->("$output\n--" . $self->seperator . "\n");
+  
+    $stream->{msgs} = [];
+    $stream->{actions} = [];
+    $stream->{last_send} = time;
+    no bytes;
+  }
+  $stream->{resend_id} = undef;
 }
 
 sub purge_disconnects {
@@ -200,12 +209,13 @@ sub handle_message {
   my $msg  = $req->parm('msg');
   my $source = $req->parm('source');
   my $window = $self->app->get_window($source);
-  return unless $window;
-  for (split /\n/, $msg) {
-    eval {$self->app->dispatch($_, $window) if length $_};
-    if ($@) {$self->log_debug($@)}
+  if ($window) {
+    for (split /\n/, $msg) {
+      eval {$self->app->dispatch($_, $window) if length $_};
+      if ($@) {$self->log_debug($@)}
+    }
   }
-  $req->respond(200,'ok');
+  $req->respond([200,'ok',{'Content-Type' => 'text/plain'}, 'ok']);
 }
 
 sub handle_static {

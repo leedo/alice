@@ -3,6 +3,7 @@ package App::Alice::IRC;
 use Encode;
 use AnyEvent;
 use AnyEvent::IRC::Client;
+use Digest::MD5 qw/md5_hex/;
 use Moose;
 
 has 'cl' => (
@@ -33,6 +34,21 @@ has 'app' => (
   required => 1,
 );
 
+has nicks => (
+  traits    => ['Hash'],
+  is        => 'rw',
+  isa       => 'HashRef[HashRef|Undef]',
+  default   => sub {{}},
+  handles   => {
+    remove_nick   => 'delete',
+    includes_nick => 'exists',
+    get_nick_info => 'get',
+    all_nicks     => 'keys',
+    all_nick_info => 'values',
+    set_nick_info => 'set',
+  }
+);
+
 sub BUILD {
   my $self = shift;
   $self->meta->error_class('Moose::Error::Croak');
@@ -54,17 +70,10 @@ sub BUILD {
     quit           => sub{$self->quit(@_)},
     publicmsg      => sub{$self->publicmsg(@_)},
     privatemsg     => sub{$self->privatemsg(@_)},
-    connect        => sub{$self->_connect(@_)},
+    connect        => sub{$self->connected(@_)},
+    irc_352        => sub{$self->who(@_)},
   );
-  $self->cl->connect(
-    $self->config->{host}, $self->config->{port},
-    {
-      nick     => $self->config->{nick},
-      real     => $self->config->{ircname},
-      password => $self->config->{password},
-      user     => $self->config->{username},
-    }
-  );
+  $self->connect;
 }
 
 sub window {
@@ -79,7 +88,25 @@ sub nick {
   return $self->cl->nick;
 }
 
-sub _connect {
+sub windows {
+  my $self = shift;
+  return grep {$_->id ne "info" && $_->irc->alias eq $self->alias} $self->app->windows;
+}
+
+sub connect {
+  my $self = shift;
+  $self->cl->connect(
+    $self->config->{host}, $self->config->{port},
+    {
+      nick     => $self->config->{nick},
+      real     => $self->config->{ircname},
+      password => $self->config->{password},
+      user     => $self->config->{username},
+    }
+  );
+}
+
+sub connected {
   my ($self, $cl, $con, $err) = @_;
   if (defined $err) {
     $self->app->send([
@@ -91,6 +118,10 @@ sub _connect {
 sub registered {
   my $self = shift;
   my @log;
+  $self->cl->enable_ping (60, sub {
+    $self->app->log_info($self->alias, "disconnected from server, reconnecting in 10 seconds");
+    AnyEvent->timer(after => 10, cb => sub {shift->connect});
+  });
   push @log, $self->app->log_info($self->alias, "connected");
   for (@{$self->config->{on_connect}}) {
     push @log, $self->app->log_info($self->alias, "sending $_");
@@ -136,23 +167,24 @@ sub nick_change {
   $self->app->send([
     map { $_->rename_nick($old_nick, $new_nick);
           $_->render_event("nick", $old_nick, $new_nick);
-    } $self->app->nick_windows($old_nick)
+    } $self->nick_windows($old_nick)
   ]);
 }
 
 sub _join {
   my ($self, $cl, $nick, $channel, $is_self) = @_;
   my $window = $self->window($channel);
-  if (!$is_self) {
-    $window->add_nick($nick);
-    $self->app->send([$window->render_event("joined", $nick)]);
+  if ($is_self) {
+    $self->cl->send_srv("WHO $channel");
   }
+  $self->add_nick($nick, {channels => {$channel => ''}});
+  $self->app->send([$window->render_event("joined", $nick)]);
 }
 
 sub channel_add {
   my ($self, $cl, $msg, $channel, @nicks) = @_;
   my $window = $self->window($channel);
-  $window->add_nicks(@nicks);
+  $self->add_nick($_, {channels => {$channel => ''}}) for @nicks;
 }
 
 sub part {
@@ -170,16 +202,14 @@ sub part {
 sub channel_remove {
   my ($self, $cl, $msg, $channel, @nicks) = @_;
   my $window = $self->window($channel);
-  $window->remove_nicks(@nicks);
+  $self->remove_nicks(@nicks);
 }
 
 sub quit {
   my ($self, $cl, $nick, $msg) = @_;
-  use Data::Dumper;
-  print STDERR Dumper $msg;
   $self->app->send([
     map {$_->render_event("left", $nick, $msg)}
-        $self->app->nick_windows($nick)
+        $self->nick_windows($nick)
   ]);
 };
 
@@ -190,7 +220,85 @@ sub channel_topic {
   $self->app->send([
     $window->render_event("topic", $nick, $topic),
   ]);
-};
+}
+
+sub nick_channels {
+  my ($self, $nick) = @_;
+  my $info = $self->get_nick_info($nick);
+  return keys %{$info->{channels}} if $info->{channels};
+}
+
+sub nick_windows {
+  my ($self, $nick) = @_;
+  return map {$self->window($_)} $self->nick_channels($nick);
+}
+
+sub who {
+  my ($self, $cl, $msg) = @_;
+  my (undef, $channel, $user, $ip, $server, $nick, $flags, $real) = @{$msg->{params}};
+  return unless $nick;
+  $real =~ s/^\d // if $real;
+  my $info = {
+    IP       => $ip     || "",
+    server   => $server || "",
+    real     => $real   || "",
+    channels => {$channel => $flags},
+    nick     => $nick,
+  };
+  if ($self->includes_nick($nick)) {
+    my $prev_info = $self->get_nick_info($nick);
+    $info->{channels} = {
+      %{$prev_info->{channels}},
+      %{$info->{channels}},
+    }
+  }  
+  $self->set_nick_info($nick, $info);
+}
+
+sub rename_nick {
+  my ($self, $nick, $new_nick) = @_;
+  return unless $self->includes_nick($nick);
+  my $info = $self->nick_info($nick);
+  $self->set_nick_info($new_nick, $info);
+  $self->remove_nick($nick);
+}
+
+sub remove_nicks {
+  my ($self, @nicks) = @_;
+  for (@nicks) {
+    $self->remove_nick($_);
+  }
+}
+
+sub add_nick {
+  my ($self, $nick, $data) = @_;
+  $self->set_nick_info($nick, $data);
+}
+
+sub nick_avatar {
+  my ($self, $nick) = @_;
+  my $info = $self->get_nick_info($nick);
+  if ($info and $info->{real}) {
+    if ($info->{real} =~ /.+@.+/) {
+      return "//www.gravatar.com/avatar/"
+           . md5_hex($info->{real}) . "?s=32&amp;r=x";
+    }
+    elsif ($info->{real} =~ /^https?:(\/\/\S+(?:jpe?g|png|gif))/) {
+      return $1;
+    }
+    else {
+      return undef;
+    }
+  }
+}
+
+sub whois_table {
+  my ($self, $nick) = @_;
+  my $info = $self->get_nick_info($nick);
+  return "real: $info->{real}\nserver: $info->{server}\nchannels: " .
+         join " ", keys %{$info->{channels}};
+  return "No info for user \"$nick\"" if !$info;
+}
 
 sub log_debug {
   my $self = shift;

@@ -4,7 +4,6 @@ use Moose;
 use Encode;
 use DateTime;
 use Digest::CRC qw/crc16/;
-use Digest::MD5 qw/md5_hex/;
 use MooseX::ClassAttribute;
 use IRC::Formatting::HTML;
 
@@ -84,21 +83,6 @@ has irc => (
   required => 1,
 );
 
-has nicks => (
-  traits    => ['Hash'],
-  is        => 'rw',
-  isa       => 'HashRef[HashRef|Undef]',
-  default   => sub {{}},
-  handles   => {
-    remove_nick   => 'delete',
-    includes_nick => 'exists',
-    get_nick_info => 'get',
-    all_nicks     => 'keys',
-    all_nick_info => 'kv',
-    set_nick_info => 'set',
-  }
-);
-
 has 'tt' => (
   is       => 'ro',
   isa      => 'Template',
@@ -107,60 +91,6 @@ has 'tt' => (
 
 sub BUILD {
   shift->meta->error_class('Moose::Error::Croak');
-}
-
-sub rename_nick {
-  my ($self, $nick, $new_nick) = @_;
-  return unless $self->includes_nick($nick);
-  my $info = $self->nick_info($nick);
-  $self->set_nick_info($new_nick, $info);
-  $self->remove_nick($nick);
-}
-
-sub remove_nicks {
-  my ($self, @nicks) = @_;
-  for (@nicks) {
-    $self->remove_nick($_);
-  }
-}
-
-sub add_nick {
-  my ($self, $nick) = @_;
-  $self->set_nick_info($nick, {});
-}
-
-sub add_nicks {
-  my ($self, @nicks) = @_;
-  for (@nicks) {
-    $self->set_nick_info($_, {});
-  }
-}
-
-sub nick_info {
-  my ($self, $nick) = @_;
-  my $info = $self->get_nick_info($nick);
-  #if (!$info or !$info->{Real}) {
-  #  $info = $self->irc->nick_info($nick);
-  #  $self->set_nick_info($nick, $info);
-  #}
-  return $info;
-}
-
-sub nick_avatar {
-  my ($self, $nick) = @_;
-  my $info = $self->nick_info($nick);
-  if ($info and $info->{Real}) {
-    if ($info->{Real} =~ /.+@.+/) {
-      return "//www.gravatar.com/avatar/"
-           . md5_hex($info->{Real}) . "?s=32&amp;r=x";
-    }
-    elsif ($info->{Real} =~ /^https?:(\/\/\S+(?:jpe?g|png|gif))/) {
-      return $1;
-    }
-    else {
-      return undef;
-    }
-  }
 }
 
 sub serialized {
@@ -178,6 +108,12 @@ sub serialized {
 sub nick {
   my $self = shift;
   return $self->irc->nick;
+}
+
+sub all_nicks {
+  my $self = shift;
+  return unless $self->is_channel;
+  return keys %{$self->irc->cl->channel_list($self->title)};
 }
 
 sub add_message {
@@ -264,7 +200,7 @@ sub render_message {
     type      => "message",
     event     => "say",
     nick      => $nick,
-    avatar    => $self->nick_avatar($nick),
+    avatar    => $self->irc->nick_avatar($nick),
     window    => $self->serialized,
     body      => $body,
     highlight => $body =~ /\b$own_nick\b/i ? 1 : 0,
@@ -295,13 +231,6 @@ sub render_announcement {
   return $message;
 }
 
-sub render_nicklist {
-  my $self = shift;
-  my $nicks = {
-    nicks => [map {$_->{avatar}} $self->all_nicks],
-  };
-}
-
 sub close_action {
   my $self = shift;
   my $action = {
@@ -316,14 +245,6 @@ sub part {
   my $self = shift;
   return unless $self->is_channel;
   $self->irc->cl->send_srv(PART => $self->title);
-}
-
-sub whois_table {
-  my ($self, $nick) = @_;
-  my $info = $self->nick_info($nick);
-  return "No info for user \"$nick\"" if !$info;
-  return join "\n", (map({"$_: $info->{$_}"} keys %$info),
-    "Channels: " . join " ", $self->irc->nick_channels($nick));
 }
 
 sub nick_table {

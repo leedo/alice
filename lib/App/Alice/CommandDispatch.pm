@@ -71,13 +71,13 @@ sub names {
 sub whois {
   my ($self, $window, $arg) = @_;
   $arg = decode("utf8", $arg, Encode::FB_WARN);
-  $self->app->send([$window->render_announcement($window->whois_table($arg))]);
+  $self->app->send([$window->render_announcement($window->irc->whois_table($arg))]);
 }
 
 sub query {
   my ($self, $window, $arg) = @_;
   $arg = decode("utf8", $arg, Encode::FB_WARN);
-  my $new_window = $self->app->find_or_create_window($arg, $window->connection);
+  my $new_window = $self->app->find_or_create_window($arg, $window->irc);
   $self->app->send([$new_window->join_action]);
 }
 
@@ -110,9 +110,9 @@ sub nick {
 
 sub create {
   my ($self, $window, $arg) = @_;
-  return unless $window->connection;
+  return unless $window->irc;
   $arg = decode("utf8", $arg, Encode::FB_WARN);
-  my $new_window = $self->app->find_or_create_window($arg, $window->connection);
+  my $new_window = $self->app->find_or_create_window($arg, $window->irc);
   $self->app->send([$new_window->join_action]);
 }
 
