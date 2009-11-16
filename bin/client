@@ -1,0 +1,28 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+
+use Gtk2 -init;
+use Gtk2::WebKit;
+
+my $window = Gtk2::Window->new;
+$window->set_title("alice");
+$window->resize(800, 600);
+my $view = Gtk2::WebKit::WebView->new;
+$view->signal_connect(
+  navigation_policy_decision_requested => sub {
+    my ($view, $frame, $req, $action, $policy) = @_;
+    if ($action->get_reason eq 'link-clicked' && $action->get_button == 1) {
+      Gtk2::show_uri(undef, $req->get_uri);
+      $policy->ignore;
+      return 1;
+    }
+    $policy->use;
+    return 0;
+  }
+);
+$window->add($view);
+$view->open('http://127.0.0.1:8081/view');
+$window->show_all;
+Gtk2->main;

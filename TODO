@@ -1,0 +1,6 @@
+AnyEvent issues
+- private messages
+- quit messages
+- reconnecting
+- config window
+- tab order
