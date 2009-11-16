@@ -125,13 +125,13 @@ sub clear {
 sub topic {
   my ($self, $window, $arg) = @_;
   if ($arg) {
-    $window->topic($arg);
+    $window->set_topic($arg);
   }
   else {
     my $topic = $window->topic;
-    my $nick = ( split /!/, $topic->{SetBy} )[0];
+    my $nick = ( split /!/, $topic->{author} )[0];
     $self->app->send([
-      $window->render_event("topic", $nick, $topic->{Value})
+      $window->render_event("topic", $nick, $topic->{string})
     ]);
   }
 }

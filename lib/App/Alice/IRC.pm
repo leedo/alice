@@ -177,7 +177,10 @@ sub _join {
   if ($is_self) {
     $self->cl->send_srv("WHO $channel");
   }
-  $self->add_nick($nick, {channels => {$channel => ''}});
+  else {
+    $self->add_nick($nick, {channels => {$channel => ''}});
+    $self->cl->send_srv("WHO $nick");
+  }
   $self->app->send([$window->render_event("joined", $nick)]);
 }
 
@@ -220,6 +223,11 @@ sub channel_topic {
   $self->app->send([
     $window->render_event("topic", $nick, $topic),
   ]);
+}
+
+sub channel_nicks {
+  my ($self, $channel) = @_;
+  return map {$_->{nick}} grep {$_->{channels}{$channel}} $self->all_nick_info;
 }
 
 sub nick_channels {

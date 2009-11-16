@@ -113,7 +113,7 @@ sub nick {
 sub all_nicks {
   my $self = shift;
   return unless $self->is_channel;
-  return keys %{$self->irc->cl->channel_list($self->title)};
+  return $self->irc->channel_nicks($self->title);
 }
 
 sub add_message {
@@ -245,6 +245,16 @@ sub part {
   my $self = shift;
   return unless $self->is_channel;
   $self->irc->cl->send_srv(PART => $self->title);
+}
+
+sub set_topic {
+  my ($self, $topic) = @_;
+  $self->topic({
+    string => $topic,
+    author => $self->nick,
+    time   => time,
+  });
+  $self->irc->cl->send_srv(TOPIC => $self->title, $topic);
 }
 
 sub nick_table {
