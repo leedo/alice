@@ -4,3 +4,4 @@ AnyEvent issues
 - reconnecting
 - config window
 - tab order
+- parting channel leaves window

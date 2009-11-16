@@ -174,11 +174,11 @@ sub nick_change {
 sub _join {
   my ($self, $cl, $nick, $channel, $is_self) = @_;
   my $window = $self->window($channel);
+  $self->add_nick($nick, {channels => {$channel => ''}});
   if ($is_self) {
     $self->cl->send_srv("WHO $channel");
   }
   else {
-    $self->add_nick($nick, {channels => {$channel => ''}});
     $self->cl->send_srv("WHO $nick");
   }
   $self->app->send([$window->render_event("joined", $nick)]);
@@ -303,9 +303,9 @@ sub nick_avatar {
 sub whois_table {
   my ($self, $nick) = @_;
   my $info = $self->get_nick_info($nick);
+  return "No info for user \"$nick\"" if !$info;
   return "real: $info->{real}\nserver: $info->{server}\nchannels: " .
          join " ", keys %{$info->{channels}};
-  return "No info for user \"$nick\"" if !$info;
 }
 
 sub log_debug {
