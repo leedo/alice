@@ -186,8 +186,14 @@ sub _join {
     $self->cl->send_srv("WHO $channel");
   }
   else {
+    $self->cl->send_srv("WHO $nick");
+    if (!$self->includes_nick($nick)) {
+      $self->add_nick($nick, {nick => $nick, channels => {$channel => ''}}); 
+    }
+    else {
+      $self->get_nick_info($nick)->{channels}{$channel} = '';
+    }
     $self->app->send([$window->render_event("joined", $nick)]);
-    $self->cl->send_srv("WHO $_");
   }
 }
 
@@ -195,7 +201,12 @@ sub channel_add {
   my ($self, $cl, $msg, $channel, @nicks) = @_;
   my $window = $self->window($channel);
   for (@nicks) {
-    $self->add_nick($_, {nick => $_, channels => {$channel => ''}}); 
+    if (!$self->includes_nick($_)) {
+      $self->add_nick($_, {nick => $_, channels => {$channel => ''}}); 
+    }
+    else {
+      $self->get_nick_info($_)->{channels}{$channel} = '';
+    }
   }
 }
 

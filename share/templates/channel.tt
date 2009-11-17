@@ -1,6 +1,7 @@
-<div class="channel[% IF loop.first %] active[% END %]" id="[% chanid %]">
+[% active = loop.count == 2 %]
+<div class="channel[% IF active %] active[% END %]" id="[% chanid %]">
   <div class="topic" id="[% chanid %]_topic">
-    [% topic.Value | html %]
+    [% topic.string | html %]
   </div>
   <ul class="messages" id="[% chanid %]_messages">
   </ul>
@@ -13,7 +14,7 @@
     </form>
     <script type="text/javascript">
       alice.addChannel(
-        new Alice.Channel('[% chan %]','[% chanid %]',[% loop.first ? "true" : "false" %],'[% session %]')
+        new Alice.Channel('[% chan %]','[% chanid %]',[% active ? "true" : "false" %],'[% session %]')
       );
     </script>
   </div>
