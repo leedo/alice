@@ -1,5 +1,4 @@
 AnyEvent issues
-- quit messages
 - reconnecting
 - config window
 - parting channel leaves window

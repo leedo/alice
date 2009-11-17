@@ -16,11 +16,6 @@ has 'app' => (
   required => 1,
 );
 
-has 'condvar' => (
-  is  => 'rw',
-  isa => 'AnyEvent::CondVar',
-);
-
 has 'httpd' => (
   is  => 'rw',
   isa => 'AnyEvent::HTTPD'
@@ -55,7 +50,6 @@ has 'config' => (
 sub BUILD {
   my $self = shift;
   $self->meta->error_class('Moose::Error::Croak');
-  $self->condvar(AnyEvent->condvar);
   my $httpd = AnyEvent::HTTPD->new(
     port => $self->config->port,
   );

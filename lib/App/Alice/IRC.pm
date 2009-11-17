@@ -67,7 +67,6 @@ sub BUILD {
     part           => sub{$self->part(@_)},
     nick_change    => sub{$self->nick_change(@_)},
     ctcp_action    => sub{$self->ctcp_action(@_)},
-    quit           => sub{$self->quit(@_)},
     publicmsg      => sub{$self->publicmsg(@_)},
     privatemsg     => sub{$self->privatemsg(@_)},
     connect        => sub{$self->connected(@_)},
@@ -205,26 +204,16 @@ sub part {
     $self->app->close_window($window);
     return;
   }
-  $self->app->send([
-    $window->render_event("left", $nick, $msg)
-  ]);
 }
 
 sub channel_remove {
   my ($self, $cl, $msg, $channel, @nicks) = @_;
-  use Data::Dumper;
-  print STDERR Dumper $msg;
   my $window = $self->window($channel);
+  $self->app->send([
+    map {$window->render_event("left", $_, $msg->{params}[0])} @nicks
+  ]);
   $self->remove_nicks(@nicks);
 }
-
-sub quit {
-  my ($self, $cl, $nick, $msg) = @_;
-  $self->app->send([
-    map {$_->render_event("left", $nick, $msg)}
-        $self->nick_windows($nick)
-  ]);
-};
 
 sub channel_topic {
   my ($self, $cl, $channel, $topic, $nick) = @_;
