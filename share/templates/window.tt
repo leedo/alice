@@ -1,8 +1,8 @@
-<div class="window[% IF loop.first %] active[% END %]" id="[% window.id %]">
+<div class="window[% IF loop.count == 2 %] active[% END %]" id="[% window.id %]">
   <table cellspacing="0" cellpadding="0">
     <tr class="topic">
       <td id="[% window.id %]_topic">
-        [% topic.Value | html %]
+        [% topic.string | html %]
       </td>
     </tr>
     <tr>
@@ -22,7 +22,7 @@
           <textarea name="msg" id="[% window.id %]_msg" rows="1"></textarea>
         </form>
         <script type="text/javascript">[% USE JavaScript %]
-          alice.openWindow('[% window.id %]','[% window.title | js %]',[% loop.first ? "true" : "false" %]);
+          alice.openWindow('[% window.id %]','[% window.title | js %]',[% loop.count == 2 ? "true" : "false" %]);
         </script>
       </td>
     </tr>

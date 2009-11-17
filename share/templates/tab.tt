@@ -1,4 +1,4 @@
-<li id="[% window.id %]_tab" class="[% window.type %]_tab [% IF loop.first %] active[% END %]">
+<li id="[% window.id %]_tab" class="[% window.type %]_tab [% IF loop.count == 2 %] active[% END %]">
   <div class="tab_button" id="[% window.id %]_tab_button"></div>
   <div style="float:left">[% window.title | html %]</div>
 </li>
