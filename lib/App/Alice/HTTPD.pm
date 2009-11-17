@@ -257,7 +257,6 @@ sub handle_static {
 
 sub send_index {
   my ($self, $httpd, $req) = @_;
-  my $output = '';
   my $channels = [];
   for my $window ($self->sorted_windows) {
     push @$channels, {
@@ -265,12 +264,12 @@ sub send_index {
       topic   => $window->topic,
     }
   }
-  $self->tt->process('index.tt', {
+  my $output = $self->app->process_template('index', {
     windows => $channels,
     style   => $self->config->style  || "default",
     images  => $self->config->images,
     monospace_nicks => $self->config->monospace_nicks,
-  }, \$output) or die $!;
+  });
   $req->respond([200, 'ok', {'Content-Type' => 'text/html; charset=utf-8'}, $output]);
 }
 
@@ -295,23 +294,21 @@ sub sorted_windows {
 sub send_config {
   my ($self, $httpd, $req) = @_;
   $self->log_debug("serving config");
-  my $output = '';
-  $self->tt->process('config.tt', {
+  my $output = $self->app->process_template('config', {
     style       => $self->config->style || "default",
     config      => $self->config->serialized,
     connections => [ sort {$a->alias cmp $b->alias}
                      $self->app->connections ],
-  }, \$output);
+  });
+  $req->respond([200, 'ok', {}, $output]);
 }
 
 sub server_config {
   my ($self, $httpd, $req) = @_;
   $self->log_debug("serving blank server config");
   my $name = $req->parm('name');
-  my $config = '';
-  $self->tt->process('server_config.tt', {name => $name}, \$config);
-  my $listitem = '';
-  $self->tt->process('server_listitem.tt', {name => $name}, \$listitem);
+  my $config = $self->app->process_template('server_config', {name => $name});
+  my $listitem = $self->app->process_template('server_listitem', {name => $name});
   $req->respond([200, 'ok', {"Cache-control" => "no-cache"}, 
                 to_json({config => $config, listitem => $listitem})]);
 }
@@ -320,23 +317,24 @@ sub save_config {
   my ($self, $httpd, $req) = @_;
   $self->log_debug("saving config");
   my $new_config = {};
-  for my $name ($req->params) {
-    next unless $req->parm($name);
+  my %params = $req->vars;
+  for my $name (keys %params) {
+    next unless $params{$name};
     if ($name =~ /^(.+?)_(.+)/) {
       if ($2 eq "channels" or $2 eq "on_connect") {
-        $new_config->{servers}{$1}{$2} = [$req->parm($name)];
+        $new_config->{servers}{$1}{$2} = $params{$name};
       }
       else {
-        $new_config->{servers}{$1}{$2} = $req->parm($name);
+        $new_config->{servers}{$1}{$2} = $params{$name};
       }
     }
     else {
-      $new_config->{$name} = $req->parm($name);
+      $new_config->{$name} = $params{$name};
     }
   }
   $self->config->merge($new_config);
   $self->config->write;
-  $req->respond->([200, 'ok'])
+  $req->respond->([200, 'ok', {}, 'ok'])
 }
 
 sub tab_order  {

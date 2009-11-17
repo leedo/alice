@@ -17,30 +17,30 @@
 		<div id="config">
 		  <script type="text/javascript">
 				with (window.parent) {
-			    showConnection = function (sessionid) {
+			    showConnection = function (alias) {
 			      $$("div#config .active").invoke("removeClassName","active");
-			      $("setting_" + sessionid).addClassName("active");
-			      $("menu_" + sessionid).addClassName("active");
+			      $("setting_" + alias).addClassName("active");
+			      $("menu_" + alias).addClassName("active");
 			    }
-			    addChannel  = function (sessionid) {
+			    addChannel  = function (alias) {
 			      var channel = prompt("Please enter a channel name.");
 			      if (channel)
-			        $("channels_" + sessionid).insert("<option value=\""+channel+"\">"+channel+"</option>");
+			        $("channels_" + alias).insert("<option value=\""+channel+"\">"+channel+"</option>");
 			      return false;
 			    };
-			    addCommand  = function (sessionid) {
+			    addCommand  = function (alias) {
 			      var command = prompt("Please enter a channel name.");
 			      if (command)
-			        $("on_connect_" + sessionid).insert("<option value=\""+command+"\">"+command+"</option>");
+			        $("on_connect_" + alias).insert("<option value=\""+command+"\">"+command+"</option>");
 			      return false;
 			    };
-			    removeCommands = function (sessionid) {
-			      $A($("on_connect_" + sessionid).options).each(function (option) {
+			    removeCommands = function (alias) {
+			      $A($("on_connect_" + alias).options).each(function (option) {
 			        if (option.selected) option.remove()});
 			      return false;
 			    };
-			    removeChannels = function (sessionid) {
-			      $A($("channels_" + sessionid).options).each(function (option) {
+			    removeChannels = function (alias) {
+			      $A($("channels_" + alias).options).each(function (option) {
 			        if (option.selected) option.remove()});
 			      return false;
 			    };
@@ -68,9 +68,9 @@
 		  <ul id="connections">
 		    <li class="header">Connections</li>
 		    [% FOR connection IN connections %]
-		      [% sessionid = connection.session_id %]
+		      [% alias = connection.alias %]
 		    <li class="[% connection.connected ? "connected" : "disconnected" %][% IF loop.first %] active[% END %]"
-		        onclick="_.showConnection('[% sessionid %]')" id="menu_[% sessionid %]">
+		        onclick="_.showConnection('[% alias %]')" id="menu_[% alias %]">
 		      [% connection.alias %]
 		    </li>
 		    [% END %]
@@ -82,77 +82,76 @@
   
 		  <form id="config_data" onsubmit="return alice.submitConfig(this)">
 		  [% FOR connection IN connections %]
-		    [% sessionid = connection.session_alias %]
-		  <div class="setting[% IF loop.first %] active[% END %]" id="setting_[% sessionid %]">
-		      [% connection.config = config.servers.${connection.alias} %]
+		    [% alias = connection.alias %]
+		  <div class="setting[% IF loop.first %] active[% END %]" id="setting_[% alias %]">
 		    <div class="field" style="width:138px">
 		      <label>Name</label>
 		      <span>[% connection.alias %]</span>
-		      <input type="hidden" name="[% sessionid %]_name" value="[% connection.alias %]" />
+		      <input type="hidden" name="[% alias %]_name" value="[% connection.alias %]" />
 		    </div>
 		    <div class="field" style="width:138px">
 		      <label>Status</label>
-		      [% status = connection.connected ? "connected" : "disconnected" %]
+		      [% status = connection.is_connected ? "connected" : "disconnected" %]
 		      <span class="[% status %]">[% status %]</span>
 		      </div>
 		    <div class="field clear">
 		      <label>Server address</label>
-		      <input type="text" name="[% sessionid %]_host" value="[% connection.config.host %]" size="15"/>
+		      <input type="text" name="[% alias %]_host" value="[% connection.config.host %]" size="15"/>
 		    </div>
 		    <div class="field">
 		      <label>Port</label>
-		      <input type="text" name="[% sessionid %]_port" value="[% connection.config.port %]" size="6" style="float:left"/>
+		      <input type="text" name="[% alias %]_port" value="[% connection.config.port %]" size="6" style="float:left"/>
 		      <div style="float:left">
-		      <input type="checkbox" name="[% sessionid %]_ssl"[% IF connection.config.ssl %] checked="checked"[% END %] style="display:inline;margin-right:0px"/>
+		      <input type="checkbox" name="[% alias %]_ssl"[% IF connection.config.ssl %] checked="checked"[% END %] style="display:inline;margin-right:0px"/>
 		      <span style="font-size:0.7em">SSL</span>
 		      </div>
 		    </div>
 		    <div class="field clear">
 		      <label>Nick</label>
-		      <input type="text" name="[% sessionid %]_nick" value="[% connection.config.nick %]" size="15" />
+		      <input type="text" name="[% alias %]_nick" value="[% connection.config.nick %]" size="15" />
 		    </div>
 		    <div class="field">
 		      <label>Ircname</label>
-		      <input type="text" name="[% sessionid %]_ircname" value="[% connection.config.ircname %]" size="15" />
+		      <input type="text" name="[% alias %]_ircname" value="[% connection.config.ircname %]" size="15" />
 		    </div>
 		    <div class="field clear">
 		      <label>Username</label>
-		      <input type="text" name="[% sessionid %]_username" value="[% connection.config.username %]" size="15" />
+		      <input type="text" name="[% alias %]_username" value="[% connection.config.username %]" size="15" />
 		    </div>
 		    <div class="field">
 		      <label>Password</label>
-		      <input type="text" name="[% sessionid %]_password" value="[% connection.config.password %]" size="15" />
+		      <input type="text" name="[% alias %]_password" value="[% connection.config.password %]" size="15" />
 		    </div>
 		    <div class="field clear">
 		      <label>Channels
 		        <span style="font-size:0.8em">(e.g. <span style="font-family:monospace;font-size:1em">#alice</span>)</span>
 		      </label>
-		      <select name="[% sessionid %]_channels" multiple="multiple" id="channels_[% sessionid %]" class="channelselect">
+		      <select name="[% alias %]_channels" multiple="multiple" id="channels_[% alias %]" class="channelselect">
 		        [% FOR channel IN connection.config.channels %]
 		        <option value="[% channel %]">[% channel %]</option>
 		        [% END %]
 		      </select>
 		      <div class="controls">
-		        <a href="#" onclick="return _.addChannel('[% sessionid %]')">New</a>
-		        <a href="#" onclick="return _.removeChannels('[% sessionid %]')">Remove</a>
+		        <a href="#" onclick="return _.addChannel('[% alias %]')">New</a>
+		        <a href="#" onclick="return _.removeChannels('[% alias %]')">Remove</a>
 		      </div>
 		    </div>
 		    <div class="field">
 		      <label>Commands</label>
-		      <select name="[% sessionid %]_on_connect" multiple="multiple" id="on_connect_[% sessionid %]" class="channelselect">
+		      <select name="[% alias %]_on_connect" multiple="multiple" id="on_connect_[% alias %]" class="channelselect">
 		        [% FOR command IN connection.config.on_connect %]
 		        <option value="[% command %]">[% command %]</option>
 		        [% END %]
 		      </select>
 		      <div class="controls">
-		        <a href="#" onclick="return _.addCommand('[% sessionid %]')">New</a>
-		        <a href="#" onclick="return _.removeCommands('[% sessionid %]')">Remove</a>
+		        <a href="#" onclick="return _.addCommand('[% alias %]')">New</a>
+		        <a href="#" onclick="return _.removeCommands('[% alias %]')">Remove</a>
 		      </div>
 		    </div>
 		  </div>  
 		  [% END %]
 		  <div id="buttons">
-		    <button onclick="window.close()">Cancel</button>
+		    <button onclick="window.close(); return false;">Cancel</button>
 		    <button type="submit">Save</button>
 		  </div>
 		  </form>

@@ -239,11 +239,16 @@ sub render_notice {
     body      => $body,
     msgid     => App::Alice::Window->next_msgid,
   };
-  my $html = '';
-  $self->tt->process("event.tt", $message, \$html);
-  $message->{full_html} = $html;
+  $message->{full_html} = $self->process_template('event',$message);
   $message->{event} = "notice";
   return $message;
+}
+
+sub process_template {
+  my ($self, $template, $data) = @_;
+  my $output = '';
+  $self->tt->process("$template.tt", $data, \$output);
+  return $output;
 }
 
 sub log_debug {

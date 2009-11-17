@@ -57,6 +57,7 @@ function loadInlineImage(image) {
   setTimeout(function () {
     var messagelist = image.up("ul.messages");
     messagelist.scrollTop = messagelist.scrollHeight;
+    console.log("scrolling to bottom");
   }, 50);
 }
 

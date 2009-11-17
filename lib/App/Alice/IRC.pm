@@ -70,10 +70,11 @@ sub BUILD {
     publicmsg      => sub{$self->publicmsg(@_)},
     privatemsg     => sub{$self->privatemsg(@_)},
     connect        => sub{$self->connected(@_)},
-    irc_352        => sub{$self->who(@_)}, # WHO
-    irc_372        => sub{$self->log_info(@_)}, # MOTD
-    irc_377        => sub{$self->log_info(@_)}, # MOTD
-    irc_378        => sub{$self->log_info(@_)}, # MOTD
+    irc_352        => sub{$self->irc_352(@_)}, # WHO info
+    irc_366        => sub{$self->irc_366(@_)}, # end of NAMES
+    irc_372        => sub{$self->log_info(@_)}, # MOTD info
+    irc_377        => sub{$self->log_info(@_)}, # MOTD info
+    irc_378        => sub{$self->log_info(@_)}, # MOTD info
   );
   $self->connect;
 }
@@ -181,52 +182,50 @@ sub nick_change {
 sub _join {
   my ($self, $cl, $nick, $channel, $is_self) = @_;
   my $window = $self->window($channel);
-  $self->add_nick($nick, {channels => {$channel => ''}});
   if ($is_self) {
     $self->cl->send_srv("WHO $channel");
   }
   else {
-    $self->cl->send_srv("WHO $nick");
+    $self->app->send([$window->render_event("joined", $nick)]);
+    $self->cl->send_srv("WHO $_");
   }
-  $self->app->send([$window->render_event("joined", $nick)]);
 }
 
 sub channel_add {
   my ($self, $cl, $msg, $channel, @nicks) = @_;
   my $window = $self->window($channel);
-  $self->add_nick($_, {channels => {$channel => ''}}) for @nicks;
+  for (@nicks) {
+    $self->add_nick($_, {nick => $_, channels => {$channel => ''}}); 
+  }
 }
 
 sub part {
   my ($self, $cl, $nick, $channel, $is_self, $msg) = @_;
-  my $window = $self->window($channel);
   if ($is_self) {
+    my $window = $self->window($channel);
     $self->app->close_window($window);
-    return;
   }
 }
 
 sub channel_remove {
   my ($self, $cl, $msg, $channel, @nicks) = @_;
   my $window = $self->window($channel);
+  $self->remove_nicks(@nicks);
   $self->app->send([
     map {$window->render_event("left", $_, $msg->{params}[0])} @nicks
   ]);
-  $self->remove_nicks(@nicks);
 }
 
 sub channel_topic {
   my ($self, $cl, $channel, $topic, $nick) = @_;
   my $window = $self->window($channel);
   $window->topic({string => $topic, author => $nick, time => time});
-  $self->app->send([
-    $window->render_event("topic", $nick, $topic),
-  ]);
+  $self->app->send([$window->render_event("topic", $nick, $topic)]);
 }
 
 sub channel_nicks {
   my ($self, $channel) = @_;
-  return map {$_->{nick}} grep {$_->{channels}{$channel}} $self->all_nick_info;
+  return map {$_->{nick}} grep {exists $_->{channels}{$channel}} $self->all_nick_info;
 }
 
 sub nick_channels {
@@ -240,7 +239,7 @@ sub nick_windows {
   return map {$self->window($_)} $self->nick_channels($nick);
 }
 
-sub who {
+sub irc_352 {
   my ($self, $cl, $msg) = @_;
   my (undef, $channel, $user, $ip, $server, $nick, $flags, $real) = @{$msg->{params}};
   return unless $nick;
@@ -260,6 +259,15 @@ sub who {
     }
   }  
   $self->set_nick_info($nick, $info);
+}
+
+sub irc_366 {
+  my ($self, $cl, $msg) = @_;
+  my $window = $self->window($msg->{params}[1]);
+  $self->app->send([
+    $window->join_action,
+    $window->nicks_action,
+  ]);
 }
 
 sub rename_nick {
