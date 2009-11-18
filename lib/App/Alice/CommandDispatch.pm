@@ -87,7 +87,6 @@ sub _join {
     $window = $self->app->ircs->{$arg2};
   }
   if ($arg1 =~ /^[#&]/) {
-    $arg1 = decode("utf8", $arg1, Encode::FB_WARN);
     $window->irc->cl->send_srv(JOIN => $arg1);
   }
 }
@@ -155,8 +154,7 @@ sub notfound {
 
 sub _say {
   my ($self, $window, $arg) = @_;
-  $self->app->send([$window->render_message($window->nick, $arg)], 1);
-  $arg = decode("utf8", $arg, Encode::FB_WARN);
+  $self->app->send([$window->render_message($window->nick, $arg)]);
   $window->irc->cl->send_srv(PRIVMSG => $window->title, $arg);
 }
 
