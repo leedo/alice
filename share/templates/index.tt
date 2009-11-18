@@ -2,13 +2,11 @@
 <html>
   <head>
     <title>[% windows.0.window.title %]</title>
-    <script type="text/javascript" src="/static/site.js"></script>
-    <script type="text/javascript" src="/static/styles/[% style %]/default.js?images=[% images || 'show' %]&amp;monospace_nicks=[% monospace_nicks.join(",") %]"></script>
+    <script type="text/javascript" src="/static/alice.js"></script>
+    <script type="text/javascript" src="/static/site.js?images=[% images || 'show' %]&amp;monospace_nicks=[% monospace_nicks.join(",") %]"></script>
     <link type="text/css" rel="stylesheet" href="/static/site.css" />
-    <link type="text/css" rel="stylesheet" href="/static/config.css" />
-    <link type="text/css" rel="stylesheet" href="/static/styles/[% style %]/default.css" />
     <!--[if !IE]>--> 
-    <link rel="stylesheet" href="/static/styles/[% style %]/iphone.css" type="text/css" 
+    <link rel="stylesheet" href="/static/iphone.css" type="text/css" 
           media="only screen and (max-device-width: 480px)" /> 
     <!--<![endif]-->
     <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no" />
@@ -16,7 +14,7 @@
   <body>
     <div id="container">
       <ul id="controls">
-        <li id="config_button"><img src="/static/styles/[% style %]/image/config.png" /></li>
+        <li id="config_button"><img src="/static/image/config.png" /></li>
         <li id="status" class="disabled"></li>
       </ul>
       <ul id="tabs">

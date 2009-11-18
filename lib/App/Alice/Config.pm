@@ -40,12 +40,6 @@ has debug => (
   default => 0,
 );
 
-has style => (
-  is      => 'rw',
-  isa     => 'Str',
-  default => 'default',
-);
-
 has port => (
   is      => 'rw',
   isa     => 'Int',

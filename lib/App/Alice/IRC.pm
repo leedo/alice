@@ -172,10 +172,10 @@ sub ctcp_action {
 
 sub nick_change {
   my ($self, $cl, $old_nick, $new_nick, $is_self) = @_;
+  $self->rename_nick($old_nick, $new_nick);
   $self->app->send([
-    map { $_->rename_nick($old_nick, $new_nick);
-          $_->render_event("nick", $old_nick, $new_nick);
-    } $self->nick_windows($old_nick)
+    map {$_->render_event("nick", $old_nick, $new_nick)}
+        $self->nick_windows($old_nick)
   ]);
 }
 
@@ -213,13 +213,16 @@ sub channel_add {
 sub part {
   my ($self, $cl, $nick, $channel, $is_self, $msg) = @_;
   if ($is_self) {
-    my $window = $self->window($channel);
-    $self->app->close_window($window);
+    my $window = $self->app->find_window($channel, $self);
+    if ($window) {
+      $self->app->close_window($window);
+    }
   }
 }
 
 sub channel_remove {
   my ($self, $cl, $msg, $channel, @nicks) = @_;
+  return if grep {$_ eq $self->nick} @nicks;
   my $window = $self->window($channel);
   $self->remove_nicks(@nicks);
   $self->app->send([
@@ -247,7 +250,10 @@ sub nick_channels {
 
 sub nick_windows {
   my ($self, $nick) = @_;
-  return map {$self->window($_)} $self->nick_channels($nick);
+  if ($self->nick_channels($nick)) {
+    return map {$self->window($_)} $self->nick_channels($nick);
+  }
+  return;
 }
 
 sub irc_352 {

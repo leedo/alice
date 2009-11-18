@@ -5,7 +5,7 @@ INCLUDES := $(foreach sprocket,$(SPROCKETS),$(SOURCE)/$(sprocket)/src)
 INCLUDE := $(foreach dir,$(INCLUDES),-I $(dir))
 JAVASCRIPT_SOURCES := $(foreach dir,$(INCLUDES),$(wildcard $(dir)/*.js))
 
-SITE_JS := $(BUILD)/site.js
+SITE_JS := $(BUILD)/alice.js
 ALICE_JS := $(SOURCE)/alice/src/alice.js
 
 define build_submodules

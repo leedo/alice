@@ -25,7 +25,7 @@ has config => (
 
 has ircs => (
   is      => 'ro',
-  isa     => 'HashRef[HashRef]',
+  isa     => 'HashRef',
   default => sub {{}},
 );
 
@@ -126,10 +126,9 @@ sub run {
   $self->add_irc_server($_, $self->config->servers->{$_})
     for keys %{$self->config->servers};
 
-  say STDERR "You can view your IRC session at: http://localhost:"
-               . $self->config->port."/view";
-
+  say STDERR "Location: http://localhost:". $self->config->port ."/view";
   $c->wait;
+  $_->disconnect('alice') for $self->connections;
 }
 
 sub dispatch {
@@ -176,13 +175,22 @@ sub connections {
   return values %{$self->ircs};
 }
 
-sub find_or_create_window {
+sub find_window {
   my ($self, $title, $connection) = @_;
   return $self->info_window if $title eq "info";
   my $id = "win_" . crc16(lc($title . $connection->alias));
   if (my $window = $self->get_window($id)) {
     return $window;
   }
+}
+
+sub find_or_create_window {
+  my ($self, $title, $connection) = @_;
+  return $self->info_window if $title eq "info";
+  if (my $window = $self->find_window($title, $connection)) {
+    return $window;
+  }
+  my $id = "win_" . crc16(lc($title . $connection->alias));
   my $window = App::Alice::Window->new(
     title    => $title,
     irc      => $connection,

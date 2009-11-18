@@ -129,9 +129,8 @@ sub topic {
   }
   else {
     my $topic = $window->topic;
-    my $nick = ( split /!/, $topic->{author} )[0];
     $self->app->send([
-      $window->render_event("topic", $nick, $topic->{string})
+      $window->render_event("topic", $topic->{author}, $topic->{string})
     ]);
   }
 }

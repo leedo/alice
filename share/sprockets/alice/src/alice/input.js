@@ -112,9 +112,7 @@ Alice.Input = Class.create({
         this.element.setStyle({ height: null, top: 0 });
       } else if (height <= 150) {
         this.element.setStyle({ height: height + "px", top: "-1px" });
-        this.window.scrollToBottom();
       }
-      this.window.element.redraw();
     }).bind(this).defer();
   },
   

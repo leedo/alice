@@ -21,15 +21,8 @@ sub START {
   $self->call("sig" . lc $self->type);
 }
 
-sub sigint  {$_[0]->shutdown};
-sub sigquit {$_[0]->shutdown};
-
-sub shutdown {
-  my $self = shift;
-  say STDERR "Closing connections, please wait.";
-  $_->disconnect for $self->app->connections;
-  AnyEvent->timer(after => 3, cb => sub {exit(0)});
-}
+sub sigint  {$_[0]->app->cond->send};
+sub sigquit {$_[0]->app->cond->send};
 
 __PACKAGE__->meta->make_immutable;
 1;

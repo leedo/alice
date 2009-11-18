@@ -29,18 +29,6 @@ Alice.Application = Class.create({
     return this.window_map.values();
   },
   
-  submitConfig: function(form) {
-    $$('#config .channelselect').each(function(select) {
-      $A(select.options).each(function(option) {
-        option.selected = true;
-      });
-    });
-    this.connection.sendConfig(form.serialize(), function() {
-      window.close();
-    });
-    return false;
-  },
-  
   openWindow: function(element, title, active) {
     var win = new Alice.Window(this, element, title, active);
     this.addWindow(win);

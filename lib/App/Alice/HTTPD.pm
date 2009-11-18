@@ -73,7 +73,7 @@ sub BUILD {
 sub ping {
   my $self = shift;
   AnyEvent->timer(
-    after    => 0,
+    after    => 5,
     interval => 10,
     cb       => sub {
       $self->broadcast({
@@ -154,7 +154,8 @@ sub setup_stream {
   
   my $res = $req->respond([
     200, 'ok', 'multipart/mixed; boundary='.$self->seperator.'; charset=utf-8',
-    sub {$stream->{data_cb} = shift} ]);
+    sub {$stream->{data_cb} = shift}
+  ]);
   
   $stream->{res} = $res;
   
@@ -190,7 +191,7 @@ sub send_stream {
                         time => time - $stream->{offset}});
     $output .= " " x (1024 - bytes::length $output) if bytes::length $output < 1024;
     $stream->{data_cb}->("$output\n--" . $self->seperator . "\n");
-  
+    
     $stream->{msgs} = [];
     $stream->{actions} = [];
     $stream->{last_send} = time;
@@ -266,7 +267,6 @@ sub send_index {
   }
   my $output = $self->app->process_template('index', {
     windows => $channels,
-    style   => $self->config->style  || "default",
     images  => $self->config->images,
     monospace_nicks => $self->config->monospace_nicks,
   });
@@ -295,7 +295,6 @@ sub send_config {
   my ($self, $httpd, $req) = @_;
   $self->log_debug("serving config");
   my $output = $self->app->process_template('config', {
-    style       => $self->config->style || "default",
     config      => $self->config->serialized,
     connections => [ sort {$a->alias cmp $b->alias}
                      $self->app->connections ],
@@ -322,7 +321,12 @@ sub save_config {
     next unless $params{$name};
     if ($name =~ /^(.+?)_(.+)/) {
       if ($2 eq "channels" or $2 eq "on_connect") {
-        $new_config->{servers}{$1}{$2} = $params{$name};
+        if (ref $params{$name} eq "ARRAY") {
+          $new_config->{servers}{$1}{$2} = $params{$name};
+        }
+        else {
+          $new_config->{servers}{$1}{$2} = [$params{$name}];
+        }
       }
       else {
         $new_config->{servers}{$1}{$2} = $params{$name};
@@ -334,7 +338,7 @@ sub save_config {
   }
   $self->config->merge($new_config);
   $self->config->write;
-  $req->respond->([200, 'ok', {}, 'ok'])
+  $req->respond([200, 'ok', {}, 'ok'])
 }
 
 sub tab_order  {

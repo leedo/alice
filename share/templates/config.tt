@@ -2,11 +2,9 @@
 <html>
   <head>
     <title>Alice</title>
-    <script type="text/javascript" src="/static/site.js"></script>
-    <script type="text/javascript" src="/static/styles/[% style %]/default.js"></script>
+    <script type="text/javascript" src="/static/alice.js"></script>
     <link type="text/css" rel="stylesheet" href="/static/site.css" />
     <link type="text/css" rel="stylesheet" href="/static/config.css" />
-    <link type="text/css" rel="stylesheet" href="/static/styles/[% style %]/default.css" />
     <!--[if !IE]>--> 
     <link rel="stylesheet" href="/static/styles/[% style %]/iphone.css" type="text/css" 
           media="only screen and (max-device-width: 480px)" /> 
@@ -16,7 +14,6 @@
 	<body class="config">
 		<div id="config">
 		  <script type="text/javascript">
-				with (window.parent) {
 			    showConnection = function (alias) {
 			      $$("div#config .active").invoke("removeClassName","active");
 			      $("setting_" + alias).addClassName("active");
@@ -60,9 +57,20 @@
 			        }
 			      })
 			    };
-				}
-				
-				var _ = window.parent, alice = _.alice;
+			    
+			    submitConfig = function(form) {
+            $$('#config .channelselect').each(function(select) {
+              $A(select.options).each(function(option) {
+                option.selected = true;
+              });
+            });
+            new Ajax.Request('/save', {
+              method: 'get',
+              parameters: form.serialize(),
+              onSuccess: function () {window.close()}
+            });
+            return false;
+          },
 		  </script>
   
 		  <ul id="connections">
@@ -70,17 +78,17 @@
 		    [% FOR connection IN connections %]
 		      [% alias = connection.alias %]
 		    <li class="[% connection.connected ? "connected" : "disconnected" %][% IF loop.first %] active[% END %]"
-		        onclick="_.showConnection('[% alias %]')" id="menu_[% alias %]">
+		        onclick="showConnection('[% alias %]')" id="menu_[% alias %]">
 		      [% connection.alias %]
 		    </li>
 		    [% END %]
 		  </ul>
 		  <div class="controls" id="server_controls">
-		     <a href="#" onclick="return _.addServer()">Add</a>
-		     <a href="#" onclick="return _.removeServer()">Remove</a>
+		     <a href="#" onclick="return addServer()">Add</a>
+		     <a href="#" onclick="return removeServer()">Remove</a>
 		  </div>
   
-		  <form id="config_data" onsubmit="return alice.submitConfig(this)">
+		  <form id="config_data" onsubmit="return submitConfig(this)">
 		  [% FOR connection IN connections %]
 		    [% alias = connection.alias %]
 		  <div class="setting[% IF loop.first %] active[% END %]" id="setting_[% alias %]">
@@ -132,8 +140,8 @@
 		        [% END %]
 		      </select>
 		      <div class="controls">
-		        <a href="#" onclick="return _.addChannel('[% alias %]')">New</a>
-		        <a href="#" onclick="return _.removeChannels('[% alias %]')">Remove</a>
+		        <a href="#" onclick="return addChannel('[% alias %]')">New</a>
+		        <a href="#" onclick="return removeChannels('[% alias %]')">Remove</a>
 		      </div>
 		    </div>
 		    <div class="field">
@@ -144,8 +152,8 @@
 		        [% END %]
 		      </select>
 		      <div class="controls">
-		        <a href="#" onclick="return _.addCommand('[% alias %]')">New</a>
-		        <a href="#" onclick="return _.removeCommands('[% alias %]')">Remove</a>
+		        <a href="#" onclick="return addCommand('[% alias %]')">New</a>
+		        <a href="#" onclick="return removeCommands('[% alias %]')">Remove</a>
 		      </div>
 		    </div>
 		  </div>  
