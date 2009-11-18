@@ -155,26 +155,26 @@ sub publicmsg {
   my $nick = (split '!', $msg->{prefix})[0];
   my $text = $msg->{params}[1];
   my $window = $self->window($channel);
-  $self->app->send([$window->render_message($nick, $text)]);
+  $self->app->send([$window->format_message($nick, $text)]);
 };
 
 sub privatemsg {
   my ($self, $cl, $nick, $msg) = @_;
   my $window = $self->window($nick);
-  $self->app->send([$window->render_message($nick, $msg->{params}[1])]);
+  $self->app->send([$window->format_message($nick, $msg->{params}[1])]);
 };
 
 sub ctcp_action {
   my ($self, $cl, $nick, $channel, $msg, $type) = @_;
   my $window = $self->window($channel);
-  $self->app->send([$window->render_message($nick, "• $msg")]);
+  $self->app->send([$window->format_message($nick, "• $msg")]);
 };
 
 sub nick_change {
   my ($self, $cl, $old_nick, $new_nick, $is_self) = @_;
   $self->rename_nick($old_nick, $new_nick);
   $self->app->send([
-    map {$_->render_event("nick", $old_nick, $new_nick)}
+    map {$_->format_event("nick", $old_nick, $new_nick)}
         $self->nick_windows($old_nick)
   ]);
 }
@@ -193,7 +193,7 @@ sub _join {
     else {
       $self->get_nick_info($nick)->{channels}{$channel} = '';
     }
-    $self->app->send([$window->render_event("joined", $nick)]);
+    $self->app->send([$window->format_event("joined", $nick)]);
   }
 }
 
@@ -226,7 +226,7 @@ sub channel_remove {
   my $window = $self->window($channel);
   $self->remove_nicks(@nicks);
   $self->app->send([
-    map {$window->render_event("left", $_, $msg->{params}[0])} @nicks
+    map {$window->format_event("left", $_, $msg->{params}[0])} @nicks
   ]);
 }
 
@@ -234,7 +234,7 @@ sub channel_topic {
   my ($self, $cl, $channel, $topic, $nick) = @_;
   my $window = $self->window($channel);
   $window->topic({string => $topic, author => $nick, time => time});
-  $self->app->send([$window->render_event("topic", $nick, $topic)]);
+  $self->app->send([$window->format_event("topic", $nick, $topic)]);
 }
 
 sub channel_nicks {

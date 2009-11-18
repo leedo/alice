@@ -82,9 +82,9 @@ has irc => (
   required => 1,
 );
 
-has 'tt' => (
-  is       => 'ro',
-  isa      => 'Template',
+has app => (
+  is      => 'ro',
+  isa     => 'App::Alice',
   required => 1,
 );
 
@@ -135,12 +135,8 @@ sub join_action {
     event     => "join",
     window    => $self->serialized,
   };
-  my $window_html = '';
-  $self->tt->process("window.tt", $action, \$window_html);
-  $action->{html}{window} = $window_html;
-  my $tab_html = '';
-  $self->tt->process("tab.tt", $action, \$tab_html);
-  $action->{html}{tab} = $tab_html;
+  $action->{html}{window} = $self->app->render("window", 0, $self);
+  $action->{html}{tab} = $self->app->render("tab", 0, $self);
   return $action;
 }
 
@@ -172,7 +168,7 @@ sub timestamp {
   return sprintf("%d:%02d%s",$hour, $time[1], $ampm);
 }
 
-sub render_event {
+sub format_event {
   my ($self, $event, $nick, $body) = @_;
   $body = decode("utf8", $body, Encode::FB_WARN);
   my $message = {
@@ -185,14 +181,12 @@ sub render_event {
     timestamp => $self->timestamp,
     nicks     => [ $self->all_nicks ],
   };
-  my $html = '';
-  $self->tt->process("event.tt", $message, \$html);
-  $message->{full_html} = $html;
+  $message->{full_html} = $self->app->render("event", $message);
   $self->add_message($message);
   return $message;
 }
 
-sub render_message {
+sub format_message {
   my ($self, $nick, $body) = @_;
   $body = decode("utf8", $body, Encode::FB_WARN);
   my $html = IRC::Formatting::HTML->formatted_string_to_html($body);
@@ -210,14 +204,12 @@ sub render_message {
     msgid     => $self->next_msgid,
     timestamp => $self->timestamp,
   };
-  my $fullhtml = '';
-  $self->tt->process("message.tt", $message, \$fullhtml);
-  $message->{full_html} = $fullhtml;
+  $message->{full_html} = $self->app->render("message", $message);
   $self->add_message($message);
   return $message;
 }
 
-sub render_announcement {
+sub format_announcement {
   my ($self, $msg) = @_;
   $msg = decode("utf8", $msg, Encode::FB_WARN);
   my $message = {
@@ -226,9 +218,7 @@ sub render_announcement {
     window  => $self->serialized,
     message => $msg,
   };
-  my $fullhtml = '';
-  $self->tt->process('announcement.tt', $message, \$fullhtml);
-  $message->{full_html} = $fullhtml;
+  $message->{full_html} = $self->app->render('announcement', $message);
   return $message;
 }
 

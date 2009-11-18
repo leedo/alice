@@ -1,6 +1,7 @@
 package App::Alice;
 
 use Moose;
+use Text::MicroTemplate::File;
 use App::Alice::Window;
 use App::Alice::InfoWindow;
 use App::Alice::HTTPD;
@@ -76,15 +77,15 @@ has window_map => (
   }
 );
 
-has 'tt' => (
+has 'template' => (
   is => 'ro',
-  isa => 'Template',
+  isa => 'Text::MicroTemplate::File',
   lazy => 1,
   default => sub {
     my $self = shift;
-    Template->new(
-      INCLUDE_PATH => $self->config->assetdir . '/templates',
-      ENCODING     => 'UTF8'
+    Text::MicroTemplate::File->new(
+      include_path => $self->config->assetdir . '/templates',
+      cache        => 1,
     );
   },
 );
@@ -97,7 +98,7 @@ has 'info_window' => (
     my $self = shift;
     my $info = App::Alice::InfoWindow->new(
       assetdir => $self->config->assetdir,
-      tt       => $self->tt,
+      app      => $self,
     );
     $self->add_window($info->title, $info);
     return $info;
@@ -119,8 +120,8 @@ sub run {
   my $self = shift;
   my $c = AnyEvent->condvar;
   
-  # initialize tt and httpd because they are lazy
-  $self->tt;
+  # initialize template and httpd because they are lazy
+  $self->template;
   $self->httpd;
 
   $self->add_irc_server($_, $self->config->servers->{$_})
@@ -195,9 +196,27 @@ sub find_or_create_window {
     title    => $title,
     irc      => $connection,
     assetdir => $self->config->assetdir,
-    tt       => $self->tt,
+    app      => $self,
   );  
   $self->add_window($id, $window);
+}
+
+sub sorted_windows {
+  my $self = shift;
+  my %order;
+  if ($self->config->order) {
+    %order = map {$self->config->order->[$_] => $_}
+             0 .. @{$self->config->order} - 1;
+  }
+  $order{info} = "##";
+  sort {
+    my ($c, $d) = ($a->title, $b->title);
+    $c =~ s/^#//;
+    $d =~ s/^#//;
+    $c = $order{$a->title} . $c if exists $order{$a->title};
+    $d = $order{$b->title} . $d if exists $order{$b->title};
+    $c cmp $d;
+  } $self->windows
 }
 
 sub close_window {
@@ -220,7 +239,7 @@ sub add_irc_server {
 sub log_info {
   my ($self, $session, $body, $highlight) = @_;
   $highlight = 0 unless $highlight;
-  $self->info_window->render_message($session, $body, highlight => $highlight);
+  $self->info_window->format_message($session, $body, highlight => $highlight);
 }
 
 sub send {
@@ -237,7 +256,7 @@ sub send {
   }
 }
 
-sub render_notice {
+sub format_notice {
   my ($self, $event, $nick, $body) = @_;
   $body = decode("utf8", $body, Encode::FB_WARN);
   my $message = {
@@ -247,16 +266,14 @@ sub render_notice {
     body      => $body,
     msgid     => App::Alice::Window->next_msgid,
   };
-  $message->{full_html} = $self->process_template('event',$message);
+  $message->{full_html} = $self->render('event',$message);
   $message->{event} = "notice";
   return $message;
 }
 
-sub process_template {
-  my ($self, $template, $data) = @_;
-  my $output = '';
-  $self->tt->process("$template.tt", $data, \$output);
-  return $output;
+sub render {
+  my ($self, $template, @data) = @_;
+  return $self->template->render_file("$template.html", $self, @data)->as_string;
 }
 
 sub log_debug {

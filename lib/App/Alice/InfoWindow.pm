@@ -11,11 +11,11 @@ has '+id' => (default => 'info');
 has '+title' => (required => 0, default => 'info');
 has '+irc' => (required => 0);
 has '+session' => ( isa => 'Undef', default => undef);
-has 'topic' => (is => 'ro', isa => 'HashRef', default => sub {{Value => 'info'}});
+has 'topic' => (is => 'ro', isa => 'HashRef', default => sub {{string => 'info'}});
 has '+buffersize' => (default => 300);
 has '+type' => (lazy => 0, default => 'info');
 
-sub render_message {
+sub format_message {
   my ($self, $from, $body, $highlight) = @_;
   $highlight = 0 unless $highlight;
   my $html = IRC::Formatting::HTML->formatted_string_to_html($body);
@@ -29,9 +29,8 @@ sub render_message {
     html   => $html,
     msgid  => $self->next_msgid,
   };
-  my $full_html = '';
-  $self->tt->process("message.tt", $message, \$full_html);
-  $message->{full_html} = $full_html;
+  
+  $message->{full_html} = $self->app->render("message", $message);
   $self->add_message($message);
   return $message;
 }

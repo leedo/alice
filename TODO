@@ -1,2 +1,7 @@
 AnyEvent issues
-- reconnecting
+- reconnecting, mostly seems to work
+
+Switch to Text::MicroTemplate
+Switch to Any::Moose/Mouse
+
+Just send one combined list of actions/messages

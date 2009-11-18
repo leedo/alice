@@ -259,46 +259,15 @@ sub handle_static {
 sub send_index {
   my ($self, $httpd, $req) = @_;
   my $channels = [];
-  for my $window ($self->sorted_windows) {
-    push @$channels, {
-      window  => $window->serialized(encoded => 1),
-      topic   => $window->topic,
-    }
-  }
-  my $output = $self->app->process_template('index', {
-    windows => $channels,
-    images  => $self->config->images,
-    monospace_nicks => $self->config->monospace_nicks,
-  });
+  my $output = $self->app->render('index');
   $req->respond([200, 'ok', {'Content-Type' => 'text/html; charset=utf-8'}, $output]);
 }
 
-sub sorted_windows {
-  my $self = shift;
-  my %order;
-  if ($self->config->order) {
-    %order = map {$self->config->order->[$_] => $_}
-             0 .. @{$self->config->order} - 1;
-  }
-  $order{info} = "##";
-  sort {
-    my ($c, $d) = ($a->title, $b->title);
-    $c =~ s/^#//;
-    $d =~ s/^#//;
-    $c = $order{$a->title} . $c if exists $order{$a->title};
-    $d = $order{$b->title} . $d if exists $order{$b->title};
-    $c cmp $d;
-  } $self->app->windows
-}
 
 sub send_config {
   my ($self, $httpd, $req) = @_;
   $self->log_debug("serving config");
-  my $output = $self->app->process_template('config', {
-    config      => $self->config->serialized,
-    connections => [ sort {$a->alias cmp $b->alias}
-                     $self->app->connections ],
-  });
+  my $output = $self->app->render('config');
   $req->respond([200, 'ok', {}, $output]);
 }
 
@@ -306,8 +275,8 @@ sub server_config {
   my ($self, $httpd, $req) = @_;
   $self->log_debug("serving blank server config");
   my $name = $req->parm('name');
-  my $config = $self->app->process_template('server_config', {name => $name});
-  my $listitem = $self->app->process_template('server_listitem', {name => $name});
+  my $config = $self->app->render('server_config', $name);
+  my $listitem = $self->app->render('server_listitem', $name);
   $req->respond([200, 'ok', {"Cache-control" => "no-cache"}, 
                 to_json({config => $config, listitem => $listitem})]);
 }

@@ -45,7 +45,7 @@ sub handle {
       my @args = grep {defined $_} ($5, $4, $3, $2, $1); # up to 5 captures
       if ($handler->{in_channel} and !$window->is_channel) {
         $self->app->send([
-          $window->render_announcement("$command can only be used in a channel")
+          $window->format_announcement("$command can only be used in a channel")
         ]);
       }
       else {
@@ -65,13 +65,13 @@ sub handle {
 
 sub names {
   my ($self, $window) = @_;
-  $self->app->send([$window->render_announcement($window->nick_table)]);
+  $self->app->send([$window->format_announcement($window->nick_table)]);
 }
 
 sub whois {
   my ($self, $window, $arg) = @_;
   $arg = decode("utf8", $arg, Encode::FB_WARN);
-  $self->app->send([$window->render_announcement($window->irc->whois_table($arg))]);
+  $self->app->send([$window->format_announcement($window->irc->whois_table($arg))]);
 }
 
 sub query {
@@ -129,14 +129,14 @@ sub topic {
   else {
     my $topic = $window->topic;
     $self->app->send([
-      $window->render_event("topic", $topic->{author}, $topic->{string})
+      $window->format_event("topic", $topic->{author}, $topic->{string})
     ]);
   }
 }
 
 sub me {
   my ($self, $window, $arg) = @_;
-  $self->app->send([$window->render_message($window->nick, "• $arg")], 1);
+  $self->app->send([$window->format_message($window->nick, "• $arg")], 1);
   $window->irc->cl->send_srv(CTCP => $window->title, "ACTION $1");
 }
 
@@ -149,12 +149,12 @@ sub quote {
 sub notfound {
   my ($self, $window, $arg) = @_;
   $arg = decode("utf8", $arg, Encode::FB_WARN);
-  $self->app->send([$window->render_announcement("Invalid command $arg")]);
+  $self->app->send([$window->format_announcement("Invalid command $arg")]);
 }
 
 sub _say {
   my ($self, $window, $arg) = @_;
-  $self->app->send([$window->render_message($window->nick, $arg)]);
+  $self->app->send([$window->format_message($window->nick, $arg)]);
   $window->irc->cl->send_srv(PRIVMSG => $window->title, $arg);
 }
 

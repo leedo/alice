@@ -1,9 +1,10 @@
+? my @windows = $_[0]->sorted_windows;
 <!DOCTYPE html>
 <html>
   <head>
-    <title>[% windows.0.window.title %]</title>
+    <title><?= $windows[1]->topic->{string} ?></title>
     <script type="text/javascript" src="/static/alice.js"></script>
-    <script type="text/javascript" src="/static/site.js?images=[% images || 'show' %]&amp;monospace_nicks=[% monospace_nicks.join(",") %]"></script>
+    <script type="text/javascript" src="/static/site.js?images=<?= $_[0]->config->images || 'show' ?>&amp;monospace_nicks=<?= join ",", @{$_[0]->config->monospace_nicks} ?>"></script>
     <link type="text/css" rel="stylesheet" href="/static/site.css" />
     <!--[if !IE]>--> 
     <link rel="stylesheet" href="/static/iphone.css" type="text/css" 
@@ -18,14 +19,20 @@
         <li id="status" class="disabled"></li>
       </ul>
       <ul id="tabs">
-        [% FOR windows %]
-        [% INCLUDE "tab.tt" %]
-        [% END %]
+? for (0 .. @windows - 1) {
+?   my $window = $windows[$_];
+?   my $active = 0;
+?   $active = 1 if (@windows > 1 and $_ == 2);
+?=  $_mt->render_file('tab.html', $_[0], $active, $window)
+? }
       </ul>
       <div id="windows">
-      [% FOR windows %]
-      [% INCLUDE "window.tt" %]
-      [% END %]
+? for (0 .. @windows - 1) {
+?   my $window = $windows[$_];
+?   my $active = 0;
+?   $active = 1 if (@windows > 1 and $_ == 2);
+?=  $_mt->render_file('window.html', $_[0], $active, $window)
+? }
       </div>
     </div>
   </body>

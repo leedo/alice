@@ -144,6 +144,7 @@ sub write {
   open my $fh, ">", $self->fullpath;
   {
     local $Data::Dumper::Terse = 1;
+    local $Data::Dumper::Indent = 1;
     print $fh Dumper($config)
       or die "Can not write config file: $!\n";
   }

@@ -1,0 +1,5 @@
+? my ($app, $active, $window) = @_;
+<li id="<?= $window->id ?>_tab" class="<?= $window->type ?>_tab<? if ($active) {?><?=" active"?><?}?>">
+  <div class="tab_button" id="<?= $window->id ?>_tab_button"></div>
+  <div style="float:left"><?= $window->title ?></div>
+</li>
