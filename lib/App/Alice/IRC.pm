@@ -290,7 +290,7 @@ sub irc_366 {
 sub rename_nick {
   my ($self, $nick, $new_nick) = @_;
   return unless $self->includes_nick($nick);
-  my $info = $self->nick_info($nick);
+  my $info = $self->get_nick_info($nick);
   $self->set_nick_info($new_nick, $info);
   $self->remove_nick($nick);
 }
