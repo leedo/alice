@@ -2,7 +2,6 @@ package App::Alice::Window;
 
 use Moose;
 use Encode;
-use DateTime;
 use Digest::CRC qw/crc16/;
 use MooseX::ClassAttribute;
 use IRC::Formatting::HTML;
@@ -166,9 +165,11 @@ sub clear_action {
 
 sub timestamp {
   my $self = shift;
-  my $dt = DateTime->now(time_zone => "local");
-  my $ampm = $dt->am_or_pm eq "AM" ? "a" : "p";
-  return sprintf("%d:%02d%s",$dt->hour_12, $dt->min, $ampm);
+  my @time = localtime(time);
+  my $hour = $time[2];
+  my $ampm = $hour > 11 ? 'p' : 'a';
+  $hour = $hour > 12 ? $hour - 12 : $hour;
+  return sprintf("%d:%02d%s",$hour, $time[1], $ampm);
 }
 
 sub render_event {

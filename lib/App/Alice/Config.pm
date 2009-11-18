@@ -2,7 +2,7 @@ package App::Alice::Config;
 
 use Moose;
 use FindBin;
-use YAML qw/LoadFile DumpFile/;
+use Data::Dumper;
 use File::ShareDir qw/dist_dir/;
 use Getopt::Long;
 
@@ -85,7 +85,7 @@ has path => (
 has file => (
   is      => 'ro',
   isa     => 'Str',
-  default => "config.yaml",
+  default => "config",
 );
 
 has fullpath => (
@@ -107,19 +107,19 @@ sub load {
   mkdir $self->path if !-d $self->path;
 
   if (-e $self->fullpath) {
-    $config = LoadFile($self->fullpath);
+    $config = require $self->fullpath;
   }
   elsif (-e $ENV{HOME}.'/.alice.yaml') {
     say STDERR "Found config in old location, moving it to ".$self->fullpath;
+    require YAML;
+    YAML->import('LoadFile');
     $config = LoadFile($ENV{HOME}.'/.alice.yaml');
     unlink $ENV{HOME}.'/.alice.yaml';
-    DumpFile($self->fullpath, $config)
-      or die "Can not write config file: $!\n";
+    $self->write($config);
   }
   else {
     say STDERR "No config found, writing a few config to ".$self->fullpath;
-    DumpFile($self->fullpath, $config)
-      or die "Can not write config file: $!\n";
+    $self->write($config);
   }
   GetOptions("port=i" => \($config->{port}), "debug" => \($config->{debug}));
   $self->merge($config);
@@ -138,10 +138,15 @@ sub merge {
 }
 
 sub write {
-  my $self = shift;
+  my ($self, $data) = @_;
+  my $config = $data || $self->serialized;
   mkdir $self->path if !-d $self->path;
-  DumpFile($self->fullpath, $self->serialized)
-    or die "Can not write config file: $!\n";
+  open my $fh, ">", $self->fullpath;
+  {
+    local $Data::Dumper::Terse = 1;
+    print $fh Dumper($config)
+      or die "Can not write config file: $!\n";
+  }
 }
 
 sub serialized {
