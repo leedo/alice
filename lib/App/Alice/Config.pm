@@ -103,23 +103,23 @@ sub BUILD {
 
 sub load {
   my $self = shift;
-  my $config = {};
   mkdir $self->path if !-d $self->path;
-
+  my $config = {};
   if (-e $self->fullpath) {
     $config = require $self->fullpath;
   }
-  elsif (-e $ENV{HOME}.'/.alice.yaml') {
+  elsif (-e $ENV{HOME}.'/.alice.yaml' or -e $ENV{HOME}.'/.alice/config.yaml') {
+    my $file = -e $ENV{HOME}.'/.alice.yaml' ? '.alice.yaml' : '/.alice/config.yaml';
     say STDERR "Found config in old location, moving it to ".$self->fullpath;
     require YAML;
     YAML->import('LoadFile');
-    $config = LoadFile($ENV{HOME}.'/.alice.yaml');
-    unlink $ENV{HOME}.'/.alice.yaml';
+    $config = LoadFile($ENV{HOME}.$file);
+    unlink $ENV{HOME}.$file;
     $self->write($config);
   }
   else {
     say STDERR "No config found, writing a few config to ".$self->fullpath;
-    $self->write($config);
+    $self->write;
   }
   GetOptions("port=i" => \($config->{port}), "debug" => \($config->{debug}));
   $self->merge($config);
