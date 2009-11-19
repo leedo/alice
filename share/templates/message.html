@@ -1,5 +1,5 @@
 ? my ($app, $msg) = @_;
-<li class="message <?= $msg->{nick} ?><? if ($msg->{self}) { ?><?=$msg->{self}?><?}?>" id="<?= $msg->{msgid} ?>">
+<li class="message <?= $msg->{nick} ?><? if ($msg->{self}) { ?> self<?}?>" id="<?= $msg->{msgid} ?>">
 <div class="left"><a href="javascript:alice.connection.requestWindow('<?= $msg->{nick} ?>','<?= $msg->{window}{id} ?>')" class="nick"><? if ($msg->{avatar}) { ?><img src="<?= $msg->{avatar} ?>" alt="<?= $msg->{nick} ?>" /><span class="nickhint"><?= $msg->{nick} ?></span><? } else { ?><?= $msg->{nick} ?><?}?></a></div>
 <div class="msg<? if ($msg->{nick} eq "Shaniqua" or $msg->{nick} eq "root" or $msg->{nick} eq "p6eval") { ?> monospace<?}?>"><?= $msg->{html} ?></div>
   <hr />

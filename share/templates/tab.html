@@ -1,5 +1,6 @@
-? my ($app, $active, $window) = @_;
-<li id="<?= $window->id ?>_tab" class="<?= $window->type ?>_tab<? if ($active) {?><?=" active"?><?}?>">
+? my ($app, $window, @classes) = @_;
+? my $active = grep {$_ eq "active"} @classes;
+<li id="<?= $window->id ?>_tab" class="<?= $window->type ?>_tab <?= join " ", @classes ?>">
   <div class="tab_button" id="<?= $window->id ?>_tab_button"></div>
   <div style="float:left"><?= $window->title ?></div>
 </li>

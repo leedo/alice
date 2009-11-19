@@ -21,17 +21,23 @@
       <ul id="tabs">
 ? for (0 .. @windows - 1) {
 ?   my $window = $windows[$_];
-?   my $active = 0;
-?   $active = 1 if (@windows > 1 and $_ == 2);
-?=  $_mt->render_file('tab.html', $_[0], $active, $window)
+?   my @classes = ();
+?   if (@windows > 1) {
+?     push @classes, "active" if $_ == 1;
+?     push @classes, "leftof_active" if $_ == 0;
+?   }
+?=  $_mt->render_file('tab.html', $_[0], $window, @classes)
 ? }
       </ul>
       <div id="windows">
 ? for (0 .. @windows - 1) {
 ?   my $window = $windows[$_];
-?   my $active = 0;
-?   $active = 1 if (@windows > 1 and $_ == 2);
-?=  $_mt->render_file('window.html', $_[0], $active, $window)
+?   my @classes = ();
+?   if (@windows > 1) {
+?     push @classes, "active" if $_ == 1;
+?     push @classes, "leftof_active" if $_ == 0;
+?   }
+?=  $_mt->render_file('window.html', $_[0], $window, @classes)
 ? }
       </div>
     </div>

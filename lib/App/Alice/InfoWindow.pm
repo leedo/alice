@@ -3,6 +3,7 @@ package App::Alice::InfoWindow;
 use Moose;
 use Encode;
 use IRC::Formatting::HTML;
+use Text::MicroTemplate qw/encoded_string/;
 
 extends 'App::Alice::Window';
 
@@ -26,11 +27,12 @@ sub format_message {
     window => $self->serialized,
     body   => $body,
     self   => $highlight,
-    html   => $html,
+    html   => encoded_string($html),
     msgid  => $self->next_msgid,
   };
   
   $message->{full_html} = $self->app->render("message", $message);
+  $message->{html} = "$html";
   $self->add_message($message);
   return $message;
 }

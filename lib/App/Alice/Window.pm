@@ -5,6 +5,7 @@ use Encode;
 use Digest::CRC qw/crc16/;
 use MooseX::ClassAttribute;
 use IRC::Formatting::HTML;
+use Text::MicroTemplate qw/encoded_string/;
 
 class_has msgid => (
   traits    => ['Counter'],
@@ -135,8 +136,8 @@ sub join_action {
     event     => "join",
     window    => $self->serialized,
   };
-  $action->{html}{window} = $self->app->render("window", 0, $self);
-  $action->{html}{tab} = $self->app->render("tab", 0, $self);
+  $action->{html}{window} = $self->app->render("window", $self);
+  $action->{html}{tab} = $self->app->render("tab", $self);
   return $action;
 }
 
@@ -199,12 +200,13 @@ sub format_message {
     window    => $self->serialized,
     body      => $body,
     highlight => $body =~ /\b$own_nick\b/i ? 1 : 0,
-    html      => $html,
+    html      => encoded_string($html),
     self      => $own_nick eq $nick,
     msgid     => $self->next_msgid,
     timestamp => $self->timestamp,
   };
   $message->{full_html} = $self->app->render("message", $message);
+  $message->{html} = "$html";
   $self->add_message($message);
   return $message;
 }

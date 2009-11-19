@@ -6,7 +6,7 @@
     <link type="text/css" rel="stylesheet" href="/static/site.css" />
     <link type="text/css" rel="stylesheet" href="/static/config.css" />
     <!--[if !IE]>--> 
-    <link rel="stylesheet" href="/static/styles/[% style %]/iphone.css" type="text/css" 
+    <link rel="stylesheet" href="/static/styles/iphone.css" type="text/css" 
           media="only screen and (max-device-width: 480px)" /> 
     <!--<![endif]-->
     <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no" />
@@ -75,13 +75,13 @@
   
 		  <ul id="connections">
 		    <li class="header">Connections</li>
-		    [% FOR connection IN connections %]
-		      [% alias = connection.alias %]
-		    <li class="[% connection.connected ? "connected" : "disconnected" %][% IF loop.first %] active[% END %]"
+		    <? for my $connection (@connections) { ?>
+		      <? my $alias = $connection->alias ?>
+		    <li class="<?= $connection->connected ? "connected" : "disconnected" ?><?= if loop.first %] active[% END %]"
 		        onclick="showConnection('[% alias %]')" id="menu_[% alias %]">
-		      [% connection.alias %]
+		      <?= $alias ?>
 		    </li>
-		    [% END %]
+		    <? } ?>
 		  </ul>
 		  <div class="controls" id="server_controls">
 		     <a href="#" onclick="return addServer()">Add</a>
@@ -89,12 +89,12 @@
 		  </div>
   
 		  <form id="config_data" onsubmit="return submitConfig(this)">
-		  [% FOR connection IN connections %]
-		    [% alias = connection.alias %]
+	    <? for my $connection (@connections) { ?>
+	      <? my $alias = $connection->alias ?>
 		  <div class="setting[% IF loop.first %] active[% END %]" id="setting_[% alias %]">
 		    <div class="field" style="width:138px">
 		      <label>Name</label>
-		      <span>[% connection.alias %]</span>
+		      <span><?= $alias ?></span>
 		      <input type="hidden" name="[% alias %]_name" value="[% connection.alias %]" />
 		    </div>
 		    <div class="field" style="width:138px">

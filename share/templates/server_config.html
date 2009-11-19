@@ -1,9 +1,9 @@
+? my ($app, $alias) = @_;
 <div class="setting active" id="setting_[% name %]">
-    [% connection.config = config.servers.${connection.alias} %]
   <div class="field" style="width:138px">
     <label>Name</label>
-    <span>[% name %]</span>
-    <input type="hidden" name="[% name %]_name" value="[% name %]" />
+    <span><?= $alias ?></span>
+    <input type="hidden" name="<?= $alias ?>_name" value="<?= $alias ?>" />
   </div>
   <div class="field" style="width:138px">
     <label>Status</label>
@@ -11,56 +11,50 @@
     </div>
   <div class="field clear">
     <label>Server address</label>
-    <input type="text" name="[% name %]_host" value="" size="15"/>
+    <input type="text" name="<?= $alias ?>_host" value="" size="15"/>
   </div>
   <div class="field">
     <label>Port</label>
-    <input type="text" name="[% name %]_port" value="" size="6" style="float:left"/>
+    <input type="text" name="<?= $alias ?>_port" value="" size="6" style="float:left"/>
     <div style="float:left">
-    <input type="checkbox" name="[% name %]_ssl"[% IF connection.config.ssl %] checked="checked"[% END %] style="display:inline;margin-right:0px"/>
+    <input type="checkbox" name="<?= $alias ?>_ssl"[% IF connection.config.ssl %] checked="checked"[% END %] style="display:inline;margin-right:0px"/>
     <span style="font-size:0.7em">SSL</span>
     </div>
   </div
   <div class="field clear">
     <label>Nick</label>
-    <input type="text" name="[% name %]_nick" value="" size="15" />
+    <input type="text" name="<?= $alias ?>_nick" value="" size="15" />
   </div>
   <div class="field">
     <label>Ircname</label>
-    <input type="text" name="[% name %]_ircname" value="" size="15" />
+    <input type="text" name="<?= $alias ?>_ircname" value="" size="15" />
   </div>
   <div class="field clear">
     <label>Username</label>
-    <input type="text" name="[% name %]_username" value="" size="15" />
+    <input type="text" name="<?= $alias ?>_username" value="" size="15" />
   </div>
   <div class="field">
     <label>Password</label>
-    <input type="text" name="[% name %]_password" value="" size="15" />
+    <input type="text" name="<?= $alias ?>_password" value="" size="15" />
   </div>
   <div class="field clear">
     <label>Channels
       <span style="font-size:0.8em">(e.g. <span style="font-family:monospace;font-size:1em">#alice</span>)</span>
     </label>
-    <select name="[% name %]_channels" multiple="multiple" id="channels_[% name %]" class="channelselect">
-      [% FOR channel IN connection.config.channels %]
-      <option value="">[% channel %]</option>
-      [% END %]
+    <select name="<?= $alias ?>_channels" multiple="multiple" id="channels_<?= $alias ?>" class="channelselect">
     </select>
     <div class="controls">
-      <a href="#" onclick="return addChannel('[% name %]')">New</a>
-      <a href="#" onclick="return removeChannels('[% name %]')">Remove</a>
+      <a href="#" onclick="return addChannel('<?= $alias ?>')">New</a>
+      <a href="#" onclick="return removeChannels('<?= $alias ?>')">Remove</a>
     </div>
   </div>
   <div class="field">
     <label>Commands</label>
-    <select name="[% sessionid %]_on_connect" multiple="multiple" id="on_connect_[% sessionid %]" class="channelselect">
-      [% FOR command IN connection.config.on_connect %]
-      <option value="[% command %]">[% command %]</option>
-      [% END %]
+    <select name="<?= $alias ?>_on_connect" multiple="multiple" id="on_connect_<?= $alias ?>" class="channelselect">
     </select>
     <div class="controls">
-      <a href="#" onclick="return _.addCommand([% sessionid %])">New</a>
-      <a href="#" onclick="return _.removeCommands([% sessionid %])">Remove</a>
+      <a href="#" onclick="return _.addCommand(<?= $alias ?>)">New</a>
+      <a href="#" onclick="return _.removeCommands(<?= $alias ?>)">Remove</a>
     </div>
   </div>
 </div>

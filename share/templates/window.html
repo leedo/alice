@@ -1,5 +1,6 @@
-? my ($app, $active, $window) = @_;
-<div class="window<?= " active" if $active ?>" id="<?= $window->id ?>">
+? my ($app, $window, @classes) = @_;
+? my $active = grep {$_ eq "active"} @classes;
+<div class="window <?= join " ", @classes ?>" id="<?= $window->id ?>">
   <table cellspacing="0" cellpadding="0">
     <tr class="topic">
       <td id="<?= $window->id ?>_topic">
