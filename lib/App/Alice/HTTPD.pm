@@ -154,7 +154,7 @@ sub setup_stream {
 sub purge_disconnects {
   my ($self, $host, $port) = @_;
   $self->streams([
-    grep {$_->callback} $self->streams
+    grep {!$_->disconnected} $self->streams
   ]);
 }
 

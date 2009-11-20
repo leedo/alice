@@ -68,6 +68,12 @@ has 'request' => (
   required => 1,
 );
 
+has disconnected => (
+  is  => 'rw',
+  isa => 'Bool',
+  default => 0,
+);
+
 has callback => (
   is  => 'rw',
   isa => 'CodeRef',
@@ -86,7 +92,7 @@ sub BUILD {
 
   $self->request->respond([
     200, 'ok', 'multipart/mixed; boundary='.$self->seperator.'; charset=utf-8',
-    sub {$self->callback($_[0])}
+    sub {$_[0] ? $self->callback($_[0]) : $self->disconnected(1)}
   ]);
   $self->broadcast;
 }
