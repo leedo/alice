@@ -148,7 +148,12 @@ sub disconnected {
   $self->app->send(
     [$self->log_info("disconnected")]
   );
-};
+}
+
+sub disconnect {
+  my $self = shift;
+  $self->cl->disconnect($self->app->config->quitmsg);
+}
 
 sub publicmsg {
   my ($self, $cl, $channel, $msg) = @_;

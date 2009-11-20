@@ -108,17 +108,11 @@ has 'info_window' => (
 sub BUILD {
   my $self = shift;
   $self->meta->error_class('Moose::Error::Croak');
-  for my $sig (qw/INT QUIT/) {
-    AnyEvent->signal(
-      signal => $sig,
-      cb     => sub {App::Alice::Signal->new(app => $self, type => $sig)}
-    );
-  }
 }
 
 sub run {
   my $self = shift;
-  my $c = AnyEvent->condvar;
+  $self->cond(AnyEvent->condvar);
   
   # initialize template and httpd because they are lazy
   $self->template;
@@ -128,7 +122,18 @@ sub run {
     for keys %{$self->config->servers};
 
   say STDERR "Location: http://localhost:". $self->config->port ."/view";
-  $c->wait;
+  
+  my @sigs;
+  for my $sig (qw/INT QUIT/) {
+    my $w = AnyEvent->signal(
+      signal => $sig,
+      cb     => sub {App::Alice::Signal->new(app => $self, type => $sig)}
+    );
+    push @sigs, $w;
+  }
+  
+  $self->cond->wait;
+  print STDERR "Disconnecting...\n";
   $_->disconnect('alice') for $self->connections;
 }
 

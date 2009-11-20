@@ -15,10 +15,11 @@ has app => (
   required => 1,
 );
 
-sub START {
+sub BUILD {
   my $self = shift;
   $self->meta->error_class('Moose::Error::Croak');
-  $self->call("sig" . lc $self->type);
+  my $method = "sig" . lc $self->type;
+  $self->$method();
 }
 
 sub sigint  {$_[0]->app->cond->send};
