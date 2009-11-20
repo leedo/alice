@@ -1,6 +1,7 @@
 package App::Alice;
 
-use Moose;
+use Digest::CRC qw/crc16/;
+use Encode;
 use Text::MicroTemplate::File;
 use App::Alice::Window;
 use App::Alice::InfoWindow;
@@ -8,8 +9,7 @@ use App::Alice::HTTPD;
 use App::Alice::IRC;
 use App::Alice::Signal;
 use App::Alice::Config;
-use Digest::CRC qw/crc16/;
-use Encode;
+use Moose;
 
 our $VERSION = '0.01';
 
@@ -107,7 +107,6 @@ has 'info_window' => (
 
 sub BUILD {
   my $self = shift;
-  $self->meta->error_class('Moose::Error::Croak');
   for my $sig (qw/INT QUIT/) {
     AnyEvent->signal(
       signal => $sig,

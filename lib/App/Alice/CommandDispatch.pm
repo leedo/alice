@@ -1,7 +1,7 @@
 package App::Alice::CommandDispatch;
 
-use Moose;
 use Encode;
+use Moose;
   
 has 'handlers' => (
   is => 'rw',
@@ -32,10 +32,6 @@ has 'app' => (
   isa      => 'App::Alice',
   required => 1,
 );
-
-sub BUILD {
-  shift->meta->error_class('Moose::Error::Croak');
-}
 
 sub handle {
   my ($self, $command, $window) = @_;

@@ -1,11 +1,11 @@
 package App::Alice::Window;
 
-use Moose;
 use Encode;
 use Digest::CRC qw/crc16/;
 use MooseX::ClassAttribute;
-use IRC::Formatting::HTML;
 use Text::MicroTemplate qw/encoded_string/;
+use IRC::Formatting::HTML;
+use Moose;
 
 class_has msgid => (
   traits    => ['Counter'],
@@ -88,10 +88,6 @@ has app => (
   isa     => 'App::Alice',
   required => 1,
 );
-
-sub BUILD {
-  shift->meta->error_class('Moose::Error::Croak');
-}
 
 sub serialized {
   my ($self, $encoded) = @_;

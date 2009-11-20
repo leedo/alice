@@ -71,7 +71,6 @@ sub BUILD {
   my $local_time = time;
   my $remote_time = $self->request->parm('t') || $local_time;
   $self->offset($local_time - $remote_time);
-
   $self->request->respond([
     200, 'ok', 'multipart/mixed; boundary='.$self->seperator.'; charset=utf-8',
     sub {$_[0] ? $self->callback($_[0]) : $self->disconnected(1)}

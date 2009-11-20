@@ -42,7 +42,6 @@ has 'config' => (
 
 sub BUILD {
   my $self = shift;
-  $self->meta->error_class('Moose::Error::Croak');
   my $httpd = AnyEvent::HTTPD->new(
     port => $self->config->port,
   );

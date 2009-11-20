@@ -1,10 +1,10 @@
 package App::Alice::Config;
 
-use Moose;
 use FindBin;
 use Data::Dumper;
 use File::ShareDir qw/dist_dir/;
 use Getopt::Long;
+use Moose;
 
 has assetdir => (
   is      => 'ro',
@@ -97,7 +97,6 @@ has fullpath => (
 
 sub BUILD {
   my $self = shift;
-  $self->meta->error_class('Moose::Error::Croak');
   $self->load;
 }
 
