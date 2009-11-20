@@ -28,19 +28,13 @@ has actions => (
   },
 );
 
-has offset => (
+has [qw/offset last_send/]=> (
   is  => 'rw',
   isa => 'Num',
   default => 0,
 );
 
-has last_send => (
-  is  => 'rw',
-  isa => 'Num',
-  default => 0,
-);
-
-has delayed => (
+has [qw/delayed started disconnected/] => (
   is  => 'rw',
   isa => 'Bool',
   default => 0,
@@ -52,12 +46,6 @@ has 'seperator' => (
   default => 'xalicex',
 );
 
-has 'started' => (
-  is  => 'rw',
-  isa => 'Bool',
-  default => 0,
-);
-
 has 'timer' => (
   is  => 'rw',
 );
@@ -66,12 +54,6 @@ has 'request' => (
   is  => 'ro',
   isa => 'AnyEvent::HTTPD::Request',
   required => 1,
-);
-
-has disconnected => (
-  is  => 'rw',
-  isa => 'Bool',
-  default => 0,
 );
 
 has callback => (
