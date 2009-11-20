@@ -33,13 +33,6 @@ has 'streams' => (
   }
 );
 
-has 'tt' => (
-  is => 'ro',
-  isa => 'Template',
-  lazy => 1,
-  default => sub { shift->app->tt }
-);
-
 has 'config' => (
   is => 'ro',
   isa => 'App::Alice::Config',
@@ -145,7 +138,7 @@ sub setup_stream {
   $self->add_stream(
     App::Alice::Stream->new(
       actions => [ map {$_->nicks_action} $self->app->windows ],
-      msgs    => $self->app->buffered_messages(0),
+      msgs    => $self->app->buffered_messages($msgid),
       request => $req,
     )
   );
