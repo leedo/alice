@@ -139,7 +139,7 @@ sub to_string {
     msgs => $self->msgs,
     actions => $self->actions,
     time => time - $self->offset,
-  });
+  }, {utf8 => 1});
   use bytes;
   $output .= " " x (1024 - bytes::length $output)
     if bytes::length $output < 1024;
