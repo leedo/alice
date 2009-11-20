@@ -223,7 +223,7 @@ sub close_window {
   my ($self, $window) = @_;
   $self->send([$window->close_action]);
   $self->log_debug("sending a request to close a tab: " . $window->title)
-    if $self->httpd->has_clients;
+    if $self->httpd->stream_count;
   $self->remove_window($window->id);
 }
 
@@ -250,7 +250,7 @@ sub send {
   
   $self->httpd->broadcast($messages, $force);
   
-  return unless $self->notifier and ! $self->httpd->has_clients;
+  return unless $self->notifier and ! $self->httpd->stream_count;
   for my $message (@$messages) {
     $self->notifier->display($message) if $message->{highlight};
   }

@@ -3,12 +3,11 @@ package App::Alice::HTTPD;
 use AnyEvent;
 use AnyEvent::HTTPD;
 use AnyEvent::HTTP;
-use Moose;
+use App::Alice::Stream;
 use App::Alice::CommandDispatch;
 use MIME::Base64;
-use Time::HiRes qw/time/;
 use JSON;
-use Template;
+use Moose;
 
 has 'app' => (
   is  => 'ro',
@@ -22,15 +21,16 @@ has 'httpd' => (
 );
 
 has 'streams' => (
+  traits => ['Array'],
   is  => 'rw',
-  isa => 'ArrayRef',
+  auto_deref => 1,
+  isa => 'ArrayRef[App::Alice::Stream]',
   default => sub {[]},
-);
-
-has 'seperator' => (
-  is  => 'ro',
-  isa => 'Str',
-  default => 'xalicex',
+  handles => {
+    add_stream   => 'push',
+    no_streams   => 'is_empty',
+    stream_count => 'count',
+  }
 );
 
 has 'tt' => (
@@ -96,19 +96,21 @@ sub image_proxy {
 
 sub broadcast {
   my ($self, $data, $force) = @_;
-  return unless $self->has_clients;
+  return if $self->no_streams;
   
-  for my $res (@{$self->streams}) {
-    for my $item (@$data) {
-      if ($item->{type} eq "message") {
-        push @{$res->{msgs}}, $item
-      }
-      elsif ($item->{type} eq "action") {
-        push @{$res->{actions}}, $item
+  if (@$data) {
+    for my $stream ($self->streams) {
+      for my $item (@$data) {
+        if ($item->{type} eq "message") {
+          $stream->add_msg($item);
+        }
+        elsif ($item->{type} eq "action") {
+          $stream->add_action($item);
+        }
       }
     }
   }
-  $self->send_stream($_) for @{$self->streams};
+  $_->broadcast for @{$self->streams};
 };
 
 sub check_authentication {
@@ -138,76 +140,22 @@ sub check_authentication {
 
 sub setup_stream {
   my ($self, $httpd, $req) = @_;
-  
-  my $local_time = time;
-  my $remote_time = $req->parm('t') || $local_time;
-  
-  # TODO make a real stream class for this
-  my $stream = {
-    msgs      => [],
-    actions   => [ map {$_->nicks_action} $self->app->windows ],
-    offset    => $local_time - $remote_time,
-    last_send => 0,
-    delayed   => 0,
-    data_cb   => sub {print STDERR "no data cb setup yet\n"},
-  };
-  
-  my $res = $req->respond([
-    200, 'ok', 'multipart/mixed; boundary='.$self->seperator.'; charset=utf-8',
-    sub {$stream->{data_cb} = shift}
-  ]);
-  
-  $stream->{res} = $res;
-  
   $self->log_debug("opening new stream");
-
-  # populate the msg queue with any buffered messages
-  if (defined (my $msgid = $req->parm('msgid'))) {
-    $stream->{msgs} = $self->app->buffered_messages($msgid);
-  }
-  push @{$self->streams}, $stream;
-  $self->send_stream($stream);
-}
-
-sub send_stream {
-  my ($self, $stream) = @_;
-  my $diff = time - $stream->{last_send};
-  if ($diff < 0.1 and !$stream->{resend_id}) {
-    $stream->{delayed} = 1;
-    $stream->{resend_id} = AnyEvent->timer(
-      after => 0.1 - $diff,
-      cb    => sub {$self->send_stream($stream)}
-    );
-    return;
-  }
-  if (@{$stream->{msgs}} or @{$stream->{actions}}) {
-    use bytes;
-    my $output;
-    if (! $stream->{started}) {
-      $stream->{started} = 1;
-      $output .= '--'.$self->seperator."\n";
-    }
-    $output .= to_json({msgs => $stream->{msgs}, actions => $stream->{actions},
-                        time => time - $stream->{offset}});
-    $output .= " " x (1024 - bytes::length $output) if bytes::length $output < 1024;
-    $stream->{data_cb}->("$output\n--" . $self->seperator . "\n");
-    
-    $stream->{msgs} = [];
-    $stream->{actions} = [];
-    $stream->{last_send} = time;
-    no bytes;
-  }
-  $stream->{resend_id} = undef;
+  my $msgid = $req->parm('msgid') || 0;
+  $self->add_stream(
+    App::Alice::Stream->new(
+      actions => [ map {$_->nicks_action} $self->app->windows ],
+      msgs    => $self->app->buffered_messages(0),
+      request => $req,
+    )
+  );
 }
 
 sub purge_disconnects {
   my ($self, $host, $port) = @_;
-  for (0 .. scalar @{$self->streams} - 1) {
-    my $stream = $self->streams->[$_];
-    if (!$stream->{data_cb}) {
-      splice @{$self->streams}, $_, 1;
-    }
-  }
+  $self->streams([
+    grep {$_->callback} $self->streams
+  ]);
 }
 
 sub handle_message {
@@ -324,11 +272,6 @@ sub not_found  {
   my ($self, $req) = @_;
   $self->log_debug("404: ", $req->url);
   $req->respond([404,'not found']);
-}
-
-sub has_clients {
-  my $self = shift;
-  return scalar @{$self->streams} > 0;
 }
 
 sub log_debug {
