@@ -258,7 +258,7 @@ sub send {
 
 sub format_notice {
   my ($self, $event, $nick, $body) = @_;
-  $body = decode("utf8", $body, Encode::FB_WARN);
+  $body = decode("utf8", $body, Encode::FB_QUIET);
   my $message = {
     type      => "action",
     event     => $event,

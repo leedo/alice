@@ -86,7 +86,7 @@ sub log_info {
 
 sub window {
   my ($self, $title) = @_;
-  $title = decode("utf8", $title, Encode::FB_WARN);
+  $title = decode("utf8", $title, Encode::FB_QUIET);
   return $self->app->find_or_create_window(
            $title, $self);
 }

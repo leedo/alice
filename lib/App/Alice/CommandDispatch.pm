@@ -70,13 +70,13 @@ sub names {
 
 sub whois {
   my ($self, $window, $arg) = @_;
-  $arg = decode("utf8", $arg, Encode::FB_WARN);
+  $arg = decode("utf8", $arg, Encode::FB_QUIET);
   $self->app->send([$window->format_announcement($window->irc->whois_table($arg))]);
 }
 
 sub query {
   my ($self, $window, $arg) = @_;
-  $arg = decode("utf8", $arg, Encode::FB_WARN);
+  $arg = decode("utf8", $arg, Encode::FB_QUIET);
   my $new_window = $self->app->find_or_create_window($arg, $window->irc);
   $self->app->send([$new_window->join_action]);
 }
@@ -110,7 +110,7 @@ sub nick {
 sub create {
   my ($self, $window, $arg) = @_;
   return unless $window->irc;
-  $arg = decode("utf8", $arg, Encode::FB_WARN);
+  $arg = decode("utf8", $arg, Encode::FB_QUIET);
   my $new_window = $self->app->find_or_create_window($arg, $window->irc);
   $self->app->send([$new_window->join_action]);
 }
@@ -142,13 +142,13 @@ sub me {
 
 sub quote {
   my ($self, $window, $arg) = @_;
-  $arg = decode("utf8", $arg, Encode::FB_WARN);
+  $arg = decode("utf8", $arg, Encode::FB_QUIET);
   $window->irc->cl->send_raw($arg);
 }
 
 sub notfound {
   my ($self, $window, $arg) = @_;
-  $arg = decode("utf8", $arg, Encode::FB_WARN);
+  $arg = decode("utf8", $arg, Encode::FB_QUIET);
   $self->app->send([$window->format_announcement("Invalid command $arg")]);
 }
 
