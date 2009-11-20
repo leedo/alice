@@ -139,4 +139,5 @@ sub to_string {
   return $output
 }
 
+__PACKAGE__->meta->make_immutable;
 1;
