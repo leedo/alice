@@ -79,7 +79,7 @@ has callback => (
   isa => 'CodeRef',
   default => sub {
     sub {
-      print STDERR "no data callback set up on stream yet\n"
+      print STDERR "no data callback set up on stream yet!\n"
     }
   }
 );
@@ -99,6 +99,7 @@ sub BUILD {
 
 sub broadcast {
   my $self = shift;
+  return if $self->delayed;
   return if $self->no_msgs and $self->no_actions;
   if (my $delay = $self->flooded) {
     $self->delay($delay);
@@ -111,9 +112,10 @@ sub broadcast {
 sub flooded {
   my $self = shift;
   my $diff = time - $self->last_send;
-  if ($diff < 0.2 and !$self->delayed) {
+  if ($diff < 0.2) {
     return 0.2 - $diff;
   }
+  return 0;
 }
 
 sub delay {
@@ -121,14 +123,16 @@ sub delay {
   $self->delayed(1);
   $self->timer(AnyEvent->timer(
     after => $delay,
-    cb    => sub {$self->broadcast},
+    cb    => sub {
+      $self->delayed(0);
+      $self->timer(undef);
+      $self->broadcast;
+    },
   ));
 }
 
 sub flush {
   my $self = shift;
-  $self->delayed(0);
-  $self->timer(undef);
   $self->clear_msgs;
   $self->clear_actions;
   $self->last_send(time);

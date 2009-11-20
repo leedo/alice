@@ -2,6 +2,9 @@ AnyEvent issues
 - reconnecting, mostly seems to work
 
 Switch to Text::MicroTemplate
+- Config window
+
 Switch to Any::Moose/Mouse
+- not possible with current trait usage?
 
 Just send one combined list of actions/messages
