@@ -1,6 +1,7 @@
 package App::Alice;
 
-use Moose;
+use Digest::CRC qw/crc16/;
+use Encode;
 use Text::MicroTemplate::File;
 use App::Alice::Window;
 use App::Alice::InfoWindow;
@@ -8,8 +9,7 @@ use App::Alice::HTTPD;
 use App::Alice::IRC;
 use App::Alice::Signal;
 use App::Alice::Config;
-use Digest::CRC qw/crc16/;
-use Encode;
+use Moose;
 
 our $VERSION = '0.01';
 
@@ -104,11 +104,6 @@ has 'info_window' => (
     return $info;
   }
 );
-
-sub BUILD {
-  my $self = shift;
-  $self->meta->error_class('Moose::Error::Croak');
-}
 
 sub run {
   my $self = shift;
@@ -228,7 +223,7 @@ sub close_window {
   my ($self, $window) = @_;
   $self->send([$window->close_action]);
   $self->log_debug("sending a request to close a tab: " . $window->title)
-    if $self->httpd->has_clients;
+    if $self->httpd->stream_count;
   $self->remove_window($window->id);
 }
 
@@ -255,7 +250,7 @@ sub send {
   
   $self->httpd->broadcast($messages, $force);
   
-  return unless $self->notifier and ! $self->httpd->has_clients;
+  return unless $self->notifier and ! $self->httpd->stream_count;
   for my $message (@$messages) {
     $self->notifier->display($message) if $message->{highlight};
   }
@@ -263,7 +258,7 @@ sub send {
 
 sub format_notice {
   my ($self, $event, $nick, $body) = @_;
-  $body = decode("utf8", $body, Encode::FB_WARN);
+  $body = decode("utf8", $body, Encode::FB_QUIET);
   my $message = {
     type      => "action",
     event     => $event,

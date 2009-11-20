@@ -1,11 +1,11 @@
 package App::Alice::Window;
 
-use Moose;
 use Encode;
 use Digest::CRC qw/crc16/;
 use MooseX::ClassAttribute;
-use IRC::Formatting::HTML;
 use Text::MicroTemplate qw/encoded_string/;
+use IRC::Formatting::HTML;
+use Moose;
 
 class_has msgid => (
   traits    => ['Counter'],
@@ -89,10 +89,6 @@ has app => (
   required => 1,
 );
 
-sub BUILD {
-  shift->meta->error_class('Moose::Error::Croak');
-}
-
 sub serialized {
   my ($self, $encoded) = @_;
   $encoded = 0 unless $encoded;
@@ -171,7 +167,7 @@ sub timestamp {
 
 sub format_event {
   my ($self, $event, $nick, $body) = @_;
-  $body = decode("utf8", $body, Encode::FB_WARN);
+  $body = decode("utf8", $body, Encode::FB_QUIET);
   my $message = {
     type      => "message",
     event     => $event,
@@ -189,7 +185,7 @@ sub format_event {
 
 sub format_message {
   my ($self, $nick, $body) = @_;
-  $body = decode("utf8", $body, Encode::FB_WARN);
+  $body = decode("utf8", $body, Encode::FB_QUIET);
   my $html = IRC::Formatting::HTML->formatted_string_to_html($body);
   my $own_nick = $self->nick;
   my $message = {
@@ -213,7 +209,7 @@ sub format_message {
 
 sub format_announcement {
   my ($self, $msg) = @_;
-  $msg = decode("utf8", $msg, Encode::FB_WARN);
+  $msg = decode("utf8", $msg, Encode::FB_QUIET);
   my $message = {
     type    => "message",
     event   => "announce",

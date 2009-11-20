@@ -17,7 +17,6 @@ has app => (
 
 sub BUILD {
   my $self = shift;
-  $self->meta->error_class('Moose::Error::Croak');
   my $method = "sig" . lc $self->type;
   $self->$method();
 }

@@ -6,10 +6,8 @@ App::Alice - an Altogether Lovely Internet Chatting Experience
 
 =head1 SYNPOSIS
 
-Alice require perl 5.10.
-
   arthur:~ leedo$ alice
-  You can view your IRC session at: http://localhost:8080/view
+  Location: http://localhost:8080/view
 
 =head1 DESCRIPTION
 
@@ -17,7 +15,7 @@ Alice is an IRC client that can be run either locally or remotely, and
 can be viewed in multiple web browsers at the same time. The alice server
 maintains a message buffer, so when a browser connects it is sent
 the 100 most recent lines from each channel. This allows the user to
-close their browser and alice will continue to aggregate messages.
+close their browser while alice continues to aggregate messages.
 
 Alice's built in web server maintains a long streaming HTTP response
 to each connected browser. It uses this connection to push IRC messages
@@ -36,7 +34,7 @@ will appear as tabs at the bottom of the screen.
 
 =head1 COMMANDS
 
-=head2 /join $string
+=head2 /j[oin] [-network] $string
 
 Takes a channel name as an argument. It will attempt to join this channel
 on the server of the channel that you typed the command into.
@@ -47,6 +45,8 @@ This will close the currently focused tab and part the channel. Only works on
 channels.
 
 =head2 /close
+
+=head2 /wc
 
 Closes the current tab, even private message tabs. If used in a channel
 it will also part the channel.
@@ -68,6 +68,8 @@ Takes a nick as an argument. This will print some information about the
 supplied user.
 
 =head2 /quote $string
+
+=head2 /raw $string
 
 Sends $string as a raw message to the server.
 

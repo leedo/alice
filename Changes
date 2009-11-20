@@ -1,2 +1,6 @@
+0.02  Fri 20 Nov 2009
+         - Switched to AnyEvent and Text::MicroTemplate
+         - Removed other dependencies
+
 0.01  Wed 19 Aug 2009
          - Initial release

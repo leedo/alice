@@ -51,12 +51,7 @@ has nicks => (
 
 sub BUILD {
   my $self = shift;
-  $self->meta->error_class('Moose::Error::Croak');
-
-  $self->app->send(
-    [$self->log_info("connecting")]
-  );
-
+  $self->app->send([$self->log_info("connecting")]);
   $self->cl->enable_ssl(1) if $self->config->{ssl};
   $self->cl->reg_cb(
     registered     => sub{$self->registered(@_)},
@@ -86,7 +81,7 @@ sub log_info {
 
 sub window {
   my ($self, $title) = @_;
-  $title = decode("utf8", $title, Encode::FB_WARN);
+  $title = decode("utf8", $title, Encode::FB_QUIET);
   return $self->app->find_or_create_window(
            $title, $self);
 }
