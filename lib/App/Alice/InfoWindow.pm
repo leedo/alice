@@ -31,9 +31,8 @@ sub format_message {
     msgid  => $self->next_msgid,
     monospaced => $monospaced ? 1 : 0,
   };
-  
   $message->{full_html} = $self->app->render("message", $message);
-  $message->{html} = "$html";
+  $message->{html} = $monospaced ? "<span class=\"monospace\">$html</span>" : "$html";
   $self->add_message($message);
   return $message;
 }

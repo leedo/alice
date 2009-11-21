@@ -179,9 +179,10 @@ sub tab_order {
 
 sub buffered_messages {
   my ($self, $min) = @_;
+  my $max = 0;
   return [ map {$_->{buffered} = 1; $_;}
-           grep {$_->{msgid} > $min}
-           map {@{$_->msgbuffer}} $self->windows
+           grep {$_->{msgid} > $min or $min > $max}
+           map {$max = $_->msgid; @{$_->msgbuffer}} $self->windows
          ];
 }
 

@@ -211,7 +211,7 @@ sub send_index {
 sub send_config {
   my ($self, $httpd, $req) = @_;
   $self->log_debug("serving config");
-  my $output = $self->app->render('config');
+  my $output = $self->app->render('servers');
   $req->respond([200, 'ok', {}, $output]);
 }
 
@@ -219,7 +219,7 @@ sub server_config {
   my ($self, $httpd, $req) = @_;
   $self->log_debug("serving blank server config");
   my $name = $req->parm('name');
-  my $config = $self->app->render('server_config', $name);
+  my $config = $self->app->render('new_server', $name);
   my $listitem = $self->app->render('server_listitem', $name);
   $req->respond([200, 'ok', {"Cache-control" => "no-cache"}, 
                 to_json({config => $config, listitem => $listitem})]);

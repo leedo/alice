@@ -284,7 +284,7 @@ div.msg img {
   border: none;
 }
 
-div.msg.monospace, div.msg.announce {
+.monospace, div.msg.monospace, div.msg.announce {
   font-family: Monaco, monospace;
   font-size: 10px;
   line-height: 12px;
