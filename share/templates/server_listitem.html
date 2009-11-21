@@ -1,4 +1,5 @@
+? my ($app, $alias) = @_;
 <li class="disconnected active"
-    onclick="showConnection('[% name %]')" id="menu_[% name %]">
-  [% name %]
+    onclick="showConnection('<?= $alias ?>')" id="menu_<?= $alias ?>">
+  <?= $alias ?>
 </li>

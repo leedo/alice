@@ -1,3 +1,5 @@
+? my $app = shift;
+? my @connections = $app->connections;
 <!DOCTYPE html>
 <html>
   <head>
@@ -75,10 +77,11 @@
   
 		  <ul id="connections">
 		    <li class="header">Connections</li>
-		    <? for my $connection (@connections) { ?>
-		      <? my $alias = $connection->alias ?>
-		    <li class="<?= $connection->connected ? "connected" : "disconnected" ?><?= if loop.first %] active[% END %]"
-		        onclick="showConnection('[% alias %]')" id="menu_[% alias %]">
+		    <? for my $index (0 .. @connections - 1) { ?>
+		      <? my $connection = $connections[$index]; ?>
+		      <? my $alias = $connection->alias; ?>
+		    <li class="<?= $connection->cl->registered ? "connected" : "disconnected" ?> <? if ($index == 0) {?> active<?}?>"
+		        onclick="showConnection('<?= $alias ?>')" id="menu_<?= $alias ?>">
 		      <?= $alias ?>
 		    </li>
 		    <? } ?>
@@ -89,75 +92,76 @@
 		  </div>
   
 		  <form id="config_data" onsubmit="return submitConfig(this)">
-	    <? for my $connection (@connections) { ?>
-	      <? my $alias = $connection->alias ?>
-		  <div class="setting[% IF loop.first %] active[% END %]" id="setting_[% alias %]">
+		  <? for my $index (0 .. @connections - 1) { ?>
+		    <? my $connection = $connections[$index]; ?>
+		    <? my $alias = $connection->alias; ?>
+		  <div class="setting<? if ($index == 0) {?> active<?}?>" id="setting_<?= $alias ?>">
 		    <div class="field" style="width:138px">
 		      <label>Name</label>
 		      <span><?= $alias ?></span>
-		      <input type="hidden" name="[% alias %]_name" value="[% connection.alias %]" />
+		      <input type="hidden" name="<?= $alias ?>_name" value="<?= $alias ?>" />
 		    </div>
 		    <div class="field" style="width:138px">
 		      <label>Status</label>
-		      [% status = connection.is_connected ? "connected" : "disconnected" %]
-		      <span class="[% status %]">[% status %]</span>
+		      <? my $status = $connection->cl->registered ? "connected" : "disconnected" ?>
+		      <span class="<?= $status ?>"><?= $status ?></span>
 		      </div>
 		    <div class="field clear">
 		      <label>Server address</label>
-		      <input type="text" name="[% alias %]_host" value="[% connection.config.host %]" size="15"/>
+		      <input type="text" name="<?= $alias ?>_host" value="<?= $connection->config->{host} ?>" size="15"/>
 		    </div>
 		    <div class="field">
 		      <label>Port</label>
-		      <input type="text" name="[% alias %]_port" value="[% connection.config.port %]" size="6" style="float:left"/>
+		      <input type="text" name="<?= $alias ?>_port" value="<?= $connection->config->{port} ?>" size="6" style="float:left"/>
 		      <div style="float:left">
-		      <input type="checkbox" name="[% alias %]_ssl"[% IF connection.config.ssl %] checked="checked"[% END %] style="display:inline;margin-right:0px"/>
+		      <input type="checkbox" name="<?= $alias ?>_ssl"<? if ($connection->config->{ssl}) { ?> checked="checked"<? } ?> style="display:inline;margin-right:0px"/>
 		      <span style="font-size:0.7em">SSL</span>
 		      </div>
 		    </div>
 		    <div class="field clear">
 		      <label>Nick</label>
-		      <input type="text" name="[% alias %]_nick" value="[% connection.config.nick %]" size="15" />
+		      <input type="text" name="<?= $alias ?>_nick" value="<?= $connection->config->{nick} ?>" size="15" />
 		    </div>
 		    <div class="field">
 		      <label>Ircname</label>
-		      <input type="text" name="[% alias %]_ircname" value="[% connection.config.ircname %]" size="15" />
+		      <input type="text" name="<?= $alias ?>_ircname" value="<?= $connection->config->{ircname} ?>" size="15" />
 		    </div>
 		    <div class="field clear">
 		      <label>Username</label>
-		      <input type="text" name="[% alias %]_username" value="[% connection.config.username %]" size="15" />
+		      <input type="text" name="<?= $alias ?>_username" value="<?= $connection->config->{username} ?>" size="15" />
 		    </div>
 		    <div class="field">
 		      <label>Password</label>
-		      <input type="text" name="[% alias %]_password" value="[% connection.config.password %]" size="15" />
+		      <input type="text" name="<?= $alias ?>_password" value="<?= $connection->config->{password} ?>" size="15" />
 		    </div>
 		    <div class="field clear">
 		      <label>Channels
 		        <span style="font-size:0.8em">(e.g. <span style="font-family:monospace;font-size:1em">#alice</span>)</span>
 		      </label>
-		      <select name="[% alias %]_channels" multiple="multiple" id="channels_[% alias %]" class="channelselect">
-		        [% FOR channel IN connection.config.channels %]
-		        <option value="[% channel %]">[% channel %]</option>
-		        [% END %]
+		      <select name="<?= $alias ?>_channels" multiple="multiple" id="channels_<?= $alias ?>" class="channelselect">
+		        <? for my $channel (@{$connection->config->{channels}}) { ?>
+		        <option value="<?= $channel ?>"><?= $channel ?></option>
+		        <? } ?>
 		      </select>
 		      <div class="controls">
-		        <a href="#" onclick="return addChannel('[% alias %]')">New</a>
-		        <a href="#" onclick="return removeChannels('[% alias %]')">Remove</a>
+		        <a href="#" onclick="return addChannel('<?= $alias ?>')">New</a>
+		        <a href="#" onclick="return removeChannels('<?= $alias ?>')">Remove</a>
 		      </div>
 		    </div>
 		    <div class="field">
 		      <label>Commands</label>
-		      <select name="[% alias %]_on_connect" multiple="multiple" id="on_connect_[% alias %]" class="channelselect">
-		        [% FOR command IN connection.config.on_connect %]
-		        <option value="[% command %]">[% command %]</option>
-		        [% END %]
+		      <select name="<?= $alias ?>_on_connect" multiple="multiple" id="on_connect_<?= $alias ?>" class="channelselect">
+		        <? for my $command (@{ $connection->config->{on_connect} }) { ?>
+		        <option value="<?= $command ?>"><?= $command ?></option>
+		        <? } ?>
 		      </select>
 		      <div class="controls">
-		        <a href="#" onclick="return addCommand('[% alias %]')">New</a>
-		        <a href="#" onclick="return removeCommands('[% alias %]')">Remove</a>
+		        <a href="#" onclick="return addCommand('<?= $alias ?>')">New</a>
+		        <a href="#" onclick="return removeCommands('<?= $alias ?>')">Remove</a>
 		      </div>
 		    </div>
 		  </div>  
-		  [% END %]
+		  <? } ?>
 		  <div id="buttons">
 		    <button onclick="window.close(); return false;">Cancel</button>
 		    <button type="submit">Save</button>

@@ -251,7 +251,7 @@ sub save_config {
   }
   $self->config->merge($new_config);
   $self->config->write;
-  $req->respond([200, 'ok', {}, 'ok'])
+  $req->respond([200, 'ok'])
 }
 
 sub tab_order  {
@@ -266,7 +266,6 @@ sub tab_order  {
 
 sub not_found  {
   my ($self, $req) = @_;
-  $self->log_debug("404: ", $req->url);
   $req->respond([404,'not found']);
 }
 
