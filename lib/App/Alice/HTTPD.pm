@@ -47,7 +47,7 @@ has 'ping_timer' => (
 sub BUILD {
   my $self = shift;
   my $httpd = AnyEvent::HTTPD->new(
-    port => $self->config->port,
+    port => $self->config->http_port,
   );
   $httpd->reg_cb(
     '/serverconfig' => sub{$self->server_config(@_)},
@@ -250,6 +250,7 @@ sub save_config {
     }
   }
   $self->config->merge($new_config);
+  $self->app->reload_config();
   $self->config->write;
   $req->respond([200, 'ok'])
 }
@@ -271,11 +272,13 @@ sub not_found  {
 
 sub log_debug {
   my $self = shift;
-  print STDERR join " ", @_ if $self->config->debug;
+  return unless $self->config->show_debug and @_;
+  print STDERR join " ", @_ if $self->config->show_debug;
   print "\n";
 }
 
 sub log_info {
+  return unless @_;
   print STDERR join " ", @_;
   print STDERR "\n";
 }

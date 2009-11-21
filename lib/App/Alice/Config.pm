@@ -95,6 +95,12 @@ has fullpath => (
   default => sub {$_[0]->path ."/". $_[0]->file},
 );
 
+has commandline => (
+  is      => 'ro',
+  isa     => 'HashRef',
+  default => sub {{}},
+);
+
 sub BUILD {
   my $self = shift;
   $self->load;
@@ -120,8 +126,27 @@ sub load {
     say STDERR "No config found, writing a few config to ".$self->fullpath;
     $self->write;
   }
-  GetOptions("port=i" => \($config->{port}), "debug" => \($config->{debug}));
+  my ($port, $debug) = @_;
+  GetOptions("port=i" => \$port, "debug" => \$debug);
+  $self->commandline->{port} = $port if $port and $port =~ /\d+/;
+  $self->commandline->{debug} = 1 if $debug;
   $self->merge($config);
+}
+
+sub http_port {
+  my $self = shift;
+  if ($self->commandline->{port}) {
+    return $self->commandline->{port};
+  }
+  return $self->port;
+}
+
+sub show_debug {
+  my $self = shift;
+  if ($self->commandline->{debug}) {
+    return 1;
+  }
+  return $self->debug;
 }
 
 sub merge {

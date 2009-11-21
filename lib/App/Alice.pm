@@ -250,6 +250,34 @@ sub add_irc_server {
   );
 }
 
+sub reload_config {
+  my $self = shift;
+  for (keys %{$self->config->servers}) {
+    if (!$self->ircs->{$_}) {
+      $self->add_irc_server(
+        $_, $self->config->servers->{$_}
+      );
+    }
+    else {
+      $self->ircs->{$_}->config($self->config->servers->{$_});
+    }
+  }
+  for ($self->connections) {
+    if (!$self->config->servers->{$_->alias}) {
+      $self->remove_connection($_->alias);
+    }
+  }
+}
+
+sub remove_connection {
+  my ($self, $alias) = @_;
+  my $irc = $self->ircs->{$alias};
+  if ($irc) {
+    $irc->disconnect;
+    delete $self->ircs->{$alias};
+  }
+}
+
 sub log_info {
   my ($self, $session, $body, $highlight) = @_;
   $highlight = 0 unless $highlight;
@@ -292,7 +320,8 @@ sub render {
 
 sub log_debug {
   my $self = shift;
-  say STDERR join " ", @_ if $self->config->debug;
+  return unless $self->config->show_debug and @_;
+  say STDERR join " ", @_;
 }
 
 __PACKAGE__->meta->make_immutable;

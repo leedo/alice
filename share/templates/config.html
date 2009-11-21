@@ -123,11 +123,17 @@
 		      <label>Status</label>
 		      <? my $status = $connection->is_connected ? "connected" : "disconnected" ?>
 		      <span class="<?= $status ?>"><?= $status ?></span>
+		    </div>
+		    <div class="field clear" style="width:138px">
+		      <label>Auto-connect?</label>
+          <input type="checkbox"<? if ($connection->config->{autoconnect}) {?> checked="checked"<?}?> name="<?= $alias ?>_autoconnect" />
+        </div>
+		    <div class="field">
 		      <? my $action = $connection->is_connected ? "disconnect" : "connect" ?>
 		      <button onclick="return serverConnection('<?= $connection->alias ?>', '<?= $action ?>')">
 		        <?= $action ?>
 		      </button>
-		      </div>
+		    </div>
 		    <div class="field clear">
 		      <label>Server address</label>
 		      <input type="text" name="<?= $alias ?>_host" value="<?= $connection->config->{host} ?>" size="15"/>
@@ -166,7 +172,7 @@
 		        <? } ?>
 		      </select>
 		      <div class="controls">
-		        <a href="#" onclick="return addChannel('<?= $alias ?>')">New</a>
+		        <a href="#" onclick="return addChannel('<?= $alias ?>')">Add</a>
 		        <a href="#" onclick="return removeChannels('<?= $alias ?>')">Remove</a>
 		      </div>
 		    </div>
@@ -178,7 +184,7 @@
 		        <? } ?>
 		      </select>
 		      <div class="controls">
-		        <a href="#" onclick="return addCommand('<?= $alias ?>')">New</a>
+		        <a href="#" onclick="return addCommand('<?= $alias ?>')">Add</a>
 		        <a href="#" onclick="return removeCommands('<?= $alias ?>')">Remove</a>
 		      </div>
 		    </div>

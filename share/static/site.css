@@ -410,7 +410,7 @@ div#config {
 div#config div#buttons {
   position: absolute;
   bottom: 10px;
-  right: 20px;
+  left: 170px;
 }
 
 div#config div.setting {

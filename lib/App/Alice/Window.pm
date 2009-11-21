@@ -81,6 +81,7 @@ has irc => (
   is       => 'ro',
   isa      => 'App::Alice::IRC',
   required => 1,
+  weak_ref => 1,
 );
 
 has app => (

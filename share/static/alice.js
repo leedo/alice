@@ -7236,7 +7236,7 @@ Alice.Application = Class.create({
       this.configWindow.focus();
 
     } else {
-      this.configWindow = window.open(null, "config", "resizable=no,scrollbars=no,status=no,toolbar=no,location=no,width=500,height=410");
+      this.configWindow = window.open(null, "config", "resizable=no,scrollbars=no,status=no,toolbar=no,location=no,width=500,height=480");
 
       this.connection.getConfig(function(transport) {
         this.configWindow.document.write(transport.responseText);

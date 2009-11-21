@@ -20,7 +20,7 @@ has 'alias' => (
 
 has 'config' => (
   isa      => 'HashRef',
-  is       => 'ro',
+  is       => 'rw',
   lazy     => 1,
   default  => sub {
     my $self = shift;
@@ -62,7 +62,7 @@ has nicks => (
 sub BUILD {
   my $self = shift;
   $self->cl->enable_ssl(1) if $self->config->{ssl};
-  $self->disabled(1) unless $self->config->{enabled};
+  $self->disabled(1) unless $self->config->{autoconnect};
   $self->cl->reg_cb(
     registered     => sub{$self->registered(@_)},
     channel_add    => sub{$self->channel_add(@_)},
@@ -171,7 +171,7 @@ sub registered {
 sub disconnected {
   my ($self, $cl, $reason) = @_;
   $self->app->send(
-    [$self->log_info("disconnected: $reason")]
+    [$self->log_info("disconnected")]
   );
   $self->reconnect;
 }
@@ -366,7 +366,8 @@ sub whois_table {
 
 sub log_debug {
   my $self = shift;
-  say STDERR join " ", @_ if $self->config->{debug};
+  return unless $self->config->show_debug and @_;
+  say STDERR join " ", @_;;
 }
 
 __PACKAGE__->meta->make_immutable;
