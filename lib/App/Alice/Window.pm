@@ -162,6 +162,7 @@ sub timestamp {
   my $hour = $time[2];
   my $ampm = $hour > 11 ? 'p' : 'a';
   $hour = $hour > 12 ? $hour - 12 : $hour;
+  $hour = 12 if $hour == 0;
   return sprintf("%d:%02d%s",$hour, $time[1], $ampm);
 }
 

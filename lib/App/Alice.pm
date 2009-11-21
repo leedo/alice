@@ -117,6 +117,7 @@ sub run {
   $self->cond(AnyEvent->condvar);
   
   # initialize template and httpd because they are lazy
+  $self->info_window;
   $self->template;
   $self->httpd;
 

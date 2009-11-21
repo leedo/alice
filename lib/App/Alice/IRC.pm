@@ -34,6 +34,16 @@ has 'app' => (
   required => 1,
 );
 
+has 'reconnect_timer' => (
+  is => 'rw'
+);
+
+has [qw/is_connected disabled/] => (
+  is  => 'rw',
+  isa => 'Bool',
+  default => 0,
+);
+
 has nicks => (
   traits    => ['Hash'],
   is        => 'rw',
@@ -51,8 +61,8 @@ has nicks => (
 
 sub BUILD {
   my $self = shift;
-  $self->app->send([$self->log_info("connecting")]);
   $self->cl->enable_ssl(1) if $self->config->{ssl};
+  $self->disabled(1) unless $self->config->{enabled};
   $self->cl->reg_cb(
     registered     => sub{$self->registered(@_)},
     channel_add    => sub{$self->channel_add(@_)},
@@ -65,13 +75,14 @@ sub BUILD {
     publicmsg      => sub{$self->publicmsg(@_)},
     privatemsg     => sub{$self->privatemsg(@_)},
     connect        => sub{$self->connected(@_)},
+    disconnect     => sub{$self->disconnected(@_)},
     irc_352        => sub{$self->irc_352(@_)}, # WHO info
     irc_366        => sub{$self->irc_366(@_)}, # end of NAMES
     irc_372        => sub{$self->log_info(@_)}, # MOTD info
     irc_377        => sub{$self->log_info(@_)}, # MOTD info
     irc_378        => sub{$self->log_info(@_)}, # MOTD info
   );
-  $self->connect;
+  $self->connect unless $self->disabled;
 }
 
 sub log_info {
@@ -98,6 +109,7 @@ sub windows {
 
 sub connect {
   my $self = shift;
+  $self->app->send([$self->log_info("connecting")]);
   $self->cl->connect(
     $self->config->{host}, $self->config->{port},
     {
@@ -115,15 +127,33 @@ sub connected {
     $self->app->send([
       $self->log_info("connect error: $err")
     ]);
+    $self->reconnect;
   }
+  else {
+    $self->is_connected(1);
+  }
+}
+
+sub reconnect {
+  my $self = shift;
+  $self->is_connected(0);
+  return if $self->disabled;
+  $self->app->send([$self->log_info("reconnecting in 10 seconds")]);
+  $self->reconnect_timer(
+    AnyEvent->timer(after => 10, cb => sub {
+      unless ($self->is_connected) {
+        $self->connect;
+      }
+    })
+  );
 }
 
 sub registered {
   my $self = shift;
   my @log;
   $self->cl->enable_ping (60, sub {
-    $self->log_info("disconnected from server, reconnecting in 10 seconds");
-    AnyEvent->timer(after => 10, cb => sub {shift->connect});
+    $self->app->send([$self->log_info("ping timeout")]);
+    $self->reconnect;
   });
   push @log, $self->log_info("connected");
   for (@{$self->config->{on_connect}}) {
@@ -139,14 +169,16 @@ sub registered {
 };
 
 sub disconnected {
-  my $self = shift;
+  my ($self, $cl, $reason) = @_;
   $self->app->send(
-    [$self->log_info("disconnected")]
+    [$self->log_info("disconnected: $reason")]
   );
+  $self->reconnect;
 }
 
 sub disconnect {
   my $self = shift;
+  $self->disabled(1);
   $self->cl->disconnect($self->app->config->quitmsg);
 }
 

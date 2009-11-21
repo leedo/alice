@@ -1,8 +1,9 @@
 ? my @windows = $_[0]->sorted_windows;
+? my $titlewin = @windows > 1 ? $windows[1] : $windows[0];
 <!DOCTYPE html>
 <html>
   <head>
-    <title><?= $windows[1]->title . " " . $windows[1]->topic->{string} ?></title>
+    <title><?= $titlewin->title . " " . $titlewin->topic->{string} ?></title>
     <script type="text/javascript" src="/static/alice.js"></script>
     <script type="text/javascript" src="/static/site.js?images=<?= $_[0]->config->images || 'show' ?>&amp;monospace_nicks=<?= join ",", @{$_[0]->config->monospace_nicks} ?>"></script>
     <link type="text/css" rel="stylesheet" href="/static/site.css" />
@@ -26,6 +27,9 @@
 ?     push @classes, "active" if $_ == 1;
 ?     push @classes, "leftof_active" if $_ == 0;
 ?   }
+?   else {
+?     push @classes, "active" if $_ == 0;
+?   }
 ?=  $_mt->render_file('tab.html', $_[0], $window, @classes)
 ? }
       </ul>
@@ -36,6 +40,9 @@
 ?   if (@windows > 1) {
 ?     push @classes, "active" if $_ == 1;
 ?     push @classes, "leftof_active" if $_ == 0;
+?   }
+?   else {
+?     push @classes, "active" if $_ == 0;
 ?   }
 ?=  $_mt->render_file('window.html', $_[0], $window, @classes)
 ? }

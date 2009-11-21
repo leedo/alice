@@ -59,7 +59,15 @@
 			        }
 			      })
 			    };
-			    
+			    removeServer = function () {
+		        var alias = $('connections').down('.active').id.replace(/^menu_/, "");
+			      if (alias && confirm("Are you sure you want to remove "+alias+"?")) {
+			        $("menu_"+alias).remove();
+			        $("setting_"+alias).remove();
+			        $("connections").down("li", 1).addClassName("active");
+			        $("config_data").down("div").addClassName("active");
+			      }
+			    };
 			    submitConfig = function(form) {
             $$('#config .channelselect').each(function(select) {
               $A(select.options).each(function(option) {
@@ -72,7 +80,17 @@
               onSuccess: function () {window.close()}
             });
             return false;
-          },
+          };
+          serverConnection = function(alias, action) {
+            new Ajax.Request('/say', {
+              method: 'get',
+              parameters: {
+                msg: '/' + action + ' ' + alias,
+                source: 'info'
+              }
+            });
+            return false;
+          };
 		  </script>
   
 		  <ul id="connections">
@@ -80,7 +98,7 @@
 		    <? for my $index (0 .. @connections - 1) { ?>
 		      <? my $connection = $connections[$index]; ?>
 		      <? my $alias = $connection->alias; ?>
-		    <li class="<?= $connection->cl->registered ? "connected" : "disconnected" ?> <? if ($index == 0) {?> active<?}?>"
+		    <li class="<?= $connection->is_connected ? "connected" : "disconnected" ?> <? if ($index == 0) {?> active<?}?>"
 		        onclick="showConnection('<?= $alias ?>')" id="menu_<?= $alias ?>">
 		      <?= $alias ?>
 		    </li>
@@ -101,10 +119,14 @@
 		      <span><?= $alias ?></span>
 		      <input type="hidden" name="<?= $alias ?>_name" value="<?= $alias ?>" />
 		    </div>
-		    <div class="field" style="width:138px">
+		    <div class="field" style="width:150px;margin-right:0">
 		      <label>Status</label>
-		      <? my $status = $connection->cl->registered ? "connected" : "disconnected" ?>
+		      <? my $status = $connection->is_connected ? "connected" : "disconnected" ?>
 		      <span class="<?= $status ?>"><?= $status ?></span>
+		      <? my $action = $connection->is_connected ? "disconnect" : "connect" ?>
+		      <button onclick="return serverConnection('<?= $connection->alias ?>', '<?= $action ?>')">
+		        <?= $action ?>
+		      </button>
 		      </div>
 		    <div class="field clear">
 		      <label>Server address</label>

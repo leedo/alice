@@ -22,6 +22,8 @@ has 'handlers' => (
       {sub => 'me',       re => qr{^/me (.+)}},
       {sub => 'nick',     re => qr{^/nick\s+(\S+)}},
       {sub => 'quote',    re => qr{^/(?:quote|raw) (.+)}},
+      {sub => 'disconnect',re=> qr{^/disconnect\s+(\S+)}},
+      {sub => 'connect',  re => qr{^/connect\s+(\S+)}},
       {sub => 'notfound', re => qr{^/(.+)(?:\s.*)?}},
     ]
   }
@@ -140,6 +142,22 @@ sub quote {
   my ($self, $window, $arg) = @_;
   $arg = decode("utf8", $arg, Encode::FB_QUIET);
   $window->irc->cl->send_raw($arg);
+}
+
+sub disconnect {
+  my ($self, $window, $arg) = @_;
+  my $irc = $self->app->ircs->{$arg};
+  if ($irc and $irc->is_connected) {
+    $irc->disconnect;
+  }
+}
+
+sub connect {
+  my ($self, $window, $arg) = @_;
+  my $irc  = $self->app->ircs->{$arg};
+  if ($irc and !$irc->is_connected) {
+    $irc->connect;
+  }
 }
 
 sub notfound {
