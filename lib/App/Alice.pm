@@ -11,7 +11,7 @@ use App::Alice::Signal;
 use App::Alice::Config;
 use Moose;
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 has cond => (
   is       => 'rw',
@@ -66,7 +66,7 @@ has notifier => (
         return App::Alice::Notifier::LibNotify->new;
       }
     };
-    print STDERR $@ if $@;
+    print STDERR "Notifications disabled...\n" if $@;
   }
 );
 

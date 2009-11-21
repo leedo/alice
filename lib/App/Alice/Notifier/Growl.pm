@@ -1,10 +1,11 @@
 package App::Alice::Notifier::Growl;
 
-use Mac::Growl ":all";
 use Moose;
 
 sub BUILD {
   my $self = shift;
+  require Mac::Growl;
+  Mac::Growl->import(":all");
   RegisterNotifications("Alice", ["message"], ["message"]);
 }
 

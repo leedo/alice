@@ -7,6 +7,7 @@
 \B\.svn\b
 \B\.git\b
 \B\.gitignore\b
+\B\.gitmodules\b
 \b_darcs\b
  
 # Avoid Makemaker generated and utility files.
@@ -47,6 +48,10 @@
 \bextlib.*
 
 # Avoid archives of this distribution
-\bshare/sprockets
+\bshare/sprockets.*
+\balice.app.*
+\bAlice.app.*
+Sprockets.*
+TODO
 App-Alice
 README.md
