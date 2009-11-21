@@ -52,8 +52,12 @@ has notifier => (
   default => sub {
     eval {
       if ($^O eq 'darwin') {
-        require lib;
-        lib->import("/System/Library/Perl/Extras/5.10.0");
+        # 5.10 doesn't seem to put Extras in @INC
+        # need this for Foundation.pm
+        if (-e "/System/Library/Perl/Extras/5.10.0") {
+          require lib;
+          lib->import("/System/Library/Perl/Extras/5.10.0"); 
+        }
         require App::Alice::Notifier::Growl;
         return App::Alice::Notifier::Growl->new;
       }
