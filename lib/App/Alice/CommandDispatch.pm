@@ -12,7 +12,7 @@ has 'handlers' => (
       {sub => '_say',     re => qr{^([^/].*)}s},
       {sub => 'query',    re => qr{^/query\s+(\S+)}},
       {sub => 'names',    re => qr{^/n(?:ames)?\s*$}, in_channel => 1},
-      {sub => '_join',    re => qr{^/j(?:oin)?\s+(?:-(\S+)\s+)?(\S+)}},
+      {sub => '_join',    re => qr{^/j(?:oin)?\s+(?:\-(\S+)\s+)?(\S+)}},
       {sub => 'part',     re => qr{^/part}, in_channel => 1},
       {sub => 'create',   re => qr{^/create (\S+)}},
       {sub => 'close',    re => qr{^/(?:close|wc)}},
@@ -81,11 +81,13 @@ sub query {
 
 sub _join {
   my ($self, $window, $arg1, $arg2) = @_;
+  my $irc = $window->irc;
   if ($arg2 and $self->app->ircs->{$arg2}) {
-    $window = $self->app->ircs->{$arg2};
+    $irc = $self->app->ircs->{$arg2};
   }
-  if ($arg1 =~ /^[#&]/) {
-    $window->irc->cl->send_srv(JOIN => $arg1);
+  if ($irc and $arg1 =~ /^[#&]/) {
+    $self->app->send([$irc->log_info("joining $arg1")]);
+    $irc->cl->send_srv(JOIN => $arg1);
   }
 }
 

@@ -38,7 +38,7 @@ has 'reconnect_timer' => (
   is => 'rw'
 );
 
-has [qw/is_connected disabled/] => (
+has [qw/is_connected disabled removed/] => (
   is  => 'rw',
   isa => 'Bool',
   default => 0,
@@ -78,9 +78,9 @@ sub BUILD {
     disconnect     => sub{$self->disconnected(@_)},
     irc_352        => sub{$self->irc_352(@_)}, # WHO info
     irc_366        => sub{$self->irc_366(@_)}, # end of NAMES
-    irc_372        => sub{$self->log_info(@_)}, # MOTD info
-    irc_377        => sub{$self->log_info(@_)}, # MOTD info
-    irc_378        => sub{$self->log_info(@_)}, # MOTD info
+    irc_372        => sub{$self->log_info($_[1]->{params}[1])}, # MOTD info
+    irc_377        => sub{$self->log_info($_[1]->{params}[1])}, # MOTD info
+    irc_378        => sub{$self->log_info($_[1]->{params}[1])}, # MOTD info
   );
   $self->connect unless $self->disabled;
 }
@@ -109,6 +109,7 @@ sub windows {
 
 sub connect {
   my $self = shift;
+  $self->disabled(0);
   $self->app->send([$self->log_info("connecting")]);
   $self->cl->connect(
     $self->config->{host}, $self->config->{port},
@@ -174,6 +175,10 @@ sub disconnected {
     [$self->log_info("disconnected")]
   );
   $self->reconnect;
+  if ($self->removed) {
+    delete $self->app->ircs->{$self->alias};
+    $self = undef;
+  }
 }
 
 sub disconnect {
@@ -182,25 +187,36 @@ sub disconnect {
   $self->cl->disconnect($self->app->config->quitmsg);
 }
 
+sub remove {
+  my $self = shift;
+  $self->removed(1);
+  $self->disconnect;
+}
+
 sub publicmsg {
   my ($self, $cl, $channel, $msg) = @_;
   my $nick = (split '!', $msg->{prefix})[0];
   my $text = $msg->{params}[1];
   my $window = $self->window($channel);
   $self->app->send([$window->format_message($nick, $text)]);
-};
+}
 
 sub privatemsg {
   my ($self, $cl, $nick, $msg) = @_;
-  my $window = $self->window($nick);
-  $self->app->send([$window->format_message($nick, $msg->{params}[1])]);
-};
+  if ($msg->{command} eq "PRIVMSG") {
+    my $window = $self->window($nick);
+    $self->app->send([$window->format_message($nick, $msg->{params}[1])]); 
+  }
+  elsif ($msg->{command} eq "NOTICE") {
+    $self->app->send([$self->log_info($msg->{params}[1])]);
+  }
+}
 
 sub ctcp_action {
   my ($self, $cl, $nick, $channel, $msg, $type) = @_;
   my $window = $self->window($channel);
   $self->app->send([$window->format_message($nick, "• $msg")]);
-};
+}
 
 sub nick_change {
   my ($self, $cl, $old_nick, $new_nick, $is_self) = @_;
@@ -247,6 +263,7 @@ sub part {
   if ($is_self) {
     my $window = $self->app->find_window($channel, $self);
     if ($window) {
+      $self->app->send([$self->log_info("leaving $channel")]);
       $self->app->close_window($window);
     }
   }

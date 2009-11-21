@@ -148,19 +148,19 @@
 		    </div>
 		    <div class="field clear">
 		      <label>Nick</label>
-		      <input type="text" name="<?= $alias ?>_nick" value="<?= $connection->config->{nick} ?>" size="15" />
+		      <input type="text" name="<?= $alias ?>_nick" value="<?= $connection->config->{nick} || ""?>" size="15" />
 		    </div>
 		    <div class="field">
 		      <label>Ircname</label>
-		      <input type="text" name="<?= $alias ?>_ircname" value="<?= $connection->config->{ircname} ?>" size="15" />
+		      <input type="text" name="<?= $alias ?>_ircname" value="<?= $connection->config->{ircname} || ""?>" size="15" />
 		    </div>
 		    <div class="field clear">
 		      <label>Username</label>
-		      <input type="text" name="<?= $alias ?>_username" value="<?= $connection->config->{username} ?>" size="15" />
+		      <input type="text" name="<?= $alias ?>_username" value="<?= $connection->config->{username} || ""?>" size="15" />
 		    </div>
 		    <div class="field">
 		      <label>Password</label>
-		      <input type="text" name="<?= $alias ?>_password" value="<?= $connection->config->{password} ?>" size="15" />
+		      <input type="text" name="<?= $alias ?>_password" value="<?= $connection->config->{password} || ""?>" size="15" />
 		    </div>
 		    <div class="field clear">
 		      <label>Channels

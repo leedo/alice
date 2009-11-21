@@ -228,7 +228,7 @@ sub server_config {
 sub save_config {
   my ($self, $httpd, $req) = @_;
   $self->log_debug("saving config");
-  my $new_config = {};
+  my $new_config = {servers => {}};
   my %params = $req->vars;
   for my $name (keys %params) {
     next unless $params{$name};

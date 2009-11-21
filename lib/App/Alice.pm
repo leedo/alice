@@ -264,30 +264,21 @@ sub reload_config {
   }
   for ($self->connections) {
     if (!$self->config->servers->{$_->alias}) {
-      $self->remove_connection($_->alias);
+      $_->remove;
     }
-  }
-}
-
-sub remove_connection {
-  my ($self, $alias) = @_;
-  my $irc = $self->ircs->{$alias};
-  if ($irc) {
-    $irc->disconnect;
-    delete $self->ircs->{$alias};
   }
 }
 
 sub log_info {
   my ($self, $session, $body, $highlight) = @_;
   $highlight = 0 unless $highlight;
-  $self->info_window->format_message($session, $body, highlight => $highlight);
+  $self->info_window->format_message($session, $body, $highlight);
 }
 
 sub send {
   my ($self, $messages, $force) = @_;
   # add any highlighted messages to the log window
-  push @$messages, map {$self->log_info($_->{nick}, $_->{body}, highlight => 1)}
+  push @$messages, map {$self->log_info($_->{nick}, $_->{body}, 1)}
                   grep {$_->{highlight}} @$messages;
   
   $self->httpd->broadcast($messages, $force);
