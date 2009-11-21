@@ -40,6 +40,10 @@ has 'config' => (
   default => sub {shift->app->config},
 );
 
+has 'ping_timer' => (
+  is  => 'rw',
+);
+
 sub BUILD {
   my $self = shift;
   my $httpd = AnyEvent::HTTPD->new(
@@ -64,16 +68,16 @@ sub BUILD {
 
 sub ping {
   my $self = shift;
-  AnyEvent->timer(
+  $self->ping_timer(AnyEvent->timer(
     after    => 5,
     interval => 10,
     cb       => sub {
-      $self->broadcast({
+      $self->broadcast([{
         type => "action",
         event => "ping",
-      })
+      }]);
     }
-  );
+  ));
 }
 
 sub image_proxy {

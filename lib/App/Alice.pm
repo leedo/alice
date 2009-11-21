@@ -128,8 +128,14 @@ sub run {
   }
   
   $self->cond->wait;
-  print STDERR "Disconnecting...\n";
+  print STDERR "Disconnecting, please wait\n";
+  $self->httpd->ping_timer(undef);
   $_->disconnect('alice') for $self->connections;
+  my $timer = AnyEvent->timer(
+    after => 3,
+    cb    => sub{exit(0)}
+  );
+  AnyEvent->condvar->wait;
 }
 
 sub dispatch {
