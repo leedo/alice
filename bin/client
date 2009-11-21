@@ -5,7 +5,11 @@ use warnings;
 
 use Gtk2 -init;
 use Gtk2::WebKit;
+use FindBin;
+use lib "$FindBin::Bin/../lib";
+use App::Alice::Config;
 
+my $config = Alice::Config->new;
 my $window = Gtk2::Window->new;
 $window->set_title("alice");
 $window->resize(800, 600);
@@ -37,6 +41,6 @@ $view->signal_connect(
   }
 );
 $window->add($view);
-$view->open('http://127.0.0.1:8081/view');
+$view->open('http://127.0.0.1:'.$config->port.'/view');
 $window->show_all;
 Gtk2->main;

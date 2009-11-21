@@ -52,6 +52,8 @@ has notifier => (
   default => sub {
     eval {
       if ($^O eq 'darwin') {
+        require lib;
+        lib->import("/System/Library/Perl/Extras/5.10.0");
         require App::Alice::Notifier::Growl;
         return App::Alice::Notifier::Growl->new;
       }
@@ -59,7 +61,8 @@ has notifier => (
         require App::Alice::Notifier::LibNotify;
         return App::Alice::Notifier::LibNotify->new;
       }
-    }
+    };
+    print STDERR $@ if $@;
   }
 );
 

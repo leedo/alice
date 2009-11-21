@@ -1,16 +1,16 @@
 package App::Alice::Notifier::Growl;
 
-use Mac::Growl ':all';
+use Mac::Growl ":all";
 use Moose;
 
 sub BUILD {
   my $self = shift;
-  RegisterNotifications("Alice", ["message"], ["message"], "Alice.app");
+  RegisterNotifications("Alice", ["message"], ["message"]);
 }
 
 sub display {
   my ($self, $message) = @_;
-  PostNotification("Alice", "message", 
+  PostNotification("Alice", "message",
     $message->{nick} . " in " . $message->{window}->{title},
     $message->{body},
   );
