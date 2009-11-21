@@ -137,8 +137,6 @@ sub connected {
 
 sub reconnect {
   my $self = shift;
-  $self->is_connected(0);
-  return if $self->disabled;
   $self->app->send([$self->log_info("reconnecting in 10 seconds")]);
   $self->reconnect_timer(
     AnyEvent->timer(after => 10, cb => sub {
@@ -171,10 +169,9 @@ sub registered {
 
 sub disconnected {
   my ($self, $cl, $reason) = @_;
-  $self->app->send(
-    [$self->log_info("disconnected")]
-  );
-  $self->reconnect;
+  $self->app->send([$self->log_info("disconnected: $reason")]);
+  $self->is_connected(0);
+  $self->reconnect unless $self->disabled;
   if ($self->removed) {
     delete $self->app->ircs->{$self->alias};
     $self = undef;
@@ -184,7 +181,7 @@ sub disconnected {
 sub disconnect {
   my $self = shift;
   $self->disabled(1);
-  $self->cl->disconnect($self->app->config->quitmsg);
+  $self->cl->send_srv("QUIT" => $self->app->config->quitmsg);
 }
 
 sub remove {
