@@ -12,7 +12,7 @@ has '+id' => (default => 'info');
 has '+title' => (required => 0, default => 'info');
 has '+irc' => (required => 0);
 has '+session' => ( isa => 'Undef', default => undef);
-has 'topic' => (is => 'ro', isa => 'HashRef', default => sub {{string => 'info'}});
+has 'topic' => (is => 'ro', isa => 'HashRef', default => sub {{string => ''}});
 has '+buffersize' => (default => 300);
 has '+type' => (lazy => 0, default => 'info');
 

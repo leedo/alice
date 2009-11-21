@@ -2,7 +2,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title><?= $windows[1]->topic->{string} ?></title>
+    <title><?= $windows[1]->title . " " . $windows[1]->topic->{string} ?></title>
     <script type="text/javascript" src="/static/alice.js"></script>
     <script type="text/javascript" src="/static/site.js?images=<?= $_[0]->config->images || 'show' ?>&amp;monospace_nicks=<?= join ",", @{$_[0]->config->monospace_nicks} ?>"></script>
     <link type="text/css" rel="stylesheet" href="/static/site.css" />
