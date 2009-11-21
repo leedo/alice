@@ -7621,7 +7621,7 @@ Alice.Window = Class.create({
   addMessage: function(message) {
     if (message.html || message.full_html) {
       if (message.nick && message.nick == this.lastNick) {
-        if (this.application.messagesAreMonospacedFor(message.nick))
+        if (this.application.messagesAreMonospacedFor(message.nick) || message.monospaced)
           this.messages.down('li:last-child div.msg').insert(
             "<br>" + this.application.applyFilters(message.html));
         else if (message.event == "say")

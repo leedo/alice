@@ -78,16 +78,16 @@ sub BUILD {
     disconnect     => sub{$self->disconnected(@_)},
     irc_352        => sub{$self->irc_352(@_)}, # WHO info
     irc_366        => sub{$self->irc_366(@_)}, # end of NAMES
-    irc_372        => sub{$self->log_info($_[1]->{params}[1])}, # MOTD info
-    irc_377        => sub{$self->log_info($_[1]->{params}[1])}, # MOTD info
-    irc_378        => sub{$self->log_info($_[1]->{params}[1])}, # MOTD info
+    irc_372        => sub{$self->log_info($_[1]->{params}[1], 1)}, # MOTD info
+    irc_377        => sub{$self->log_info($_[1]->{params}[1], 1)}, # MOTD info
+    irc_378        => sub{$self->log_info($_[1]->{params}[1], 1)}, # MOTD info
   );
   $self->connect unless $self->disabled;
 }
 
 sub log_info {
-  my ($self, $msg) = @_;
-  $self->app->log_info($self->alias, $msg);
+  my ($self, $msg, $monospaced) = @_;
+  $self->app->log_info($self->alias, $msg, 0, $monospaced);
 }
 
 sub window {

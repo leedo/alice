@@ -17,7 +17,7 @@ has '+buffersize' => (default => 300);
 has '+type' => (lazy => 0, default => 'info');
 
 sub format_message {
-  my ($self, $from, $body, $highlight) = @_;
+  my ($self, $from, $body, $highlight, $monospaced) = @_;
   $highlight = 0 unless $highlight;
   my $html = IRC::Formatting::HTML->formatted_string_to_html($body);
   my $message = {
@@ -29,6 +29,7 @@ sub format_message {
     self   => $highlight,
     html   => encoded_string($html),
     msgid  => $self->next_msgid,
+    monospaced => $monospaced ? 1 : 0,
   };
   
   $message->{full_html} = $self->app->render("message", $message);

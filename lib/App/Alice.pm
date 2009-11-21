@@ -270,9 +270,9 @@ sub reload_config {
 }
 
 sub log_info {
-  my ($self, $session, $body, $highlight) = @_;
+  my ($self, $session, $body, $highlight, $monospaced) = @_;
   $highlight = 0 unless $highlight;
-  $self->info_window->format_message($session, $body, $highlight);
+  $self->info_window->format_message($session, $body, $highlight, $monospaced);
 }
 
 sub send {
