@@ -1,3 +1,7 @@
+0.03  Sat 21 Nov 2009
+        - Fixed a number of issues with reconnecting
+        - Fixed issue adding new server from config window
+
 0.02  Fri 20 Nov 2009
          - Switched to AnyEvent and Text::MicroTemplate
          - Removed other dependencies

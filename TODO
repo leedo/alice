@@ -1,8 +1,2 @@
-AnyEvent issues
-- reconnecting, mostly seems to work
-- handle signals/quit more gracefully
-
-Switch to Text::MicroTemplate
-- Config window
-
+HTTP Auth
 Combine actions and messages

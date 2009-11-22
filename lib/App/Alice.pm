@@ -11,7 +11,7 @@ use App::Alice::Signal;
 use App::Alice::Config;
 use Moose;
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 has cond => (
   is       => 'rw',
