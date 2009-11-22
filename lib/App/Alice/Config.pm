@@ -114,7 +114,7 @@ sub load {
     $config = require $self->fullpath;
   }
   elsif (-e $ENV{HOME}.'/.alice.yaml' or -e $ENV{HOME}.'/.alice/config.yaml') {
-    my $file = -e $ENV{HOME}.'/.alice.yaml' ? '.alice.yaml' : '/.alice/config.yaml';
+    my $file = -e $ENV{HOME}.'/.alice.yaml' ? '/.alice.yaml' : '/.alice/config.yaml';
     say STDERR "Found config in old location, moving it to ".$self->fullpath;
     require YAML;
     YAML->import('LoadFile');
