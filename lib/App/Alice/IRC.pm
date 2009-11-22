@@ -110,6 +110,10 @@ sub windows {
 sub connect {
   my $self = shift;
   $self->disabled(0);
+  if (!$self->config->{host} or !$self->config->{port}) {
+    $self->app->send([$self->log_info("can't connect: missing either host or port")]);
+    return;
+  }
   $self->app->send([$self->log_info("connecting")]);
   $self->cl->connect(
     $self->config->{host}, $self->config->{port},

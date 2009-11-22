@@ -1,5 +1,5 @@
 ? my ($app, $alias) = @_;
-<div class="setting active" id="setting_[% name %]">
+<div class="setting active" id="setting_<?= $alias ?>">
   <div class="field" style="width:138px">
     <label>Name</label>
     <span><?= $alias ?></span>
@@ -15,7 +15,7 @@
   </div>
   <div class="field">
     <label>Port</label>
-    <input type="text" name="<?= $alias ?>_port" value="" size="6" style="float:left"/>
+    <input type="text" name="<?= $alias ?>_port" value="6667" size="6" style="float:left"/>
     <div style="float:left">
     <input type="checkbox" name="<?= $alias ?>_ssl" style="display:inline;margin-right:0px"/>
     <span style="font-size:0.7em">SSL</span>
