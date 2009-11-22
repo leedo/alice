@@ -7590,7 +7590,7 @@ Alice.Window = Class.create({
   },
 
   focus: function(event) {
-    document.title = this.title + " " + this.topic.innerHTML.stripTags().unescapeHTML();
+    document.title = this.title;
     if (this.application.activeWindow()) this.application.activeWindow().unFocus();
     this.active = true;
     this.tab.addClassName('active');
