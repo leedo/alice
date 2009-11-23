@@ -22,13 +22,14 @@ if (window == window.parent) {
   document.observe("dom:loaded", function () {
     $$("tr.topic td").each(function (topic){
       topic.innerHTML = Alice.makeLinksClickable(topic.innerHTML)});
-    $('config_button').observe("click", alice.toggleConfig.bind(alice));
+    $$('#config_overlay option').each(function(opt){opt.selected = false});
+    $('config_overlay').observe("change", function (e) {  
+      alice.toggleConfig(e);
+      $$('#config_overlay option').each(function(opt){opt.selected = false});
+    });
     var width = document.viewport.getWidth();
     $$('.messages').invoke('setStyle', {width: width+"px"});
     if (alice.activeWindow()) alice.activeWindow().input.focus()
- 
-    setTimeout(function () {
-      if (!alice.windows()) alice.toggleConfig.bind(alice), 2000});
  
     window.onkeydown = function (e) {
       if (alice.activeWindow() && !$('config') && !Alice.isSpecialKey(e.which))

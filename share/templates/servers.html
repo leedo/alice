@@ -152,6 +152,7 @@
 		    </div>
 		    <div class="field">
 		      <label>Ircname</label>
+		      <img src="<?= $connection->nick_avatar($connection->nick) ?>" />
 		      <input type="text" name="<?= $alias ?>_ircname" value="<?= $connection->config->{ircname} || ""?>" size="15" />
 		    </div>
 		    <div class="field clear">

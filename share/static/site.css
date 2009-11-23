@@ -27,8 +27,25 @@ ul#controls {
   z-index: 30;
 }
 
+ul#controls li {
+  position: relative;
+}
+
 ul#controls li.disabled {
   display: none;
+}
+
+select#config_overlay {
+  display: block;
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  bottom: 0px;
+  right: 0px;
+  border: none;
+  padding: 0;
+  margin: 0;
+  opacity: 0;
 }
 
 body {
