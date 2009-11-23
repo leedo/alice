@@ -180,10 +180,9 @@ sub tab_order {
 sub buffered_messages {
   my ($self, $min) = @_;
   my $max = 0;
-  return [ map {$_->{buffered} = 1; $_;}
-           grep {$_->{msgid} > $min or $min > $max}
-           map {$max = $_->msgid; @{$_->msgbuffer}} $self->windows
-         ];
+  return map {$_->{buffered} = 1; $_;}
+         grep {$_->{msgid} > $min or $min > $max}
+         map {$max = $_->msgid; @{$_->msgbuffer}} $self->windows;
 }
 
 sub connections {
@@ -212,7 +211,7 @@ sub find_or_create_window {
     irc      => $connection,
     assetdir => $self->config->assetdir,
     app      => $self,
-  );  
+  );
   $self->add_window($id, $window);
 }
 

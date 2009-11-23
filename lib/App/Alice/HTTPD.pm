@@ -92,20 +92,8 @@ sub image_proxy {
 
 sub broadcast {
   my ($self, $data, $force) = @_;
-  return if $self->no_streams;
-  
-  if (@$data) {
-    for my $stream ($self->streams) {
-      for my $item (@$data) {
-        if ($item->{type} eq "message") {
-          $stream->add_msg($item);
-        }
-        elsif ($item->{type} eq "action") {
-          $stream->add_action($item);
-        }
-      }
-    }
-  }
+  return if $self->no_streams or !@$data;
+  $_->enqueue(@$data) for $self->streams;
   $_->broadcast for @{$self->streams};
 };
 
@@ -140,8 +128,10 @@ sub setup_stream {
   my $msgid = $req->parm('msgid') || 0;
   $self->add_stream(
     App::Alice::Stream->new(
-      actions => [ map {$_->nicks_action} $self->app->windows ],
-      msgs    => $self->app->buffered_messages($msgid),
+      queue   => [
+        map({$_->nicks_action} $self->app->windows),
+        $self->app->buffered_messages($msgid),
+      ],
       request => $req,
     )
   );

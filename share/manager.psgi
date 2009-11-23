@@ -16,14 +16,12 @@ sub get {
           $self->write($body);
           $self->flush(0);
           if (!$body) {
-            $self->flush(1);
             $self->finish;
             return 0;
           }
           return 1;
         },
         sub {
-          $self->flush(1);
           $self->finish;
         }
     );        

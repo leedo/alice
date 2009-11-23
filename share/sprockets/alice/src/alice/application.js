@@ -106,10 +106,6 @@ Alice.Application = Class.create({
     }
   },
   
-  handleActions: function(list) {
-    list.each(this.handleAction, this);
-  },
-  
   handleAction: function(action) {
     switch (action.event) {
       case "join":
@@ -137,10 +133,6 @@ Alice.Application = Class.create({
       default:
         break;
     }
-  },
-  
-  displayMessages: function(list) {
-    list.each(this.displayMessage, this);
   },
   
   displayMessage: function(message) {

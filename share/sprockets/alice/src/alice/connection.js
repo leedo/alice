@@ -56,10 +56,16 @@ Alice.Connection = Class.create({
     data = data.slice(start, end);
     try {
       data = data.evalJSON();
-      if (data.msgs.length)
-        this.msgid = data.msgs[data.msgs.length - 1].msgid;
-      this.application.handleActions(data.actions);
-      this.application.displayMessages(data.msgs);
+      var queue = data.queue;
+      var length = queue.length;
+      if (length)
+        this.msgid = queue[length - 1].msgid;
+      for (var i=0; i<length; i++) {
+        if (queue[i].type == "action")
+          this.application.handleAction(queue[i]);
+        else if (queue[i].type == "message")
+          this.application.displayMessage(queue[i]);
+      }
     }
     catch (e) {
       console.log(e);

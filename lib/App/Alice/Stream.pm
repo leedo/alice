@@ -4,27 +4,15 @@ use JSON;
 use Time::HiRes qw/time/;
 use Moose;
 
-has msgs => (
+has queue => (
   traits => ['Array'],
   is  => 'rw',
   isa => 'ArrayRef[HashRef]',
   default => sub { [] },
   handles => {
-    clear_msgs => 'clear',
-    add_msg => 'push',
-    no_msgs => 'is_empty',
-  },
-);
-
-has actions => (
-  traits => ['Array'],
-  is  => 'ro',
-  isa => 'ArrayRef[HashRef]',
-  default => sub { [] },
-  handles => {
-    clear_actions => 'clear',
-    add_action => 'push',
-    no_actions => 'is_empty',
+    clear_queue => 'clear',
+    enqueue     => 'push',
+    queue_empty => 'is_empty',
   },
 );
 
@@ -80,8 +68,7 @@ sub BUILD {
 
 sub broadcast {
   my $self = shift;
-  return if $self->delayed;
-  return if $self->no_msgs and $self->no_actions;
+  return if $self->delayed or $self->queue_empty;
   if (my $delay = $self->flooded) {
     $self->delay($delay);
     return;
@@ -114,8 +101,7 @@ sub delay {
 
 sub flush {
   my $self = shift;
-  $self->clear_msgs;
-  $self->clear_actions;
+  $self->clear_queue;
   $self->last_send(time);
 }
 
@@ -127,9 +113,8 @@ sub to_string {
     $self->started(1);
   }
   $output .= to_json({
-    msgs => $self->msgs,
-    actions => $self->actions,
-    time => time - $self->offset,
+    queue => $self->queue,
+    time  => time - $self->offset,
   }, {utf8 => 1});
   use bytes;
   $output .= " " x (1024 - bytes::length $output)
