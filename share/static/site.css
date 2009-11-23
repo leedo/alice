@@ -46,6 +46,7 @@ select#config_overlay {
   padding: 0;
   margin: 0;
   opacity: 0;
+  font-size: 12px;
 }
 
 body {
