@@ -155,6 +155,7 @@ sub registered {
   my $self = shift;
   my @log;
   $self->cl->enable_ping (60, sub {
+    $self->is_connected(0);
     $self->app->send([$self->log_info("ping timeout")]);
     $self->reconnect;
   });
