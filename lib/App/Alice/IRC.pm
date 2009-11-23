@@ -185,7 +185,12 @@ sub disconnected {
 sub disconnect {
   my $self = shift;
   $self->disabled(1);
-  $self->cl->send_srv("QUIT" => $self->app->config->quitmsg);
+  if ($self->is_connected) {
+    $self->cl->send_srv("QUIT" => $self->app->config->quitmsg);
+  }
+  else {
+    $self->cl->disconnect;
+  }
 }
 
 sub remove {
