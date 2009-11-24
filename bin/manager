@@ -1,0 +1,38 @@
+#!/usr/bin/perl
+
+use IO::Socket::INET;
+use AnyEvent::Socket;
+use AnyEvent::Handle;
+use FindBin;
+use lib "$FindBin::Bin/../lib";
+use App::Alice;
+
+my $confdir = "/home/leedo/alices";
+mkdir $confdir unless -d $confdir;
+
+my $c = AE::cv;
+
+my $guard = tcp_server undef, 8888, sub {
+  my ($fh, $host, $port) = @_;
+  my $handle; $handle = AnyEvent::Handle->new(
+    fh => $fh,
+    on_error => sub {
+      my ($handle, $fatal, $msg) = @_;
+      warn "got error $msg\n";
+      $handle->destroy;
+    },
+  );
+  $sock = IO::Socket::INET->new(LocalPort => 0, Listen =>1);
+  my $port = $sock->sockport;
+  $sock->shutdown(2);
+  $sock = undef;
+  App::Alice->new(
+    port => $port,
+    path => "$confdir/$port",
+    standalone => 0,
+  )->run;
+  $handle->push_write($port);
+  $handle->on_drain(sub {undef $handle});
+};
+
+$c->recv;

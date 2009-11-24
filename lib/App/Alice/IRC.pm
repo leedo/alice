@@ -186,7 +186,12 @@ sub disconnected {
 sub disconnect {
   my $self = shift;
   $self->disabled(1);
-  $self->cl->send_srv("QUIT" => $self->app->config->quitmsg);
+  if ($self->is_connected) {
+    $self->cl->send_srv("QUIT" => $self->app->config->quitmsg);
+  }
+  else {
+    $self->cl->disconnect;
+  }
 }
 
 sub remove {
@@ -206,8 +211,9 @@ sub publicmsg {
 sub privatemsg {
   my ($self, $cl, $nick, $msg) = @_;
   if ($msg->{command} eq "PRIVMSG") {
-    my $window = $self->window($nick);
-    $self->app->send([$window->format_message($nick, $msg->{params}[1])]); 
+    my $from = (split /!/, $msg->{prefix})[0];
+    my $window = $self->window($from);
+    $self->app->send([$window->format_message($from, $msg->{params}[1])]); 
   }
   elsif ($msg->{command} eq "NOTICE") {
     $self->app->send([$self->log_info($msg->{params}[1])]);
