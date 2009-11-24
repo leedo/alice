@@ -147,6 +147,7 @@ sub connect {
 
 sub connected {
   my ($self, $cl, $err) = @_;
+  $self->log_info("connected");
   if (defined $err) {
     $self->app->send([
       $self->log_info("connect error: $err")
@@ -156,6 +157,7 @@ sub connected {
   else {
     $self->reset_reconnect_count;
     $self->is_connected(1);
+    $self->cl->register;
   }
 }
 
@@ -165,7 +167,7 @@ sub reconnect {
     $self->app->send([$self->log_info("too many failed reconnects, giving up")]);
     return;
   }
-  $time = 60 unless $time;
+  $time = 60 unless $time >= 0;
   $self->app->send([$self->log_info("reconnecting in $time seconds")]);
   $self->reconnect_timer(
     AnyEvent->timer(after => $time, cb => sub {
@@ -182,7 +184,7 @@ sub registered {
     $self->app->send([$self->log_info("ping timeout")]);
     $self->reconnect(0);
   });
-  push @log, $self->log_info("connected");
+  push @log, $self->log_info("registered");
   for (@{$self->config->{on_connect}}) {
     push @log, $self->log_info("sending $_");
     $self->cl->send_raw($_);
@@ -197,6 +199,7 @@ sub registered {
 
 sub disconnected {
   my ($self, $cl, $reason) = @_;
+  return if $reason eq "reconnect requested.";
   $reason = "" unless $reason;
   $self->app->send([$self->log_info("disconnected: $reason")]);
   $self->is_connected(0);
