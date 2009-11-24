@@ -18,6 +18,11 @@ has 'alias' => (
   required => 1,
 );
 
+has 'nick_cached' => (
+  isa      => 'Str',
+  is       => 'rw',
+);
+
 has 'config' => (
   isa      => 'HashRef',
   is       => 'rw',
@@ -99,7 +104,11 @@ sub window {
 
 sub nick {
   my $self = shift;
-  return $self->cl->nick;
+  if (my $nick = $self->cl->nick) {
+    $self->nick_cached($nick);
+    return $nick;
+  }
+  return $self->nick_cached;
 }
 
 sub windows {
