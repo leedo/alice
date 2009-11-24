@@ -227,7 +227,7 @@ sub find_window {
 sub _build_window_id {
   my ($title, $connection_alias) = @_;
   my $name = lc($title . $connection_alias);
-  $name =~ s/[^\w]//g;
+  $name =~ s/[^\w\d]//g;
   return "win_" . $name;
 }
 
