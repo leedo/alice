@@ -120,7 +120,8 @@ sub window {
 
 sub nick {
   my $self = shift;
-  if (my $nick = $self->cl->nick) {
+  my $nick = $self->cl->nick;
+  if ($nick and $nick ne "") {
     $self->nick_cached($nick);
     return $nick;
   }
@@ -171,7 +172,12 @@ sub connected {
   else {
     $self->reset_reconnect_count;
     $self->is_connected(1);
-    $self->cl->register;
+    $self->cl->register(
+      $self->config->{nick},
+      $self->config->{username},
+      $self->config->{ircname},
+      $self->config->{password},
+    );
   }
 }
 
@@ -198,7 +204,6 @@ sub registered {
     $self->app->send([$self->log_info("ping timeout")]);
     $self->reconnect(0);
   });
-  push @log, $self->log_info("registered");
   for (@{$self->config->{on_connect}}) {
     push @log, $self->log_info("sending $_");
     $self->cl->send_raw($_);
@@ -320,6 +325,7 @@ sub part {
 
 sub channel_remove {
   my ($self, $cl, $msg, $channel, @nicks) = @_;
+  return unless @nicks;
   return if grep {$_ eq $self->nick} @nicks;
   my $window = $self->window($channel);
   $self->remove_nicks(@nicks);
