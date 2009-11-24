@@ -38,6 +38,17 @@ has 'reconnect_timer' => (
   is => 'rw'
 );
 
+has 'reconnect_count' => (
+  traits => ['Counter'],
+  is  => 'rw',
+  isa => 'Int',
+  default   => 0,
+  handles   => {
+    increase_reconnect_count => 'inc',
+    reset_reconnect_count => 'reset',
+  },
+);
+
 has [qw/is_connected disabled removed/] => (
   is  => 'rw',
   isa => 'Bool',
@@ -110,11 +121,19 @@ sub windows {
 sub connect {
   my $self = shift;
   $self->disabled(0);
+  $self->increase_reconnect_count;
   if (!$self->config->{host} or !$self->config->{port}) {
     $self->app->send([$self->log_info("can't connect: missing either host or port")]);
     return;
   }
-  $self->app->send([$self->log_info("connecting")]);
+  if ($self->reconnect_count > 1) {
+    $self->app->send([
+      $self->log_info("reconnecting: attempt " . $self->reconnect_count),
+    ]);
+  }
+  else {
+    $self->app->send([$self->log_info("connecting")]);
+  }
   $self->cl->connect(
     $self->config->{host}, $self->config->{port},
     {
@@ -127,26 +146,30 @@ sub connect {
 }
 
 sub connected {
-  my ($self, $cl, $con, $err) = @_;
+  my ($self, $cl, $err) = @_;
   if (defined $err) {
     $self->app->send([
       $self->log_info("connect error: $err")
     ]);
-    $self->reconnect;
+    $self->reconnect(60);
   }
   else {
+    $self->reset_reconnect_count;
     $self->is_connected(1);
   }
 }
 
 sub reconnect {
-  my $self = shift;
-  $self->app->send([$self->log_info("reconnecting in 10 seconds")]);
+  my ($self, $time) = @_;
+  if ($self->reconnect_count > 4) {
+    $self->app->send([$self->log_info("too many failed reconnects, giving up")]);
+    return;
+  }
+  $time = 60 unless $time;
+  $self->app->send([$self->log_info("reconnecting in $time seconds")]);
   $self->reconnect_timer(
-    AnyEvent->timer(after => 10, cb => sub {
-      unless ($self->is_connected) {
-        $self->connect;
-      }
+    AnyEvent->timer(after => $time, cb => sub {
+      $self->connect unless $self->is_connected;
     })
   );
 }
@@ -157,7 +180,7 @@ sub registered {
   $self->cl->enable_ping (60, sub {
     $self->is_connected(0);
     $self->app->send([$self->log_info("ping timeout")]);
-    $self->reconnect;
+    $self->reconnect(0);
   });
   push @log, $self->log_info("connected");
   for (@{$self->config->{on_connect}}) {
@@ -174,9 +197,10 @@ sub registered {
 
 sub disconnected {
   my ($self, $cl, $reason) = @_;
+  $reason = "" unless $reason;
   $self->app->send([$self->log_info("disconnected: $reason")]);
   $self->is_connected(0);
-  $self->reconnect unless $self->disabled;
+  $self->reconnect(0) unless $self->disabled;
   if ($self->removed) {
     delete $self->app->ircs->{$self->alias};
     $self = undef;
