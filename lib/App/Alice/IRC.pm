@@ -432,7 +432,7 @@ sub whois_table {
   my ($self, $nick) = @_;
   my $info = $self->get_nick_info($nick);
   return "No info for user \"$nick\"" if !$info;
-  return "real: $info->{real}\nserver: $info->{server}\nchannels: " .
+  return "real: $info->{real}\nhost: $info->{IP}\nserver: $info->{server}\nchannels: " .
          join " ", keys %{$info->{channels}};
 }
 
