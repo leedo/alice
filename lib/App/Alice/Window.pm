@@ -1,19 +1,9 @@
 package App::Alice::Window;
 
 use Encode;
-use Digest::CRC qw/crc16/;
-use MooseX::ClassAttribute;
 use Text::MicroTemplate qw/encoded_string/;
 use IRC::Formatting::HTML;
 use Moose;
-
-class_has msgid => (
-  traits    => ['Counter'],
-  is        => 'rw',
-  isa       => 'Int',
-  default   => 1,
-  handles   => {next_msgid => 'inc'}
-);
 
 has type => (
   is      => 'ro',
@@ -67,7 +57,9 @@ has id => (
   is      => 'ro',
   isa     => 'Str',
   lazy    => 1,
-  default => sub {return "win_" . crc16(lc($_[0]->title . $_[0]->session))}
+  default => sub {
+    return App::Alice::_build_window_id($_[0]->title, $_[0]->session);
+  },
 );
 
 has session => (
@@ -176,7 +168,7 @@ sub format_event {
     nick      => $nick,
     window    => $self->serialized,
     body      => $body,
-    msgid     => $self->next_msgid,
+    msgid     => $self->app->next_msgid,
     timestamp => $self->timestamp,
     nicks     => [ $self->all_nicks ],
   };
@@ -200,7 +192,7 @@ sub format_message {
     highlight => $body =~ /\b$own_nick\b/i ? 1 : 0,
     html      => encoded_string($html),
     self      => $own_nick eq $nick,
-    msgid     => $self->next_msgid,
+    msgid     => $self->app->next_msgid,
     timestamp => $self->timestamp,
   };
   $message->{full_html} = $self->app->render("message", $message);

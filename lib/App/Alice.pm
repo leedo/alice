@@ -1,6 +1,5 @@
 package App::Alice;
 
-use Digest::CRC qw/crc16/;
 use Encode;
 use Text::MicroTemplate::File;
 use App::Alice::Window;
@@ -11,7 +10,7 @@ use App::Alice::Signal;
 use App::Alice::Config;
 use Moose;
 
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
 has cond => (
   is       => 'rw',
@@ -21,6 +20,14 @@ has cond => (
 has config => (
   is       => 'ro',
   isa      => 'App::Alice::Config',
+);
+
+has msgid => (
+  traits    => ['Counter'],
+  is        => 'rw',
+  isa       => 'Int',
+  default   => 1,
+  handles   => {next_msgid => 'inc'}
 );
 
 has ircs => (
@@ -198,10 +205,9 @@ sub tab_order {
 
 sub buffered_messages {
   my ($self, $min) = @_;
-  my $max = 0;
   return map {$_->{buffered} = 1; $_;}
-         grep {$_->{msgid} > $min or $min > $max}
-         map {$max = $_->msgid; @{$_->msgbuffer}} $self->windows;
+         grep {$_->{msgid} > $min or $min > $self->msgid}
+         map {@{$_->msgbuffer}} $self->windows;
 }
 
 sub connections {
@@ -212,10 +218,17 @@ sub connections {
 sub find_window {
   my ($self, $title, $connection) = @_;
   return $self->info_window if $title eq "info";
-  my $id = "win_" . crc16(lc($title . $connection->alias));
+  my $id = _build_window_id($title, $connection->alias);
   if (my $window = $self->get_window($id)) {
     return $window;
   }
+}
+
+sub _build_window_id {
+  my ($title, $connection_alias) = @_;
+  my $name = lc($title . $connection_alias);
+  $name =~ s/[^\w]//g;
+  return "win_" . $name;
 }
 
 sub find_or_create_window {
@@ -224,7 +237,7 @@ sub find_or_create_window {
   if (my $window = $self->find_window($title, $connection)) {
     return $window;
   }
-  my $id = "win_" . crc16(lc($title . $connection->alias));
+  my $id = _build_window_id($title, $connection->alias);
   my $window = App::Alice::Window->new(
     title    => $title,
     irc      => $connection,
@@ -316,7 +329,7 @@ sub format_notice {
     event     => $event,
     nick      => $nick,
     body      => $body,
-    msgid     => App::Alice::Window->next_msgid,
+    msgid     => $self->next_msgid,
   };
   $message->{full_html} = $self->render('event',$message);
   $message->{event} = "notice";

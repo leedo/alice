@@ -28,7 +28,7 @@ sub format_message {
     body   => $body,
     self   => $highlight,
     html   => encoded_string($html),
-    msgid  => $self->next_msgid,
+    msgid  => $self->app->next_msgid,
     monospaced => $monospaced ? 1 : 0,
   };
   $message->{full_html} = $self->app->render("message", $message);
