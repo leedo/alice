@@ -21,6 +21,11 @@ has 'alias' => (
 has 'nick_cached' => (
   isa      => 'Str',
   is       => 'rw',
+  lazy     => 1,
+  default  => sub {
+    my $self = shift;
+    return $self->config->{nick};
+  },
 );
 
 has 'config' => (
