@@ -26,7 +26,7 @@ has 'handlers' => (
       {sub => 'connect',  re => qr{^/connect\s+(\S+)}},
       {sub => 'ignore',   re => qr{^/ignore\s+(\S+)}},
       {sub => 'unignore', re => qr{^/unignore\s+(\S+)}},
-      {sub => 'ignores',  re => qr{^/ignores}},
+      {sub => 'ignores',  re => qr{^/ignores?}},
       {sub => 'notfound', re => qr{^/(.+)(?:\s.*)?}},
     ]
   }
