@@ -257,9 +257,9 @@ sub publicmsg {
 
 sub privatemsg {
   my ($self, $cl, $nick, $msg) = @_;
-  return if $self->app->is_ignore($nick);
+  my $from = (split /!/, $msg->{prefix})[0];
+  return if $self->app->is_ignore($from);
   if ($msg->{command} eq "PRIVMSG") {
-    my $from = (split /!/, $msg->{prefix})[0];
     my $window = $self->window($from);
     $self->app->send([$window->format_message($from, $msg->{params}[1])]); 
   }

@@ -1,5 +1,6 @@
 0.05  Tue 24 Nov 2009
-        - Removed Digest::CRC dependency, use md5 instead
+        - Removed Digest::CRC dependency
+        - Added /ignore /unignore and /ignores
 
 0.04  Tue 24 Nov 2009
         - Removed MooseX::ClassAttribute dependency

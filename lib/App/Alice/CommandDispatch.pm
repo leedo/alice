@@ -167,8 +167,10 @@ sub connect {
 
 sub ignores {
   my ($self, $window, $arg) = @_;
+  my $msg = join ", ", $self->app->ignores;
+  $msg = "none" unless $msg;
   $self->app->send([
-    $window->format_announcement("Ignoring:\n" . join (", ", $self->app->ignores))
+    $window->format_announcement("Ignoring:\n$msg")
   ]);
 }
 
