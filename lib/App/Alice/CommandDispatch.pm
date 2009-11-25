@@ -171,6 +171,7 @@ sub notfound {
 sub _say {
   my ($self, $window, $arg) = @_;
   $self->app->send([$window->format_message($window->nick, $arg)]);
+  $arg = decode("utf8", $arg, Encode::FB_QUIET);
   $window->irc->cl->send_srv(PRIVMSG => $window->title, $arg);
 }
 
