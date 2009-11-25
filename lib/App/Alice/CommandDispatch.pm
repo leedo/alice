@@ -24,6 +24,9 @@ has 'handlers' => (
       {sub => 'quote',    re => qr{^/(?:quote|raw) (.+)}},
       {sub => 'disconnect',re=> qr{^/disconnect\s+(\S+)}},
       {sub => 'connect',  re => qr{^/connect\s+(\S+)}},
+      {sub => 'ignore',   re => qr{^/ignore\s+(\S+)}},
+      {sub => 'unignore', re => qr{^/unignore\s+(\S+)}},
+      {sub => 'ignores',  re => qr{^/ignores}},
       {sub => 'notfound', re => qr{^/(.+)(?:\s.*)?}},
     ]
   }
@@ -162,9 +165,27 @@ sub connect {
   }
 }
 
+sub ignores {
+  my ($self, $window, $arg) = @_;
+  $self->app->send([
+    $window->format_announcement("Ignoring:\n" . join (", ", $self->app->ignores))
+  ]);
+}
+
+sub ignore {
+  my ($self, $window, $arg) = @_;
+  $self->app->add_ignore($arg);
+  $self->app->send([$window->format_announcement("Ignoring $arg")]);
+}
+
+sub unignore {
+  my ($self, $window, $arg) = @_;
+  $self->app->remove_ignore($arg);
+  $self->app->send([$window->format_announcement("No longer ignoring $arg")]);
+}
+
 sub notfound {
   my ($self, $window, $arg) = @_;
-  $arg = decode("utf8", $arg, Encode::FB_QUIET);
   $self->app->send([$window->format_announcement("Invalid command $arg")]);
 }
 

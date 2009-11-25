@@ -101,6 +101,17 @@ has commandline => (
   default => sub {{}},
 );
 
+has ignore => (
+  traits  => ['Array'],
+  is      => 'rw',
+  isa     => 'ArrayRef',
+  default => sub {[]},
+  handles => {
+    add_ignore => 'push',
+    ignores    => 'elements',
+  },
+);
+
 sub BUILD {
   my $self = shift;
   $self->load;

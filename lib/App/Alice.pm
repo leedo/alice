@@ -341,6 +341,33 @@ sub render {
   return $self->template->render_file("$template.html", $self, @data)->as_string;
 }
 
+sub is_ignore {
+  my ($self, $nick) = @_;
+  for ($self->config->ignores) {
+    return 1 if $nick eq $_;
+  }
+  return 0;
+}
+
+sub add_ignore {
+  my ($self, $nick) = @_;
+  $self->config->add_ignore($nick);
+  $self->config->write;
+}
+
+sub remove_ignore {
+  my ($self, $nick) = @_;
+  $self->config->ignore([
+    grep {$nick ne $_} $self->config->ignores
+  ]);
+  $self->config->write;
+}
+
+sub ignores {
+  my $self = shift;
+  return $self->config->ignores;
+}
+
 sub log_debug {
   my $self = shift;
   return unless $self->config->show_debug and @_;

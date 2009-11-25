@@ -4,7 +4,6 @@ __PACKAGE__->asynchronous(1);
  
 use AnyEvent::HTTP;
 use Tatsumaki::HTTPClient;
-use DBI;
 
 sub get {
     my $self = shift;

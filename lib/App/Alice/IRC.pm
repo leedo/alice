@@ -249,6 +249,7 @@ sub remove {
 sub publicmsg {
   my ($self, $cl, $channel, $msg) = @_;
   my $nick = (split '!', $msg->{prefix})[0];
+  return if $self->app->is_ignore($nick);
   my $text = $msg->{params}[1];
   my $window = $self->window($channel);
   $self->app->send([$window->format_message($nick, $text)]);
@@ -256,6 +257,7 @@ sub publicmsg {
 
 sub privatemsg {
   my ($self, $cl, $nick, $msg) = @_;
+  return if $self->app->is_ignore($nick);
   if ($msg->{command} eq "PRIVMSG") {
     my $from = (split /!/, $msg->{prefix})[0];
     my $window = $self->window($from);
@@ -268,6 +270,7 @@ sub privatemsg {
 
 sub ctcp_action {
   my ($self, $cl, $nick, $channel, $msg, $type) = @_;
+  return if $self->app->is_ignore($nick);
   my $window = $self->window($channel);
   $self->app->send([$window->format_message($nick, "• $msg")]);
 }
