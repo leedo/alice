@@ -113,7 +113,14 @@ Alice.Connection = Class.create({
       onSuccess: callback
     })
   },
-  
+
+  getLog: function(callback) {
+    new Ajax.Request('/logs', {
+      method: 'get',
+      onSuccess: callback
+    })
+  },
+
   sendConfig: function(params, callback) {
     new Ajax.Request('/save', {
       method: 'get',

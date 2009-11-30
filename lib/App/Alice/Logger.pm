@@ -17,7 +17,7 @@ has dbh => (
 has sql => (
   is => 'ro',
   isa => 'SQL::Abstract',
-  default => sub {SQL::Abstract->new},
+  default => sub {SQL::Abstract->new(cmp => "like")},
 );
 
 has dbfile => (
@@ -25,6 +25,23 @@ has dbfile => (
   isa => 'Str',
   required => 1,
 );
+
+has channels => (
+  is => 'rw',
+  isa => 'ArrayRef[Str]',
+  lazy => 1,
+  default => sub {
+    my $self = shift;
+    $self->refresh_channels;
+    return [];
+  }
+);
+
+sub BUILD {
+  my $self = shift;
+  $self->dbh;
+  $self->channels;
+}
 
 sub log_message {
   my ($self, @fields) = @_;
@@ -34,10 +51,25 @@ sub log_message {
 }
 
 sub search {
+  my $cb = pop;
   my ($self, %query) = @_;
+  %query = map {$_ => "%$query{$_}%"} grep {$query{$_}} keys %query;
   my ($stmt, @bind) = $self->sql->select("messages", '*', \%query);
-  my $sth = $self->prepare($stmt);
-  return $self->dbh->selectall_arrayref($sth, {}, @bind);
+  $self->dbh->exec($stmt, @bind, sub {
+    my ($db, $rows, $rv) = @_;
+    $cb->($rows);
+  });
+}
+
+sub refresh_channels {
+  my $self = shift;
+  $self->dbh->exec(
+    "SELECT DISTINCT channel FROM messages",
+    , (), sub {
+      my ($dbh, $rows, $rv) = @_;
+      $self->channels([map {$_->[0]} @$rows]);
+    }
+  );
 }
 
 1;

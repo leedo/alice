@@ -1,0 +1,8 @@
+? my ($app, @results) = @_;
+<ul id="results"
+? for my $result (@results) {
+<li>
+  <?= join " ", @$result ?>
+</li>
+? }
+</ul>

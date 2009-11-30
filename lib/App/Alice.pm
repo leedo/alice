@@ -154,6 +154,7 @@ sub run {
   $self->info_window;
   $self->template;
   $self->httpd;
+  $self->logger;
 
   $self->add_irc_server($_, $self->config->servers->{$_})
     for keys %{$self->config->servers};
