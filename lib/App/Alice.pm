@@ -8,6 +8,7 @@ use App::Alice::HTTPD;
 use App::Alice::IRC;
 use App::Alice::Signal;
 use App::Alice::Config;
+use App::Alice::Logger;
 use Moose;
 
 our $VERSION = '0.04';
@@ -80,6 +81,16 @@ has notifier => (
     };
     print STDERR "Notifications disabled...\n" if $@;
   }
+);
+
+has logger => (
+  is      => 'ro',
+  isa     => 'App::Alice::Logger',
+  lazy    => 1,
+  default => sub {
+    my $self = shift;
+    App::Alice::Logger->new(dbfile => $self->config->assetdir ."/log.db");
+  },
 );
 
 has window_map => (

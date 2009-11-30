@@ -252,6 +252,7 @@ sub publicmsg {
   return if $self->app->is_ignore($nick);
   my $text = $msg->{params}[1];
   my $window = $self->window($channel);
+  $self->app->logger->log_message(time, $nick, $channel, $text);
   $self->app->send([$window->format_message($nick, $text)]);
 }
 
@@ -259,12 +260,14 @@ sub privatemsg {
   my ($self, $cl, $nick, $msg) = @_;
   my $from = (split /!/, $msg->{prefix})[0];
   return if $self->app->is_ignore($from);
+  my $text = $msg->{params}[1];
   if ($msg->{command} eq "PRIVMSG") {
     my $window = $self->window($from);
-    $self->app->send([$window->format_message($from, $msg->{params}[1])]); 
+    $self->app->logger->log_message(time, $from, $from, $text);
+    $self->app->send([$window->format_message($from, $text)]); 
   }
   elsif ($msg->{command} eq "NOTICE") {
-    $self->app->send([$self->log_info($msg->{params}[1])]);
+    $self->app->send([$self->log_info($text)]);
   }
 }
 
@@ -272,7 +275,9 @@ sub ctcp_action {
   my ($self, $cl, $nick, $channel, $msg, $type) = @_;
   return if $self->app->is_ignore($nick);
   my $window = $self->window($channel);
-  $self->app->send([$window->format_message($nick, "• $msg")]);
+  my $text = "• $msg";
+  $self->app->logger->log_message(time, $nick, $channel, $text);
+  $self->app->send([$window->format_message($nick, $text)]);
 }
 
 sub nick_change {
