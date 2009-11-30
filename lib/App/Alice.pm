@@ -10,6 +10,7 @@ use App::Alice::Signal;
 use App::Alice::Config;
 use App::Alice::Logger;
 use Moose;
+use File::Copy;
 
 our $VERSION = '0.04';
 
@@ -90,10 +91,8 @@ has logger => (
   default => sub {
     my $self = shift;
     if (! -e $self->config->path ."/log.db") {
-      open my $blank, '<', $self->config->assetdir."/log.db";
-      open my $new, '>', $self->config->path."/log.db";
-      while (<$blank>) {print $new $_}
-      close $blank; close $new;
+      copy($self->config->assetdir."/log.db",
+           $self->config->path."/log.db");
     }
     App::Alice::Logger->new(
       dbfile => $self->config->path ."/log.db"
