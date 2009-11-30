@@ -97,6 +97,8 @@ sub BUILD {
     privatemsg     => sub{$self->privatemsg(@_)},
     connect        => sub{$self->connected(@_)},
     disconnect     => sub{$self->disconnected(@_)},
+    dcc_request    => sub{$self->dcc_request(@_)},
+    dcc_connected  => sub{$self->dcc_connected(@_)},
     irc_352        => sub{$self->irc_352(@_)}, # WHO info
     irc_366        => sub{$self->irc_366(@_)}, # end of NAMES
     irc_372        => sub{$self->log_info($_[1]->{params}[1], 1)}, # MOTD info
