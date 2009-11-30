@@ -107,28 +107,6 @@ Alice.Connection = Class.create({
     });
   },
   
-  getConfig: function(callback) {
-    new Ajax.Request('/config', {
-      method: 'get',
-      onSuccess: callback
-    })
-  },
-
-  getLog: function(callback) {
-    new Ajax.Request('/logs', {
-      method: 'get',
-      onSuccess: callback
-    })
-  },
-
-  sendConfig: function(params, callback) {
-    new Ajax.Request('/save', {
-      method: 'get',
-      parameters: params,
-      onSuccess: callback
-    });
-  },
-  
   sendTabOrder: function (windows) {
     new Ajax.Request('/tabs', {
       method: 'get',

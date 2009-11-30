@@ -551,16 +551,32 @@ body.config {
 
 div#logsearch {
   background: #eee;
-  border-bottom: 1px solid #ccc
+  border-bottom: 1px solid #999;
+  position: fixed;
+  top: 0px;
+  left: 0px;
+  right: 0px;
+  height: 2em;
+}
+
+div#logsearch form {
+  display: block;
+  margin: 0;
 }
 
 ul#logresults {
   list-style: none;
-  margin: 0;
+  margin: 2em 0 0 0;
   padding: 0;
 }
 
 ul#logresults li {
   border-bottom: 1px solid #eee;
-  padding: 5px;
+  padding: 5px 5px;
+  font-size: 0.8em;
+}
+
+ul#logresults span.metadata {
+  font-size: 0.7em;
+  color: #666;
 }

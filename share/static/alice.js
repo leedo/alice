@@ -7236,11 +7236,7 @@ Alice.Application = Class.create({
       this.configWindow.focus();
 
     } else {
-      this.configWindow = window.open(null, "config", "resizable=no,scrollbars=no,status=no,toolbar=no,location=no,width=500,height=480");
-
-      this.connection.getConfig(function(transport) {
-        this.configWindow.document.write(transport.responseText);
-      }.bind(this));
+      this.configWindow = window.open("/config", "config", "resizable=no,scrollbars=no,status=no,toolbar=no,location=no,width=500,height=480");
     }
 
     e.stop();
@@ -7250,11 +7246,7 @@ Alice.Application = Class.create({
     if (this.logWindow && this.logWindow.focus) {
       this.logWindow.focus();
     } else {
-      this.logWindow = window.open(null, "logs", "resizable=no,scrollbars=no,statusbar=no, toolbar=no,location=no,width=500,height=480");
-      this.connection.getLog(function(transport) {
-        console.log(transport.responseText);
-        this.logWindow.document.write(transport.responseText);
-      }.bind(this));
+      this.logWindow = window.open("/logs", "logs", "resizable=no,scrollbars=no,statusbar=no, toolbar=no,location=no,width=500,height=480");
     }
 
     e.stop();
@@ -7490,28 +7482,6 @@ Alice.Connection = Class.create({
     new Ajax.Request('/say', {
       method: 'get',
       parameters: form.serialize(),
-    });
-  },
-
-  getConfig: function(callback) {
-    new Ajax.Request('/config', {
-      method: 'get',
-      onSuccess: callback
-    })
-  },
-
-  getLog: function(callback) {
-    new Ajax.Request('/logs', {
-      method: 'get',
-      onSuccess: callback
-    })
-  },
-
-  sendConfig: function(params, callback) {
-    new Ajax.Request('/save', {
-      method: 'get',
-      parameters: params,
-      onSuccess: callback
     });
   },
 

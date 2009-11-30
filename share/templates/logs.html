@@ -19,7 +19,7 @@
   <body>
     <div id="logsearch">
 <form id="query" onsubmit="return sendQuery(this)">
-  <label for="nick">Nick</label><input type="text" name="nick" id="nick" />
+  <label for="nick">Nick</label><input size="8" type="text" name="nick" id="nick" />
   <label for="body">Content</label><input type="text" name="body" id="body" />
   <select name="channel">
     <? for my $channel (@{$logger->channels}) { ?>
