@@ -1,7 +1,7 @@
 ? my ($app, $logger) = @_;
 <html>
   <head>
-    <link type="text/css" rel="stylesheet" href="/static/logs.css" />
+    <link type="text/css" rel="stylesheet" href="/static/site.css" />
     <script type="text/javascript" src="/static/alice.js"></script>
     <script type="text/javascript">
       sendQuery = function (form) {
@@ -9,7 +9,7 @@
           method: "get",
           parameters: form.serialize(),
           onSuccess: function (transport) {
-            $('results').replace(transport.responseText);
+            $('logresults').replace(transport.responseText);
           }
         });
         return false;
@@ -17,6 +17,7 @@
     </script>
   </head>
   <body>
+    <div id="logsearch">
 <form id="query" onsubmit="return sendQuery(this)">
   <label for="nick">Nick</label><input type="text" name="nick" id="nick" />
   <label for="body">Content</label><input type="text" name="body" id="body" />
@@ -27,8 +28,8 @@
   </select>
   <input type="submit" value="Search" />
 </form>
-
-<ul id="results">
+</div>
+<ul id="logresults">
 </ul>
 </body>
 </html>

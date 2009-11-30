@@ -548,3 +548,19 @@ div#config ul#connections li.connected {
 body.config {
   background: #efefef;
 }
+
+div#logsearch {
+  background: #eee;
+  border-bottom: 1px solid #ccc
+}
+
+ul#logresults {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+ul#logresults li {
+  border-bottom: 1px solid #eee;
+  padding: 5px;
+}
