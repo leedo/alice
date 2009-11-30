@@ -1,8 +1,8 @@
 Object.extend(Alice, {
   makeLinksClickable: function(content) {
     return content.replace(
-      /(https?\:\/\/[^<"\s]*[^<"\s.,)\]])/gi,
-      "<a href=\"$1\">$1</a>"
+      /(\b)(([\w-]+:\/\/?|www[.])[^\s()<>]+(?:\([\w\d]+\)|([^[<,.;\s]|\/)))/gi,
+      "$1<a href=\"$2\">$2</a>"
     );
   },
   

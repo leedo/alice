@@ -124,7 +124,9 @@ Alice.Window = Class.create({
           this.displayTopic(message.body.escapeHTML());
         }
         else {
-          this.messages.insert(this.application.applyFilters(message.full_html));
+          this.messages.insert(message.full_html);
+          var node = this.messages.down("li:last-child div.msg");
+          node.innerHTML = this.application.applyFilters(node.innerHTML);
           var span = this.messages.down('li:last-child span.nickhint');
           if (span && this.nicksVisible) {
             span.style.webkitTransition = 'none 0 linear';

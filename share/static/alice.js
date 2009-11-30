@@ -7145,8 +7145,8 @@ var Alice = { };
 Object.extend(Alice, {
   makeLinksClickable: function(content) {
     return content.replace(
-      /(https?\:\/\/[^<"\s]*[^<"\s.,)\]])/gi,
-      "<a href=\"$1\">$1</a>"
+      /(\b)(([\w-]+:\/\/?|www[.])[^\s()<>]+(?:\([\w\d]+\)|([^[<,.;\s]|\/)))/gi,
+      "$1<a href=\"$2\">$2</a>"
     );
   },
 
@@ -7631,7 +7631,9 @@ Alice.Window = Class.create({
           this.displayTopic(message.body.escapeHTML());
         }
         else {
-          this.messages.insert(this.application.applyFilters(message.full_html));
+          this.messages.insert(message.full_html);
+          var node = this.messages.down("li:last-child div.msg");
+          node.innerHTML = this.application.applyFilters(node.innerHTML);
           var span = this.messages.down('li:last-child span.nickhint');
           if (span && this.nicksVisible) {
             span.style.webkitTransition = 'none 0 linear';
