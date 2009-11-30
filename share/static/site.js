@@ -24,7 +24,14 @@ if (window == window.parent) {
       topic.innerHTML = Alice.makeLinksClickable(topic.innerHTML)});
     $$('#config_overlay option').each(function(opt){opt.selected = false});
     $('config_overlay').observe("change", function (e) {  
-      alice.toggleConfig(e);
+      switch ($('config_overlay').value) {
+        case "Logs":
+          alice.toggleLogs(e);
+          break;
+        case "Connections":
+          alice.toggleConfig(e);
+          break;
+      }
       $$('#config_overlay option').each(function(opt){opt.selected = false});
     });
     var width = document.viewport.getWidth();

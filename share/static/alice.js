@@ -7236,11 +7236,17 @@ Alice.Application = Class.create({
       this.configWindow.focus();
 
     } else {
-      this.configWindow = window.open(null, "config", "resizable=no,scrollbars=no,status=no,toolbar=no,location=no,width=500,height=480");
+      this.configWindow = window.open("/config", "config", "resizable=no,scrollbars=no,status=no,toolbar=no,location=no,width=500,height=480");
+    }
 
-      this.connection.getConfig(function(transport) {
-        this.configWindow.document.write(transport.responseText);
-      }.bind(this));
+    e.stop();
+  },
+
+  toggleLogs: function(e) {
+    if (this.logWindow && this.logWindow.focus) {
+      this.logWindow.focus();
+    } else {
+      this.logWindow = window.open("/logs", "logs", "resizable=no,scrollbars=no,statusbar=no, toolbar=no,location=no,width=500,height=480");
     }
 
     e.stop();
@@ -7476,21 +7482,6 @@ Alice.Connection = Class.create({
     new Ajax.Request('/say', {
       method: 'get',
       parameters: form.serialize(),
-    });
-  },
-
-  getConfig: function(callback) {
-    new Ajax.Request('/config', {
-      method: 'get',
-      onSuccess: callback
-    })
-  },
-
-  sendConfig: function(params, callback) {
-    new Ajax.Request('/save', {
-      method: 'get',
-      parameters: params,
-      onSuccess: callback
     });
   },
 

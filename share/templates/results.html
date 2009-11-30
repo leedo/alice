@@ -1,0 +1,14 @@
+? my ($app, @results) = @_;
+<ul id="logresults">
+? for my $result (@results) {
+<li>
+? my @date = localtime($result->[0]);
+? $date[5] = $date[5] % 100;
+<strong><?= $result->[1] ?> </strong><?= $result->[3] ?><br/>
+  <span class="metadata">
+    <?= $result->[2] ?>
+    <?= sprintf("%02d:%02d %02d-%02d-%02d", @date[2,1,4,3,5]) ?>
+  </span>
+</tr>
+? }
+</table>

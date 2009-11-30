@@ -9,7 +9,7 @@ use FindBin;
 use lib "$FindBin::Bin/../lib";
 use App::Alice::Config;
 
-my $config = Alice::Config->new;
+my $config = App::Alice::Config->new;
 my $window = Gtk2::Window->new;
 $window->set_title("alice");
 $window->resize(800, 600);

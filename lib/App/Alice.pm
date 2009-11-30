@@ -8,7 +8,9 @@ use App::Alice::HTTPD;
 use App::Alice::IRC;
 use App::Alice::Signal;
 use App::Alice::Config;
+use App::Alice::Logger;
 use Moose;
+use File::Copy;
 
 our $VERSION = '0.04';
 
@@ -82,6 +84,22 @@ has notifier => (
   }
 );
 
+has logger => (
+  is      => 'ro',
+  isa     => 'App::Alice::Logger',
+  lazy    => 1,
+  default => sub {
+    my $self = shift;
+    if (! -e $self->config->path ."/log.db") {
+      copy($self->config->assetdir."/log.db",
+           $self->config->path."/log.db");
+    }
+    App::Alice::Logger->new(
+      dbfile => $self->config->path ."/log.db"
+    );
+  },
+);
+
 has window_map => (
   traits    => ['Hash'],
   isa       => 'HashRef[App::Alice::Window|App::Alice::InfoWindow]',
@@ -143,6 +161,7 @@ sub run {
   $self->info_window;
   $self->template;
   $self->httpd;
+  $self->logger;
 
   $self->add_irc_server($_, $self->config->servers->{$_})
     for keys %{$self->config->servers};

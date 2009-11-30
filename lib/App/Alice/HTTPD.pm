@@ -60,6 +60,8 @@ sub BUILD {
     '/say'          => sub{$self->handle_message(@_)},
     '/static'       => sub{$self->handle_static(@_)},
     '/get'          => sub{$self->image_proxy(@_)},
+    '/logs'         => sub{$self->send_logs(@_)},
+    '/search'       => sub{$self->send_search(@_)},
     'client_disconnected' => sub{$self->purge_disconnects(@_)},
   );
   $self->httpd($httpd);
@@ -192,11 +194,25 @@ sub handle_static {
 
 sub send_index {
   my ($self, $httpd, $req) = @_;
-  my $channels = [];
   my $output = $self->app->render('index');
   $req->respond([200, 'ok', {'Content-Type' => 'text/html; charset=utf-8'}, $output]);
 }
 
+sub send_logs {
+  my ($self, $httpd, $req) = @_;
+  my $output = $self->app->render('logs', $self->app->logger);
+  $req->respond([200, 'ok', {'Content-Type' => 'text/html; charset=utf-8'}, $output]);
+}
+
+sub send_search {
+  my ($self, $httpd, $req) = @_;
+  my $results = $self->app->logger->search($req->vars, sub {
+    my $rows = shift;
+    my $content = $self->app->render('results', @$rows);
+    $req->respond([200, 'ok', {'Content-Type' => 'text/html; charset=utf-8'},
+      $content]);
+  });
+}
 
 sub send_config {
   my ($self, $httpd, $req) = @_;

@@ -1,0 +1,35 @@
+? my ($app, $logger) = @_;
+<html>
+  <head>
+    <link type="text/css" rel="stylesheet" href="/static/site.css" />
+    <script type="text/javascript" src="/static/alice.js"></script>
+    <script type="text/javascript">
+      sendQuery = function (form) {
+        new Ajax.Request("/search", {
+          method: "get",
+          parameters: form.serialize(),
+          onSuccess: function (transport) {
+            $('logresults').replace(transport.responseText);
+          }
+        });
+        return false;
+      };
+    </script>
+  </head>
+  <body>
+    <div id="logsearch">
+<form id="query" onsubmit="return sendQuery(this)">
+  <label for="nick">Nick</label><input size="8" type="text" name="nick" id="nick" />
+  <label for="body">Content</label><input type="text" name="body" id="body" />
+  <select name="channel">
+    <? for my $channel (@{$logger->channels}) { ?>
+    <option value="<?= $channel ?>"><?= $channel ?></option>
+    <? } ?>
+  </select>
+  <input type="submit" value="Search" />
+</form>
+</div>
+<ul id="logresults">
+</ul>
+</body>
+</html>
