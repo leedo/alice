@@ -54,7 +54,7 @@ sub search {
   my $cb = pop;
   my ($self, %query) = @_;
   %query = map {$_ => "%$query{$_}%"} grep {$query{$_}} keys %query;
-  my ($stmt, @bind) = $self->sql->select("messages", '*', \%query);
+  my ($stmt, @bind) = $self->sql->select("messages", '*', \%query, {-desc => 'time'});
   $self->dbh->exec($stmt, @bind, sub {
     my ($db, $rows, $rv) = @_;
     $cb->($rows);
