@@ -2,6 +2,7 @@ package App::Alice::Logger;
 
 use Moose;
 use AnyEvent::DBI;
+use AnyEvent::IRC::Util qw/filter_colors/;
 use SQL::Abstract;
 
 has dbh => (
@@ -45,6 +46,7 @@ sub BUILD {
 
 sub log_message {
   my ($self, @fields) = @_;
+  $fields[3] = filter_colors($fields[3]);
   my $sth = $self->dbh->exec(
     "INSERT INTO messages (time,nick,channel,body) VALUES(?,?,?,?)"
   , @fields, sub {});
