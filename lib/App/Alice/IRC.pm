@@ -287,7 +287,7 @@ sub nick_change {
   $self->rename_nick($old_nick, $new_nick);
   $self->app->send([
     map {$_->format_event("nick", $old_nick, $new_nick)}
-        $self->nick_windows($old_nick)
+        $self->nick_windows($new_nick)
   ]);
 }
 

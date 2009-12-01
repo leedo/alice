@@ -68,7 +68,7 @@ has notifier => (
       if ($^O eq 'darwin') {
         # 5.10 doesn't seem to put Extras in @INC
         # need this for Foundation.pm
-        if (-e "/System/Library/Perl/Extras/5.10.0") {
+        if ($] >= 5.01 and -e "/System/Library/Perl/Extras/5.10.0") {
           require lib;
           lib->import("/System/Library/Perl/Extras/5.10.0"); 
         }
