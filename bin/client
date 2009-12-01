@@ -27,19 +27,31 @@ $view->signal_connect(
   }
 );
 $view->signal_connect(
-  new_window_policy_decision_requested => sub {
-    my ($view, $frame, $req, $action, $policy) = @_;
+  create_web_view => sub {
     my $window = Gtk2::Window->new;
-    $window->set_title("alice preferences");
-    $window->resize(500, 600);
-    $view = Gtk2::WebKit::WebView->new;
+    my $view = Gtk2::WebKit::WebView->new;
     $window->add($view);
-    $view->open($req->get_uri);
     $window->show_all;
-    $policy->ignore;
-    return 1;
+    return $view;
   }
 );
+
+$view->signal_connect(
+  new_window_policy_decision_requested => sub {
+    my ($view, $frame, $req, $action, $policy) = @_;
+    print STDERR "new_window_policy_decision_requested\n";
+    $policy->use;
+    return 0;
+  }
+);
+
+$view->signal_connect(
+  web_view_ready => sub {
+    print STDERR "web_view_ready\n";
+    return 0;
+  }
+);
+
 $window->add($view);
 $view->open('http://127.0.0.1:'.$config->port.'/view');
 $window->show_all;

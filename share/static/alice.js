@@ -7251,7 +7251,6 @@ Alice.Application = Class.create({
     } else {
       this.logWindow = window.open(null, "logs", "resizable=no,scrollbars=no,statusbar=no, toolbar=no,location=no,width=500,height=480");
       this.connection.getLog(function (transport) {
-        console.log(transport.responseText);
         this.logWindow.document.write(transport.responseText);
       }.bind(this));
     }
@@ -7681,7 +7680,6 @@ Alice.Window = Class.create({
   },
 
   scrollToBottom: function(force) {
-    console.log("scrolling to bottom");
     if (!force) {
       var lastmsg = this.messages.down('li:last-child');
       if (!lastmsg) return;

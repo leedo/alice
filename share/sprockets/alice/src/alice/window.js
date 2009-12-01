@@ -163,7 +163,6 @@ Alice.Window = Class.create({
   },
   
   scrollToBottom: function(force) {
-    console.log("scrolling to bottom");
     if (!force) {
       var lastmsg = this.messages.down('li:last-child');
       if (!lastmsg) return;
