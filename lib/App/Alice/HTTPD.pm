@@ -200,8 +200,10 @@ sub send_index {
 
 sub send_logs {
   my ($self, $httpd, $req) = @_;
-  my $output = $self->app->render('logs', $self->app->logger);
-  $req->respond([200, 'ok', {'Content-Type' => 'text/html; charset=utf-8'}, $output]);
+  $self->app->logger->refresh_channels(sub {
+    my $output = $self->app->render('logs', $self->app->logger);
+    $req->respond([200, 'ok', {'Content-Type' => 'text/html; charset=utf-8'}, $output]);
+  });
 }
 
 sub send_search {

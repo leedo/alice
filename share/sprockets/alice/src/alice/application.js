@@ -15,7 +15,10 @@ Alice.Application = Class.create({
       this.configWindow.focus();
 
     } else {
-      this.configWindow = window.open("/config", "config", "resizable=no,scrollbars=no,status=no,toolbar=no,location=no,width=500,height=480");
+      this.configWindow = window.open(null, "config", "resizable=no,scrollbars=no,status=no,toolbar=no,location=no,width=500,height=480");
+      this.connection.getConfig(function (transport) {
+        this.configWindow.document.write(transport.responseText);
+      }.bind(this));
     }
     
     e.stop();
@@ -25,7 +28,11 @@ Alice.Application = Class.create({
     if (this.logWindow && this.logWindow.focus) {
       this.logWindow.focus();
     } else {
-      this.logWindow = window.open("/logs", "logs", "resizable=no,scrollbars=no,statusbar=no, toolbar=no,location=no,width=500,height=480");
+      this.logWindow = window.open(null, "logs", "resizable=no,scrollbars=no,statusbar=no, toolbar=no,location=no,width=500,height=480");
+      this.connection.getLog(function (transport) {
+        console.log(transport.responseText);
+        this.logWindow.document.write(transport.responseText);
+      }.bind(this));
     }
 
     e.stop();

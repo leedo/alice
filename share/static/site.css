@@ -556,7 +556,14 @@ div#logsearch {
   top: 0px;
   left: 0px;
   right: 0px;
-  height: 2em;
+  height: 28px;
+  padding: 5px 0 0 0;
+}
+
+div#logsearch label {
+  font-size: 0.7em;
+  padding-right: 2px;
+  padding-left: 10px;
 }
 
 div#logsearch form {
@@ -566,8 +573,14 @@ div#logsearch form {
 
 ul#logresults {
   list-style: none;
-  margin: 2em 0 0 0;
+  margin: 0;
   padding: 0;
+  position: absolute;
+  top: 33px;
+  bottom: 0px;
+  left: 0px;
+  right: 0px;
+  overflow: auto;
 }
 
 ul#logresults li {

@@ -100,6 +100,20 @@ Alice.Connection = Class.create({
     });
   },
   
+  getConfig: function(callback) {
+    new Ajax.Request('/config', {
+      method: 'get',
+      onSuccess: callback
+    });
+  },
+  
+  getLog: function(callback) {
+    new Ajax.Request('/logs', {
+      method: 'get',
+      onSuccess: callback
+    });
+  },
+  
   sendMessage: function(form) {
     new Ajax.Request('/say', {
       method: 'get',

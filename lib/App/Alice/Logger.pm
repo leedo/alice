@@ -62,12 +62,13 @@ sub search {
 }
 
 sub refresh_channels {
-  my $self = shift;
+  my ($self, $cb) = @_;
   $self->dbh->exec(
     "SELECT DISTINCT channel FROM messages",
     , (), sub {
       my ($dbh, $rows, $rv) = @_;
       $self->channels([map {$_->[0]} @$rows]);
+      $cb->() if $cb;
     }
   );
 }
