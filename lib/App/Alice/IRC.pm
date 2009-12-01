@@ -213,7 +213,7 @@ sub registered {
 
   for (@{$self->config->{channels}}) {
     push @log, $self->log_info("joining $_");
-    $self->cl->send_srv("JOIN", $_);
+    $self->cl->send_srv("JOIN", split(/\s+/, $_));
   }
   $self->app->send(\@log);
 };

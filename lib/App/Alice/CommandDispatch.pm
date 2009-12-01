@@ -12,6 +12,7 @@ has 'handlers' => (
       {sub => '_say',     re => qr{^([^/].*)}s},
       {sub => 'query',    re => qr{^/query\s+(\S+)}},
       {sub => 'names',    re => qr{^/n(?:ames)?\s*$}, in_channel => 1},
+      {sub => '_joinpass',re => qr{^/j(?:oin)?\s+(#\S+)\s+(\S+)}},     
       {sub => '_join',    re => qr{^/j(?:oin)?\s+(?:\-(\S+)\s+)?(\S+)(?:\s+(\S+))?}},
       {sub => 'part',     re => qr{^/part}, in_channel => 1},
       {sub => 'create',   re => qr{^/create (\S+)}},
@@ -91,6 +92,15 @@ sub _join {
   if ($irc and $arg1 =~ /^[#&]/) {
     $self->app->send([$irc->log_info("joining $arg1")]);
     $irc->cl->send_srv(JOIN => $arg1);
+  }
+}
+
+sub _joinpass {
+  my ($self, $window, $password, $channel) = @_;
+  my $irc = $window->irc;
+  if($irc and $channel =~ /^[#&]/) {
+    $self->app->send([$irc->log_info("joining $channel with password $password")]);
+    $irc->cl->send_srv(JOIN => $channel, $password);
   }
 }
 
