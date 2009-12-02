@@ -208,12 +208,12 @@ sub registered {
   });
   for (@{$self->config->{on_connect}}) {
     push @log, $self->log_info("sending $_");
-    $self->cl->send_raw($_);
+    $self->cl->send_raw(split /\s+/);
   }
 
   for (@{$self->config->{channels}}) {
     push @log, $self->log_info("joining $_");
-    $self->cl->send_srv("JOIN", split(/\s+/, $_));
+    $self->cl->send_srv("JOIN", split /\s+/);
   }
   $self->app->send(\@log);
 };
