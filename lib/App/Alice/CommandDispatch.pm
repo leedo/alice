@@ -11,18 +11,17 @@ has 'handlers' => (
     [
       {sub => '_say',     re => qr{^([^/].*)}s},
       {sub => 'query',    re => qr{^/query\s+(\S+)}},
-      {sub => 'names',    re => qr{^/n(?:ames)?\s*$}, in_channel => 1},
-      {sub => '_joinpass',re => qr{^/j(?:oin)?\s+(#\S+)\s+(\S+)}},     
-      {sub => '_join',    re => qr{^/j(?:oin)?\s+(?:\-(\S+)\s+)?(\S+)(?:\s+(\S+))?}},
+      {sub => 'nick',     re => qr{^/nick\s+(\S+)}},
+      {sub => 'names',    re => qr{^/n(?:ames)?}, in_channel => 1},
+      {sub => '_join',    re => qr{^/j(?:oin)?\s+(?:\-(\S+)\s+)?(.+)}},
       {sub => 'part',     re => qr{^/part}, in_channel => 1},
-      {sub => 'create',   re => qr{^/create (\S+)}},
+      {sub => 'create',   re => qr{^/create\s+(\S+)}},
       {sub => 'close',    re => qr{^/(?:close|wc)}},
       {sub => 'clear',    re => qr{^/clear}},
       {sub => 'topic',    re => qr{^/topic(?:\s+(.+))?}, in_channel => 1},
       {sub => 'whois',    re => qr{^/whois\s+(\S+)}},
-      {sub => 'me',       re => qr{^/me (.+)}},
-      {sub => 'nick',     re => qr{^/nick\s+(\S+)}},
-      {sub => 'quote',    re => qr{^/(?:quote|raw) (.+)}},
+      {sub => 'me',       re => qr{^/me\s+(.+)}},
+      {sub => 'quote',    re => qr{^/(?:quote|raw)\s+(.+)}},
       {sub => 'disconnect',re=> qr{^/disconnect\s+(\S+)}},
       {sub => 'connect',  re => qr{^/connect\s+(\S+)}},
       {sub => 'ignore',   re => qr{^/ignore\s+(\S+)}},
@@ -71,36 +70,28 @@ sub names {
 }
 
 sub whois {
-  my ($self, $window, $arg) = @_;
-  $arg = decode("utf8", $arg, Encode::FB_QUIET);
-  $self->app->send([$window->format_announcement($window->irc->whois_table($arg))]);
+  my ($self, $window, $nick) = @_;
+  $nick = decode("utf8", $nick, Encode::FB_QUIET);
+  $self->app->send([$window->format_announcement($window->irc->whois_table($nick))]);
 }
 
 sub query {
-  my ($self, $window, $arg) = @_;
-  $arg = decode("utf8", $arg, Encode::FB_QUIET);
-  my $new_window = $self->app->find_or_create_window($arg, $window->irc);
+  my ($self, $window, $nick) = @_;
+  $nick = decode("utf8", $nick, Encode::FB_QUIET);
+  my $new_window = $self->app->find_or_create_window($nick, $window->irc);
   $self->app->send([$new_window->join_action]);
 }
 
 sub _join {
-  my ($self, $window, $arg1, $arg2, $arg3) = @_;
+  my ($self, $window, $channel, $network) = @_;
   my $irc = $window->irc;
-  if ($arg2 and $self->app->ircs->{$arg2}) {
-    $irc = $self->app->ircs->{$arg2};
+  if ($network and $self->app->ircs->{$network}) {
+    $irc = $self->app->ircs->{$network};
   }
-  if ($irc and $arg1 =~ /^[#&]/) {
-    $self->app->send([$irc->log_info("joining $arg1")]);
-    $irc->cl->send_srv(JOIN => $arg1);
-  }
-}
-
-sub _joinpass {
-  my ($self, $window, $password, $channel) = @_;
-  my $irc = $window->irc;
-  if($irc and $channel =~ /^[#&]/) {
-    $self->app->send([$irc->log_info("joining $channel with password $password")]);
-    $irc->cl->send_srv(JOIN => $channel, $password);
+  my @params = split /\s+/, $channel;
+  if ($irc and $irc->cl->is_channel_name($params[0])) {
+    $self->app->send([$irc->log_info("joining $params[0]")]);
+    $irc->cl->send_srv(JOIN => @params);
   }
 }
 
@@ -116,28 +107,27 @@ sub close {
 }
 
 sub nick {
-  my ($self, $window, $arg) = @_;
-  $window->irc->send_srv(NICK => $arg);
+  my ($self, $window, $nick) = @_;
+  $window->irc->cl->send_srv(NICK => $nick);
 }
 
 sub create {
-  my ($self, $window, $arg) = @_;
-  return unless $window->irc;
-  $arg = decode("utf8", $arg, Encode::FB_QUIET);
-  my $new_window = $self->app->find_or_create_window($arg, $window->irc);
+  my ($self, $window, $name) = @_;
+  $name = decode("utf8", $name, Encode::FB_QUIET);
+  my $new_window = $self->app->find_or_create_window($name, $window->irc);
   $self->app->send([$new_window->join_action]);
 }
 
 sub clear {
-  my ($self, $window, $arg) = @_;
+  my ($self, $window) = @_;
   $window->clear_buffer;
   $self->app->send([$window->clear_action]);
 }
 
 sub topic {
-  my ($self, $window, $arg) = @_;
-  if ($arg) {
-    $window->set_topic($arg);
+  my ($self, $window, $new_topic) = @_;
+  if ($new_topic) {
+    $window->set_topic($new_topic);
   }
   else {
     my $topic = $window->topic;
@@ -148,35 +138,35 @@ sub topic {
 }
 
 sub me {
-  my ($self, $window, $arg) = @_;
-  $self->app->send([$window->format_message($window->nick, "• $arg")], 1);
+  my ($self, $window, $action) = @_;
+  $self->app->send([$window->format_message($window->nick, "• $action")]);
   $window->irc->cl->send_srv(CTCP => $window->title, "ACTION $1");
 }
 
 sub quote {
-  my ($self, $window, $arg) = @_;
-  $arg = decode("utf8", $arg, Encode::FB_QUIET);
-  $window->irc->cl->send_raw($arg);
+  my ($self, $window, $commands) = @_;
+  $commands = decode("utf8", $commands, Encode::FB_QUIET);
+  $window->irc->cl->send_raw(split /\s+/, $commands);
 }
 
 sub disconnect {
-  my ($self, $window, $arg) = @_;
-  my $irc = $self->app->ircs->{$arg};
+  my ($self, $window, $network) = @_;
+  my $irc = $self->app->ircs->{$network};
   if ($irc and $irc->is_connected) {
     $irc->disconnect;
   }
 }
 
 sub connect {
-  my ($self, $window, $arg) = @_;
-  my $irc  = $self->app->ircs->{$arg};
+  my ($self, $window, $network) = @_;
+  my $irc  = $self->app->ircs->{$network};
   if ($irc and !$irc->is_connected) {
     $irc->connect;
   }
 }
 
 sub ignores {
-  my ($self, $window, $arg) = @_;
+  my ($self, $window) = @_;
   my $msg = join ", ", $self->app->ignores;
   $msg = "none" unless $msg;
   $self->app->send([
@@ -185,27 +175,27 @@ sub ignores {
 }
 
 sub ignore {
-  my ($self, $window, $arg) = @_;
-  $self->app->add_ignore($arg);
-  $self->app->send([$window->format_announcement("Ignoring $arg")]);
+  my ($self, $window, $nick) = @_;
+  $self->app->add_ignore($nick);
+  $self->app->send([$window->format_announcement("Ignoring $nick")]);
 }
 
 sub unignore {
-  my ($self, $window, $arg) = @_;
-  $self->app->remove_ignore($arg);
-  $self->app->send([$window->format_announcement("No longer ignoring $arg")]);
+  my ($self, $window, $nick) = @_;
+  $self->app->remove_ignore($nick);
+  $self->app->send([$window->format_announcement("No longer ignoring $nick")]);
 }
 
 sub notfound {
-  my ($self, $window, $arg) = @_;
-  $self->app->send([$window->format_announcement("Invalid command $arg")]);
+  my ($self, $window, $command) = @_;
+  $self->app->send([$window->format_announcement("Invalid command $command")]);
 }
 
 sub _say {
-  my ($self, $window, $arg) = @_;
-  $self->app->send([$window->format_message($window->nick, $arg)]);
-  $arg = decode("utf8", $arg, Encode::FB_QUIET);
-  $window->irc->cl->send_srv(PRIVMSG => $window->title, $arg);
+  my ($self, $window, $msg) = @_;
+  $self->app->send([$window->format_message($window->nick, $msg)]);
+  $msg = decode("utf8", $msg, Encode::FB_QUIET);
+  $window->irc->cl->send_srv(PRIVMSG => $window->title, $msg);
 }
 
 __PACKAGE__->meta->make_immutable;
