@@ -7184,7 +7184,7 @@ Object.extend(Alice, {
       onUpdate: function (res) {
         var tabs = res.childElements();
         var order = tabs.collect(function(t){
-          var m = t.id.match(/(win_\d+)_tab/);
+          var m = t.id.match(/(win_[^_]+)_tab/);
           if (m) return m[1]
         });
         if (order.length) alice.connection.sendTabOrder(order);
