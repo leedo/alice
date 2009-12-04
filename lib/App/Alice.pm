@@ -169,7 +169,7 @@ sub run {
   $self->add_irc_server($_, $self->config->servers->{$_})
     for keys %{$self->config->servers};
 
-  print STDERR "Location: http://localhost:". $self->config->port ."/view\n";
+  print STDERR "Location: http://".$self->config->http_address.":". $self->config->http_port ."/view\n";
   
   if ($self->standalone) { 
     $self->cond(AnyEvent->condvar);
