@@ -19,7 +19,7 @@ Alice.Connection = Class.create({
     this.closeConnection();
     this.len = 0;
     var now = new Date();
-    console.log("opening new connection starting at message " + this.msgid);
+    //console.log("opening new connection starting at message " + this.msgid);
     this.request = new Ajax.Request('/stream', {
       method: 'get',
       parameters: {msgid: this.msgid, t: now.getTime() / 1000},
@@ -30,13 +30,13 @@ Alice.Connection = Class.create({
   },
 
   handleException: function(request, exception) {
-    console.log("encountered an error with stream.");
+    //console.log("encountered an error with stream.");
     if (!this.aborting)
       setTimeout(this.connect.bind(this), 2000);
   },
 
   handleComplete: function(transport) {
-    console.log("connection was closed cleanly.");
+    //console.log("connection was closed cleanly.");
     if (!this.aborting)
       setTimeout(this.connect.bind(this), 2000);
   },
@@ -67,13 +67,13 @@ Alice.Connection = Class.create({
       }
     }
     catch (e) {
-      console.log(e);
+      //console.log(e);
     }
 
     // reconnect if lag is over 5 seconds... not a good way to do this.
     var lag = time / 1000 -  data.time;
     if (lag > 5) {
-      console.log("lag is " + Math.round(lag) + "s, reconnecting.");
+      //console.log("lag is " + Math.round(lag) + "s, reconnecting.");
       this.connect();
     }
   },

@@ -260,10 +260,10 @@ sub publicmsg {
 
 sub privatemsg {
   my ($self, $cl, $nick, $msg) = @_;
-  my $from = (split /!/, $msg->{prefix})[0];
-  return if $self->app->is_ignore($from);
   my $text = $msg->{params}[1];
   if ($msg->{command} eq "PRIVMSG") {
+    my $from = (split /!/, $msg->{prefix})[0];
+    return if $self->app->is_ignore($from);
     my $window = $self->window($from);
     $self->app->logger->log_message(time, $from, $from, $text);
     $self->app->send([$window->format_message($from, $text)]); 

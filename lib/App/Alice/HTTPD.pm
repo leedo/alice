@@ -47,6 +47,7 @@ has 'ping_timer' => (
 sub BUILD {
   my $self = shift;
   my $httpd = AnyEvent::HTTPD->new(
+    host => $self->config->http_address,
     port => $self->config->http_port,
   );
   $httpd->reg_cb(

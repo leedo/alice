@@ -42,14 +42,14 @@ has debug => (
 
 has port => (
   is      => 'rw',
-  isa     => 'Int',
-  default => 8080,
+  isa     => 'Str',
+  default => "8080",
 );
 
 has address => (
   is      => 'rw',
   isa     => 'Str',
-  default => 'localhost',
+  default => '127.0.0.1',
 );
 
 has auth => (
@@ -137,10 +137,11 @@ sub load {
     say STDERR "No config found, writing a few config to ".$self->fullpath;
     $self->write;
   }
-  my ($port, $debug) = @_;
-  GetOptions("port=i" => \$port, "debug" => \$debug);
+  my ($port, $debug, $address) = @_;
+  GetOptions("port=i" => \$port, "debug" => \$debug, "address=s" => \$address);
   $self->commandline->{port} = $port if $port and $port =~ /\d+/;
   $self->commandline->{debug} = 1 if $debug;
+  $self->commandline->{address} = $address if $address;
   $self->merge($config);
 }
 
@@ -150,6 +151,17 @@ sub http_port {
     return $self->commandline->{port};
   }
   return $self->port;
+}
+
+sub http_address {
+  my $self = shift;
+  if ($self->commandline->{address}) {
+    return $self->commandline->{address};
+  }
+  if ($self->address eq "localhost") {
+    $self->address("127.0.0.1");
+  }
+  return $self->address;
 }
 
 sub show_debug {
