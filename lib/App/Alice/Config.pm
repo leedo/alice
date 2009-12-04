@@ -158,6 +158,9 @@ sub http_address {
   if ($self->commandline->{address}) {
     return $self->commandline->{address};
   }
+  if ($self->address eq "localhost") {
+    $self->address("127.0.0.1");
+  }
   return $self->address;
 }
 
