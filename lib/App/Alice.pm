@@ -63,7 +63,9 @@ has dispatcher => (
 
 has notifier => (
   is      => 'ro',
+  lazy    => 1,
   default => sub {
+    my $self = shift;
     eval {
       if ($^O eq 'darwin') {
         # 5.10 doesn't seem to put Extras in @INC
@@ -80,7 +82,7 @@ has notifier => (
         return App::Alice::Notifier::LibNotify->new;
       }
     };
-    print STDERR "Notifications disabled...\n" if $@;
+    $self->log_debug("Notifications disabled...\n") if $@;
   }
 );
 
@@ -162,14 +164,15 @@ sub run {
   $self->template;
   $self->httpd;
   $self->logger;
+  $self->notifier;
 
   $self->add_irc_server($_, $self->config->servers->{$_})
     for keys %{$self->config->servers};
 
+  print STDERR "Location: http://localhost:". $self->config->port ."/view\n";
   
   if ($self->standalone) { 
     $self->cond(AnyEvent->condvar);
-    say STDERR "Location: http://localhost:". $self->config->port ."/view";
     my @sigs;
     for my $sig (qw/INT QUIT/) {
       my $w = AnyEvent->signal(
