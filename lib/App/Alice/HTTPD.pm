@@ -132,8 +132,8 @@ sub setup_stream {
   $self->add_stream(
     App::Alice::Stream->new(
       queue   => [
-        map({$_->nicks_action} $self->app->windows),
         $self->app->buffered_messages($msgid),
+        map({$_->nicks_action} $self->app->windows),
       ],
       request => $req,
     )

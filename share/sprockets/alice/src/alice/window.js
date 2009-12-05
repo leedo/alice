@@ -177,6 +177,6 @@ Alice.Window = Class.create({
   },
   
   getNicknames: function() {
-     return this.nicks;
+    return this.nicks;
   }
 });

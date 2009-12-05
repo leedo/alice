@@ -123,6 +123,7 @@ sub join_action {
   my $action = {
     type      => "action",
     event     => "join",
+    nicks     => [ $self->all_nicks ],
     window    => $self->serialized,
   };
   $action->{html}{window} = $self->app->render("window", $self);

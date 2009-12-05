@@ -7343,7 +7343,8 @@ Alice.Application = Class.create({
     switch (action.event) {
       case "join":
         this.insertWindow(action['window'].id, action.html);
-        var win = new Alice.Window(this, action['window'].id, action['window'].title, false)
+        var win = new Alice.Window(this, action['window'].id, action['window'].title, false);
+        win.nicks = action.nicks;
         this.addWindow(win);
         break;
       case "part":
@@ -7441,11 +7442,13 @@ Alice.Connection = Class.create({
       var queue = data.queue;
       var length = queue.length;
       for (var i=0; i<length; i++) {
+        console.log(queue[i]);
         if (queue[i].type == "action")
           this.application.handleAction(queue[i]);
-        else if (queue[i].type == "message")
+        else if (queue[i].type == "message") {
           if (queue[i].msgid) this.msgid = queue[i].msgid;
           this.application.displayMessage(queue[i]);
+        }
       }
     }
     catch (e) {
@@ -7689,7 +7692,7 @@ Alice.Window = Class.create({
   },
 
   getNicknames: function() {
-     return this.nicks;
+    return this.nicks;
   }
 });
 Alice.Input = Class.create({

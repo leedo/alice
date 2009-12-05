@@ -120,6 +120,12 @@ sub window {
            $title, $self);
 }
 
+sub find_window {
+  my ($self, $title) = @_;
+  $title = decode("utf8", $title, Encode::FB_QUIET);
+  return $self->app->find_window($title, $self);
+}
+
 sub nick {
   my $self = shift;
   my $nick = $self->cl->nick;
@@ -250,12 +256,13 @@ sub remove {
 
 sub publicmsg {
   my ($self, $cl, $channel, $msg) = @_;
-  my $nick = (split '!', $msg->{prefix})[0];
-  return if $self->app->is_ignore($nick);
-  my $text = $msg->{params}[1];
-  my $window = $self->window($channel);
-  $self->app->logger->log_message(time, $nick, $channel, $text);
-  $self->app->send([$window->format_message($nick, $text)]);
+  if (my $window = $self->find_window($channel)) {
+    my $nick = (split '!', $msg->{prefix})[0];
+    return if $self->app->is_ignore($nick);
+    my $text = $msg->{params}[1];
+    $self->app->logger->log_message(time, $nick, $channel, $text);
+    $self->app->send([$window->format_message($nick, $text)]); 
+  }
 }
 
 sub privatemsg {
@@ -276,10 +283,11 @@ sub privatemsg {
 sub ctcp_action {
   my ($self, $cl, $nick, $channel, $msg, $type) = @_;
   return if $self->app->is_ignore($nick);
-  my $window = $self->window($channel);
-  my $text = "• $msg";
-  $self->app->logger->log_message(time, $nick, $channel, $text);
-  $self->app->send([$window->format_message($nick, $text)]);
+  if (my $window = $self->find_window($channel)) {
+    my $text = "• $msg";
+    $self->app->logger->log_message(time, $nick, $channel, $text);
+    $self->app->send([$window->format_message($nick, $text)]);
+  }
 }
 
 sub nick_change {
@@ -293,62 +301,61 @@ sub nick_change {
 
 sub _join {
   my ($self, $cl, $nick, $channel, $is_self) = @_;
-  my $window = $self->window($channel);
-  if ($is_self) {
-    $self->cl->send_srv("WHO $channel");
+  if (!$self->includes_nick($nick)) {
+    $self->add_nick($nick, {nick => $nick, channels => {$channel => ''}}); 
   }
   else {
+    $self->get_nick_info($nick)->{channels}{$channel} = '';
+  }
+  if ($is_self) {
+    $self->app->create_window($channel, $self);
+    $self->cl->send_srv("WHO $channel");
+  }
+  elsif (my $window = $self->find_window($channel)) {
     $self->cl->send_srv("WHO $nick");
-    if (!$self->includes_nick($nick)) {
-      $self->add_nick($nick, {nick => $nick, channels => {$channel => ''}}); 
-    }
-    else {
-      $self->get_nick_info($nick)->{channels}{$channel} = '';
-    }
     $self->app->send([$window->format_event("joined", $nick)]);
   }
 }
 
 sub channel_add {
   my ($self, $cl, $msg, $channel, @nicks) = @_;
-  my $window = $self->window($channel);
-  for (@nicks) {
-    if (!$self->includes_nick($_)) {
-      $self->add_nick($_, {nick => $_, channels => {$channel => ''}}); 
-    }
-    else {
-      $self->get_nick_info($_)->{channels}{$channel} = '';
-    }
+  if (my $window = $self->find_window($channel)) {
+    for (@nicks) {
+      if (!$self->includes_nick($_)) {
+        $self->add_nick($_, {nick => $_, channels => {$channel => ''}}); 
+      }
+      else {
+        $self->get_nick_info($_)->{channels}{$channel} = '';
+      }
+    } 
   }
 }
 
 sub part {
   my ($self, $cl, $nick, $channel, $is_self, $msg) = @_;
-  if ($is_self) {
-    my $window = $self->app->find_window($channel, $self);
-    if ($window) {
-      $self->app->send([$self->log_info("leaving $channel")]);
-      $self->app->close_window($window);
-    }
+  if ($is_self and my $window = $self->find_window($channel)) {
+    $self->app->send([$self->log_info("leaving $channel")]);
+    $self->app->close_window($window);
   }
 }
 
 sub channel_remove {
   my ($self, $cl, $msg, $channel, @nicks) = @_;
-  return unless @nicks;
-  return if grep {$_ eq $self->nick} @nicks;
-  my $window = $self->window($channel);
-  $self->remove_nicks(@nicks);
-  $self->app->send([
-    map {$window->format_event("left", $_, $msg->{params}[0])} @nicks
-  ]);
+  return if !@nicks or grep {$_ eq $self->nick} @nicks;
+  if (my $window = $self->find_window($channel)) {
+    $self->remove_nicks(@nicks);
+    $self->app->send([
+      map {$window->format_event("left", $_, $msg->{params}[0])} @nicks
+    ]);
+  }
 }
 
 sub channel_topic {
   my ($self, $cl, $channel, $topic, $nick) = @_;
-  my $window = $self->window($channel);
-  $window->topic({string => $topic, author => $nick, time => time});
-  $self->app->send([$window->format_event("topic", $nick, $topic)]);
+  if (my $window = $self->find_window($channel)) {
+    $window->topic({string => $topic, author => $nick, time => time});
+    $self->app->send([$window->format_event("topic", $nick, $topic)]);
+  }
 }
 
 sub channel_nicks {
@@ -365,7 +372,7 @@ sub nick_channels {
 sub nick_windows {
   my ($self, $nick) = @_;
   if ($self->nick_channels($nick)) {
-    return map {$self->window($_)} $self->nick_channels($nick);
+    return map {$self->find_window($_)} $self->nick_channels($nick);
   }
   return;
 }
@@ -388,17 +395,15 @@ sub irc_352 {
       %{$prev_info->{channels}},
       %{$info->{channels}},
     }
-  }  
+  }
   $self->set_nick_info($nick, $info);
 }
 
 sub irc_366 {
   my ($self, $cl, $msg) = @_;
-  my $window = $self->window($msg->{params}[1]);
-  $self->app->send([
-    $window->join_action,
-    $window->nicks_action,
-  ]);
+  if (my $window = $self->find_window($msg->{params}[1])) {
+    $self->app->send([$window->join_action]);
+  }
 }
 
 sub rename_nick {

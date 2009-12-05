@@ -246,6 +246,19 @@ sub find_window {
   }
 }
 
+sub create_window {
+  my ($self, $title, $connection) = @_;
+  my $id = _build_window_id($title, $connection->alias);
+  my $window = App::Alice::Window->new(
+    title    => $title,
+    irc      => $connection,
+    assetdir => $self->config->assetdir,
+    app      => $self,
+  );
+  $self->add_window($id, $window);
+  return $window;
+}
+
 sub _build_window_id {
   my ($title, $connection_alias) = @_;
   my $name = lc($title . $connection_alias);
@@ -259,14 +272,9 @@ sub find_or_create_window {
   if (my $window = $self->find_window($title, $connection)) {
     return $window;
   }
-  my $id = _build_window_id($title, $connection->alias);
-  my $window = App::Alice::Window->new(
-    title    => $title,
-    irc      => $connection,
-    assetdir => $self->config->assetdir,
-    app      => $self,
-  );
-  $self->add_window($id, $window);
+  else {
+    $self->create_window($title, $connection);
+  }
 }
 
 sub sorted_windows {

@@ -59,11 +59,13 @@ Alice.Connection = Class.create({
       var queue = data.queue;
       var length = queue.length;
       for (var i=0; i<length; i++) {
+        console.log(queue[i]);
         if (queue[i].type == "action")
           this.application.handleAction(queue[i]);
-        else if (queue[i].type == "message")
+        else if (queue[i].type == "message") {
           if (queue[i].msgid) this.msgid = queue[i].msgid;
           this.application.displayMessage(queue[i]);
+        }
       }
     }
     catch (e) {
