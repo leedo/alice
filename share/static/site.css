@@ -25,14 +25,11 @@ ul#tabs li:hover {
 
 ul#controls {
   z-index: 30;
+  background: #ddd;
 }
 
 ul#controls li {
   position: relative;
-}
-
-ul#controls li.disabled {
-  display: none;
 }
 
 select.select_overlay {
@@ -161,7 +158,7 @@ ul#controls {
   position: fixed;
   bottom: 0px;
   right: 18px;
-  height: 22px;
+  height: 23px;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -173,7 +170,7 @@ ul#controls li {
   padding: 0;
   height: 16px;
   width: 16px;
-  padding: 3px;
+  padding: 4px 3px 3px 3px;
   cursor: pointer;
 }
 
