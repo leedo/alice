@@ -35,7 +35,7 @@ ul#controls li.disabled {
   display: none;
 }
 
-select#config_overlay {
+select.select_overlay {
   display: block;
   position: absolute;
   top: 0px;
@@ -47,6 +47,10 @@ select#config_overlay {
   margin: 0;
   opacity: 0;
   font-size: 12px;
+}
+
+select#tab_overflow_overlay option.unread {
+  font-weight: bold;
 }
 
 body {
@@ -375,7 +379,6 @@ li.info_tab div.tab_button {
 ul#tabs li.active div.tab_button:hover {
   background: url(image/aquaTabClose.png) no-repeat center;
 }
-
 
 ul#tabs li.unread.channel_tab div.tab_button {
   background: url(image/roomTabNewMessage.png);

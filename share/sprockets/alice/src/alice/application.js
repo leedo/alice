@@ -114,6 +114,9 @@ Alice.Application = Class.create({
     if (!$(windowId)) {
       $('windows').insert(html['window']);
       $('tabs').insert(html.tab);
+      $('tab_overflow_overlay').insert(html.select);
+      $(windowId+"_tab_overflow_button").selected = false;
+      this.activeWindow().tabOverflowButton.selected = true;
       Alice.makeSortable();
     }
   },

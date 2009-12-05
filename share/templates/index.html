@@ -19,10 +19,20 @@
       <ul id="controls">
         <li id="config_button">
           <img src="/static/image/config.png" />
-          <select id="config_overlay">
+          <select class="select_overlay" id="config_overlay">
             <option>Logs</option>
             <option>Preferences</option>
             <option>Connections</option>
+          </select>
+        </li>
+        <li id="tab_overflow_button">
+          <img src="/static/image/overflow.png" />
+          <select class="select_overlay" id="tab_overflow_overlay">
+            <? for (0 .. @windows -1) { ?>
+              <? my $window = $windows[$_]; ?>
+              <? my $selected = $_ == 1; ?>
+              <?= $_mt->render_file('select.html', $_[0], $window, $selected); ?>
+            <? } ?>
           </select>
         </li>
         <li id="status" class="disabled"></li>

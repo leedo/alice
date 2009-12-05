@@ -128,6 +128,7 @@ sub join_action {
   };
   $action->{html}{window} = $self->app->render("window", $self);
   $action->{html}{tab} = $self->app->render("tab", $self);
+  $action->{html}{select} = $self->app->render("select", $self);
   return $action;
 }
 

@@ -23,6 +23,10 @@ if (window == window.parent) {
     $$("tr.topic td").each(function (topic){
       topic.innerHTML = Alice.makeLinksClickable(topic.innerHTML)});
     $$('#config_overlay option').each(function(opt){opt.selected = false});
+    $('tab_overflow_overlay').observe("change", function (e) {
+      var win = alice.getWindow($('tab_overflow_overlay').value);
+      if (win) win.focus();
+    });
     $('config_overlay').observe("change", function (e) {  
       switch ($('config_overlay').value) {
         case "Logs":
