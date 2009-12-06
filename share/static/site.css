@@ -108,6 +108,7 @@ ul#tabs {
   left: 0;
   right: 62px;
   height: 23px;
+  overflow: hidden;
   font-size: 11px;
   background: #ddd;
 }
