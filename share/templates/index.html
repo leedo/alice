@@ -5,8 +5,6 @@
   <head>
     <title><?= $titlewin->title ?></title>
     <link rel="shortcut icon" href="/static/favicon.ico">
-    <script type="text/javascript" src="/static/alice.js"></script>
-    <script type="text/javascript" src="/static/site.js?images=<?= $_[0]->config->images || 'show' ?>&amp;monospace_nicks=<?= join ",", @{$_[0]->config->monospace_nicks} ?>"></script>
     <link type="text/css" rel="stylesheet" href="/static/site.css" />
     <!--[if !IE]>--> 
     <link rel="stylesheet" href="/static/iphone.css" type="text/css" 
@@ -63,10 +61,23 @@
 ?   }
 ?   my $active = grep {$_ eq "active"} @classes;
 ?=  $_mt->render_file('window.html', $_[0], $window, @classes);
-        <script type="text/javascript">
-          alice.openWindow('<?= $window->id ?>','<?= $window->title ?>',<?= $active ? "true" : "false" ?>);
-        </script>
 ? }
+
+        <script type="text/javascript" src="/static/alice-min.js"></script>
+        <script type="text/javascript" src="/static/site.js?images=<?= $_[0]->config->images || 'show' ?>&amp;monospace_nicks=<?= join ",", @{$_[0]->config->monospace_nicks} ?>"></script>
+        <script type="text/javascript">
+? for my $window (@windows) {
+?   my $active;
+?   if (@windows > 1) {
+?     $active = 1;
+?   }
+?   else {
+?     $active = 1;
+?   }
+
+          alice.openWindow('<?= $window->id ?>','<?= $window->title ?>',<?= $active ? "true" : "false" ?>);
+? }
+        </script>
       </div>
     </div>
   </body>
