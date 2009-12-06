@@ -66,12 +66,13 @@
         <script type="text/javascript" src="/static/alice-min.js"></script>
         <script type="text/javascript" src="/static/site.js?images=<?= $_[0]->config->images || 'show' ?>&amp;monospace_nicks=<?= join ",", @{$_[0]->config->monospace_nicks} ?>"></script>
         <script type="text/javascript">
-? for my $window (@windows) {
+? for (0 .. @windows - 1) {
 ?   my $active;
-?   if (@windows > 1) {
+?   my $window = $windows[$_];
+?   if (@windows > 1 and $_ == 1) {
 ?     $active = 1;
 ?   }
-?   else {
+?   elsif (@windows == 1) {
 ?     $active = 1;
 ?   }
 
