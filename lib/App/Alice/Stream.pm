@@ -2,19 +2,17 @@ package App::Alice::Stream;
 
 use JSON;
 use Time::HiRes qw/time/;
-use Moose;
+use Any::Moose;
 
 has queue => (
-  traits => ['Array'],
   is  => 'rw',
   isa => 'ArrayRef[HashRef]',
   default => sub { [] },
-  handles => {
-    clear_queue => 'clear',
-    enqueue     => 'push',
-    queue_empty => 'is_empty',
-  },
 );
+
+sub clear_queue {$_[0]->queue([])}
+sub enqueue {push @{shift->queue}, @_}
+sub queue_empty {return @{$_[0]->queue} == 0}
 
 has [qw/offset last_send/]=> (
   is  => 'rw',

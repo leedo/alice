@@ -1,7 +1,7 @@
 package App::Alice::CommandDispatch;
 
 use Encode;
-use Moose;
+use Any::Moose;
   
 has 'handlers' => (
   is => 'rw',

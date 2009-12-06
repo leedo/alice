@@ -1,6 +1,6 @@
 package App::Alice::Notifier::Growl;
 
-use Moose;
+use Any::Moose;
 
 sub BUILD {
   my $self = shift;

@@ -1,6 +1,6 @@
 package App::Alice::InfoWindow;
 
-use Moose;
+use Any::Moose;
 use Encode;
 use IRC::Formatting::HTML;
 use Text::MicroTemplate qw/encoded_string/;

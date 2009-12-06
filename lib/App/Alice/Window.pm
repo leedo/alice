@@ -3,7 +3,7 @@ package App::Alice::Window;
 use Encode;
 use Text::MicroTemplate qw/encoded_string/;
 use IRC::Formatting::HTML;
-use Moose;
+use Any::Moose;
 
 has type => (
   is      => 'ro',

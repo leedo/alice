@@ -1,6 +1,6 @@
 package App::Alice::Logger;
 
-use Moose;
+use Any::Moose;
 use AnyEvent::DBI;
 use AnyEvent::IRC::Util qw/filter_colors/;
 use SQL::Abstract;

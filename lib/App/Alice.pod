@@ -17,10 +17,10 @@ maintains a message buffer, so when a browser connects it is sent
 the 100 most recent lines from each channel. This allows the user to
 close their browser while alice continues to aggregate messages.
 
-Alice's built in web server maintains a long streaming HTTP response
-to each connected browser. It uses this connection to push IRC messages
-to the browsers in realtime. Sending messages or commands is done
-through an HTTP request back to alice's server.
+Alice's built in web server maintains a long streaming HTTP connection
+to each browser, and uses this connection to instantly push messages
+to the browsers. Sending messages or commands is done through an HTTP
+request back to alice's HTTP server.
 
 =head1 USAGE
 
@@ -28,7 +28,7 @@ After installing, there should be a new `alice' command available. Run
 this command to start the alice server. Open your browser and connect to 
 the URL that was printed to your terminal (likely http://localhost:8080/view). 
 You will see a small icon in the bottom corner; this button will bring up the
-connection configuration window. Add one more more IRC servers and channels in this
+connection configuration window. Add one or more IRC servers and channels in this
 window and save. Alice will then connect to those servers, and the channels
 will appear as tabs at the bottom of the screen.
 

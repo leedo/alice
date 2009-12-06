@@ -7,7 +7,7 @@ use App::Alice::Stream;
 use App::Alice::CommandDispatch;
 use MIME::Base64;
 use JSON;
-use Moose;
+use Any::Moose;
 
 has 'app' => (
   is  => 'ro',
@@ -21,17 +21,15 @@ has 'httpd' => (
 );
 
 has 'streams' => (
-  traits => ['Array'],
   is  => 'rw',
   auto_deref => 1,
   isa => 'ArrayRef[App::Alice::Stream]',
   default => sub {[]},
-  handles => {
-    add_stream   => 'push',
-    no_streams   => 'is_empty',
-    stream_count => 'count',
-  }
 );
+
+sub add_stream {push @{shift->streams}, @_}
+sub no_streams {@{$_[0]->streams} == 0}
+sub stream_count {scalar @{$_[0]->streams}}
 
 has 'config' => (
   is => 'ro',

@@ -4,7 +4,7 @@ use FindBin;
 use Data::Dumper;
 use File::ShareDir qw/dist_dir/;
 use Getopt::Long;
-use Moose;
+use Any::Moose;
 
 has assetdir => (
   is      => 'ro',
@@ -102,15 +102,13 @@ has commandline => (
 );
 
 has ignore => (
-  traits  => ['Array'],
   is      => 'rw',
   isa     => 'ArrayRef',
   default => sub {[]},
-  handles => {
-    add_ignore => 'push',
-    ignores    => 'elements',
-  },
 );
+
+sub add_ignore {push @{shift->ignore}, @_}
+sub ignores {@{$_[0]->ignore}}
 
 sub BUILD {
   my $self = shift;

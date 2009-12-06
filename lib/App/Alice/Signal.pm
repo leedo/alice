@@ -1,7 +1,7 @@
 package App::Alice::Signal;
 
 use AnyEvent;
-use Moose;
+use Any::Moose;
 
 has type => (
   is  => 'ro',

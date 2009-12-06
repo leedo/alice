@@ -9,10 +9,10 @@ use App::Alice::IRC;
 use App::Alice::Signal;
 use App::Alice::Config;
 use App::Alice::Logger;
-use Moose;
+use Any::Moose;
 use File::Copy;
 
-our $VERSION = '0.04';
+our $VERSION = '0.05';
 
 has cond => (
   is       => 'rw',
@@ -25,12 +25,12 @@ has config => (
 );
 
 has msgid => (
-  traits    => ['Counter'],
   is        => 'rw',
   isa       => 'Int',
   default   => 1,
-  handles   => {next_msgid => 'inc'}
 );
+
+sub next_msgid {$_[0]->msgid($_[0]->msgid + 1)}
 
 has ircs => (
   is      => 'ro',
@@ -103,18 +103,17 @@ has logger => (
 );
 
 has window_map => (
-  traits    => ['Hash'],
+  is        => 'rw',
   isa       => 'HashRef[App::Alice::Window|App::Alice::InfoWindow]',
   default   => sub {{}},
-  handles   => {
-    windows       => 'values',
-    add_window    => 'set',
-    has_window    => 'exists',
-    get_window    => 'get',
-    remove_window => 'delete',
-    window_ids    => 'keys',
-  }
 );
+
+sub windows {values %{$_[0]->window_map}}
+sub add_window {$_[0]->window_map->{$_[1]} = $_[2]}
+sub has_window {exists $_[0]->window_map->{$_[1]}}
+sub get_window {$_[0]->window_map->{$_[1]}}
+sub remove_window {delete $_[0]->window_map->{$_[1]}}
+sub window_ids {keys %{$_[0]->window_map}}
 
 has 'template' => (
   is => 'ro',

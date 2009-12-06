@@ -1,6 +1,6 @@
 package Sprockets;
 
-use Moose;
+use Any::Moose;
 use List::MoreUtils qw/any/;
 use File::Which qw/which/;
 use IPC::Open3;
@@ -21,15 +21,13 @@ has 'root' => (
 );
 
 has 'load_path' => (
-  traits  => ['List'],
   is      => 'rw',
   isa     => 'ArrayRef[Str]',
   default => sub {[]},
-  handles => {
-    add_load_path     => 'push',
-    _filter_load_path => 'grep',
-  }
 );
+
+sub add_load_path {push @{shift->load_path}, @_}
+sub _filter_laod_path {grep $_[1] @{$_[0]->load_path}}
 
 has 'asset_root' => (
   is  => 'rw',
