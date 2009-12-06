@@ -93,7 +93,6 @@ sub BUILD {
     part           => sub{$self->part(@_)},
     nick_change    => sub{$self->nick_change(@_)},
     ctcp_action    => sub{$self->ctcp_action(@_)},
-    ctcp_version   => sub{$self->ctcp_version(@_)},
     publicmsg      => sub{$self->publicmsg(@_)},
     privatemsg     => sub{$self->privatemsg(@_)},
     connect        => sub{$self->connected(@_)},
@@ -106,7 +105,7 @@ sub BUILD {
     irc_377        => sub{$self->log_info($_[1]->{params}[1], 1)}, # MOTD info
     irc_378        => sub{$self->log_info($_[1]->{params}[1], 1)}, # MOTD info
   );
-  $self->cl->ctcp_auto_reply ('VERSION', ['VERSION', "Alice:$App::Alice::VERSION"]);
+  $self->cl->ctcp_auto_reply ('VERSION', ['VERSION', "alice $App::Alice::VERSION"]);
   $self->connect unless $self->disabled;
 }
 
