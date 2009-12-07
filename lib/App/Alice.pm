@@ -1,6 +1,5 @@
 package App::Alice;
 
-use Encode;
 use Text::MicroTemplate::File;
 use App::Alice::Window;
 use App::Alice::InfoWindow;
@@ -12,7 +11,7 @@ use App::Alice::Logger;
 use Any::Moose;
 use File::Copy;
 
-our $VERSION = '0.05';
+our $VERSION = '0.06';
 
 has cond => (
   is       => 'rw',
@@ -352,7 +351,6 @@ sub send {
 
 sub format_notice {
   my ($self, $event, $nick, $body) = @_;
-  $body = decode("utf8", $body, Encode::FB_QUIET);
   my $message = {
     type      => "action",
     event     => $event,

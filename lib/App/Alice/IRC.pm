@@ -1,6 +1,5 @@
 package App::Alice::IRC;
 
-use Encode;
 use AnyEvent;
 use AnyEvent::IRC::Client;
 use Digest::MD5 qw/md5_hex/;
@@ -112,14 +111,12 @@ sub log_info {
 
 sub window {
   my ($self, $title) = @_;
-  $title = decode("utf8", $title, Encode::FB_QUIET);
   return $self->app->find_or_create_window(
            $title, $self);
 }
 
 sub find_window {
   my ($self, $title) = @_;
-  $title = decode("utf8", $title, Encode::FB_QUIET);
   return $self->app->find_window($title, $self);
 }
 

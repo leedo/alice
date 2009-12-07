@@ -7,7 +7,8 @@ Alice.Application = Class.create({
     this.filters = [ Alice.makeLinksClickable, Alice.uncacheGravatar ];
     this.monospaceNicks = ['Shaniqua', 'root', 'p6eval'];
     this.keyboard = new Alice.Keyboard(this);
-    this.connection.connect();
+    // Keep this as a timeout so the page doesn't show "loading..."
+    setTimeout(this.connection.connect.bind(this.connection), 1000);
   },
   
   toggleConfig: function(e) {
