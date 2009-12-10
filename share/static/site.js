@@ -7,7 +7,7 @@ if (window == window.parent) {
   };
 
   var js = /site\.js\?(.*)?$/;
-  $$('head script[src]').findAll(function(s) {
+  $$('script[src]').findAll(function(s) {
       return s.src.match(js);
   }).each(function(s) {
     var params = s.src.match(js)[1];
