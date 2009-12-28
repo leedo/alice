@@ -136,7 +136,7 @@ sub topic {
 sub me {
   my ($self, $window, $action) = @_;
   $self->app->send([$window->format_message($window->nick, "• $action")]);
-  $window->irc->cl->send_srv(CTCP => $window->title, "ACTION $1");
+  $window->irc->cl->send_srv(PRIVMSG => $window->title, chr(01) . "ACTION $action" . chr(01));
 }
 
 sub quote {
