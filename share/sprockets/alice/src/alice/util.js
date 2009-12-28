@@ -2,7 +2,7 @@ Object.extend(Alice, {
   makeLinksClickable: function(content) {
     return content.replace(
       /(\b)(([\w-]+:\/\/?|www[.])[^\s()<>]+(?:\([\w\d]+\)|([^[<,.;\s]|\/)))/gi,
-      "$1<a href=\"$2\">$2</a>"
+      "$1<a href=\"$2\" rel=\"noreferrer\">$2</a>"
     );
   },
   
