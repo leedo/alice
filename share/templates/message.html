@@ -3,7 +3,7 @@
   <? if ($msg->{self}) { ?> self<?}?>" id="<?= $msg->{msgid} ?>">
     <div class="left">
       <a href="javascript:alice.connection.requestWindow('<?= $msg->{nick} ?>','<?= $msg->{window}{id} ?>')" class="nick">
-        <? if ($msg->{avatar}) { ?>
+        <? if ($msg->{avatar} && ($app->config->{avatars} eq "show")) { ?>
           <img src="<?= $msg->{avatar} ?>" alt="<?= $msg->{nick} ?>" />
           <span class="nickhint"><?= $msg->{nick} ?></span>
         <? } else { ?>

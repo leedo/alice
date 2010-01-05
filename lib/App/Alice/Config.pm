@@ -28,6 +28,12 @@ has images => (
   default => "show",
 );
 
+has avatars => (
+  is      => 'rw',
+  isa     => 'Str',
+  default => "show",
+);
+
 has quitmsg => (
   is      => 'rw',
   isa     => 'Str',
