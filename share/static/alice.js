@@ -7146,7 +7146,7 @@ Object.extend(Alice, {
   makeLinksClickable: function(content) {
     return content.replace(
       /(\b)(([\w-]+:\/\/?|www[.])[^\s()<>]+(?:\([\w\d]+\)|([^[<,.;\s]|\/)))/gi,
-      "$1<a href=\"$2\">$2</a>"
+      "$1<a href=\"$2\" rel=\"noreferrer\">$2</a>"
     );
   },
 
@@ -7184,7 +7184,7 @@ Object.extend(Alice, {
       onUpdate: function (res) {
         var tabs = res.childElements();
         var order = tabs.collect(function(t){
-          var m = t.id.match(/(win_\d+)_tab/);
+          var m = t.id.match(/(win_[^_]+)_tab/);
           if (m) return m[1]
         });
         if (order.length) alice.connection.sendTabOrder(order);
@@ -7335,6 +7335,9 @@ Alice.Application = Class.create({
     if (!$(windowId)) {
       $('windows').insert(html['window']);
       $('tabs').insert(html.tab);
+      $('tab_overflow_overlay').insert(html.select);
+      $(windowId+"_tab_overflow_button").selected = false;
+      this.activeWindow().tabOverflowButton.selected = true;
       Alice.makeSortable();
     }
   },
@@ -7343,7 +7346,8 @@ Alice.Application = Class.create({
     switch (action.event) {
       case "join":
         this.insertWindow(action['window'].id, action.html);
-        var win = new Alice.Window(this, action['window'].id, action['window'].title, false)
+        var win = new Alice.Window(this, action['window'].id, action['window'].title, false);
+        win.nicks = action.nicks;
         this.addWindow(win);
         break;
       case "part":
@@ -7404,7 +7408,6 @@ Alice.Connection = Class.create({
     this.closeConnection();
     this.len = 0;
     var now = new Date();
-    console.log("opening new connection starting at message " + this.msgid);
     this.request = new Ajax.Request('/stream', {
       method: 'get',
       parameters: {msgid: this.msgid, t: now.getTime() / 1000},
@@ -7415,13 +7418,11 @@ Alice.Connection = Class.create({
   },
 
   handleException: function(request, exception) {
-    console.log("encountered an error with stream.");
     if (!this.aborting)
       setTimeout(this.connect.bind(this), 2000);
   },
 
   handleComplete: function(transport) {
-    console.log("connection was closed cleanly.");
     if (!this.aborting)
       setTimeout(this.connect.bind(this), 2000);
   },
@@ -7443,21 +7444,20 @@ Alice.Connection = Class.create({
       data = data.evalJSON();
       var queue = data.queue;
       var length = queue.length;
-      if (length) this.msgid = queue[length - 1].msgid;
       for (var i=0; i<length; i++) {
         if (queue[i].type == "action")
           this.application.handleAction(queue[i]);
-        else if (queue[i].type == "message")
+        else if (queue[i].type == "message") {
+          if (queue[i].msgid) this.msgid = queue[i].msgid;
           this.application.displayMessage(queue[i]);
+        }
       }
     }
     catch (e) {
-      console.log(e);
     }
 
     var lag = time / 1000 -  data.time;
     if (lag > 5) {
-      console.log("lag is " + Math.round(lag) + "s, reconnecting.");
       this.connect();
     }
   },
@@ -7528,6 +7528,7 @@ Alice.Window = Class.create({
     this.tab = $(this.id + "_tab");
     this.input = new Alice.Input(this, this.id + "_msg");
     this.tabButton = $(this.id + "_tab_button");
+    this.tabOverflowButton = $(this.id + "_tab_overflow_button");
     this.form = $(this.id + "_form");
     this.topic = $(this.id + "_topic");
     this.messages = $(this.id + "_messages");
@@ -7551,6 +7552,7 @@ Alice.Window = Class.create({
     this.application.previousFocus = this;
     this.element.removeClassName('active');
     this.tab.removeClassName('active');
+    this.tabOverflowButton.selected = false;
     if (this.tab.previous()) this.tab.previous().removeClassName("leftof_active");
   },
 
@@ -7603,6 +7605,7 @@ Alice.Window = Class.create({
     this.active = true;
     this.tab.addClassName('active');
     this.element.addClassName('active');
+    this.tabOverflowButton.selected = true;
     this.markRead();
     this.tab.removeClassName("leftof_active");
     if (this.tab.previous()) this.tab.previous().addClassName("leftof_active");
@@ -7614,12 +7617,14 @@ Alice.Window = Class.create({
   markRead: function () {
     this.tab.removeClassName("unread");
     this.tab.removeClassName("highlight");
+    this.tabOverflowButton.removeClassName("unread");
   },
 
   close: function(event) {
     this.application.removeWindow(this);
     this.tab.remove();
     this.element.remove();
+    this.tabOverflowButton.remove();
   },
 
   displayTopic: function(topic) {
@@ -7666,10 +7671,14 @@ Alice.Window = Class.create({
       if (this.element.hasClassName('active'))
         this.scrollToBottom();
       else if (!message.buffered && this.title != "info") {
-        if (message.event == "say" && message.highlight)
+        if (message.event == "say" && message.highlight) {
           this.tab.addClassName("highlight");
-        else if (message.event == "say")
+          this.tabOverflowButton.addClassName("unread");
+        }
+        else if (message.event == "say") {
           this.tab.addClassName("unread");
+          this.tabOverflowButton.addClassName("unread");
+        }
       }
     }
 
@@ -7694,7 +7703,7 @@ Alice.Window = Class.create({
   },
 
   getNicknames: function() {
-     return this.nicks;
+    return this.nicks;
   }
 });
 Alice.Input = Class.create({

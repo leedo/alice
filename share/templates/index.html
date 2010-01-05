@@ -4,8 +4,7 @@
 <html>
   <head>
     <title><?= $titlewin->title ?></title>
-    <script type="text/javascript" src="/static/alice.js"></script>
-    <script type="text/javascript" src="/static/site.js?images=<?= $_[0]->config->images || 'show' ?>&amp;monospace_nicks=<?= join ",", @{$_[0]->config->monospace_nicks} ?>"></script>
+    <link rel="shortcut icon" href="/static/favicon.ico">
     <link type="text/css" rel="stylesheet" href="/static/site.css" />
     <!--[if !IE]>--> 
     <link rel="stylesheet" href="/static/iphone.css" type="text/css" 
@@ -18,13 +17,22 @@
       <ul id="controls">
         <li id="config_button">
           <img src="/static/image/config.png" />
-          <select id="config_overlay">
+          <select class="select_overlay" id="config_overlay">
             <option>Logs</option>
             <option>Preferences</option>
             <option>Connections</option>
           </select>
         </li>
-        <li id="status" class="disabled"></li>
+        <li id="tab_overflow_button">
+          <img src="/static/image/overflow.png" />
+          <select class="select_overlay" id="tab_overflow_overlay">
+            <? for (0 .. @windows -1) { ?>
+              <? my $window = $windows[$_]; ?>
+              <? my $selected = $_ == 1; ?>
+              <?= $_mt->render_file('select.html', $_[0], $window, $selected); ?>
+            <? } ?>
+          </select>
+        </li>
       </ul>
       <ul id="tabs">
 ? for (0 .. @windows - 1) {
@@ -43,7 +51,7 @@
       <div id="windows">
 ? for (0 .. @windows - 1) {
 ?   my $window = $windows[$_];
-?   my @classes = ();
+?   my @classes;
 ?   if (@windows > 1) {
 ?     push @classes, "active" if $_ == 1;
 ?     push @classes, "leftof_active" if $_ == 0;
@@ -51,8 +59,26 @@
 ?   else {
 ?     push @classes, "active" if $_ == 0;
 ?   }
-?=  $_mt->render_file('window.html', $_[0], $window, @classes)
+?   my $active = grep {$_ eq "active"} @classes;
+?=  $_mt->render_file('window.html', $_[0], $window, @classes);
 ? }
+
+        <script type="text/javascript" src="/static/alice-min.js"></script>
+        <script type="text/javascript" src="/static/site.js?images=<?= $_[0]->config->images || 'show' ?>&amp;monospace_nicks=<?= join ",", @{$_[0]->config->monospace_nicks} ?>"></script>
+        <script type="text/javascript">
+? for (0 .. @windows - 1) {
+?   my $active;
+?   my $window = $windows[$_];
+?   if (@windows > 1 and $_ == 1) {
+?     $active = 1;
+?   }
+?   elsif (@windows == 1) {
+?     $active = 1;
+?   }
+
+          alice.openWindow('<?= $window->id ?>','<?= $window->title ?>',<?= $active ? "true" : "false" ?>);
+? }
+        </script>
       </div>
     </div>
   </body>

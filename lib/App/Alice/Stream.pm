@@ -2,19 +2,17 @@ package App::Alice::Stream;
 
 use JSON;
 use Time::HiRes qw/time/;
-use Moose;
+use Any::Moose;
 
 has queue => (
-  traits => ['Array'],
   is  => 'rw',
   isa => 'ArrayRef[HashRef]',
   default => sub { [] },
-  handles => {
-    clear_queue => 'clear',
-    enqueue     => 'push',
-    queue_empty => 'is_empty',
-  },
 );
+
+sub clear_queue {$_[0]->queue([])}
+sub enqueue {push @{shift->queue}, @_}
+sub queue_empty {return @{$_[0]->queue} == 0}
 
 has [qw/offset last_send/]=> (
   is  => 'rw',
@@ -60,7 +58,7 @@ sub BUILD {
   my $remote_time = $self->request->parm('t') || $local_time;
   $self->offset($local_time - $remote_time);
   $self->request->respond([
-    200, 'ok', 'multipart/mixed; boundary='.$self->seperator.'; charset=utf-8',
+    200, 'ok', {'Content-Type' => 'multipart/mixed; boundary='.$self->seperator.'; charset=utf-8'},
     sub {$_[0] ? $self->callback($_[0]) : $self->disconnected(1)}
   ]);
   $self->broadcast;

@@ -1,6 +1,11 @@
-0.05  Tue 24 Nov 2009
+0.06  Tue 06 Dec 2009
+        - Fixed bug with initial tab focus
+
+0.05  Tue 06 Dec 2009
         - Removed Digest::CRC dependency
         - Added /ignore /unignore and /ignores
+        - UI additions
+        - Switched to Any::Moose
 
 0.04  Tue 24 Nov 2009
         - Removed MooseX::ClassAttribute dependency

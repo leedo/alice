@@ -3,7 +3,7 @@ package App::Alice::Window;
 use Encode;
 use Text::MicroTemplate qw/encoded_string/;
 use IRC::Formatting::HTML;
-use Moose;
+use Any::Moose;
 
 has type => (
   is      => 'ro',
@@ -123,10 +123,12 @@ sub join_action {
   my $action = {
     type      => "action",
     event     => "join",
+    nicks     => [ $self->all_nicks ],
     window    => $self->serialized,
   };
   $action->{html}{window} = $self->app->render("window", $self);
   $action->{html}{tab} = $self->app->render("tab", $self);
+  $action->{html}{select} = $self->app->render("select", $self);
   return $action;
 }
 

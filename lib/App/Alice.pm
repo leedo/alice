@@ -1,6 +1,5 @@
 package App::Alice;
 
-use Encode;
 use Text::MicroTemplate::File;
 use App::Alice::Window;
 use App::Alice::InfoWindow;
@@ -9,10 +8,10 @@ use App::Alice::IRC;
 use App::Alice::Signal;
 use App::Alice::Config;
 use App::Alice::Logger;
-use Moose;
+use Any::Moose;
 use File::Copy;
 
-our $VERSION = '0.04';
+our $VERSION = '0.06';
 
 has cond => (
   is       => 'rw',
@@ -25,12 +24,12 @@ has config => (
 );
 
 has msgid => (
-  traits    => ['Counter'],
   is        => 'rw',
   isa       => 'Int',
   default   => 1,
-  handles   => {next_msgid => 'inc'}
 );
+
+sub next_msgid {$_[0]->msgid($_[0]->msgid + 1)}
 
 has ircs => (
   is      => 'ro',
@@ -63,7 +62,9 @@ has dispatcher => (
 
 has notifier => (
   is      => 'ro',
+  lazy    => 1,
   default => sub {
+    my $self = shift;
     eval {
       if ($^O eq 'darwin') {
         # 5.10 doesn't seem to put Extras in @INC
@@ -80,7 +81,7 @@ has notifier => (
         return App::Alice::Notifier::LibNotify->new;
       }
     };
-    print STDERR "Notifications disabled...\n" if $@;
+    $self->log_debug("Notifications disabled...\n") if $@;
   }
 );
 
@@ -101,18 +102,17 @@ has logger => (
 );
 
 has window_map => (
-  traits    => ['Hash'],
+  is        => 'rw',
   isa       => 'HashRef[App::Alice::Window|App::Alice::InfoWindow]',
   default   => sub {{}},
-  handles   => {
-    windows       => 'values',
-    add_window    => 'set',
-    has_window    => 'exists',
-    get_window    => 'get',
-    remove_window => 'delete',
-    window_ids    => 'keys',
-  }
 );
+
+sub windows {values %{$_[0]->window_map}}
+sub add_window {$_[0]->window_map->{$_[1]} = $_[2]}
+sub has_window {exists $_[0]->window_map->{$_[1]}}
+sub get_window {$_[0]->window_map->{$_[1]}}
+sub remove_window {delete $_[0]->window_map->{$_[1]}}
+sub window_ids {keys %{$_[0]->window_map}}
 
 has 'template' => (
   is => 'ro',
@@ -162,14 +162,15 @@ sub run {
   $self->template;
   $self->httpd;
   $self->logger;
+  $self->notifier;
 
   $self->add_irc_server($_, $self->config->servers->{$_})
     for keys %{$self->config->servers};
 
+  print STDERR "Location: http://".$self->config->http_address.":". $self->config->http_port ."/view\n";
   
   if ($self->standalone) { 
     $self->cond(AnyEvent->condvar);
-    say STDERR "Location: http://localhost:". $self->config->port ."/view";
     my @sigs;
     for my $sig (qw/INT QUIT/) {
       my $w = AnyEvent->signal(
@@ -243,6 +244,19 @@ sub find_window {
   }
 }
 
+sub create_window {
+  my ($self, $title, $connection) = @_;
+  my $id = _build_window_id($title, $connection->alias);
+  my $window = App::Alice::Window->new(
+    title    => $title,
+    irc      => $connection,
+    assetdir => $self->config->assetdir,
+    app      => $self,
+  );
+  $self->add_window($id, $window);
+  return $window;
+}
+
 sub _build_window_id {
   my ($title, $connection_alias) = @_;
   my $name = lc($title . $connection_alias);
@@ -256,14 +270,9 @@ sub find_or_create_window {
   if (my $window = $self->find_window($title, $connection)) {
     return $window;
   }
-  my $id = _build_window_id($title, $connection->alias);
-  my $window = App::Alice::Window->new(
-    title    => $title,
-    irc      => $connection,
-    assetdir => $self->config->assetdir,
-    app      => $self,
-  );
-  $self->add_window($id, $window);
+  else {
+    $self->create_window($title, $connection);
+  }
 }
 
 sub sorted_windows {
@@ -342,7 +351,6 @@ sub send {
 
 sub format_notice {
   my ($self, $event, $nick, $body) = @_;
-  $body = decode("utf8", $body, Encode::FB_QUIET);
   my $message = {
     type      => "action",
     event     => $event,

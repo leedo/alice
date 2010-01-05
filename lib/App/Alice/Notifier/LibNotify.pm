@@ -1,7 +1,7 @@
 package App::Alice::Notifier::LibNotify;
 
 use Desktop::Notify;
-use Moose;
+use Any::Moose;
 
 has 'client' => (
   is      => 'ro',

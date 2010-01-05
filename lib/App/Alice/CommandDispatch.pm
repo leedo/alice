@@ -1,7 +1,6 @@
 package App::Alice::CommandDispatch;
 
-use Encode;
-use Moose;
+use Any::Moose;
   
 has 'handlers' => (
   is => 'rw',
@@ -71,13 +70,11 @@ sub names {
 
 sub whois {
   my ($self, $window, $nick) = @_;
-  $nick = decode("utf8", $nick, Encode::FB_QUIET);
   $self->app->send([$window->format_announcement($window->irc->whois_table($nick))]);
 }
 
 sub query {
   my ($self, $window, $nick) = @_;
-  $nick = decode("utf8", $nick, Encode::FB_QUIET);
   my $new_window = $self->app->find_or_create_window($nick, $window->irc);
   $self->app->send([$new_window->join_action]);
 }
@@ -113,7 +110,6 @@ sub nick {
 
 sub create {
   my ($self, $window, $name) = @_;
-  $name = decode("utf8", $name, Encode::FB_QUIET);
   my $new_window = $self->app->find_or_create_window($name, $window->irc);
   $self->app->send([$new_window->join_action]);
 }
@@ -140,12 +136,11 @@ sub topic {
 sub me {
   my ($self, $window, $action) = @_;
   $self->app->send([$window->format_message($window->nick, "• $action")]);
-  $window->irc->cl->send_srv(CTCP => $window->title, "ACTION $1");
+  $window->irc->cl->send_srv(PRIVMSG => $window->title, chr(01) . "ACTION $action" . chr(01));
 }
 
 sub quote {
   my ($self, $window, $commands) = @_;
-  $commands = decode("utf8", $commands, Encode::FB_QUIET);
   $window->irc->cl->send_raw(split /\s+/, $commands);
 }
 
@@ -194,7 +189,6 @@ sub notfound {
 sub _say {
   my ($self, $window, $msg) = @_;
   $self->app->send([$window->format_message($window->nick, $msg)]);
-  $msg = decode("utf8", $msg, Encode::FB_QUIET);
   $window->irc->cl->send_srv(PRIVMSG => $window->title, $msg);
 }
 

@@ -7,7 +7,7 @@ if (window == window.parent) {
   };
 
   var js = /site\.js\?(.*)?$/;
-  $$('head script[src]').findAll(function(s) {
+  $$('script[src]').findAll(function(s) {
       return s.src.match(js);
   }).each(function(s) {
     var params = s.src.match(js)[1];
@@ -23,6 +23,10 @@ if (window == window.parent) {
     $$("tr.topic td").each(function (topic){
       topic.innerHTML = Alice.makeLinksClickable(topic.innerHTML)});
     $$('#config_overlay option').each(function(opt){opt.selected = false});
+    $('tab_overflow_overlay').observe("change", function (e) {
+      var win = alice.getWindow($('tab_overflow_overlay').value);
+      if (win) win.focus();
+    });
     $('config_overlay').observe("change", function (e) {  
       switch ($('config_overlay').value) {
         case "Logs":
@@ -71,7 +75,7 @@ alice.addFilters([
     var filtered = content;
     filtered = filtered.replace(
       /(<a href=\"(:?.*?\.(:?wav|mp3|ogg|aiff))")/gi,
-      "<img src=\"/static/styles/default/image/play.png\" " +
+      "<img src=\"/static/image/play.png\" " +
       "onclick=\"playAudio(this)\" class=\"audio\"/>$1");
     return filtered;
   },
@@ -112,19 +116,19 @@ function loadInlineImage(image) {
 }
 
 function playAudio(image, audio) {
-  image.src = '/static/styles/default/image/pause.png'; 
+  image.src = '/static/image/pause.png'; 
   if (! audio) {
     var url = image.nextSibling.href;
     audio = new Audio(url);
     audio.addEventListener('ended', function () {
-      image.src = '/static/styles/default/image/play.png';
+      image.src = '/static/image/play.png';
       image.onclick = function () { playAudio(image, audio) };
     });
   }
   audio.play();
   image.onclick = function() {
     audio.pause();
-    this.src = '/static/styles/default/image/play.png';
+    this.src = '/static/image/play.png';
     this.onclick = function () { playAudio(this, audio) };
   };
 }

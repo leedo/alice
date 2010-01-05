@@ -16,7 +16,7 @@ body {
 }
 
 ul#tabs {
-  z-index: 20
+  z-index: 20;
 }
 
 ul#tabs li:hover {
@@ -25,17 +25,14 @@ ul#tabs li:hover {
 
 ul#controls {
   z-index: 30;
+  background: #ddd;
 }
 
 ul#controls li {
   position: relative;
 }
 
-ul#controls li.disabled {
-  display: none;
-}
-
-select#config_overlay {
+select.select_overlay {
   display: block;
   position: absolute;
   top: 0px;
@@ -47,6 +44,10 @@ select#config_overlay {
   margin: 0;
   opacity: 0;
   font-size: 12px;
+}
+
+select#tab_overflow_overlay option.unread {
+  font-weight: bold;
 }
 
 body {
@@ -105,8 +106,8 @@ ul#tabs {
   position: fixed;
   bottom: 0;
   left: 0;
+  right: 62px;
   height: 23px;
-  width: 100%;
   font-size: 11px;
   background: #ddd;
 }
@@ -156,10 +157,10 @@ ul#tabs li.leftof_active {
 ul#controls {
   position: fixed;
   bottom: 0px;
-  right: 18px;
-  height: 22px;
+  right: 0px;
+  height: 23px;
   margin: 0;
-  padding: 0;
+  padding: 0 18px 0 0;
   list-style: none;
 }
 
@@ -169,7 +170,7 @@ ul#controls li {
   padding: 0;
   height: 16px;
   width: 16px;
-  padding: 3px;
+  padding: 4px 3px 3px 3px;
   cursor: pointer;
 }
 
@@ -375,7 +376,6 @@ li.info_tab div.tab_button {
 ul#tabs li.active div.tab_button:hover {
   background: url(image/aquaTabClose.png) no-repeat center;
 }
-
 
 ul#tabs li.unread.channel_tab div.tab_button {
   background: url(image/roomTabNewMessage.png);
