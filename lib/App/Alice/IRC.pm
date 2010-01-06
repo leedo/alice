@@ -424,7 +424,7 @@ sub nick_avatar {
   my ($self, $nick) = @_;
   my $info = $self->get_nick_info($nick);
   if ($info and $info->{real}) {
-    if ($info->{real} =~ /([^<\s]+@[^\s>]+)/) {
+    if ($info->{real} =~ /([^<\s]+@[^\s]+\.[^>]+)/) {
       my $email = $1;
       return "//www.gravatar.com/avatar/"
            . md5_hex($email) . "?s=32&amp;r=x";
