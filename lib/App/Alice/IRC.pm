@@ -208,7 +208,7 @@ sub registered {
   });
   for (@{$self->config->{on_connect}}) {
     push @log, $self->log_info("sending $_");
-    $self->cl->send_raw(split /\s+/);
+    $self->cl->send_raw($_);
   }
 
   for (@{$self->config->{channels}}) {
