@@ -132,7 +132,9 @@ sub nick {
 
 sub windows {
   my $self = shift;
-  return grep {$_->id ne "info" && $_->irc->alias eq $self->alias} $self->app->windows;
+  return grep
+    {$_->id ne "info" && $_->irc->alias eq $self->alias}
+    $self->app->windows;
 }
 
 sub connect {

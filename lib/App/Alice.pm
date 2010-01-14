@@ -312,19 +312,20 @@ sub add_irc_server {
 
 sub reload_config {
   my $self = shift;
-  for (keys %{$self->config->servers}) {
-    if (!$self->ircs->{$_}) {
+  for my $irc (keys %{$self->config->servers}) {
+    if (!$self->ircs->{$irc}) {
       $self->add_irc_server(
-        $_, $self->config->servers->{$_}
+        $irc, $self->config->servers->{$irc}
       );
     }
     else {
-      $self->ircs->{$_}->config($self->config->servers->{$_});
+      $self->ircs->{$irc}->config($self->config->servers->{$irc});
     }
   }
-  for ($self->connections) {
-    if (!$self->config->servers->{$_->alias}) {
-      $_->remove;
+  for my $irc ($self->connections) {
+    if (!$self->config->servers->{$irc->alias}) {
+      $self->remove_window($_->id) for $irc->windows;
+      $irc->remove;
     }
   }
 }
