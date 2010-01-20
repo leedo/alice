@@ -250,6 +250,10 @@ ul.messages li hr.consecutive {
   border: none;
 }
 
+ul.messages li.event hr {
+  display: none;
+}
+
 div.left {
   float: left;
   width: 120px;
