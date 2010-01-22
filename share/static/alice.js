@@ -7601,7 +7601,7 @@ Alice.Window = Class.create({
 
   focus: function(event) {
     document.title = this.title;
-    if (this.application.activeWindow()) this.application.activeWindow().unFocus();
+    this.application.windows().invoke("unFocus");
     this.active = true;
     this.tab.addClassName('active');
     this.element.addClassName('active');
