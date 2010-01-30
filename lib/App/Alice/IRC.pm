@@ -406,6 +406,7 @@ sub rename_nick {
   my ($self, $nick, $new_nick) = @_;
   return unless $self->includes_nick($nick);
   my $info = $self->get_nick_info($nick);
+  $info->{nick} = $new_nick;
   $self->set_nick_info($new_nick, $info);
   $self->remove_nick($nick);
 }
@@ -426,7 +427,7 @@ sub nick_avatar {
   my ($self, $nick) = @_;
   my $info = $self->get_nick_info($nick);
   if ($info and $info->{real}) {
-    if ($info->{real} =~ /([^<\s]+@[^\s]+\.[^>]+)/) {
+    if ($info->{real} =~ /([^<\s]+@[^\s>]+\.[^\s>]+)/) {
       my $email = $1;
       return "//www.gravatar.com/avatar/"
            . md5_hex($email) . "?s=32&amp;r=x";
