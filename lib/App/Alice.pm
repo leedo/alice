@@ -399,7 +399,7 @@ sub ignores {
 sub log_debug {
   my $self = shift;
   return unless $self->config->show_debug and @_;
-  say STDERR join " ", @_;
+  print STDERR join(" ", @_), "\n";
 }
 
 __PACKAGE__->meta->make_immutable;

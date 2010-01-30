@@ -188,6 +188,7 @@ sub notfound {
 
 sub _say {
   my ($self, $window, $msg) = @_;
+  $self->app->logger->log_message(time, $window->nick, $window->title, $msg);
   $self->app->send([$window->format_message($window->nick, $msg)]);
   $window->irc->cl->send_srv(PRIVMSG => $window->title, $msg);
 }
