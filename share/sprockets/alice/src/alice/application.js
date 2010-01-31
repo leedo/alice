@@ -122,6 +122,28 @@ Alice.Application = Class.create({
     }
   },
   
+  highlightChannelSelect: function() {
+    var img = $('tab_overflow_button').down('img');
+    img.src = img.src.replace('overflow.png','overflow-active.png');
+  },
+  
+  unHighlightChannelSelect: function() {
+    var img = $('tab_overflow_button').down('img');
+    img.src = img.src.replace('overflow-active.png','overflow.png');
+  },
+  
+  updateChannelSelect: function() {
+    var windows = this.windows();
+    for (var i=0; i < windows.length; i++) {
+      var win = windows[i];
+      if ((win.tab.hasClassName('unread') || win.tab.hasClassName('highlight')) && win.isTabWrapped()) {
+        this.highlightChannelSelect();
+        return;
+      }
+    }
+    this.unHighlightChannelSelect();
+  },
+  
   handleAction: function(action) {
     switch (action.event) {
       case "join":

@@ -29,6 +29,10 @@ Alice.Window = Class.create({
     document.observe("mouseover", this.showNick.bind(this));
   },
   
+  isTabWrapped: function() {
+    return this.tab.offsetTop > 0;
+  },
+  
   unFocus: function() {
     this.active = false;
     this.application.previousFocus = this;
@@ -94,6 +98,7 @@ Alice.Window = Class.create({
     this.scrollToBottom(true);
     if (!Prototype.Browser.MobileSafari) this.input.focus();
     this.element.redraw();
+    this.application.updateChannelSelect();
   },
   
   markRead: function () {
@@ -154,13 +159,13 @@ Alice.Window = Class.create({
       if (this.element.hasClassName('active'))
         this.scrollToBottom();
       else if (!message.buffered && this.title != "info") {
-        if (message.event == "say" && message.highlight) {
-          this.tab.addClassName("highlight");
-          this.tabOverflowButton.addClassName("unread");
-        }
-        else if (message.event == "say") {
+        if (message.event == "say") {
           this.tab.addClassName("unread");
           this.tabOverflowButton.addClassName("unread");
+          if (this.isTabWrapped()) this.application.highlightChannelSelect();
+        }
+        if (message.highlight) {
+          this.tab.addClassName("highlight");
         }
       }
     }

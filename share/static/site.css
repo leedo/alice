@@ -99,17 +99,23 @@ tr.input textarea {
   font-family: "Lucida Grande", Helvetica, sans-serif;
 }
 
+div#tab_container {
+  position: fixed;
+  bottom: 0px;
+  left: 0px;
+  right: 0px;
+  height: 23px;
+  background: #ddd;
+  
+}
 ul#tabs {
   list-style: none;
   margin: 0;
   padding: 0;
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 62px;
-  height: 23px;
   font-size: 11px;
-  background: #ddd;
+  position: relative;
+  float: left;
+  margin-right: 62px;
 }
 
 ul#tabs li:first-child {

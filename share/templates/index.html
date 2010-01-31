@@ -34,7 +34,8 @@
           </select>
         </li>
       </ul>
-      <ul id="tabs">
+      <div id="tab_container">
+        <ul id="tabs">
 ? for (0 .. @windows - 1) {
 ?   my $window = $windows[$_];
 ?   my @classes = ();
@@ -47,7 +48,8 @@
 ?   }
 ?=  $_mt->render_file('tab.html', $_[0], $window, @classes)
 ? }
-      </ul>
+        </ul>
+      </div>
       <div id="windows">
 ? for (0 .. @windows - 1) {
 ?   my $window = $windows[$_];
