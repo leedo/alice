@@ -118,6 +118,16 @@ sub clear_buffer {
   $self->msgbuffer([]);
 }
 
+sub disconnect_action {
+  my $self = shift;
+  return {
+    type   => "action",
+    event  => "disconnect",
+    nicks  => [],
+    window => $self->serialized,
+  }
+}
+
 sub join_action {
   my $self = shift;
   my $action = {

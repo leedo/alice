@@ -156,7 +156,7 @@ sub connect {
   $self->cl->connect(
     $self->config->{host}, $self->config->{port},
     {
-      nick     => $self->config->{nick},
+      nick     => $self->nick,
       real     => $self->config->{ircname},
       password => $self->config->{password},
       user     => $self->config->{username},
@@ -166,7 +166,7 @@ sub connect {
 
 sub connected {
   my ($self, $cl, $err) = @_;
-  $self->log_info("connected");
+  $self->app->send([$self->log_info("connected")]);
   if (defined $err) {
     $self->app->send([
       $self->log_info("connect error: $err")
@@ -176,12 +176,6 @@ sub connected {
   else {
     $self->reset_reconnect_count;
     $self->is_connected(1);
-    $self->cl->register(
-      $self->config->{nick},
-      $self->config->{username},
-      $self->config->{ircname},
-      $self->config->{password},
-    );
   }
 }
 
@@ -222,14 +216,20 @@ sub registered {
 
 sub disconnected {
   my ($self, $cl, $reason) = @_;
-  return if $reason eq "reconnect requested.";
   $reason = "" unless $reason;
-  $self->app->send([$self->log_info("disconnected: $reason")]);
+  return if $reason eq "reconnect requested.";
+  my @windows = $self->windows;
+  my @log = $self->log_info("disconnected: $reason");
+  if ($self->is_connected) {
+    push @log, map {$_->format_event("disconnect", $self->nick, $reason)} @windows;
+    push @log, map {$_->disconnect_action} @windows;
+  }
+  $self->app->send(\@log);
   $self->is_connected(0);
   $self->reconnect(0) unless $self->disabled;
   if ($self->removed) {
     delete $self->app->ircs->{$self->alias};
-    $self = undef;
+    undef $self;
   }
 }
 

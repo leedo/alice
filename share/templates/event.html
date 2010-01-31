@@ -30,6 +30,11 @@
 ? } elsif ($msg->{event} eq "nick") {
     <?= $msg->{nick} ?> is now known as <a href="javascript:alice.connection.requestWindow('<?= $msg->{body} ?>','<?= $msg->{window}->{id} ?>')" class="nick"><?= $msg->{body} ?></a>.
 
+? } elsif ($msg->{event} eq "disconnect") {
+    You have been disconnected
+      <?if ($msg->{body}) { ?>
+        (<?= $msg->{body} ?>)
+      <? } ?>
 ? }
 
   </div>
