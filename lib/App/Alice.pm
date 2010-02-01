@@ -65,6 +65,7 @@ has notifier => (
   lazy    => 1,
   default => sub {
     my $self = shift;
+    my $notifier;
     eval {
       if ($^O eq 'darwin') {
         # 5.10 doesn't seem to put Extras in @INC
@@ -74,14 +75,15 @@ has notifier => (
           lib->import("/System/Library/Perl/Extras/5.10.0"); 
         }
         require App::Alice::Notifier::Growl;
-        return App::Alice::Notifier::Growl->new;
+        $notifier = App::Alice::Notifier::Growl->new;
       }
       elsif ($^O eq 'linux') {
         require App::Alice::Notifier::LibNotify;
-        return App::Alice::Notifier::LibNotify->new;
+        $notifier = App::Alice::Notifier::LibNotify->new;
       }
     };
-    $self->log_debug("Notifications disabled...\n") if $@;
+    $self->log_debug("Notifications disabled...\n") if !$notifier;
+    return $notifier;
   }
 );
 
