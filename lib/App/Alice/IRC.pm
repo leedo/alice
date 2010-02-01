@@ -339,9 +339,19 @@ sub channel_remove {
   my ($self, $cl, $msg, $channel, @nicks) = @_;
   return if !@nicks or grep {$_ eq $self->nick} @nicks;
   if (my $window = $self->find_window($channel)) {
-    $self->remove_nicks(@nicks);
+    my $body;
+    if ($msg->{command} eq "PART") {
+      for (@nicks) {
+        delete $self->nicks->{$_}{channels}{$channel};
+        $self->remove_nick($_) if !keys %{$self->nicks->{$_}{channels}};
+      }
+    }
+    else {
+      $self->remove_nicks(@nicks);
+      $body = $msg->{params}[0];
+    }
     $self->app->send([
-      map {$window->format_event("left", $_, $msg->{params}[0])} @nicks
+      map {$window->format_event("left", $_, $body)} @nicks
     ]);
   }
 }
