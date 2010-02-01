@@ -7567,7 +7567,6 @@ Alice.Window = Class.create({
 
   unFocus: function() {
     this.active = false;
-    this.application.previousFocus = this;
     this.element.removeClassName('active');
     this.tab.removeClassName('active');
     this.tabOverflowButton.selected = false;
@@ -7618,6 +7617,7 @@ Alice.Window = Class.create({
 
   focus: function(event) {
     document.title = this.title;
+    this.application.previousFocus = this.application.activeWindow();
     this.application.windows().invoke("unFocus");
     this.active = true;
     this.tab.addClassName('active');
