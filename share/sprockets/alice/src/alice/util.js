@@ -44,14 +44,6 @@ Object.extend(Alice, {
           if (m) return m[1]
         });
         if (order.length) alice.connection.sendTabOrder(order);
-        tabs.invoke('removeClassName','leftof_active');
-        for (var i=0; i < tabs.length; i++) {
-          if (tabs[i].hasClassName('active')) {
-            if (tabs[i].previous()) tabs[i].previous().addClassName('leftof_active');
-            tabs[i].removeClassName('leftof_active');
-            return;
-          }
-        }
       }
     });
   },

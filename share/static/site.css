@@ -108,6 +108,7 @@ div#tab_container {
   background: #ddd;
   
 }
+
 ul#tabs {
   list-style: none;
   margin: 0;
@@ -116,48 +117,50 @@ ul#tabs {
   position: relative;
   float: left;
   margin-right: 62px;
-}
-
-ul#tabs li:first-child {
-  margin-left: 3px;
-}
-
-ul#tabs li:first-child.active {
-  border-left: 1px solid #999;
+  padding-left: 3px;
 }
 
 ul#tabs li {
   float: left;
   margin: 0;
-  height: 14px;
-  padding: 2px 10px 8px 4px;
-  border: 1px solid #999;
-  border-left: 1px solid transparent;
-  border-bottom: none;
-  border-top: none;
+  margin-left: -1px;
   color: #333;
   background: #ddd;
 }
 
-ul#tabs li.active {
+ul#tabs li:first-child div.hit_area {
+  border-left: 1px solid #ddd;
+}
+
+ul#tabs li div.hit_area {
+  border: 1px solid #999;
+  border-bottom: none;
+  border-top: none;
+  float:left;
+  height: 14px;
+  padding: 2px 10px 8px 4px;
+}
+
+ul#tabs li.active div.hit_area {
   border: 1px solid #999;
   border-top: none;
   background: #efefef;
+  height: 11px;
   padding-top: 3px;
   margin-top: -1px;
-  height: 10px;
 }
 
-ul#tabs li.active:hover {
+ul#tabs li.active {
+  height: 23px;
+  z-index: 21;
+}
+
+ul#tabs li.active:hover div.hit_area {
   background: #efefef;
 }
 
-ul#tabs li:hover {
+ul#tabs li:hover div.hit_area {
   background: #ccc;
-}
-
-ul#tabs li.leftof_active {
-  border-right: 1px solid transparent;
 }
 
 ul#controls {

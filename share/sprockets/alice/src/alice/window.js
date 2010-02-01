@@ -39,7 +39,6 @@ Alice.Window = Class.create({
     this.element.removeClassName('active');
     this.tab.removeClassName('active');
     this.tabOverflowButton.selected = false;
-    if (this.tab.previous()) this.tab.previous().removeClassName("leftof_active");
   },
 
   showNick: function (e) {
@@ -93,8 +92,6 @@ Alice.Window = Class.create({
     this.element.addClassName('active');
     this.tabOverflowButton.selected = true;
     this.markRead();
-    this.tab.removeClassName("leftof_active");
-    if (this.tab.previous()) this.tab.previous().addClassName("leftof_active");
     this.scrollToBottom(true);
     if (!Prototype.Browser.MobileSafari) this.input.focus();
     this.element.redraw();
