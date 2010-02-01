@@ -7868,6 +7868,7 @@ Alice.Keyboard = Class.create({
     this.enable();
 
     this.shortcut("Cmd+C", { propagate: true });
+    this.shortcut("Ctrl+C", { propogate: true });
     this.shortcut("Cmd+K");
     this.shortcut("Cmd+B");
     this.shortcut("Cmd+F");
@@ -7899,6 +7900,10 @@ Alice.Keyboard = Class.create({
     if (!this.activeWindow.input.focused) {
       this.activeWindow.input.cancelNextFocus();
     }
+  },
+
+  onCtrlC: function(event) {
+    this.onCmdC(event);
   },
 
   onCmdK: function() {
