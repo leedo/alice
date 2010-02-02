@@ -7217,7 +7217,7 @@ Alice.Application = Class.create({
     this.window_map = new Hash();
     this.previousFocus = 0;
     this.connection = new Alice.Connection(this);
-    this.filters = [ Alice.makeLinksClickable, Alice.uncacheGravatar ];
+    this.filters = [ Alice.makeLinksClickable ];
     this.monospaceNicks = ['Shaniqua', 'root', 'p6eval'];
     this.keyboard = new Alice.Keyboard(this);
     setTimeout(this.connection.connect.bind(this.connection), 1000);
@@ -7663,7 +7663,8 @@ Alice.Window = Class.create({
           this.displayTopic(message.body.escapeHTML());
         }
         else {
-          this.messages.insert(message.full_html);
+          var full_html = Alice.uncacheGravatar(message.full_html);
+          this.messages.insert(full_html);
           var node = this.messages.down("li:last-child div.msg");
           node.innerHTML = this.application.applyFilters(node.innerHTML);
           var span = this.messages.down('li:last-child span.nickhint');
