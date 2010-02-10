@@ -85,6 +85,10 @@ sub ping {
 sub image_proxy {
   my ($self, $httpd, $req) = @_;
   my $url = $req->url;
+  if (my %vars = $req->vars) {
+    my $query = join "&", map {"$_=$vars{$_}"} keys %vars;
+    $url .= ($query ? "?$query" : "");
+  }
   $url =~ s/^\/get\///;
   http_get $url, sub {
     my ($data, $headers) = @_;
