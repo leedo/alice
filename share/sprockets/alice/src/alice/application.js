@@ -4,7 +4,7 @@ Alice.Application = Class.create({
     this.window_map = new Hash();
     this.previousFocus = 0;
     this.connection = new Alice.Connection(this);
-    this.filters = [ Alice.makeLinksClickable, Alice.uncacheGravatar ];
+    this.filters = [ Alice.makeLinksClickable ];
     this.monospaceNicks = ['Shaniqua', 'root', 'p6eval'];
     this.keyboard = new Alice.Keyboard(this);
     // Keep this as a timeout so the page doesn't show "loading..."
