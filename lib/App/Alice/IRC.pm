@@ -79,8 +79,9 @@ sub BUILD {
   my $self = shift;
   $self->cl->enable_ssl(1) if $self->config->{ssl};
   $self->disabled(1) unless $self->config->{autoconnect};
+  use Data::Dumper;
   $self->cl->reg_cb(
-    registered     => sub{$self->registered(@_)},
+    registered     => sub{$self->registered($_)},
     channel_add    => sub{$self->channel_add(@_)},
     channel_remove => sub{$self->channel_remove(@_)},
     channel_topic  => sub{$self->channel_topic(@_)},
@@ -99,6 +100,7 @@ sub BUILD {
     irc_372        => sub{$self->log_info($_[1]->{params}[1], 1)}, # MOTD info
     irc_377        => sub{$self->log_info($_[1]->{params}[1], 1)}, # MOTD info
     irc_378        => sub{$self->log_info($_[1]->{params}[1], 1)}, # MOTD info
+    irc_464        => sub{$self->disconnect("bad USER/PASS")},
   );
   $self->cl->ctcp_auto_reply ('VERSION', ['VERSION', "alice $App::Alice::VERSION"]);
   $self->connect unless $self->disabled;
@@ -234,8 +236,9 @@ sub disconnected {
 }
 
 sub disconnect {
-  my $self = shift;
+  my ($self, $msg) = @_;
   $self->disabled(1);
+  $self->log_info("Disconnecting: $msg") if $msg;
   if ($self->is_connected) {
     $self->cl->send_srv("QUIT" => $self->app->config->quitmsg);
   }
