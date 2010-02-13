@@ -140,8 +140,8 @@ sub me {
 }
 
 sub quote {
-  my ($self, $window, $commands) = @_;
-  $window->irc->cl->send_raw(split /\s+/, $commands);
+  my ($self, $window, $command) = @_;
+  $window->irc->cl->send_raw($command);
 }
 
 sub disconnect {
