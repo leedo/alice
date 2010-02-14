@@ -79,7 +79,6 @@ sub BUILD {
   my $self = shift;
   $self->cl->enable_ssl(1) if $self->config->{ssl};
   $self->disabled(1) unless $self->config->{autoconnect};
-  use Data::Dumper;
   $self->cl->reg_cb(
     registered     => sub{$self->registered($_)},
     channel_add    => sub{$self->channel_add(@_)},
