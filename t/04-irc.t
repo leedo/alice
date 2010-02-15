@@ -5,6 +5,7 @@ use App::Alice::Test::MockIRC;
 my $app = App::Alice->new(
   standalone => 0, path => 't', file => "test_config");
 
+my $cl = App::Alice::Test::MockIRC->new(nick => "tester");
 my $irc = App::Alice::IRC->new(
   alias => "test",
   config => {
@@ -15,7 +16,7 @@ my $irc = App::Alice::IRC->new(
     on_connect => ["JOIN #test2"],
   },
   app => $app,
-  cl => App::Alice::Test::MockIRC->new(nick => "tester"),
+  cl => $cl,
 );
 $app->ircs->{test} = $irc;
 
@@ -27,32 +28,43 @@ ok $app->find_window("#test2", $irc), "on_connect join command";
 # nicks
 is $irc->nick, "tester", "nick set";
 ok $irc->includes_nick("test"), "existing nick in channel";
-$irc->cl->send_cl(":nick!user\@host JOIN #test");
-ok $irc->includes_nick("nick"), "nick after join";
-$irc->cl->send_cl(":nick!user\@host PART #test");
+ok exists $irc->get_nick_info("test")->{channels}{'#test'}, "existing nick info set";
+
+$cl->send_cl(":nick!user\@host JOIN #test");
+ok $irc->includes_nick("nick"), "nick added after join";
+ok exists $irc->get_nick_info("nick")->{channels}{'#test'}, "new nick info set";
+
+$cl->send_cl(":nick!user\@host NICK nick2");
+ok $irc->includes_nick("nick2"), "nick change";
+ok !$irc->includes_nick("nick"), "old nick removed after nick change";
+
+$cl->send_cl(":nick!user\@host PART #test");
 ok !$irc->includes_nick("nick"), "nick gone after part";
 
 # topic
 is $window->topic->{string}, "no topic set", "default initial topic";
 
-$irc->cl->send_srv(TOPIC => "#test", "updated topic");
+$cl->send_srv(TOPIC => "#test", "updated topic");
 is $window->topic->{string}, "updated topic", "self topic change string";
 is $window->topic->{author}, "tester", "self topic change author";
 
-$irc->cl->send_cl(":nick!user\@host TOPIC #test :another topic update\015\012");
+$cl->send_cl(":nick!user\@host TOPIC #test :another topic update");
 is $window->topic->{string}, "another topic update", "external topic change string";
 is $window->topic->{author}, "nick", "external topic change author";
 
 # part channel
-$irc->cl->send_srv(PART => "#test");
+$cl->send_srv(PART => "#test");
 ok !$app->find_window("#test", $irc), "part removes window";
 
 # messages
-$irc->cl->send_cl(":nick!user\@host PRIVMSG tester :hi");
+$cl->send_cl(":nick!user\@host PRIVMSG tester :hi");
 ok $app->find_window("nick", $irc), "private message";
 
+$cl->send_cl(":nick!user\@host PRIVMSG #test3 :hi");
+ok !$app->find_window("#test3", $irc), "msg to unjoined channel doesn't create window";
+
 # disconnect
-$irc->cl->disconnect;
+$cl->disconnect;
 ok !$irc->is_connected, "disconnect";
 
 done_testing();
