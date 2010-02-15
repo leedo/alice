@@ -26,7 +26,12 @@ has events => (
         my $msg = shift;
         my $nick = prefix_nick($msg->{prefix});
         $self->cbs->{join}->($self, $nick, $msg->{params}[0], $nick eq $self->nick);
-        $self->cbs->{channel_add}->($self, $msg, $msg->{params}[0], $nick)
+        $self->cbs->{channel_add}->($self, $msg, $msg->{params}[0], $nick);
+      },
+      NICK => sub {
+        my $msg = shift;
+        my $nick = prefix_nick($msg->{prefix});
+        $self->cbs->{nick_change}->($self, $nick, ${$msg->{params}}[0], $nick eq $self->nick);
       },
       PART => sub {
         my $msg = shift;
@@ -52,7 +57,7 @@ sub send_srv {
   
   my $echo = sub {mk_msg($self->user_prefix, $command, @args)};
   my $map = {
-    map({$_ => $echo} qw/TOPIC JOIN PART/),
+    map({$_ => $echo} qw/TOPIC JOIN PART NICK/),
     WHO => sub{
       my $user = ($args[0] =~ /^#/ ? "test" : $args[0]);
       ":local.irc 352 ".$self->nick." #test $user il.comcast.net local.irc $user H :0 $user";
