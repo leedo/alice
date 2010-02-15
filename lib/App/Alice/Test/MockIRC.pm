@@ -2,16 +2,14 @@ package App::Alice::Test::MockIRC;
 
 use Any::Moose;
 use AnyEvent::IRC::Util qw/parse_irc_msg prefix_nick mk_msg/;
+use Try::Tiny;
 
 has cbs => (is => 'rw', default => sub {{}});
 has nick => (is => 'rw');
-
 has user_prefix => (
   is => 'rw',
   lazy => 1,
-  default => sub{
-    $_[0]->nick."!".$_[0]->nick."\@host";
-  }
+  default => sub{$_[0]->nick."!".$_[0]->nick."\@host"}
 );
 
 has events => (
@@ -20,22 +18,25 @@ has events => (
     my $self = shift;
     {
       TOPIC => sub {
-        my ($msg, $nick) = @_;
+        my $msg = shift;
+        my $nick = prefix_nick($msg->{prefix});
         $self->cbs->{channel_topic}->($self, @{$msg->{params}}, $nick);
       },
       JOIN => sub {
-        my ($msg, $nick) = @_;
+        my $msg = shift;
+        my $nick = prefix_nick($msg->{prefix});
         $self->cbs->{join}->($self, $nick, $msg->{params}[0], $nick eq $self->nick);
         $self->cbs->{channel_add}->($self, $msg, $msg->{params}[0], $nick)
       },
       PART => sub {
-        my ($msg, $nick) = @_;
+        my $msg = shift;
+        my $nick = prefix_nick($msg->{prefix});
         $self->cbs->{part}->($self, $nick, $msg->{params}[0], $nick eq $self->nick);
         $self->cbs->{channel_remove}->($self, $msg, $msg->{params}[0], $nick);
       },
-      352 => sub {
-        my ($msg) = @_;
-        $self->cbs->{irc_352}->($self, $msg);
+      numeric => sub {
+        my ($msg, $number) = @_;
+        $self->cbs->{"irc_$number"}->($self, $msg);
       },
     }
   }
@@ -59,8 +60,9 @@ sub send_srv {
 sub simulate_line {
   my ($self, $line) = @_;
   my $msg = parse_irc_msg($line);
-  my $nick = prefix_nick($msg->{prefix}) || "";
-  $self->events->{$msg->{command}}->($msg, $nick);
+  my $cmd = ($msg->{command} =~ /^\d+/ ? 'numeric' : $msg->{command});
+  try { $self->events->{$cmd}->($msg, $msg->{command}); }
+  catch { warn "$_\n" };
 }
 
 sub enable_ssl {}
