@@ -50,7 +50,7 @@ sub send_srv {
   elsif ($command eq "WHO") {
     $line = ":local.irc 352 test #test test il.comcast.net local.irc test H :0 test";
   }
-  $line ? simulate_line($line) : warn "no line mapped for $command\n"
+  $line ? $self->simulate_line($line) : warn "no line mapped for $command\n"
 }
 
 sub simulate_line {
