@@ -7,7 +7,7 @@ use Any::Moose;
 
 has 'cl' => (
   is      => 'rw',
-  isa     => 'AnyEvent::IRC::Client',
+  isa     => 'AnyEvent::IRC::Client|App::Alice::Test::MockIRC',
   default => sub {AnyEvent::IRC::Client->new},
 );
 
@@ -299,6 +299,7 @@ sub nick_change {
 
 sub _join {
   my ($self, $cl, $nick, $channel, $is_self) = @_;
+  
   if (!$self->includes_nick($nick)) {
     $self->add_nick($nick, {nick => $nick, channels => {$channel => ''}}); 
   }
@@ -307,10 +308,10 @@ sub _join {
   }
   if ($is_self) {
     $self->app->create_window($channel, $self);
-    $self->cl->send_srv("WHO $channel");
+    $self->cl->send_srv("WHO" => $channel);
   }
   elsif (my $window = $self->find_window($channel)) {
-    $self->cl->send_srv("WHO $nick");
+    $self->cl->send_srv("WHO" => $nick);
     $self->app->send([$window->format_event("joined", $nick)]);
   }
 }
