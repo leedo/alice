@@ -57,6 +57,11 @@ sub send_srv {
                    : warn "no line mapped for $command\n"
 }
 
+sub send_raw {
+  my ($self, $line) = @_;
+  $self->send_srv(split ' ', $line);
+}
+
 sub simulate_line {
   my ($self, $line) = @_;
   my $msg = parse_irc_msg($line);
@@ -77,7 +82,6 @@ sub disconnect {
   $self->cbs->{disconnect}->();
 }
 sub enable_ping {}
-sub send_raw {}
 
 sub reg_cb {
   my ($self, %callbacks) = @_;
