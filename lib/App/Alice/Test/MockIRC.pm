@@ -50,7 +50,10 @@ sub send_srv {
     TOPIC => $echo,
     JOIN  => $echo,
     PART  => $echo,
-    WHO   => sub{":local.irc 352 test #test test il.comcast.net local.irc test H :0 test"},
+    WHO   => sub{
+      my $user = ($args[0] =~ /^#/ ? "test" : $args[0]);
+      ":local.irc 352 ".$self->nick." #test $user il.comcast.net local.irc $user H :0 $user";
+    },
   };
   $map->{$command} ?
     $self->simulate_line($map->{$command}->())
