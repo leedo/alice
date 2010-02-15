@@ -12,18 +12,20 @@ my $irc = App::Alice::IRC->new(
     port => 6667,
     autoconnect => 1,
     channels => ["#test"],
+    on_connect => ["JOIN #test2"],
   },
   app => $app,
   cl => App::Alice::Test::MockIRC->new(nick => "tester"),
 );
 $app->ircs->{test} = $irc;
 
-# nick
-is $irc->nick, "tester", "nick set";
-
 # joining channels
 ok $irc->is_connected, "connect";
 ok my $window = $app->find_window("#test", $irc), "auto-join channel";
+ok $app->find_window("#test2", $irc), "on_connect join command";
+
+# nicks
+is $irc->nick, "tester", "nick set";
 ok $irc->includes_nick("test"), "existing nick in channel";
 $irc->cl->simulate_line(":nick!user\@host JOIN #test");
 ok $irc->includes_nick("nick"), "nick after join";
