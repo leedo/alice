@@ -47,17 +47,14 @@ sub send_srv {
   
   my $echo = sub {mk_msg($self->user_prefix, $command, @args)};
   my $map = {
-    TOPIC => $echo,
-    JOIN  => $echo,
-    PART  => $echo,
-    WHO   => sub{
+    map({$_ => $echo} qw/TOPIC JOIN PART/),
+    WHO => sub{
       my $user = ($args[0] =~ /^#/ ? "test" : $args[0]);
       ":local.irc 352 ".$self->nick." #test $user il.comcast.net local.irc $user H :0 $user";
     },
   };
-  $map->{$command} ?
-    $self->simulate_line($map->{$command}->())
-    : warn "no line mapped for $command\n"
+  $map->{$command} ? $self->simulate_line($map->{$command}->())
+                   : warn "no line mapped for $command\n"
 }
 
 sub simulate_line {
