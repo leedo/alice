@@ -34,6 +34,11 @@ has events => (
         $self->cbs->{part}->($self, $nick, $msg->{params}[0], $nick eq $self->nick);
         $self->cbs->{channel_remove}->($self, $msg, $msg->{params}[0], $nick);
       },
+      PRIVMSG => sub {
+        my $msg = shift;
+        my $nick = prefix_nick($msg->{prefix});
+        $self->cbs->{privatemsg}->($self, $nick, $msg);
+      },
       numeric => sub {
         my ($msg, $number) = @_;
         $self->cbs->{"irc_$number"}->($self, $msg);
@@ -66,7 +71,7 @@ sub send_cl {
   my ($self, $line) = @_;
   my $msg = parse_irc_msg($line);
   my $cmd = ($msg->{command} =~ /^\d+/ ? 'numeric' : $msg->{command});
-  try { $self->events->{$cmd}->($msg, $msg->{command}); }
+  try { $self->events->{$cmd}->($msg, $msg->{command}) if $self->events->{$cmd} }
   catch { warn "$_\n" };
 }
 
