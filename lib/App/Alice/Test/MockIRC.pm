@@ -53,7 +53,7 @@ sub send_srv {
       ":local.irc 352 ".$self->nick." #test $user il.comcast.net local.irc $user H :0 $user";
     },
   };
-  $map->{$command} ? $self->simulate_line($map->{$command}->())
+  $map->{$command} ? $self->send_cl($map->{$command}->())
                    : warn "no line mapped for $command\n"
 }
 
@@ -62,7 +62,7 @@ sub send_raw {
   $self->send_srv(split ' ', $line);
 }
 
-sub simulate_line {
+sub send_cl {
   my ($self, $line) = @_;
   my $msg = parse_irc_msg($line);
   my $cmd = ($msg->{command} =~ /^\d+/ ? 'numeric' : $msg->{command});
