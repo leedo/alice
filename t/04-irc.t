@@ -27,20 +27,22 @@ ok $app->find_window("#test2", $irc), "on_connect join command";
 # nicks
 is $irc->nick, "tester", "nick set";
 ok $irc->includes_nick("test"), "existing nick in channel";
-$irc->cl->simulate_line(":nick!user\@host JOIN #test");
+$irc->cl->send_cl(":nick!user\@host JOIN #test");
 ok $irc->includes_nick("nick"), "nick after join";
 
 # topic changes
+is $window->topic->{string}, "no topic set", "default initial topic";
+
 $irc->cl->send_srv(TOPIC => "#test", "updated topic");
 is $window->topic->{string}, "updated topic", "self topic change string";
 is $window->topic->{author}, "tester", "self topic change author";
 
-$irc->cl->simulate_line(":nick!user\@host TOPIC #test :another topic update\015\012");
+$irc->cl->send_cl(":nick!user\@host TOPIC #test :another topic update\015\012");
 is $window->topic->{string}, "another topic update", "external topic change string";
 is $window->topic->{author}, "nick", "external topic change author";
 
 # part channel
-$irc->cl->simulate_line(":nick!user\@host PART #test");
+$irc->cl->send_cl(":nick!user\@host PART #test");
 ok !$irc->includes_nick("nick"), "nick gone after part";
 $irc->cl->send_srv(PART => "#test");
 ok !$app->find_window("#test", $irc), "part removes window";
