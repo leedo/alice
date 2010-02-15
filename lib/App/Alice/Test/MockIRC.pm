@@ -43,14 +43,17 @@ has events => (
 
 sub send_srv {
   my ($self, $command, @args) = @_;
-  my $line;
-  if ($command =~ /^TOPIC|JOIN|PART$/) {
-    $line = mk_msg($self->user_prefix, $command, @args);
-  }
-  elsif ($command eq "WHO") {
-    $line = ":local.irc 352 test #test test il.comcast.net local.irc test H :0 test";
-  }
-  $line ? $self->simulate_line($line) : warn "no line mapped for $command\n"
+  
+  my $echo = sub {mk_msg($self->user_prefix, $command, @args)};
+  my $map = {
+    TOPIC => $echo,
+    JOIN  => $echo,
+    PART  => $echo,
+    WHO   => sub{":local.irc 352 test #test test il.comcast.net local.irc test H :0 test"},
+  };
+  $map->{$command} ?
+    $self->simulate_line($map->{$command}->())
+    : warn "no line mapped for $command\n"
 }
 
 sub simulate_line {
