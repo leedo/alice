@@ -15,11 +15,10 @@ my $irc = $app->ircs->{test};
 
 my $window = $app->create_window("test-window", $irc);
 ok $window->type eq "privmsg", "correct window type for privmsg";
-ok !$window->is_channel, "is_channel for privmsg";
+ok !$window->is_channel, "is_channel false for privmsg";
 $app->remove_window($window->id);
 
 $window = $app->create_window("#test-window", $irc);
-
 ok $window->type eq "channel", "correct window type for channel";
 ok $window->is_channel, "is_channel for channel";
 is $window->title, "#test-window", "window title";

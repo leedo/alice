@@ -33,7 +33,7 @@ is_deeply [$app->windows], [$info, $window], "window list";
 $app->add_window("test-window2", {});
 ok $app->has_window("test-window2"), "manually add window";
 $app->remove_window("test-window2");
-ok !$app->has_window("test-window2"), "remove a window";
+ok !$app->has_window("test-window2"), "manually remove window";
 
 is_deeply $app->find_or_create_window("test-window", $irc), $window, "find or create existing window";
 my $window2 = $app->find_or_create_window("test-window2", $irc);

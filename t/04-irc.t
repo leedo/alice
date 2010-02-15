@@ -29,8 +29,10 @@ is $irc->nick, "tester", "nick set";
 ok $irc->includes_nick("test"), "existing nick in channel";
 $irc->cl->send_cl(":nick!user\@host JOIN #test");
 ok $irc->includes_nick("nick"), "nick after join";
+$irc->cl->send_cl(":nick!user\@host PART #test");
+ok !$irc->includes_nick("nick"), "nick gone after part";
 
-# topic changes
+# topic
 is $window->topic->{string}, "no topic set", "default initial topic";
 
 $irc->cl->send_srv(TOPIC => "#test", "updated topic");
@@ -42,10 +44,12 @@ is $window->topic->{string}, "another topic update", "external topic change stri
 is $window->topic->{author}, "nick", "external topic change author";
 
 # part channel
-$irc->cl->send_cl(":nick!user\@host PART #test");
-ok !$irc->includes_nick("nick"), "nick gone after part";
 $irc->cl->send_srv(PART => "#test");
 ok !$app->find_window("#test", $irc), "part removes window";
+
+# messages
+$irc->cl->send_cl(":nick!user\@host PRIVMSG tester :hi");
+ok $app->find_window("nick", $irc), "private message";
 
 # disconnect
 $irc->cl->disconnect;
