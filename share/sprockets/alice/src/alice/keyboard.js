@@ -4,7 +4,7 @@ Alice.Keyboard = Class.create({
     this.enable();
     
     this.shortcut("Cmd+C", { propagate: true });
-    this.shortcut("Ctrl+C", { propogate: true });
+    this.shortcut("Ctrl+C", { propagate: true });
     this.shortcut("Cmd+K");
     this.shortcut("Cmd+B");
     this.shortcut("Cmd+F");
