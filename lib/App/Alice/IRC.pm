@@ -308,10 +308,12 @@ sub _join {
   }
   if ($is_self) {
     $self->app->create_window($channel, $self);
-    $self->cl->send_srv("WHO" => $channel);
+    # TODO enable when switched off of AE::IRC::Client
+    #$self->cl->send_srv("WHO" => $channel);
   }
   elsif (my $window = $self->find_window($channel)) {
-    $self->cl->send_srv("WHO" => $nick);
+    # TODO enable when switched off of AE::IRC::Client
+    #$self->cl->send_srv("WHO" => $nick);
     $self->app->send([$window->format_event("joined", $nick)]);
   }
 }
@@ -388,7 +390,10 @@ sub nick_windows {
 
 sub irc_352 {
   my ($self, $cl, $msg) = @_;
-  my (undef, $channel, $user, $ip, $server, $nick, $flags, $real) = @{$msg->{params}};
+  # ignore the first param if it our nick, some servers include it
+  shift @{$msg->{params}} if $msg->{params}[0] eq $self->nick;
+  my ($channel, $user, $ip, $server, $nick, $flags, @real) = @{$msg->{params}};
+  my $real = join " ", @real;
   return unless $nick;
   $real =~ s/^\d // if $real;
   my $info = {
