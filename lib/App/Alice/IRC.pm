@@ -92,8 +92,6 @@ sub BUILD {
     privatemsg     => sub{$self->privatemsg(@_)},
     connect        => sub{$self->connected(@_)},
     disconnect     => sub{$self->disconnected(@_)},
-    dcc_request    => sub{$self->dcc_request(@_)},
-    dcc_connected  => sub{$self->dcc_connected(@_)},
     irc_352        => sub{$self->irc_352(@_)}, # WHO info
     irc_366        => sub{$self->irc_366(@_)}, # end of NAMES
     irc_372        => sub{$self->log_info($_[1]->{params}[1], 1)}, # MOTD info
@@ -308,12 +306,12 @@ sub _join {
   }
   if ($is_self) {
     $self->app->create_window($channel, $self);
-    # TODO enable when switched off of AE::IRC::Client
-    #$self->cl->send_srv("WHO" => $channel);
+    # client library only sends WHO if the server doesn't
+    # send hostnames with NAMES list (UHNAMES), we to WHO always
+    $self->cl->send_srv("WHO" => $channel) if $cl->isupport("UHNAMES");
   }
   elsif (my $window = $self->find_window($channel)) {
-    # TODO enable when switched off of AE::IRC::Client
-    #$self->cl->send_srv("WHO" => $nick);
+    $self->cl->send_srv("WHO" => $nick);
     $self->app->send([$window->format_event("joined", $nick)]);
   }
 }
