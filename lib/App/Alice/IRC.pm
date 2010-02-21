@@ -92,11 +92,13 @@ sub BUILD {
     privatemsg     => sub{$self->privatemsg(@_)},
     connect        => sub{$self->connected(@_)},
     disconnect     => sub{$self->disconnected(@_)},
+    irc_001        => sub{$self->log_info($_[1]->{params}[-1])},
     irc_352        => sub{$self->irc_352(@_)}, # WHO info
     irc_366        => sub{$self->irc_366(@_)}, # end of NAMES
-    irc_372        => sub{$self->log_info($_[1]->{params}[1], 1)}, # MOTD info
-    irc_377        => sub{$self->log_info($_[1]->{params}[1], 1)}, # MOTD info
-    irc_378        => sub{$self->log_info($_[1]->{params}[1], 1)}, # MOTD info
+    irc_372        => sub{$self->log_info($_[1]->{params}[-1], 1)}, # MOTD info
+    irc_377        => sub{$self->log_info($_[1]->{params}[-1], 1)}, # MOTD info
+    irc_378        => sub{$self->log_info($_[1]->{params}[-1], 1)}, # MOTD info
+    irc_422        => sub{$self->log_info($_[1]->{params}[-1])}, # No MOTD
     irc_464        => sub{$self->disconnect("bad USER/PASS")},
   );
   $self->cl->ctcp_auto_reply ('VERSION', ['VERSION', "alice $App::Alice::VERSION"]);
@@ -104,6 +106,11 @@ sub BUILD {
 }
 
 sub log_info {
+  return unless $_[1];
+  $_[0]->app->send([ $_[0]->format_info($_[1], $_[2]) ]);
+}
+
+sub format_info {
   my ($self, $msg, $monospaced) = @_;
   $self->app->log_info($self->alias, $msg, 0, $monospaced);
 }
@@ -141,16 +148,14 @@ sub connect {
   $self->disabled(0);
   $self->increase_reconnect_count;
   if (!$self->config->{host} or !$self->config->{port}) {
-    $self->app->send([$self->log_info("can't connect: missing either host or port")]);
+    $self->log_info("can't connect: missing either host or port");
     return;
   }
   if ($self->reconnect_count > 1) {
-    $self->app->send([
-      $self->log_info("reconnecting: attempt " . $self->reconnect_count),
-    ]);
+    $self->log_info("reconnecting: attempt " . $self->reconnect_count);
   }
   else {
-    $self->app->send([$self->log_info("connecting")]);
+    $self->log_info("connecting");
   }
   $self->cl->connect(
     $self->config->{host}, $self->config->{port},
@@ -165,11 +170,9 @@ sub connect {
 
 sub connected {
   my ($self, $cl, $err) = @_;
-  $self->app->send([$self->log_info("connected")]);
+  $self->log_info("connected");
   if (defined $err) {
-    $self->app->send([
-      $self->log_info("connect error: $err")
-    ]);
+    $self->log_info("connect error: $err");
     $self->reconnect(60);
   }
   else {
@@ -181,11 +184,11 @@ sub connected {
 sub reconnect {
   my ($self, $time) = @_;
   if ($self->reconnect_count > 4) {
-    $self->app->send([$self->log_info("too many failed reconnects, giving up")]);
+    $self->log_info("too many failed reconnects, giving up");
     return;
   }
   $time = 60 unless $time >= 0;
-  $self->app->send([$self->log_info("reconnecting in $time seconds")]);
+  $self->log_info("reconnecting in $time seconds");
   $self->reconnect_timer(
     AnyEvent->timer(after => $time, cb => sub {
       $self->connect unless $self->is_connected;
@@ -198,16 +201,16 @@ sub registered {
   my @log;
   $self->cl->enable_ping (60, sub {
     $self->is_connected(0);
-    $self->app->send([$self->log_info("ping timeout")]);
+    $self->log_info("ping timeout");
     $self->reconnect(0);
   });
   for (@{$self->config->{on_connect}}) {
-    push @log, $self->log_info("sending $_");
+    push @log, $self->format_info("sending $_");
     $self->cl->send_raw($_);
   }
 
   for (@{$self->config->{channels}}) {
-    push @log, $self->log_info("joining $_");
+    push @log, $self->format_info("joining $_");
     $self->cl->send_srv("JOIN", split /\s+/);
   }
   $self->app->send(\@log);
@@ -218,7 +221,7 @@ sub disconnected {
   $reason = "" unless $reason;
   return if $reason eq "reconnect requested.";
   my @windows = $self->windows;
-  my @log = $self->log_info("disconnected: $reason");
+  my @log = $self->format_info("disconnected: $reason");
   if ($self->is_connected) {
     push @log, map {$_->format_event("disconnect", $self->nick, $reason)} @windows;
     push @log, map {$_->disconnect_action} @windows;
@@ -272,7 +275,7 @@ sub privatemsg {
     $self->app->send([$window->format_message($from, $text)]); 
   }
   elsif ($msg->{command} eq "NOTICE") {
-    $self->app->send([$self->log_info($text)]);
+    $self->log_info($text);
   }
 }
 
@@ -333,7 +336,7 @@ sub channel_add {
 sub part {
   my ($self, $cl, $nick, $channel, $is_self, $msg) = @_;
   if ($is_self and my $window = $self->find_window($channel)) {
-    $self->app->send([$self->log_info("leaving $channel")]);
+    $self->log_info("leaving $channel");
     $self->app->close_window($window);
   }
 }

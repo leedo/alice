@@ -387,9 +387,7 @@ sub add_ignore {
 
 sub remove_ignore {
   my ($self, $nick) = @_;
-  $self->config->ignore([
-    grep {$nick ne $_} $self->config->ignores
-  ]);
+  $self->config->ignore([ grep {$nick ne $_} $self->config->ignores ]);
   $self->config->write;
 }
 
