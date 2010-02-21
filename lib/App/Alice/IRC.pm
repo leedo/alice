@@ -105,9 +105,15 @@ sub BUILD {
   $self->connect unless $self->disabled;
 }
 
+sub broadcast {
+  my $self = shift;
+  $self->app->broadcast(@_);
+}
+
 sub log_info {
-  return unless $_[1];
-  $_[0]->app->send([ $_[0]->format_info($_[1], $_[2]) ]);
+  my ($self, $msg, $monospaced) = @_;
+  return unless $msg;
+  $self->broadcast($self->format_info($msg, $monospaced));
 }
 
 sub format_info {
@@ -117,8 +123,7 @@ sub format_info {
 
 sub window {
   my ($self, $title) = @_;
-  return $self->app->find_or_create_window(
-           $title, $self);
+  return $self->app->find_or_create_window($title, $self);
 }
 
 sub find_window {
@@ -213,7 +218,7 @@ sub registered {
     push @log, $self->format_info("joining $_");
     $self->cl->send_srv("JOIN", split /\s+/);
   }
-  $self->app->send(\@log);
+  $self->broadcast(@log);
 };
 
 sub disconnected {
@@ -226,7 +231,7 @@ sub disconnected {
     push @log, map {$_->format_event("disconnect", $self->nick, $reason)} @windows;
     push @log, map {$_->disconnect_action} @windows;
   }
-  $self->app->send(\@log);
+  $self->broadcast(@log);
   $self->is_connected(0);
   $self->reconnect(0) unless $self->disabled;
   if ($self->removed) {
@@ -260,7 +265,7 @@ sub publicmsg {
     return if $self->app->is_ignore($nick);
     my $text = $msg->{params}[1];
     $self->app->logger->log_message(time, $nick, $channel, $text);
-    $self->app->send([$window->format_message($nick, $text)]); 
+    $self->broadcast($window->format_message($nick, $text)); 
   }
 }
 
@@ -272,7 +277,7 @@ sub privatemsg {
     return if $self->app->is_ignore($from);
     my $window = $self->window($from);
     $self->app->logger->log_message(time, $from, $from, $text);
-    $self->app->send([$window->format_message($from, $text)]); 
+    $self->broadcast($window->format_message($from, $text)); 
   }
   elsif ($msg->{command} eq "NOTICE") {
     $self->log_info($text);
@@ -285,17 +290,17 @@ sub ctcp_action {
   if (my $window = $self->find_window($channel)) {
     my $text = "• $msg";
     $self->app->logger->log_message(time, $nick, $channel, $text);
-    $self->app->send([$window->format_message($nick, $text)]);
+    $self->broadcast($window->format_message($nick, $text));
   }
 }
 
 sub nick_change {
   my ($self, $cl, $old_nick, $new_nick, $is_self) = @_;
   $self->rename_nick($old_nick, $new_nick);
-  $self->app->send([
+  $self->broadcast(
     map  {$_->format_event("nick", $old_nick, $new_nick)}
     grep {$_} $self->nick_windows($new_nick)
-  ]);
+  );
 }
 
 sub _join {
@@ -315,7 +320,7 @@ sub _join {
   }
   elsif (my $window = $self->find_window($channel)) {
     $self->cl->send_srv("WHO" => $nick);
-    $self->app->send([$window->format_event("joined", $nick)]);
+    $self->broadcast($window->format_event("joined", $nick));
   }
 }
 
@@ -356,9 +361,9 @@ sub channel_remove {
       $self->remove_nicks(@nicks);
       $body = $msg->{params}[0];
     }
-    $self->app->send([
+    $self->broadcast(
       map {$window->format_event("left", $_, $body)} @nicks
-    ]);
+    );
   }
 }
 
@@ -366,7 +371,7 @@ sub channel_topic {
   my ($self, $cl, $channel, $topic, $nick) = @_;
   if (my $window = $self->find_window($channel)) {
     $window->topic({string => $topic, author => $nick, time => time});
-    $self->app->send([$window->format_event("topic", $nick, $topic)]);
+    $self->broadcast($window->format_event("topic", $nick, $topic));
   }
 }
 
@@ -417,7 +422,7 @@ sub irc_352 {
 sub irc_366 {
   my ($self, $cl, $msg) = @_;
   if (my $window = $self->find_window($msg->{params}[1])) {
-    $self->app->send([$window->join_action]);
+    $self->broadcast($window->join_action);
   }
 }
 

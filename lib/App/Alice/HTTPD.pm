@@ -74,10 +74,10 @@ sub ping {
     after    => 5,
     interval => 10,
     cb       => sub {
-      $self->broadcast([{
+      $self->broadcast({
         type => "action",
         event => "ping",
-      }]);
+      });
     }
   ));
 }
@@ -97,9 +97,9 @@ sub image_proxy {
 }
 
 sub broadcast {
-  my ($self, $data, $force) = @_;
-  return if $self->no_streams or !@$data;
-  $_->enqueue(@$data) for $self->streams;
+  my ($self, @data) = @_;
+  return if $self->no_streams or !@data;
+  $_->enqueue(@data) for $self->streams;
   $_->broadcast for @{$self->streams};
 };
 

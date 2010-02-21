@@ -44,9 +44,9 @@ sub handle {
     if ($command =~ /$re/) {
       my @args = grep {defined $_} ($5, $4, $3, $2, $1); # up to 5 captures
       if ($handler->{in_channel} and !$window->is_channel) {
-        $self->app->send([
+        $self->broadcast(
           $window->format_announcement("$command can only be used in a channel")
-        ]);
+        );
       }
       else {
         my $sub = $handler->{sub};
@@ -54,7 +54,7 @@ sub handle {
           $self->$sub($window, @args);
         }
         else {
-          $self->app->send($self->app->log_info(
+          $self->broadcast($self->app->log_info(
             "Error handling $command: $sub sub not found"));
         }
       }
@@ -65,18 +65,18 @@ sub handle {
 
 sub names {
   my ($self, $window) = @_;
-  $self->app->send([$window->format_announcement($window->nick_table)]);
+  $self->broadcast($window->format_announcement($window->nick_table));
 }
 
 sub whois {
   my ($self, $window, $nick) = @_;
-  $self->app->send([$window->format_announcement($window->irc->whois_table($nick))]);
+  $self->broadcast($window->format_announcement($window->irc->whois_table($nick)));
 }
 
 sub query {
   my ($self, $window, $nick) = @_;
   my $new_window = $self->app->find_or_create_window($nick, $window->irc);
-  $self->app->send([$new_window->join_action]);
+  $self->broadcast($new_window->join_action);
 }
 
 sub _join {
@@ -87,7 +87,7 @@ sub _join {
   }
   my @params = split /\s+/, $channel;
   if ($irc and $irc->cl->is_channel_name($params[0])) {
-    $self->app->send([$irc->log_info("joining $params[0]")]);
+    $self->broadcast($irc->log_info("joining $params[0]"));
     $irc->cl->send_srv(JOIN => @params);
   }
 }
@@ -111,13 +111,13 @@ sub nick {
 sub create {
   my ($self, $window, $name) = @_;
   my $new_window = $self->app->find_or_create_window($name, $window->irc);
-  $self->app->send([$new_window->join_action]);
+  $self->broadcast($new_window->join_action);
 }
 
 sub clear {
   my ($self, $window) = @_;
   $window->clear_buffer;
-  $self->app->send([$window->clear_action]);
+  $self->broadcast($window->clear_action);
 }
 
 sub topic {
@@ -127,15 +127,13 @@ sub topic {
   }
   else {
     my $topic = $window->topic;
-    $self->app->send([
-      $window->format_event("topic", $topic->{author}, $topic->{string})
-    ]);
+    $self->broadcast($window->format_event("topic", $topic->{author}, $topic->{string}));
   }
 }
 
 sub me {
   my ($self, $window, $action) = @_;
-  $self->app->send([$window->format_message($window->nick, "• $action")]);
+  $self->broadcast($window->format_message($window->nick, "• $action"));
   $window->irc->cl->send_srv(PRIVMSG => $window->title, chr(01) . "ACTION $action" . chr(01));
 }
 
@@ -164,33 +162,36 @@ sub ignores {
   my ($self, $window) = @_;
   my $msg = join ", ", $self->app->ignores;
   $msg = "none" unless $msg;
-  $self->app->send([
-    $window->format_announcement("Ignoring:\n$msg")
-  ]);
+  $self->broadcast($window->format_announcement("Ignoring:\n$msg"));
 }
 
 sub ignore {
   my ($self, $window, $nick) = @_;
   $self->app->add_ignore($nick);
-  $self->app->send([$window->format_announcement("Ignoring $nick")]);
+  $self->broadcast($window->format_announcement("Ignoring $nick"));
 }
 
 sub unignore {
   my ($self, $window, $nick) = @_;
   $self->app->remove_ignore($nick);
-  $self->app->send([$window->format_announcement("No longer ignoring $nick")]);
+  $self->broadcast($window->format_announcement("No longer ignoring $nick"));
 }
 
 sub notfound {
   my ($self, $window, $command) = @_;
-  $self->app->send([$window->format_announcement("Invalid command $command")]);
+  $self->broadcast($window->format_announcement("Invalid command $command"));
 }
 
 sub _say {
   my ($self, $window, $msg) = @_;
   $self->app->logger->log_message(time, $window->nick, $window->title, $msg);
-  $self->app->send([$window->format_message($window->nick, $msg)]);
+  $self->broadcast($window->format_message($window->nick, $msg));
   $window->irc->cl->send_srv(PRIVMSG => $window->title, $msg);
+}
+
+sub broadcast {
+  my ($self, @messages) = @_;
+  $self->app->broadcast(@messages);
 }
 
 __PACKAGE__->meta->make_immutable;

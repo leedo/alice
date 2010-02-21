@@ -297,7 +297,7 @@ sub sorted_windows {
 
 sub close_window {
   my ($self, $window) = @_;
-  $self->send([$window->close_action]);
+  $self->broadcast($window->close_action);
   $self->log_debug("sending a request to close a tab: " . $window->title)
     if $self->httpd->stream_count;
   $self->remove_window($window->id);
@@ -338,16 +338,16 @@ sub log_info {
   $self->info_window->format_message($session, $body, $highlight, $monospaced);
 }
 
-sub send {
-  my ($self, $messages, $force) = @_;
+sub broadcast {
+  my ($self, @messages) = @_;
   # add any highlighted messages to the log window
-  push @$messages, map {$self->log_info($_->{nick}, $_->{body}, 1)}
-                  grep {$_->{highlight}} @$messages;
+  push @messages, map {$self->log_info($_->{nick}, $_->{body}, 1)}
+                  grep {$_->{highlight}} @messages;
   
-  $self->httpd->broadcast($messages, $force);
+  $self->httpd->broadcast(@messages);
   
   return unless $self->notifier and ! $self->httpd->stream_count;
-  for my $message (@$messages) {
+  for my $message (@messages) {
     $self->notifier->display($message) if $message->{highlight};
   }
 }

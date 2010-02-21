@@ -27,6 +27,7 @@ has events => (
         my $nick = prefix_nick($msg->{prefix});
         $self->cbs->{join}->($self, $nick, $msg->{params}[0], $nick eq $self->nick);
         $self->cbs->{channel_add}->($self, $msg, $msg->{params}[0], $nick);
+        $self->send_srv(WHO => $msg->{params}[0]);
       },
       NICK => sub {
         my $msg = shift;
@@ -54,7 +55,6 @@ has events => (
 
 sub send_srv {
   my ($self, $command, @args) = @_;
-  
   my $echo = sub {mk_msg($self->user_prefix, $command, @args)};
   my $map = {
     map({$_ => $echo} qw/TOPIC JOIN PART NICK/),
@@ -81,6 +81,7 @@ sub send_cl {
 }
 
 sub enable_ssl {}
+sub isupport {}
 sub ctcp_auto_reply {}
 sub connect {
   my $self = shift;
