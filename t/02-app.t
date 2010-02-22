@@ -12,9 +12,9 @@ $app->add_irc_server("test", {
 });
 
 # connections
-ok $app->ircs->{test}, "add connection";
-my $irc = $app->ircs->{test};
-is_deeply [$app->connections], [$irc], "connection list";
+ok $app->has_irc("test"), "add connection";
+my $irc = $app->get_irc("test");
+is_deeply [$app->ircs], [$irc], "connection list";
 
 # windows
 my $info = $app->info_window;

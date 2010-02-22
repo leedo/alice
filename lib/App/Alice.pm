@@ -31,11 +31,19 @@ has msgid => (
 
 sub next_msgid {$_[0]->msgid($_[0]->msgid + 1)}
 
-has ircs => (
+has irc_map => (
   is      => 'ro',
   isa     => 'HashRef',
   default => sub {{}},
 );
+
+sub ircs {values %{$_[0]->irc_map}}
+sub add_irc {$_[0]->irc_map->{$_[1]} = $_[2]}
+sub has_irc {exists $_[0]->irc_map->{$_[1]}}
+sub get_irc {$_[0]->irc_map->{$_[1]}}
+sub remove_irc {delete $_[0]->irc_map->{$_[1]}}
+sub irc_aliases {keys %{$_[0]->irc_map}}
+sub connected_ircs {grep {$_->is_connected} $_[0]->ircs}
 
 has standalone => (
   is      => 'ro',
@@ -185,7 +193,7 @@ sub run {
     $self->cond->wait;
     print STDERR "Disconnecting, please wait\n";
     $self->httpd->ping_timer(undef);
-    $_->disconnect('alice') for $self->connections;
+    $_->disconnect('alice') for $self->ircs;
     my $timer = AnyEvent->timer(
       after => 3,
       cb    => sub{exit(0)}
@@ -230,11 +238,6 @@ sub buffered_messages {
   return map {$_->{buffered} = 1; $_;}
          grep {$_->{msgid} > $min or $min > $self->msgid}
          map {@{$_->msgbuffer}} $self->windows;
-}
-
-sub connections {
-  my $self = shift;
-  return values %{$self->ircs};
 }
 
 sub find_window {
@@ -305,26 +308,27 @@ sub close_window {
 
 sub add_irc_server {
   my ($self, $name, $config) = @_;
-  $self->ircs->{$name} = App::Alice::IRC->new(
+  my $irc = App::Alice::IRC->new(
     app    => $self,
     alias  => $name,
     config => $config
   );
+  $self->add_irc($name, $irc);
 }
 
 sub reload_config {
   my $self = shift;
   for my $irc (keys %{$self->config->servers}) {
-    if (!$self->ircs->{$irc}) {
+    if (!$self->has_irc($irc)) {
       $self->add_irc_server(
         $irc, $self->config->servers->{$irc}
       );
     }
     else {
-      $self->ircs->{$irc}->config($self->config->servers->{$irc});
+      $self->get_irc($irc)->config($self->config->servers->{$irc});
     }
   }
-  for my $irc ($self->connections) {
+  for my $irc ($self->ircs) {
     if (!$self->config->servers->{$irc->alias}) {
       $self->remove_window($_->id) for $irc->windows;
       $irc->remove;
