@@ -67,8 +67,6 @@ supplied user.
 
 ### /quote $string
 
-### /raw $string
-
 Sends a string as a raw message to the server.
 
 ### /topic [$topic]
