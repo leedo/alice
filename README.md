@@ -4,8 +4,10 @@ App::Alice - an Altogether Lovely Internet Chatting Experience
 
 # SYNPOSIS
 
-  arthur:~ leedo$ alice
-  Location: http://localhost:8080/view
+    arthur:~ leedo$ alice
+    Location: http://localhost:8080/view
+
+![Screenshot](http://i.conio.net/what-is-alice.png)
 
 # DESCRIPTION
 
