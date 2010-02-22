@@ -46,8 +46,6 @@ channels.
 
 ### /close
 
-### /wc
-
 Closes the current tab, even private message tabs. If used in a channel
 it will also part the channel.
 
@@ -58,8 +56,6 @@ clear the tab's message buffer so when you refresh your browser the messages
 won't re-appear (as they normally would.)
 
 ### /msg [-network] $nick [$msg]
-
-### /query [-network] $nick [$msg]
 
 Takes a nick as an argument. This will open a new tab for private messaging
 with a user. Only works in a channel.
