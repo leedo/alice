@@ -18,7 +18,7 @@ my $irc = App::Alice::IRC->new(
   app => $app,
   cl => $cl,
 );
-$app->ircs->{test} = $irc;
+$app->add_irc("test", $irc);
 
 # joining channels
 ok $irc->is_connected, "connect";

@@ -1,7 +1,8 @@
 package App::Alice::CommandDispatch;
 
 use Any::Moose;
-  
+my $SRVOPT = qr/(?:\-(\S+)\s+)?/;
+
 has 'handlers' => (
   is => 'rw',
   isa => 'ArrayRef',
@@ -9,10 +10,10 @@ has 'handlers' => (
     my $self = shift;
     [
       {sub => '_say',     re => qr{^([^/].*)}s},
-      {sub => 'query',    re => qr{^/query\s+(\S+)}},
+      {sub => 'msg',      re => qr{^/(?:msg|query)\s+$SRVOPT(\S+)(?:\s+(.+))?}},
       {sub => 'nick',     re => qr{^/nick\s+(\S+)}},
       {sub => 'names',    re => qr{^/n(?:ames)?}, in_channel => 1},
-      {sub => '_join',    re => qr{^/j(?:oin)?\s+(?:\-(\S+)\s+)?(.+)}},
+      {sub => '_join',    re => qr{^/j(?:oin)?\s+$SRVOPT(.+)}},
       {sub => 'part',     re => qr{^/part}, in_channel => 1},
       {sub => 'create',   re => qr{^/create\s+(\S+)}},
       {sub => 'close',    re => qr{^/(?:close|wc)}},
@@ -73,17 +74,23 @@ sub whois {
   $self->broadcast($window->format_announcement($window->irc->whois_table($nick)));
 }
 
-sub query {
-  my ($self, $window, $nick) = @_;
-  my $new_window = $self->app->find_or_create_window($nick, $window->irc);
+sub msg {
+  my ($self, $window, $msg, $nick, $network) = @_;
+  my $irc = $window->irc;
+  if ($network and $self->app->has_irc($network)) {
+    $irc = $self->app->get_irc($network);
+  }
+  return unless $irc;
+  my $new_window = $self->app->find_or_create_window($nick, $irc);
   $self->broadcast($new_window->join_action);
+  $irc->cl->send_srv(PRIVMSG => $nick, $msg);
 }
 
 sub _join {
   my ($self, $window, $channel, $network) = @_;
   my $irc = $window->irc;
-  if ($network and $self->app->ircs->{$network}) {
-    $irc = $self->app->ircs->{$network};
+  if ($network and $self->app->has_irc($network)) {
+    $irc = $self->app->get_irc($network);
   }
   my @params = split /\s+/, $channel;
   if ($irc and $irc->cl->is_channel_name($params[0])) {
@@ -144,7 +151,7 @@ sub quote {
 
 sub disconnect {
   my ($self, $window, $network) = @_;
-  my $irc = $self->app->ircs->{$network};
+  my $irc = $self->app->get_irc($network);
   if ($irc and $irc->is_connected) {
     $irc->disconnect;
   }
@@ -152,7 +159,7 @@ sub disconnect {
 
 sub connect {
   my ($self, $window, $network) = @_;
-  my $irc  = $self->app->ircs->{$network};
+  my $irc  = $self->app->get_irc($network);
   if ($irc and !$irc->is_connected) {
     $irc->connect;
   }

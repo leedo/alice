@@ -11,7 +11,7 @@ $app->add_irc_server("test", {
   autoconnect => 0,
 });
 
-my $irc = $app->ircs->{test};
+my $irc = $app->get_irc("test");
 
 my $window = $app->create_window("test-window", $irc);
 ok $window->type eq "privmsg", "correct window type for privmsg";
