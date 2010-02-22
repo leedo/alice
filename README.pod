@@ -129,6 +129,8 @@ Ryan Baumann
 
 Paul Robins E<lt>alice@mon.gsE<gt>
 
+Clint Ecker
+
 =head1 COPYRIGHT
 
 Copyright 2009 by Lee Aylward E<lt>leedo@cpan.orgE<gt>

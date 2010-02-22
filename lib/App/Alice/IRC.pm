@@ -47,7 +47,7 @@ has 'reconnect_timer' => (
   is => 'rw'
 );
 
-has 'reconnect_count' => (
+has [qw/reconnect_count connect_time/] => (
   is  => 'rw',
   isa => 'Int',
   default   => 0,
@@ -182,6 +182,7 @@ sub connected {
   }
   else {
     $self->reset_reconnect_count;
+    $self->connect_time(time);
     $self->is_connected(1);
   }
 }
@@ -191,6 +192,11 @@ sub reconnect {
   if ($self->reconnect_count > 4) {
     $self->log_info("too many failed reconnects, giving up");
     return;
+  }
+  my $interval = time - $self->connect_time;
+  if ($interval < 30) {
+    $time = 30 - $interval;
+    $self->log_info("last attempt was within 30 seconds, delaying $time seconds")
   }
   $time = 60 unless $time >= 0;
   $self->log_info("reconnecting in $time seconds");
