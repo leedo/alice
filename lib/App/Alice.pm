@@ -97,7 +97,6 @@ has notifier => (
 
 has logger => (
   is      => 'ro',
-  isa     => 'App::Alice::Logger',
   lazy    => 1,
   default => sub {
     my $self = shift;
@@ -154,15 +153,15 @@ has 'info_window' => (
 
 sub BUILDARGS {
   my ($class, %options) = @_;
-  my $standalone = 1;
-  if (exists $options{standalone}) {
-    $standalone = $options{standalone};
-    delete $options{standalone};
+  my $self = {standalone => 1};
+  for (qw/standalone logger notifier/) {
+    if (exists $options{$_}) {
+      $self->{$_} = $options{$_};
+      delete $options{$_};
+    }
   }
-  return {
-    standalone => $standalone,
-    config => App::Alice::Config->new(%options),
-  };
+  $self->{config} = App::Alice::Config->new(%options);
+  return $self;
 }
 
 sub run {
