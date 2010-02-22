@@ -241,7 +241,7 @@ sub disconnected {
   $self->is_connected(0);
   $self->reconnect(0) unless $self->disabled;
   if ($self->removed) {
-    delete $self->app->ircs->{$self->alias};
+    $self->app->remove_irc($self->alias);
     undef $self;
   }
 }
