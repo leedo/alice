@@ -1,15 +1,11 @@
-# NAME
-
 App::Alice - an Altogether Lovely Internet Chatting Experience
-
-# SYNPOSIS
 
     arthur:~ leedo$ alice
     Location: http://localhost:8080/view
 
 ![Screenshot](http://i.conio.net/what-is-alice.png)
 
-# DESCRIPTION
+## DESCRIPTION
 
 Alice is an IRC client that can be run either locally or remotely, and
 can be viewed in any WebKit browser. The alice server
@@ -25,7 +21,7 @@ request back to alice's HTTP server.
 Alice also logs messages to an SQLite database. These logs are searchable
 by selecting Logs from the gear menu in the bottom corner.
 
-# USAGE
+## USAGE
 
 After installing, there will be a new `alice' command available. Run
 this command to start the alice server. Open your browser (Safari, Chrome, or
@@ -36,64 +32,64 @@ menu. Add one or more IRC servers and channels in this window and save.
 Alice will then connect to those servers, and the channels will appear as
 tabs at the bottom of the screen.
 
-# COMMANDS
+## COMMANDS
 
-## /j[oin] [-network] $channel
+### /j[oin] [-network] $channel
 
 Takes a channel name as an argument. It will attempt to join this channel
 on the server of the channel that you typed the command into.
 
-## /part
+### /part
 
 This will close the currently focused tab and part the channel. Only works on
 channels.
 
-## /close
+### /close
 
-## /wc
+### /wc
 
 Closes the current tab, even private message tabs. If used in a channel
 it will also part the channel.
 
-## /clear
+### /clear
 
 This will clear the current tab's messages from your browser. It will also 
 clear the tab's message buffer so when you refresh your browser the messages 
 won't re-appear (as they normally would.)
 
-## /msg [-network] $nick [$msg]
+### /msg [-network] $nick [$msg]
 
-## /query [-network] $nick [$msg]
+### /query [-network] $nick [$msg]
 
 Takes a nick as an argument. This will open a new tab for private messaging
 with a user. Only works in a channel.
 
-## /whois $nick
+### /whois $nick
 
 Takes a nick as an argument. This will print some information about the
 supplied user.
 
-## /quote $string
+### /quote $string
 
-## /raw $string
+### /raw $string
 
 Sends a string as a raw message to the server.
 
-## /topic [$topic]
+### /topic [$topic]
 
 Takes an optional topic string. This will display the topic for the current tab.
 If a string is supplied, it will attempt to update the channel's topic.
 Only works in a channel.
 
-## /n[ames]
+### /n[ames]
 
 This will print all of the nick's in the current tab in a tabular format.
 
-## /me $string
+### /me $string
 
 Sends a string as an ACTION to the channel
 
-# NOTIFICATIONS
+## NOTIFICATIONS
 
 If you get a message with your nick in the body, while no browsers are
 connected, a notification will be sent to either Growl (if running on
@@ -102,30 +98,24 @@ if a browser is connected (the exception being Fluid SSB which will
 Growl if unfocused). This is something that will probably become 
 configurable over time.
 
-# MOBILE INTERFACE
+## MOBILE INTERFACE
 
 Surprisingly, alice is close to fulling working in Mobile Safari (the browser used
 by the iPhone.) It still needs a little work to be fully functional, though (see KNOWN ISSUES.)
 
-# KNOWN ISSUES
+## KNOWN ISSUES
 
-There are a number of rendering issues:
+* Message area doesn't scroll on Firefox or Mobile Safari
 
-- * Message area doesn't scroll on Firefox or Mobile Safari
+## AUTHORS
 
-# AUTHORS
+* Lee Aylward <leedo@cpan.org>
+* Sam Stephenson
+* Ryan Baumann
+* Paul Robins <alice@mon.gs>
+* Clint Ecker
 
-Lee Aylward <leedo@cpan.org>
-
-Sam Stephenson
-
-Ryan Baumann
-
-Paul Robins <alice@mon.gs>
-
-Clint Ecker
-
-# COPYRIGHT
+## COPYRIGHT
 
 Copyright 2009 by Lee Aylward <leedo@cpan.org>
 
