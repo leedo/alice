@@ -11,7 +11,7 @@ use App::Alice::Logger;
 use Any::Moose;
 use File::Copy;
 
-our $VERSION = '0.09';
+our $VERSION = '0.10';
 
 has cond => (
   is       => 'rw',
