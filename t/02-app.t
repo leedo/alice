@@ -1,8 +1,14 @@
 use Test::More;
 use App::Alice;
+use App::Alice::Test::NullLogger;
 
+my $logger = App::Alice::Test::NullLogger->new;
 my $app = App::Alice->new(
-  standalone => 0, path => 't', file => "test_config");
+  logger => $logger,
+  standalone => 0,
+  path => 't/alice',
+  file => "test_config"
+);
 
 $app->add_irc_server("test", {
   nick => "tester",

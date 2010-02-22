@@ -1,9 +1,15 @@
 use Test::More;
 use App::Alice;
 use App::Alice::Test::MockIRC;
+use App::Alice::Test::NullLogger;
 
+my $logger = App::Alice::Test::NullLogger->new;
 my $app = App::Alice->new(
-  standalone => 0, path => 't', file => "test_config");
+  logger => $logger,
+  standalone => 0,
+  path => 't/alice',
+  file => "test_config"
+);
 
 my $cl = App::Alice::Test::MockIRC->new(nick => "tester");
 my $irc = App::Alice::IRC->new(
@@ -67,5 +73,7 @@ ok !$app->find_window("#test3", $irc), "msg to unjoined channel doesn't create w
 $cl->disconnect;
 ok !$irc->is_connected, "disconnect";
 
-done_testing();
+undef $app;
+undef $cl;
 
+done_testing();
