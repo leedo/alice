@@ -34,7 +34,7 @@ sub next_msgid {$_[0]->msgid($_[0]->msgid + 1)}
 
 has irc_map => (
   is      => 'ro',
-  isa     => 'HashRef',
+  isa     => 'HashRef[App::Alice::IRC]',
   default => sub {{}},
 );
 
@@ -191,7 +191,7 @@ sub run {
   $self->httpd;
   $self->notifier;
 
-  print STDERR "Location: http://".$self->config->http_address.":". $self->config->http_port ."/view\n\n";
+  print STDERR "Location: http://".$self->config->http_address.":". $self->config->http_port ."/view\n";
 
   $self->add_irc_server($_, $self->config->servers->{$_})
     for keys %{$self->config->servers};
