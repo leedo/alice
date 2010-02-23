@@ -61,6 +61,7 @@ sub BUILD {
     '/get'          => sub{$self->image_proxy(@_)},
     '/logs'         => sub{$self->send_logs(@_)},
     '/search'       => sub{$self->send_search(@_)},
+    '/'             => sub{$self->send_index(@_)},
     'client_disconnected' => sub{$self->purge_disconnects(@_)},
     request         => sub{$self->check_authentication(@_)},
   );
