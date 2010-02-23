@@ -119,7 +119,7 @@ sub check_authentication {
       return;
     }
     else {
-      $self->log_debug("auth failed");
+      $self->app->log(info => "auth failed");
     }
   }
   $httpd->stop_request;
@@ -128,7 +128,7 @@ sub check_authentication {
 
 sub setup_stream {
   my ($self, $httpd, $req) = @_;
-  $self->log_debug("opening new stream");
+  $self->app->log(info => "opening new stream");
   my $msgid = $req->parm('msgid') || 0;
   $self->add_stream(
     App::Alice::Stream->new(
@@ -156,7 +156,7 @@ sub handle_message {
   if ($window) {
     for (split /\n/, $msg) {
       eval {$self->app->dispatch($_, $window) if length $_};
-      if ($@) {$self->log_debug($@)}
+      if ($@) {$self->app->log(info => $@)}
     }
   }
   $req->respond([200,'ok',{'Content-Type' => 'text/plain'}, 'ok']);
@@ -202,32 +202,29 @@ sub send_index {
 
 sub send_logs {
   my ($self, $httpd, $req) = @_;
-  $self->app->logger->refresh_channels(sub {
-    my $output = $self->app->render('logs', $self->app->logger);
-    $req->respond([200, 'ok', {'Content-Type' => 'text/html; charset=utf-8'}, $output]);
-  });
+  my $output = $self->app->render('logs');
+  $req->respond([200, 'ok', {'Content-Type' => 'text/html; charset=utf-8'}, $output]);
 }
 
 sub send_search {
   my ($self, $httpd, $req) = @_;
-  my $results = $self->app->logger->search($req->vars, sub {
+  my $results = $self->app->history->search($req->vars, sub {
     my $rows = shift;
     my $content = $self->app->render('results', @$rows);
-    $req->respond([200, 'ok', {'Content-Type' => 'text/html; charset=utf-8'},
-      $content]);
+    $req->respond([200, 'ok', {'Content-Type' => 'text/html; charset=utf-8'}, $content]);
   });
 }
 
 sub send_config {
   my ($self, $httpd, $req) = @_;
-  $self->log_debug("serving config");
+  $self->app->log(info => "serving config");
   my $output = $self->app->render('servers');
   $req->respond([200, 'ok', {}, $output]);
 }
 
 sub server_config {
   my ($self, $httpd, $req) = @_;
-  $self->log_debug("serving blank server config");
+  $self->app->log(info => "serving blank server config");
   my $name = $req->parm('name');
   my $config = $self->app->render('new_server', $name);
   my $listitem = $self->app->render('server_listitem', $name);
@@ -237,7 +234,7 @@ sub server_config {
 
 sub save_config {
   my ($self, $httpd, $req) = @_;
-  $self->log_debug("saving config");
+  $self->app->log(info => "saving config");
   my $new_config = {servers => {}};
   my %params = $req->vars;
   for my $name (keys %params) {
@@ -267,7 +264,7 @@ sub save_config {
 
 sub tab_order  {
   my ($self, $httpd, $req) = @_;
-  $self->log_debug("updating tab order");
+  $self->app->log("updating tab order");
   my %vars = $req->vars;
   $self->app->tab_order([
     grep {defined $_} @{$vars{tabs}}
@@ -278,19 +275,6 @@ sub tab_order  {
 sub not_found  {
   my ($self, $req) = @_;
   $req->respond([404,'not found']);
-}
-
-sub log_debug {
-  my $self = shift;
-  return unless $self->config->show_debug and @_;
-  print STDERR join " ", @_ if $self->config->show_debug;
-  print "\n";
-}
-
-sub log_info {
-  return unless @_;
-  print STDERR join " ", @_;
-  print STDERR "\n";
 }
 
 __PACKAGE__->meta->make_immutable;

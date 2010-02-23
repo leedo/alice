@@ -92,13 +92,13 @@ sub BUILD {
     privatemsg     => sub{$self->privatemsg(@_)},
     connect        => sub{$self->connected(@_)},
     disconnect     => sub{$self->disconnected(@_)},
-    irc_001        => sub{$self->log_info($_[1]->{params}[-1])},
+    irc_001        => sub{$self->log(info => $_[1]->{params}[-1])},
     irc_352        => sub{$self->irc_352(@_)}, # WHO info
     irc_366        => sub{$self->irc_366(@_)}, # end of NAMES
-    irc_372        => sub{$self->log_info($_[1]->{params}[-1], 1)}, # MOTD info
-    irc_377        => sub{$self->log_info($_[1]->{params}[-1], 1)}, # MOTD info
-    irc_378        => sub{$self->log_info($_[1]->{params}[-1], 1)}, # MOTD info
-    irc_422        => sub{$self->log_info($_[1]->{params}[-1])}, # No MOTD
+    irc_372        => sub{$self->mlog(debug => $_[1]->{params}[-1])}, # MOTD info
+    irc_377        => sub{$self->mlog(debug => $_[1]->{params}[-1])}, # MOTD info
+    irc_378        => sub{$self->mlog(debug => $_[1]->{params}[-1])}, # MOTD info
+    irc_422        => sub{$self->log(debug => $_[1]->{params}[-1])}, # No MOTD
     irc_464        => sub{$self->disconnect("bad USER/PASS")},
   );
   $self->cl->ctcp_auto_reply ('VERSION', ['VERSION', "alice $App::Alice::VERSION"]);
@@ -110,15 +110,21 @@ sub broadcast {
   $self->app->broadcast(@_);
 }
 
-sub log_info {
-  my ($self, $msg, $monospaced) = @_;
-  return unless $msg;
-  $self->broadcast($self->format_info($msg, $monospaced));
+sub log {
+  my ($self, $level, @messages) = @_;
+  $self->broadcast(map {$self->format_info($_)} @messages);
+  $self->app->log($level => "[".$self->alias . "] $_") for @messages;
+}
+
+sub mlog {
+  my ($self, $level, @messages) = @_;
+  $self->broadcast(map {$self->format_info($_, 1)} @messages);
+  $self->app->log($level => "[".$self->alias . "] $_") for @messages;
 }
 
 sub format_info {
-  my ($self, $msg, $monospaced) = @_;
-  $self->app->log_info($self->alias, $msg, 0, $monospaced);
+  my ($self, $message, $monospaced) = @_;
+  $self->app->format_info($self->alias, $message, 0, $monospaced);
 }
 
 sub window {
@@ -153,14 +159,14 @@ sub connect {
   $self->disabled(0);
   $self->increase_reconnect_count;
   if (!$self->config->{host} or !$self->config->{port}) {
-    $self->log_info("can't connect: missing either host or port");
+    $self->log(info => "can't connect: missing either host or port");
     return;
   }
   if ($self->reconnect_count > 1) {
-    $self->log_info("reconnecting: attempt " . $self->reconnect_count);
+    $self->log(info => "reconnecting: attempt " . $self->reconnect_count);
   }
   else {
-    $self->log_info("connecting");
+    $self->log(debug => "connecting");
   }
   $self->cl->connect(
     $self->config->{host}, $self->config->{port},
@@ -175,12 +181,12 @@ sub connect {
 
 sub connected {
   my ($self, $cl, $err) = @_;
-  $self->log_info("connected");
   if (defined $err) {
-    $self->log_info("connect error: $err");
+    $self->log(info => "connect error: $err");
     $self->reconnect(60);
   }
   else {
+    $self->log(info => "connected");
     $self->reset_reconnect_count;
     $self->connect_time(time);
     $self->is_connected(1);
@@ -190,16 +196,16 @@ sub connected {
 sub reconnect {
   my ($self, $time) = @_;
   if ($self->reconnect_count > 4) {
-    $self->log_info("too many failed reconnects, giving up");
+    $self->log(info => "too many failed reconnects, giving up");
     return;
   }
   my $interval = time - $self->connect_time;
   if ($interval < 30) {
     $time = 30 - $interval;
-    $self->log_info("last attempt was within 30 seconds, delaying $time seconds")
+    $self->log(debug => "last attempt was within 30 seconds, delaying $time seconds")
   }
   $time = 60 unless $time >= 0;
-  $self->log_info("reconnecting in $time seconds");
+  $self->log(debug => "reconnecting in $time seconds");
   $self->reconnect_timer(
     AnyEvent->timer(after => $time, cb => sub {
       $self->connect unless $self->is_connected;
@@ -207,24 +213,30 @@ sub reconnect {
   );
 }
 
+sub cancel_reconnect {
+  my $self = shift;
+  $self->reconnect_timer(undef);
+  $self->reset_reconnect_count;
+}
+
 sub registered {
   my $self = shift;
   my @log;
   $self->cl->enable_ping (60, sub {
     $self->is_connected(0);
-    $self->log_info("ping timeout");
+    $self->log(debug => "ping timeout");
     $self->reconnect(0);
   });
   for (@{$self->config->{on_connect}}) {
-    push @log, $self->format_info("sending $_");
+    push @log, "sending $_";
     $self->cl->send_raw($_);
   }
 
   for (@{$self->config->{channels}}) {
-    push @log, $self->format_info("joining $_");
+    push @log, "joining $_";
     $self->cl->send_srv("JOIN", split /\s+/);
   }
-  $self->broadcast(@log);
+  $self->log(debug => @log);
 };
 
 sub disconnected {
@@ -232,14 +244,20 @@ sub disconnected {
   $reason = "" unless $reason;
   return if $reason eq "reconnect requested.";
   my @windows = $self->windows;
-  my @log = $self->format_info("disconnected: $reason");
+  $self->log(info => "disconnected: $reason");
+  my @messages;
   if ($self->is_connected) {
-    push @log, map {$_->format_event("disconnect", $self->nick, $reason)} @windows;
-    push @log, map {$_->disconnect_action} @windows;
+    push @messages, map {$_->format_event("disconnect", $self->nick, $reason)} @windows;
+    push @messages, map {$_->disconnect_action} @windows;
   }
-  $self->broadcast(@log);
+  $self->broadcast(@messages);
   $self->is_connected(0);
   $self->reconnect(0) unless $self->disabled;
+  if ($self->app->shutting_down) {
+    if (!$self->app->connected_ircs) {
+      $self->app->cond->send;
+    }
+  }
   if ($self->removed) {
     $self->app->remove_irc($self->alias);
     undef $self;
@@ -249,9 +267,13 @@ sub disconnected {
 sub disconnect {
   my ($self, $msg) = @_;
   $self->disabled(1);
-  $self->log_info("Disconnecting: $msg") if $msg;
+  $self->log(debug => "disconnecting: $msg") if $msg;
   if ($self->is_connected) {
     $self->cl->send_srv("QUIT" => $self->app->config->quitmsg);
+    AnyEvent->timer(after => 3, cb => sub {
+      $self->is_connected(0) if $self->is_connected;
+      $self->log(debug => "forced disconnect");
+    });
   }
   else {
     $self->cl->disconnect;
@@ -270,7 +292,7 @@ sub publicmsg {
     my $nick = (split '!', $msg->{prefix})[0];
     return if $self->app->is_ignore($nick);
     my $text = $msg->{params}[1];
-    $self->app->logger->log_message(time, $nick, $channel, $text);
+    $self->app->store($nick, $channel, $text);
     $self->broadcast($window->format_message($nick, $text)); 
   }
 }
@@ -282,11 +304,11 @@ sub privatemsg {
     my $from = (split /!/, $msg->{prefix})[0];
     return if $self->app->is_ignore($from);
     my $window = $self->window($from);
-    $self->app->logger->log_message(time, $from, $from, $text);
+    $self->app->store($from, $from, $text);
     $self->broadcast($window->format_message($from, $text)); 
   }
   elsif ($msg->{command} eq "NOTICE") {
-    $self->log_info($text);
+    $self->log(debug => $text);
   }
 }
 
@@ -295,7 +317,7 @@ sub ctcp_action {
   return if $self->app->is_ignore($nick);
   if (my $window = $self->find_window($channel)) {
     my $text = "• $msg";
-    $self->app->logger->log_message(time, $nick, $channel, $text);
+    $self->app->store($nick, $channel, $text);
     $self->broadcast($window->format_message($nick, $text));
   }
 }
@@ -347,7 +369,7 @@ sub channel_add {
 sub part {
   my ($self, $cl, $nick, $channel, $is_self, $msg) = @_;
   if ($is_self and my $window = $self->find_window($channel)) {
-    $self->log_info("leaving $channel");
+    $self->log(debug => "leaving $channel");
     $self->app->close_window($window);
   }
 }
@@ -477,12 +499,6 @@ sub whois_table {
   return "No info for user \"$nick\"" if !$info;
   return "real: $info->{real}\nhost: $info->{IP}\nserver: $info->{server}\nchannels: " .
          join " ", keys %{$info->{channels}};
-}
-
-sub log_debug {
-  my $self = shift;
-  return unless $self->config->show_debug and @_;
-  say STDERR join " ", @_;;
 }
 
 __PACKAGE__->meta->make_immutable;
