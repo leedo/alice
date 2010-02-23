@@ -98,7 +98,6 @@ sub BUILD {
     irc_372        => sub{$self->log_info($_[1]->{params}[-1], 1)}, # MOTD info
     irc_377        => sub{$self->log_info($_[1]->{params}[-1], 1)}, # MOTD info
     irc_378        => sub{$self->log_info($_[1]->{params}[-1], 1)}, # MOTD info
-    irc_422        => sub{$self->log_info($_[1]->{params}[-1])}, # No MOTD
     irc_464        => sub{$self->disconnect("bad USER/PASS")},
   );
   $self->cl->ctcp_auto_reply ('VERSION', ['VERSION', "alice $App::Alice::VERSION"]);
