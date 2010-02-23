@@ -174,6 +174,7 @@ sub timestamp {
 sub format_event {
   my ($self, $event, $nick, $body) = @_;
   $body = decode("utf8", $body, Encode::FB_QUIET);
+  $nick = decode("utf8", $nick, Encode::FB_QUIET);
   my $message = {
     type      => "message",
     event     => $event,
@@ -192,6 +193,7 @@ sub format_event {
 sub format_message {
   my ($self, $nick, $body) = @_;
   $body = decode("utf8", $body, Encode::FB_QUIET);
+  $nick = decode("utf8", $nick, Encode::FB_QUIET);
   my $html = IRC::Formatting::HTML->formatted_string_to_html($body);
   my $own_nick = $self->nick;
   my $message = {
