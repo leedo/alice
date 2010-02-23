@@ -45,9 +45,7 @@ sub handle {
     if ($command =~ /$re/) {
       my @args = grep {defined $_} ($5, $4, $3, $2, $1); # up to 5 captures
       if ($handler->{in_channel} and !$window->is_channel) {
-        $self->broadcast(
-          $window->format_announcement("$command can only be used in a channel")
-        );
+        $self->reply($window, "$command can only be used in a channel");
       }
       else {
         my $sub = $handler->{sub};
@@ -55,8 +53,7 @@ sub handle {
           $self->$sub($window, @args);
         }
         else {
-          $self->broadcast($self->app->log_info(
-            "Error handling $command: $sub sub not found"));
+          $self->reply($window, "Error handling $command: $sub sub not found");
         }
       }
       return;
@@ -66,12 +63,12 @@ sub handle {
 
 sub names {
   my ($self, $window) = @_;
-  $self->broadcast($window->format_announcement($window->nick_table));
+  $self->reply($window, $window->nick_table);
 }
 
 sub whois {
   my ($self, $window, $nick) = @_;
-  $self->broadcast($window->format_announcement($window->irc->whois_table($nick)));
+  $self->reply($window, $window->irc->whois_table($nick));
 }
 
 sub msg {
@@ -94,7 +91,7 @@ sub _join {
   }
   my @params = split /\s+/, $channel;
   if ($irc and $irc->cl->is_channel_name($params[0])) {
-    $self->broadcast($irc->log_info("joining $params[0]"));
+    $irc->log(info => "joining $params[0]");
     $irc->cl->send_srv(JOIN => @params);
   }
 }
@@ -140,7 +137,7 @@ sub topic {
 
 sub me {
   my ($self, $window, $action) = @_;
-  $self->broadcast($window->format_message($window->nick, "• $action"));
+  $self->show($window, "• $action");
   $window->irc->cl->send_srv(PRIVMSG => $window->title, chr(01) . "ACTION $action" . chr(01));
 }
 
@@ -154,6 +151,13 @@ sub disconnect {
   my $irc = $self->app->get_irc($network);
   if ($irc and $irc->is_connected) {
     $irc->disconnect;
+  }
+  elsif ($irc->reconnect_timer) {
+    $irc->cancel_reconnect;
+    $irc->log(info => "canceled reconnect");
+  }
+  else {
+    $self->reply($window, "already disconnected");
   }
 }
 
@@ -169,31 +173,41 @@ sub ignores {
   my ($self, $window) = @_;
   my $msg = join ", ", $self->app->ignores;
   $msg = "none" unless $msg;
-  $self->broadcast($window->format_announcement("Ignoring:\n$msg"));
+  $self->reply($window, "Ignoring:\n$msg");
 }
 
 sub ignore {
   my ($self, $window, $nick) = @_;
   $self->app->add_ignore($nick);
-  $self->broadcast($window->format_announcement("Ignoring $nick"));
+  $self->reply($window, "Ignoring $nick");
 }
 
 sub unignore {
   my ($self, $window, $nick) = @_;
   $self->app->remove_ignore($nick);
-  $self->broadcast($window->format_announcement("No longer ignoring $nick"));
+  $self->reply($window, "No longer ignoring $nick");
 }
 
 sub notfound {
   my ($self, $window, $command) = @_;
-  $self->broadcast($window->format_announcement("Invalid command $command"));
+  $self->reply($window, "Invalid command $command");
 }
 
 sub _say {
   my ($self, $window, $msg) = @_;
-  $self->app->logger->log_message(time, $window->nick, $window->title, $msg);
-  $self->broadcast($window->format_message($window->nick, $msg));
+  $self->app->store($window->nick, $window->title, $msg);
+  $self->show($window, $msg);
   $window->irc->cl->send_srv(PRIVMSG => $window->title, $msg);
+}
+
+sub show {
+  my ($self, $window, $message) = @_;
+  $self->app->broadcast($window->format_message($window->nick, $message));
+}
+
+sub reply {
+  my ($self, $window, $message) = @_;
+  $self->app->broadcast($window->format_announcement($message));
 }
 
 sub broadcast {

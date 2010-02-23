@@ -8,6 +8,7 @@ use App::Alice::IRC;
 use App::Alice::Signal;
 use App::Alice::Config;
 use App::Alice::Logger;
+use App::Alice::History;
 use Any::Moose;
 use File::Copy;
 
@@ -90,12 +91,12 @@ has notifier => (
         $notifier = App::Alice::Notifier::LibNotify->new;
       }
     };
-    $self->log_debug("Notifications disabled...\n") if !$notifier;
+    $self->log(info => "Notifications disabled") unless $notifier;
     return $notifier;
   }
 );
 
-has logger => (
+has history => (
   is      => 'ro',
   lazy    => 1,
   default => sub {
@@ -104,11 +105,23 @@ has logger => (
       copy($self->config->assetdir."/log.db",
            $self->config->path."/log.db");
     }
-    App::Alice::Logger->new(
+    App::Alice::History->new(
       dbfile => $self->config->path ."/log.db"
     );
   },
 );
+
+sub store {
+  my $self = shift;
+  $self->history->store(@_);
+}
+
+has logger => (
+  is        => 'ro',
+  default   => sub {App::Alice::Logger->new},
+);
+
+sub log {$_[0]->logger->log($_[1] => $_[2]) if $_[0]->config->show_debug}
 
 has window_map => (
   is        => 'rw',
@@ -151,10 +164,16 @@ has 'info_window' => (
   }
 );
 
+has 'shutting_down' => (
+  is => 'rw',
+  default => 0,
+  isa => 'Bool',
+);
+
 sub BUILDARGS {
   my ($class, %options) = @_;
   my $self = {standalone => 1};
-  for (qw/standalone logger notifier/) {
+  for (qw/standalone history notifier/) {
     if (exists $options{$_}) {
       $self->{$_} = $options{$_};
       delete $options{$_};
@@ -170,13 +189,12 @@ sub run {
   $self->info_window;
   $self->template;
   $self->httpd;
-  $self->logger;
   $self->notifier;
+
+  print STDERR "Location: http://".$self->config->http_address.":". $self->config->http_port ."/view\n\n";
 
   $self->add_irc_server($_, $self->config->servers->{$_})
     for keys %{$self->config->servers};
-
-  print STDERR "Location: http://".$self->config->http_address.":". $self->config->http_port ."/view\n";
   
   if ($self->standalone) { 
     $self->cond(AnyEvent->condvar);
@@ -190,14 +208,15 @@ sub run {
     }
 
     $self->cond->wait;
-    print STDERR "Disconnecting, please wait\n";
+    print STDERR "\nDisconnecting, please wait\n";
     $self->httpd->ping_timer(undef);
-    $_->disconnect('alice') for $self->ircs;
+    $self->shutting_down(1);
+    $_->disconnect('alice') for $self->connected_ircs;
     my $timer = AnyEvent->timer(
       after => 3,
-      cb    => sub{exit(0)}
+      cb    => sub{$self->cond->send}
     );
-    AnyEvent->condvar->wait;
+    $self->cond(AE::cv)->wait;
   }
 }
 
@@ -300,7 +319,7 @@ sub sorted_windows {
 sub close_window {
   my ($self, $window) = @_;
   $self->broadcast($window->close_action);
-  $self->log_debug("sending a request to close a tab: " . $window->title)
+  $self->log(debug => "sending a request to close a tab: " . $window->title)
     if $self->httpd->stream_count;
   $self->remove_window($window->id);
 }
@@ -335,7 +354,7 @@ sub reload_config {
   }
 }
 
-sub log_info {
+sub format_info {
   my ($self, $session, $body, $highlight, $monospaced) = @_;
   $highlight = 0 unless $highlight;
   $self->info_window->format_message($session, $body, $highlight, $monospaced);
@@ -397,12 +416,6 @@ sub remove_ignore {
 sub ignores {
   my $self = shift;
   return $self->config->ignores;
-}
-
-sub log_debug {
-  my $self = shift;
-  return unless $self->config->show_debug and @_;
-  print STDERR join(" ", @_), "\n";
 }
 
 __PACKAGE__->meta->make_immutable;
