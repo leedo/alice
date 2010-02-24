@@ -202,12 +202,12 @@ sub _say {
 
 sub show {
   my ($self, $window, $message) = @_;
-  $self->app->broadcast($window->format_message($window->nick, $message));
+  $self->broadcast($window->format_message($window->nick, $message));
 }
 
 sub reply {
   my ($self, $window, $message) = @_;
-  $self->app->broadcast($window->format_announcement($message));
+  $self->broadcast($window->format_announcement($message));
 }
 
 sub broadcast {

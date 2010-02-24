@@ -208,16 +208,25 @@ sub run {
     }
 
     $self->cond->wait;
+    
     print STDERR "\nDisconnecting, please wait\n";
+    
     $self->httpd->ping_timer(undef);
     $self->shutting_down(1);
     $_->disconnect('alice') for $self->connected_ircs;
+    
     my $timer = AnyEvent->timer(
       after => 3,
       cb    => sub{$self->cond->send}
     );
+    
     $self->cond(AE::cv)->wait;
   }
+}
+
+sub shutdown {
+  my $self = shift;
+  $self->cond->send if $self->cond;
 }
 
 sub dispatch {
