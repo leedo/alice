@@ -191,7 +191,7 @@ sub run {
   $self->httpd;
   $self->notifier;
 
-  print STDERR "Location: http://".$self->config->http_address.":". $self->config->http_port ."/view\n";
+  print STDERR "Location: http://".$self->config->http_address.":".$self->config->http_port."/\n";
 
   $self->add_irc_server($_, $self->config->servers->{$_})
     for keys %{$self->config->servers};
