@@ -1,78 +1,34 @@
 package App::Alice::Logger;
 
 use Any::Moose;
-use AnyEvent::DBI;
-use AnyEvent::IRC::Util qw/filter_colors/;
-use SQL::Abstract;
 
-has dbh => (
+has callbacks => (
   is => 'ro',
-  isa => 'AnyEvent::DBI',
-  lazy => 1,
+  isa => 'HashRef',
   default => sub {
-    my $self = shift;
-    AnyEvent::DBI->new("DBI:SQLite:dbname=".$self->dbfile,"","");
+    my $hashref = {map {uc $_ => [\&print_line]} qw/debug info warn error fatal/};
   }
 );
 
-has sql => (
-  is => 'ro',
-  isa => 'SQL::Abstract',
-  default => sub {SQL::Abstract->new(cmp => "like")},
-);
-
-has dbfile => (
-  is => 'ro',
-  isa => 'Str',
-  required => 1,
-);
-
-has channels => (
-  is => 'rw',
-  isa => 'ArrayRef[Str]',
-  lazy => 1,
-  default => sub {
-    my $self = shift;
-    $self->refresh_channels;
-    return [];
-  }
-);
-
-sub BUILD {
-  my $self = shift;
-  $self->dbh;
-  $self->channels;
+sub add_cb {
+  my ($self, $level, $cb) = @_;
+  return unless $self->callbacks->{$level};
+  push @{$self->callbacks->{$level}}, $cb;
 }
 
-sub log_message {
-  my ($self, @fields) = @_;
-  $fields[3] = filter_colors($fields[3]);
-  my $sth = $self->dbh->exec(
-    "INSERT INTO messages (time,nick,channel,body) VALUES(?,?,?,?)"
-  , @fields, sub {});
+sub log {
+  my ($self, $level, $message) = @_;
+  $level = uc $level;
+  return unless @{$self->callbacks->{$level}};
+  $_->($level, $message) for @{$self->callbacks->{$level}};
 }
 
-sub search {
-  my $cb = pop;
-  my ($self, %query) = @_;
-  %query = map {$_ => "%$query{$_}%"} grep {$query{$_}} keys %query;
-  my ($stmt, @bind) = $self->sql->select("messages", '*', \%query, {-desc => 'time'});
-  $self->dbh->exec($stmt, @bind, sub {
-    my ($db, $rows, $rv) = @_;
-    $cb->($rows);
-  });
-}
-
-sub refresh_channels {
-  my ($self, $cb) = @_;
-  $self->dbh->exec(
-    "SELECT DISTINCT channel FROM messages",
-    , (), sub {
-      my ($dbh, $rows, $rv) = @_;
-      $self->channels([map {$_->[0]} @$rows]);
-      $cb->() if $cb;
-    }
-  );
+sub print_line {
+  my ($level, $message) = @_;
+  my ($sec, $min, $hour, $day, $mon, $year) = localtime(time);
+  $level = sprintf "%-5s", $level;
+  my $datestring = sprintf "%02d:%02d:%02d %02d/%02d/%02d", $hour, $min, $sec, $mon, $day, $year % 100;
+  print STDERR substr($level, 0, 1) . ", [$datestring] $level -- : $message\n";
 }
 
 1;

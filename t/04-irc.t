@@ -1,11 +1,11 @@
 use Test::More;
 use App::Alice;
 use App::Alice::Test::MockIRC;
-use App::Alice::Test::NullLogger;
+use App::Alice::Test::NullHistory;
 
-my $logger = App::Alice::Test::NullLogger->new;
+my $history = App::Alice::Test::NullHistory->new;
 my $app = App::Alice->new(
-  logger => $logger,
+  history => $history,
   standalone => 0,
   path => 't/alice',
   file => "test_config"
