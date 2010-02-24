@@ -175,7 +175,7 @@ sub handle_static {
   my $headers;
   if (-e $self->config->assetdir . "/$file") {
     open my $fh, '<', $self->config->assetdir . "/$file";
-    if ($ext =~ /^(?:png|gif|jpg|jpeg)$/i) {
+    if ($ext =~ /^(?:png|gif|jpe?g)$/i) {
       $headers = {"Content-Type" => "image/$ext"};
     }
     elsif ($ext =~ /^js$/) {
@@ -193,8 +193,9 @@ sub handle_static {
     else {
       return $self->not_found($req);
     }
-    my @file = <$fh>;
-    $req->respond([200, 'ok', $headers, join("", @file)]);
+    my $content = '';
+    { local $/; $content = <$fh>; }
+    $req->respond([200, 'ok', $headers, $content]);
     return;
   }
   $self->not_found($req);
