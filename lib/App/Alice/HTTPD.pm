@@ -65,6 +65,7 @@ sub BUILD {
     'client_disconnected' => sub{$self->purge_disconnects(@_)},
     request         => sub{$self->check_authentication(@_)},
   );
+  $httpd->reg_cb('' => sub{$self->not_found($_[1])});
   $self->httpd($httpd);
   $self->ping;
 }
@@ -265,7 +266,7 @@ sub save_config {
 
 sub tab_order  {
   my ($self, $httpd, $req) = @_;
-  $self->app->log("updating tab order");
+  $self->app->log(debug => "updating tab order");
   my %vars = $req->vars;
   $self->app->tab_order([
     grep {defined $_} @{$vars{tabs}}
@@ -275,6 +276,7 @@ sub tab_order  {
 
 sub not_found  {
   my ($self, $req) = @_;
+  $self->app->log(debug => "sending 404 " . $req->url);
   $req->respond([404,'not found']);
 }
 
