@@ -372,7 +372,7 @@ sub format_info {
 sub broadcast {
   my ($self, @messages) = @_;
   # add any highlighted messages to the log window
-  push @messages, map {$self->log_info($_->{nick}, $_->{body}, 1)}
+  push @messages, map {$self->format_info($_->{nick}, $_->{body}, 1)}
                   grep {$_->{highlight}} @messages;
   
   $self->httpd->broadcast(@messages);

@@ -79,7 +79,10 @@ sub msg {
   }
   return unless $irc;
   my $new_window = $self->app->find_or_create_window($nick, $irc);
-  $self->broadcast($new_window->join_action);
+  $self->broadcast(
+    $new_window->join_action,
+    $new_window->format_message($new_window->nick, $msg),
+  );
   $irc->cl->send_srv(PRIVMSG => $nick, $msg);
 }
 
