@@ -86,6 +86,7 @@ sub ping {
 
 sub image_proxy {
   my ($self, $httpd, $req) = @_;
+  $httpd->stop_request;
   my $url = $req->url;
   if (my %vars = $req->vars) {
     my $query = join "&", map {"$_=$vars{$_}"} keys %vars;
@@ -130,6 +131,7 @@ sub check_authentication {
 
 sub setup_stream {
   my ($self, $httpd, $req) = @_;
+  $httpd->stop_request;
   $self->app->log(info => "opening new stream");
   my $msgid = $req->parm('msgid') || 0;
   $self->add_stream(
@@ -152,6 +154,7 @@ sub purge_disconnects {
 
 sub handle_message {
   my ($self, $httpd, $req) = @_;
+  $httpd->stop_request;
   my $msg  = $req->parm('msg');
   my $source = $req->parm('source');
   my $window = $self->app->get_window($source);
@@ -166,6 +169,7 @@ sub handle_message {
 
 sub handle_static {
   my ($self, $httpd, $req) = @_;
+  $httpd->stop_request;
   my $file = $req->url;
   my ($ext) = ($file =~ /[^\.]\.(.+)$/);
   my $headers;
@@ -198,18 +202,21 @@ sub handle_static {
 
 sub send_index {
   my ($self, $httpd, $req) = @_;
+  $httpd->stop_request;
   my $output = $self->app->render('index');
   $req->respond([200, 'ok', {'Content-Type' => 'text/html; charset=utf-8'}, $output]);
 }
 
 sub send_logs {
   my ($self, $httpd, $req) = @_;
+  $httpd->stop_request;
   my $output = $self->app->render('logs');
   $req->respond([200, 'ok', {'Content-Type' => 'text/html; charset=utf-8'}, $output]);
 }
 
 sub send_search {
   my ($self, $httpd, $req) = @_;
+  $httpd->stop_request;
   my $results = $self->app->history->search($req->vars, sub {
     my $rows = shift;
     my $content = $self->app->render('results', @$rows);
@@ -219,6 +226,7 @@ sub send_search {
 
 sub send_config {
   my ($self, $httpd, $req) = @_;
+  $httpd->stop_request;
   $self->app->log(info => "serving config");
   my $output = $self->app->render('servers');
   $req->respond([200, 'ok', {}, $output]);
@@ -226,6 +234,7 @@ sub send_config {
 
 sub server_config {
   my ($self, $httpd, $req) = @_;
+  $httpd->stop_request;
   $self->app->log(info => "serving blank server config");
   my $name = $req->parm('name');
   my $config = $self->app->render('new_server', $name);
@@ -236,6 +245,7 @@ sub server_config {
 
 sub save_config {
   my ($self, $httpd, $req) = @_;
+  $httpd->stop_request;
   $self->app->log(info => "saving config");
   my $new_config = {servers => {}};
   my %params = $req->vars;
@@ -266,6 +276,7 @@ sub save_config {
 
 sub tab_order  {
   my ($self, $httpd, $req) = @_;
+  $httpd->stop_request;
   $self->app->log(debug => "updating tab order");
   my %vars = $req->vars;
   $self->app->tab_order([
