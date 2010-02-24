@@ -101,4 +101,5 @@ sub reg_cb {
   }
 }
 
+__PACKAGE__->meta->make_immutable;
 1;

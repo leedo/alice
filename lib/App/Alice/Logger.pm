@@ -31,4 +31,5 @@ sub print_line {
   print STDERR substr($level, 0, 1) . ", [$datestring] $level -- : $message\n";
 }
 
+__PACKAGE__->meta->make_immutable;
 1;
