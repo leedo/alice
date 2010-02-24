@@ -45,11 +45,7 @@ has 'request' => (
 has callback => (
   is  => 'rw',
   isa => 'CodeRef',
-  default => sub {
-    sub {
-      print STDERR "no data callback set up on stream yet!\n"
-    }
-  }
+  default => sub {}
 );
 
 sub BUILD {
