@@ -251,13 +251,16 @@ sub disconnected {
   if ($self->is_connected) {
     $self->broadcast(map {
       $_->format_event("disconnect", $self->nick, $reason), $_->disconnect_action
-    } $self->windows)
+    } $self->windows);
+    $self->is_connected(0);
   }
   
-  $self->is_connected(0);
-  $self->reconnect(0) unless $self->disabled;
+  if ($self->app->shutting_down and !$self->app->connected_ircs) {
+    $self->app->shutdown;
+    return;
+  }
   
-  $self->app->shutdown if $self->app->shutting_down and !$self->app->connected_ircs;
+  $self->reconnect(0) unless $self->disabled;
   
   if ($self->removed) {
     $self->app->remove_irc($self->alias);
@@ -381,22 +384,23 @@ sub part {
 
 sub channel_remove {
   my ($self, $cl, $msg, $channel, @nicks) = @_;
+  
   return if !@nicks or grep {$_ eq $self->nick} @nicks;
+  
   if (my $window = $self->find_window($channel)) {
     my $body;
     if ($msg->{command} eq "PART") {
       for (@nicks) {
-        delete $self->nicks->{$_}{channels}{$channel};
-        $self->remove_nick($_) if !keys %{$self->nicks->{$_}{channels}};
+        next unless $self->includes_nick($_);
+        delete $self->get_nick_info($_)->{channels}{$channel};
+        $self->remove_nick($_) if $self->nick_channels($_);
       }
     }
     else {
       $self->remove_nicks(@nicks);
       $body = $msg->{params}[0];
     }
-    $self->broadcast(
-      map {$window->format_event("left", $_, $body)} @nicks
-    );
+    $self->broadcast(map {$window->format_event("left", $_, $body)} @nicks);
   }
 }
 
@@ -429,12 +433,14 @@ sub nick_windows {
 
 sub irc_352 {
   my ($self, $cl, $msg) = @_;
+  
   # ignore the first param if it is our own nick, some servers include it
   shift @{$msg->{params}} if $msg->{params}[0] eq $self->nick;
   my ($channel, $user, $ip, $server, $nick, $flags, @real) = @{$msg->{params}};
   my $real = join " ", @real;
   return unless $nick;
   $real =~ s/^\d // if $real;
+  
   my $info = {
     IP       => $ip     || "",
     server   => $server || "",
@@ -442,6 +448,7 @@ sub irc_352 {
     channels => {$channel => $flags},
     nick     => $nick,
   };
+  
   if ($self->includes_nick($nick)) {
     my $prev_info = $self->get_nick_info($nick);
     $info->{channels} = {
@@ -449,6 +456,7 @@ sub irc_352 {
       %{$info->{channels}},
     }
   }
+  
   $self->set_nick_info($nick, $info);
 }
 
