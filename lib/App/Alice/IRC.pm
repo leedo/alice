@@ -92,7 +92,7 @@ sub BUILD {
     privatemsg     => sub{$self->privatemsg(@_)},
     connect        => sub{$self->connected(@_)},
     disconnect     => sub{$self->disconnected(@_)},
-    irc_001        => sub{$self->log(info => $_[1]->{params}[-1])},
+    irc_001        => sub{$self->log(debug => $_[1]->{params}[-1])},
     irc_352        => sub{$self->irc_352(@_)}, # WHO info
     irc_366        => sub{$self->irc_366(@_)}, # end of NAMES
     irc_372        => sub{$self->mlog(debug => $_[1]->{params}[-1])}, # MOTD info
@@ -221,11 +221,13 @@ sub cancel_reconnect {
 sub registered {
   my $self = shift;
   my @log;
+  
   $self->cl->enable_ping (60, sub {
     $self->is_connected(0);
     $self->log(debug => "ping timeout");
     $self->reconnect(0);
   });
+  
   for (@{$self->config->{on_connect}}) {
     push @log, "sending $_";
     $self->cl->send_raw($_);
@@ -235,28 +237,28 @@ sub registered {
     push @log, "joining $_";
     $self->cl->send_srv("JOIN", split /\s+/);
   }
+  
   $self->log(debug => @log);
 };
 
 sub disconnected {
   my ($self, $cl, $reason) = @_;
+  
   $reason = "" unless $reason;
   return if $reason eq "reconnect requested.";
-  my @windows = $self->windows;
   $self->log(info => "disconnected: $reason");
-  my @messages;
+  
   if ($self->is_connected) {
-    push @messages, map {$_->format_event("disconnect", $self->nick, $reason)} @windows;
-    push @messages, map {$_->disconnect_action} @windows;
+    $self->broadcast(map {
+      $_->format_event("disconnect", $self->nick, $reason), $_->disconnect_action
+    } $self->windows)
   }
-  $self->broadcast(@messages);
+  
   $self->is_connected(0);
   $self->reconnect(0) unless $self->disabled;
-  if ($self->app->shutting_down) {
-    if (!$self->app->connected_ircs) {
-      $self->app->cond->send;
-    }
-  }
+  
+  $self->app->shutdown if $self->app->shutting_down and !$self->app->connected_ircs;
+  
   if ($self->removed) {
     $self->app->remove_irc($self->alias);
     undef $self;
@@ -265,10 +267,14 @@ sub disconnected {
 
 sub disconnect {
   my ($self, $msg) = @_;
+  
   $self->disabled(1);
+  
   $self->log(debug => "disconnecting: $msg") if $msg;
+  
   if ($self->is_connected) {
     $self->cl->send_srv("QUIT" => $self->app->config->quitmsg);
+    
     AnyEvent->timer(after => 3, cb => sub {
       $self->is_connected(0) if $self->is_connected;
       $self->log(debug => "forced disconnect");
@@ -423,7 +429,7 @@ sub nick_windows {
 
 sub irc_352 {
   my ($self, $cl, $msg) = @_;
-  # ignore the first param if it our nick, some servers include it
+  # ignore the first param if it is our own nick, some servers include it
   shift @{$msg->{params}} if $msg->{params}[0] eq $self->nick;
   my ($channel, $user, $ip, $server, $nick, $flags, @real) = @{$msg->{params}};
   my $real = join " ", @real;
