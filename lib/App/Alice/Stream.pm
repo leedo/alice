@@ -45,7 +45,7 @@ has 'request' => (
 has callback => (
   is  => 'rw',
   isa => 'CodeRef',
-  default => sub {}
+  default => sub {sub{}}
 );
 
 sub BUILD {
@@ -55,7 +55,7 @@ sub BUILD {
   $self->offset($local_time - $remote_time);
   $self->request->respond([
     200, 'ok', {'Content-Type' => 'multipart/mixed; boundary='.$self->seperator.'; charset=utf-8'},
-    sub {ref $_[0] eq 'CODE' ? $self->callback($_[0]) : $self->disconnected(1)}
+    sub {ref $_[0] ? $self->callback($_[0]) : $self->disconnected(1)}
   ]);
   $self->broadcast;
 }
