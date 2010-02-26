@@ -393,7 +393,7 @@ sub channel_remove {
       for (@nicks) {
         next unless $self->includes_nick($_);
         delete $self->get_nick_info($_)->{channels}{$channel};
-        $self->remove_nick($_) if $self->nick_channels($_);
+        $self->remove_nick($_) unless $self->nick_channels($_);
       }
     }
     else {
