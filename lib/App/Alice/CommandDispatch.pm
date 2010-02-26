@@ -10,7 +10,7 @@ has 'handlers' => (
     my $self = shift;
     [
       {sub => '_say',     re => qr{^([^/].*)}s},
-      {sub => 'msg',      re => qr{^/(?:msg|query)\s+$SRVOPT(\S+)(?:\s+(.+))?}},
+      {sub => 'msg',      re => qr{^/(?:msg|query)\s+$SRVOPT(\S+)(.*)}},
       {sub => 'nick',     re => qr{^/nick\s+(\S+)}},
       {sub => 'names',    re => qr{^/n(?:ames)?}, in_channel => 1},
       {sub => '_join',    re => qr{^/j(?:oin)?\s+$SRVOPT(.+)}},
@@ -72,18 +72,28 @@ sub whois {
 }
 
 sub msg {
-  my ($self, $window, $msg, $nick, $network) = @_;
+  my $self = shift;
+  my $window = shift;
+  my ($msg, $nick, $network);
+  if (@_ == 3) {
+    ($msg, $nick, $network) = @_;
+  }
+  elsif (@_ == 2) {
+    ($msg, $nick) = @_;
+  }
+  $msg =~ s/^\s+//;
   my $irc = $window->irc;
   if ($network and $self->app->has_irc($network)) {
     $irc = $self->app->get_irc($network);
   }
   return unless $irc;
   my $new_window = $self->app->find_or_create_window($nick, $irc);
-  $self->broadcast(
-    $new_window->join_action,
-    $new_window->format_message($new_window->nick, $msg),
-  );
-  $irc->cl->send_srv(PRIVMSG => $nick, $msg);
+  my @msgs = ($new_window->join_action);
+  if ($msg) {
+    push @msgs, $new_window->format_message($new_window->nick, $msg);
+    $irc->cl->send_srv(PRIVMSG => $nick, $msg) if $msg;
+  }
+  $self->broadcast(@msgs);
 }
 
 sub _join {
