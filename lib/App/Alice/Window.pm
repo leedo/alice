@@ -194,7 +194,10 @@ sub format_message {
   my ($self, $nick, $body) = @_;
   $body = decode("utf8", $body, Encode::FB_QUIET);
   $nick = decode("utf8", $nick, Encode::FB_QUIET);
-  my $html = IRC::Formatting::HTML->formatted_string_to_html($body);
+  # check for formatting
+  if ($body =~ /(?:\002|\003|\017|\026|\037)/) {
+    $body = IRC::Formatting::HTML->formatted_string_to_html($body);
+  }
   my $own_nick = $self->nick;
   my $message = {
     type      => "message",
@@ -204,13 +207,13 @@ sub format_message {
     window    => $self->serialized,
     body      => $body,
     highlight => $body =~ /\b$own_nick\b/i ? 1 : 0,
-    html      => encoded_string($html),
+    html      => encoded_string($body),
     self      => $own_nick eq $nick,
     msgid     => $self->app->next_msgid,
     timestamp => $self->timestamp,
   };
   $message->{full_html} = $self->app->render("message", $message);
-  $message->{html} = "$html";
+  $message->{html} = "$body";
   $self->add_message($message);
   return $message;
 }
