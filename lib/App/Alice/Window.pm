@@ -191,7 +191,7 @@ sub format_event {
 sub format_message {
   my ($self, $nick, $body) = @_;
   $body = decode_utf8($body) unless utf8::is_utf8($body);
-  $body = IRC::Formatting::HTML->formatted_string_to_html($body);
+  my $html = IRC::Formatting::HTML->formatted_string_to_html($body);
   my $own_nick = $self->nick;
   my $message = {
     type      => "message",
@@ -201,13 +201,13 @@ sub format_message {
     window    => $self->serialized,
     body      => $body,
     highlight => $body =~ /\b$own_nick\b/i ? 1 : 0,
-    html      => encoded_string($body),
+    html      => encoded_string($html),
     self      => $own_nick eq $nick,
     msgid     => $self->app->next_msgid,
     timestamp => $self->timestamp,
   };
   $message->{full_html} = $self->app->render("message", $message);
-  $message->{html} = "$body";
+  $message->{html} = "$html";
   $self->add_message($message);
   return $message;
 }
