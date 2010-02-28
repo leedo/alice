@@ -272,12 +272,12 @@ sub disconnected {
   return if $reason eq "reconnect requested.";
   $self->log(info => "disconnected: $reason");
   
-  if ($self->is_connected) {
-    $self->broadcast(map {
-      $_->format_event("disconnect", $self->nick, $reason), $_->disconnect_action
-    } $self->windows);
-    $self->is_connected(0);
-  }
+  $self->broadcast(map {
+    $_->format_event("disconnect", $self->nick, $reason),
+    $_->disconnect_action
+  } $self->windows);
+  
+  $self->is_connected(0);
   
   if ($self->app->shutting_down and !$self->app->connected_ircs) {
     $self->app->shutdown;
@@ -307,9 +307,6 @@ sub disconnect {
       $self->is_connected(0) if $self->is_connected;
       $self->log(debug => "forced disconnect");
     });
-  }
-  else {
-    $self->cl->disconnect;
   }
 }
 
