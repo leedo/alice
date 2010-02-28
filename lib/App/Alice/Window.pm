@@ -96,7 +96,7 @@ sub serialized {
 
 sub nick {
   my $self = shift;
-  decode_utf8($self->irc->nick);
+  decode_utf8($self->irc->nick) unless utf8::is_utf8($self->irc->nick);
 }
 
 sub all_nicks {
@@ -190,7 +190,7 @@ sub format_event {
 
 sub format_message {
   my ($self, $nick, $body) = @_;
-  $body = decode("utf8", $body, Encode::FB_QUIET);
+  $body = decode_utf8($body) unless utf8::is_utf8($body);
   # check for formatting
   if ($body =~ /(?:\002|\003|\017|\026|\037)/) {
     $body = IRC::Formatting::HTML->formatted_string_to_html($body);
@@ -217,7 +217,7 @@ sub format_message {
 
 sub format_announcement {
   my ($self, $msg) = @_;
-  $msg = decode("utf8", $msg, Encode::FB_QUIET);
+  $msg = decode_utf8($msg) unless utf8::is_utf8($msg);
   my $message = {
     type    => "message",
     event   => "announce",
@@ -241,7 +241,7 @@ sub close_action {
 sub part {
   my $self = shift;
   return unless $self->is_channel;
-  $self->irc->cl->send_srv(PART => encode_utf8($self->title));
+  $self->irc->send_srv(PART => $self->title);
 }
 
 sub set_topic {
@@ -251,7 +251,7 @@ sub set_topic {
     author => $self->nick,
     time   => time,
   });
-  $self->irc->cl->send_srv(TOPIC => encode_utf8($self->title), encode_utf8($topic));
+  $self->irc->send_srv(TOPIC => $self->title, $topic);
 }
 
 sub nick_table {
