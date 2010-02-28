@@ -247,7 +247,7 @@ sub registered {
   
   for (@{$self->config->{on_connect}}) {
     push @log, "sending $_";
-    $self->cl->send_raw($_);
+    $self->send_raw($_);
   }
   
   # merge auto-joined channel list with existing
@@ -257,7 +257,7 @@ sub registered {
     
   for (keys %channels) {
     push @log, "joining $_";
-    $self->cl->send_srv("JOIN", split /\s+/);
+    $self->send_srv("JOIN", split /\s+/);
   }
   
   $self->log(debug => @log);
@@ -299,7 +299,7 @@ sub disconnect {
   $self->log(debug => "disconnecting: $msg") if $msg;
   
   if ($self->is_connected) {
-    $self->cl->send_srv("QUIT" => $self->app->config->quitmsg);
+    $self->send_srv("QUIT" => $self->app->config->quitmsg);
     
     AnyEvent->timer(after => 3, cb => sub {
       $self->is_connected(0) if $self->is_connected;
@@ -381,10 +381,10 @@ sub _join {
     $self->app->create_window($channel, $self);
     # client library only sends WHO if the server doesn't
     # send hostnames with NAMES list (UHNAMES), we to WHO always
-    $self->cl->send_srv("WHO" => $channel) if $cl->isupport("UHNAMES");
+    $self->send_srv("WHO" => $channel) if $cl->isupport("UHNAMES");
   }
   elsif (my $window = $self->find_window($channel)) {
-    $self->cl->send_srv("WHO" => $nick);
+    $self->send_srv("WHO" => $nick);
     $self->broadcast($window->format_event("joined", $nick));
   }
 }
