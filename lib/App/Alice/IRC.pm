@@ -100,6 +100,8 @@ sub BUILD {
     irc_372        => sub{$self->mlog(debug => $_[1]->{params}[-1])}, # MOTD info
     irc_377        => sub{$self->mlog(debug => $_[1]->{params}[-1])}, # MOTD info
     irc_378        => sub{$self->mlog(debug => $_[1]->{params}[-1])}, # MOTD info
+    irc_432        => sub{$self->log(debug => $_[1]->{params}[-1])}, # Bad nick
+    irc_433        => sub{$self->log(debug => $_[1]->{params}[-1])}, # Bad nick
     irc_464        => sub{$self->disconnect("bad USER/PASS")},
   );
   $self->cl->ctcp_auto_reply ('VERSION', ['VERSION', "alice $App::Alice::VERSION"]);
