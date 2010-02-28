@@ -191,10 +191,7 @@ sub format_event {
 sub format_message {
   my ($self, $nick, $body) = @_;
   $body = decode_utf8($body) unless utf8::is_utf8($body);
-  # check for formatting
-  if ($body =~ /(?:\002|\003|\017|\026|\037)/) {
-    $body = IRC::Formatting::HTML->formatted_string_to_html($body);
-  }
+  $body = IRC::Formatting::HTML->formatted_string_to_html($body);
   my $own_nick = $self->nick;
   my $message = {
     type      => "message",
