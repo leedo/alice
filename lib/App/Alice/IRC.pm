@@ -106,6 +106,16 @@ sub BUILD {
   $self->connect unless $self->disabled;
 }
 
+sub send_srv {
+  my ($self, $cmd, @params) = @_;
+  $self->cl->send_srv($cmd => map {encode_utf8($_)} @params);
+}
+
+sub send_raw {
+  my ($self, $cmd) = @_;
+  $self->cl->send_raw(encode_utf8($cmd));
+}
+
 sub broadcast {
   my $self = shift;
   $self->app->broadcast(@_);
