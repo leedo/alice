@@ -7,6 +7,7 @@ use App::Alice::Stream;
 use App::Alice::CommandDispatch;
 use MIME::Base64;
 use JSON;
+use Encode;
 use Any::Moose;
 
 has 'app' => (
@@ -156,6 +157,7 @@ sub handle_message {
   my ($self, $httpd, $req) = @_;
   $httpd->stop_request;
   my $msg  = $req->parm('msg');
+  utf8::decode($msg);
   my $source = $req->parm('source');
   my $window = $self->app->get_window($source);
   if ($window) {
@@ -205,14 +207,14 @@ sub send_index {
   my ($self, $httpd, $req) = @_;
   $httpd->stop_request;
   my $output = $self->app->render('index');
-  $req->respond([200, 'ok', {'Content-Type' => 'text/html; charset=utf-8'}, $output]);
+  $req->respond([200, 'ok', {'Content-Type' => 'text/html; charset=utf-8'}, encode_utf8 $output]);
 }
 
 sub send_logs {
   my ($self, $httpd, $req) = @_;
   $httpd->stop_request;
   my $output = $self->app->render('logs');
-  $req->respond([200, 'ok', {'Content-Type' => 'text/html; charset=utf-8'}, $output]);
+  $req->respond([200, 'ok', {'Content-Type' => 'text/html; charset=utf-8'}, encode_utf8 $output]);
 }
 
 sub send_search {
@@ -221,7 +223,7 @@ sub send_search {
   my $results = $self->app->history->search($req->vars, sub {
     my $rows = shift;
     my $content = $self->app->render('results', @$rows);
-    $req->respond([200, 'ok', {'Content-Type' => 'text/html; charset=utf-8'}, $content]);
+    $req->respond([200, 'ok', {'Content-Type' => 'text/html; charset=utf-8'}, encode_utf8 $content]);
   });
 }
 
