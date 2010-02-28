@@ -330,7 +330,7 @@ sub close_window {
   $self->broadcast($window->close_action);
   $self->log(debug => "sending a request to close a tab: " . $window->title)
     if $self->httpd->stream_count;
-  $self->remove_window($window->id);
+  $self->remove_window($window->id) if $window->type ne "info";
 }
 
 sub add_irc_server {
