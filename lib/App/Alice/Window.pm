@@ -238,22 +238,6 @@ sub close_action {
   return $action;
 }
 
-sub part {
-  my $self = shift;
-  return unless $self->is_channel;
-  $self->irc->send_srv(PART => $self->title);
-}
-
-sub set_topic {
-  my ($self, $topic) = @_;
-  $self->topic({
-    string => $topic,
-    author => $self->nick,
-    time   => time,
-  });
-  $self->irc->send_srv(TOPIC => $self->title, $topic);
-}
-
 sub nick_table {
   my $self = shift;
   return _format_nick_table($self->all_nicks(1));

@@ -117,8 +117,8 @@ sub part {
 
 sub close {
   my ($self, $window) = @_;
-  $window->is_channel ?
-    $window->part : $self->app->close_window($window);
+  $window->is_channel ? $window->irc->send_srv(PART => $window->title)
+                      : $self->app->close_window($window);
 }
 
 sub nick {
@@ -141,7 +141,8 @@ sub clear {
 sub topic {
   my ($self, $window, $new_topic) = @_;
   if ($new_topic) {
-    $window->set_topic($new_topic);
+    $window->topic({string => $new_topic, nick => $window->nick, time => time});
+    $window->irc->send_srv(TOPIC => $window->title, $new_topic);
   }
   else {
     my $topic = $window->topic;
