@@ -20,14 +20,14 @@ has 'root' => (
   isa   => 'Str',
 );
 
-has 'load_path' => (
+has 'load_paths' => (
   is      => 'rw',
   isa     => 'ArrayRef[Str]',
   default => sub {[]},
 );
 
-sub add_load_path {push @{shift->load_path}, @_}
-sub _filter_laod_path {grep $_[1] @{$_[0]->load_path}}
+sub add_load_path {push @{shift->load_paths}, @_}
+sub _filter_load_path {grep $_[1] @{$_[0]->load_paths}}
 
 has 'asset_root' => (
   is  => 'rw',
@@ -36,14 +36,14 @@ has 'asset_root' => (
 
 sub remove_load_path {
   my ($self, @remove) = @_;
-  $self->load_path([
-    $self->_filter_load_path(sub {any {$_[0] ne $_} @remove})
+  $self->load_paths([
+    $self->_filter_load_paths(sub {any {$_[0] ne $_} @remove})
   ]);
 }
 
 sub options {
   my $self = shift;
-  my @options = map {("-I", $_)} @{$self->load_path};
+  my @options = map {("-I", $_)} @{$self->load_paths};
   push @options, "-D", $self->root if $self->root;
   push @options, "-a", $self->asset_root if $self->asset_root;
   return @options;

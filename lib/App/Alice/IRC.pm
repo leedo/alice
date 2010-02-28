@@ -4,6 +4,8 @@ use AnyEvent;
 use AnyEvent::IRC::Client;
 use Digest::MD5 qw/md5_hex/;
 use Any::Moose;
+use utf8;
+use Encode;
 
 has 'cl' => (
   is      => 'rw',
@@ -153,6 +155,11 @@ sub windows {
     $self->app->windows;
 }
 
+sub channels {
+  my $self = shift;
+  return map {$_->title} grep {$_->is_channel} $self->windows;
+}
+
 sub connect {
   my $self = shift;
   $self->disabled(0);
@@ -232,8 +239,13 @@ sub registered {
     push @log, "sending $_";
     $self->cl->send_raw($_);
   }
-
-  for (@{$self->config->{channels}}) {
+  
+  # merge auto-joined channel list with existing
+  # channels
+  my %channels = map {$_ => $_}
+    (@{$self->config->{channels}}, $self->channels);
+    
+  for (keys %channels) {
     push @log, "joining $_";
     $self->cl->send_srv("JOIN", split /\s+/);
   }
@@ -272,6 +284,7 @@ sub disconnect {
   my ($self, $msg) = @_;
   
   $self->disabled(1);
+  $self->app->remove_window($_) for $self->windows;
   
   $self->log(debug => "disconnecting: $msg") if $msg;
   
@@ -296,10 +309,12 @@ sub remove {
 
 sub publicmsg {
   my ($self, $cl, $channel, $msg) = @_;
+  utf8::decode($channel);
   if (my $window = $self->find_window($channel)) {
     my $nick = (split '!', $msg->{prefix})[0];
     return if $self->app->is_ignore($nick);
     my $text = $msg->{params}[1];
+    utf8::decode($_) for ($text, $nick);
     $self->app->store($nick, $channel, $text);
     $self->broadcast($window->format_message($nick, $text)); 
   }
@@ -308,8 +323,10 @@ sub publicmsg {
 sub privatemsg {
   my ($self, $cl, $nick, $msg) = @_;
   my $text = $msg->{params}[1];
+  utf8::decode($_) for ($nick, $text);
   if ($msg->{command} eq "PRIVMSG") {
     my $from = (split /!/, $msg->{prefix})[0];
+    utf8::decode($from);
     return if $self->app->is_ignore($from);
     my $window = $self->window($from);
     $self->app->store($from, $from, $text);
@@ -322,6 +339,7 @@ sub privatemsg {
 
 sub ctcp_action {
   my ($self, $cl, $nick, $channel, $msg, $type) = @_;
+  utf8::decode($_) for ($nick, $msg, $channel);
   return if $self->app->is_ignore($nick);
   if (my $window = $self->find_window($channel)) {
     my $text = "• $msg";
@@ -332,6 +350,7 @@ sub ctcp_action {
 
 sub nick_change {
   my ($self, $cl, $old_nick, $new_nick, $is_self) = @_;
+  utf8::decode($_) for ($old_nick, $new_nick);
   $self->rename_nick($old_nick, $new_nick);
   $self->broadcast(
     map  {$_->format_event("nick", $old_nick, $new_nick)}
@@ -341,7 +360,7 @@ sub nick_change {
 
 sub _join {
   my ($self, $cl, $nick, $channel, $is_self) = @_;
-  
+  utf8::decode($_) for ($nick, $channel);
   if (!$self->includes_nick($nick)) {
     $self->add_nick($nick, {nick => $nick, channels => {$channel => ''}}); 
   }
@@ -362,6 +381,7 @@ sub _join {
 
 sub channel_add {
   my ($self, $cl, $msg, $channel, @nicks) = @_;
+  utf8::decode($_) for (@nicks, $channel);
   if (my $window = $self->find_window($channel)) {
     for (@nicks) {
       if (!$self->includes_nick($_)) {
@@ -376,6 +396,7 @@ sub channel_add {
 
 sub part {
   my ($self, $cl, $nick, $channel, $is_self, $msg) = @_;
+  utf8::decode($_) for ($channel, $nick, $msg);
   if ($is_self and my $window = $self->find_window($channel)) {
     $self->log(debug => "leaving $channel");
     $self->app->close_window($window);
@@ -384,12 +405,13 @@ sub part {
 
 sub channel_remove {
   my ($self, $cl, $msg, $channel, @nicks) = @_;
+  utf8::decode($_) for ($channel, @nicks);
   
   return if !@nicks or grep {$_ eq $self->nick} @nicks;
   
   if (my $window = $self->find_window($channel)) {
     my $body;
-    if ($msg->{command} eq "PART") {
+    if ($msg->{command} and $msg->{command} eq "PART") {
       for (@nicks) {
         next unless $self->includes_nick($_);
         delete $self->get_nick_info($_)->{channels}{$channel};
@@ -399,6 +421,7 @@ sub channel_remove {
     else {
       $self->remove_nicks(@nicks);
       $body = $msg->{params}[0];
+      utf8::decode($body);
     }
     $self->broadcast(map {$window->format_event("left", $_, $body)} @nicks);
   }
@@ -406,6 +429,7 @@ sub channel_remove {
 
 sub channel_topic {
   my ($self, $cl, $channel, $topic, $nick) = @_;
+  utf8::decode($_) for ($channel, $nick, $topic);
   if (my $window = $self->find_window($channel)) {
     $window->topic({string => $topic, author => $nick, time => time});
     $self->broadcast($window->format_event("topic", $nick, $topic));
@@ -440,7 +464,7 @@ sub irc_352 {
   my $real = join " ", @real;
   return unless $nick;
   $real =~ s/^\d // if $real;
-  
+  utf8::decode($_) for ($channel, $user, $nick, $real);
   my $info = {
     IP       => $ip     || "",
     server   => $server || "",
@@ -462,6 +486,7 @@ sub irc_352 {
 
 sub irc_366 {
   my ($self, $cl, $msg) = @_;
+  utf8::decode($msg->{params}[1]);
   if (my $window = $self->find_window($msg->{params}[1])) {
     $self->broadcast($window->join_action);
   }

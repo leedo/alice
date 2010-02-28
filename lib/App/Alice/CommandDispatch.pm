@@ -1,6 +1,7 @@
 package App::Alice::CommandDispatch;
 
 use Any::Moose;
+use Encode;
 my $SRVOPT = qr/(?:\-(\S+)\s+)?/;
 
 has 'handlers' => (
@@ -63,12 +64,12 @@ sub handle {
 
 sub names {
   my ($self, $window) = @_;
-  $self->reply($window, $window->nick_table);
+  $self->reply($window, encode_utf8($window->nick_table));
 }
 
 sub whois {
   my ($self, $window, $nick) = @_;
-  $self->reply($window, $window->irc->whois_table($nick));
+  $self->reply($window, encode_utf8($window->irc->whois_table($nick)));
 }
 
 sub msg {
@@ -91,7 +92,7 @@ sub msg {
   my @msgs = ($new_window->join_action);
   if ($msg) {
     push @msgs, $new_window->format_message($new_window->nick, $msg);
-    $irc->cl->send_srv(PRIVMSG => $nick, $msg) if $msg;
+    $irc->cl->send_srv(PRIVMSG => encode_utf8($nick), encode_utf8($msg)) if $msg;
   }
   $self->broadcast(@msgs);
 }
@@ -105,7 +106,7 @@ sub _join {
   my @params = split /\s+/, $channel;
   if ($irc and $irc->cl->is_channel_name($params[0])) {
     $irc->log(info => "joining $params[0]");
-    $irc->cl->send_srv(JOIN => @params);
+    $irc->cl->send_srv(JOIN => map {encode_utf8($_)} @params);
   }
 }
 
@@ -122,7 +123,7 @@ sub close {
 
 sub nick {
   my ($self, $window, $nick) = @_;
-  $window->irc->cl->send_srv(NICK => $nick);
+  $window->irc->cl->send_srv(NICK => encode_utf8($nick));
 }
 
 sub create {
@@ -151,7 +152,7 @@ sub topic {
 sub me {
   my ($self, $window, $action) = @_;
   $self->show($window, "• $action");
-  $window->irc->cl->send_srv(PRIVMSG => $window->title, chr(01) . "ACTION $action" . chr(01));
+  $window->irc->cl->send_srv(PRIVMSG => encode_utf8($window->title), chr(01) . encode_utf8("ACTION $action") . chr(01));
 }
 
 sub quote {
@@ -210,12 +211,12 @@ sub _say {
   my ($self, $window, $msg) = @_;
   $self->app->store($window->nick, $window->title, $msg);
   $self->show($window, $msg);
-  $window->irc->cl->send_srv(PRIVMSG => $window->title, $msg);
+  $window->irc->cl->send_srv(PRIVMSG => encode_utf8($window->title), encode_utf8($msg));
 }
 
 sub show {
   my ($self, $window, $message) = @_;
-  $self->broadcast($window->format_message($window->nick, $message));
+  $self->broadcast($window->format_message($window->nick, encode_utf8($message)));
 }
 
 sub reply {

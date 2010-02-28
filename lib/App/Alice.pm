@@ -11,6 +11,8 @@ use App::Alice::Logger;
 use App::Alice::History;
 use Any::Moose;
 use File::Copy;
+use Digest::MD5 qw/md5_hex/;
+use Encode;
 
 our $VERSION = '0.10';
 
@@ -291,9 +293,7 @@ sub create_window {
 
 sub _build_window_id {
   my ($title, $connection_alias) = @_;
-  my $name = lc($title . $connection_alias);
-  $name =~ s/[^\w\d]//g;
-  return "win_" . $name;
+  return "win_" . md5_hex(encode_utf8("$title-$connection_alias"));
 }
 
 sub find_or_create_window {

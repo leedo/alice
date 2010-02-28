@@ -1,6 +1,7 @@
 package App::Alice::Window;
 
 use Encode;
+use utf8;
 use Text::MicroTemplate qw/encoded_string/;
 use IRC::Formatting::HTML;
 use Any::Moose;
@@ -83,12 +84,11 @@ has app => (
 );
 
 sub serialized {
-  my ($self, $encoded) = @_;
-  $encoded = 0 unless $encoded;
+  my ($self) = @_;
   return {
     id         => $self->id, 
     session    => $self->session,
-    title      => $encoded ? encode('utf8', $self->title) : $self->title,
+    title      => $self->title,
     is_channel => $self->is_channel,
     type       => $self->type,
   };
@@ -96,11 +96,11 @@ sub serialized {
 
 sub nick {
   my $self = shift;
-  return $self->irc->nick;
+  decode_utf8($self->irc->nick);
 }
 
 sub all_nicks {
-  my $self = shift;
+  my ($self) = @_;
   return unless $self->is_channel;
   return $self->irc->channel_nicks($self->title);
 }
@@ -173,8 +173,6 @@ sub timestamp {
 
 sub format_event {
   my ($self, $event, $nick, $body) = @_;
-  $body = decode("utf8", $body, Encode::FB_QUIET);
-  $nick = decode("utf8", $nick, Encode::FB_QUIET);
   my $message = {
     type      => "message",
     event     => $event,
@@ -193,7 +191,6 @@ sub format_event {
 sub format_message {
   my ($self, $nick, $body) = @_;
   $body = decode("utf8", $body, Encode::FB_QUIET);
-  $nick = decode("utf8", $nick, Encode::FB_QUIET);
   # check for formatting
   if ($body =~ /(?:\002|\003|\017|\026|\037)/) {
     $body = IRC::Formatting::HTML->formatted_string_to_html($body);
@@ -244,7 +241,7 @@ sub close_action {
 sub part {
   my $self = shift;
   return unless $self->is_channel;
-  $self->irc->cl->send_srv(PART => $self->title);
+  $self->irc->cl->send_srv(PART => encode_utf8($self->title));
 }
 
 sub set_topic {
@@ -254,12 +251,12 @@ sub set_topic {
     author => $self->nick,
     time   => time,
   });
-  $self->irc->cl->send_srv(TOPIC => $self->title, $topic);
+  $self->irc->cl->send_srv(TOPIC => encode_utf8($self->title), encode_utf8($topic));
 }
 
 sub nick_table {
   my $self = shift;
-  return _format_nick_table($self->all_nicks);
+  return _format_nick_table($self->all_nicks(1));
 }
 
 sub _format_nick_table {
