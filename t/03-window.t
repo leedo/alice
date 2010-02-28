@@ -32,7 +32,7 @@ is $window->nick, "tester", "nick";
 is $window->topic->{string}, "no topic set", "default window topic";
 
 is_deeply $window->serialized, {
-  id => "win_testwindowtest",
+  id => "win_7d25e1fdc28e1ce4918085e41e1280da",
   session => "test",
   title => "#test-window",
   is_channel => 1,
