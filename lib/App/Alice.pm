@@ -215,7 +215,7 @@ sub run {
     
     $self->httpd->ping_timer(undef);
     $self->shutting_down(1);
-    $_->disconnect for $self->connected_ircs;
+    $_->disconnect('alice') for $self->connected_ircs;
     
     my $timer = AnyEvent->timer(
       after => 3,
