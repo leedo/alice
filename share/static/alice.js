@@ -7176,19 +7176,6 @@ Object.extend(Alice, {
     });
   },
 
-  expandRange: function(channel, time, li) {
-    new Ajax.Request('/range', {
-      method: "post",
-      parameters: {time: time, channel: channel},
-      onSuccess: function (transport) {
-        var data = transport.responseText;
-        data = data.evalJSON();
-        li.insert({top: data[0], bottom: data[1]});
-        li.addClassName("context");
-      }
-    });
-  },
-
   makeSortable: function() {
     Sortable.create('tabs', {
       overlap: 'horizontal',
