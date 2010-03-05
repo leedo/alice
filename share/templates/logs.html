@@ -22,7 +22,7 @@
           parameters: {time: time, channel: channel},
           onSuccess: function (transport) {
             $$('.context').each(function (item) {
-              item.select("ul").invoke("remove");
+              item.select(".context_wrapper").invoke("remove");
               item.removeClassName("context");
             });
             var data = transport.responseText;
