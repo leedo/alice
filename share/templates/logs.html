@@ -26,9 +26,9 @@
               item.removeClassName("context");
             });
             var data = transport.responseText;
+            li.addClassName("context");
             data = data.evalJSON();
             li.insert({top: data[0], bottom: data[1]});
-            li.addClassName("context");
           }
         });
       };
