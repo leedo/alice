@@ -590,7 +590,7 @@ ul#logresults {
   margin: 0;
   padding: 0;
   position: absolute;
-  top: 33px;
+  top: 34px;
   bottom: 0px;
   left: 0px;
   right: 0px;
@@ -599,8 +599,31 @@ ul#logresults {
 
 ul#logresults li {
   border-bottom: 1px solid #eee;
-  padding: 5px 10px;
+  padding: 0;
   font-size: 0.8em;
+}
+
+ul#logresults li div.focus {
+  background: #fff;
+  padding: 5px 10px;
+}
+
+ul#logresults li.context ul {
+  margin: 0;
+  padding: 5px 10px;
+  list-style: none;
+  background: #eee;
+}
+
+ul#logresults li.context ul li {
+  border: none;
+  margin: 0;
+  padding: 2px 0;
+}
+
+ul#logresults li.context {
+  border-top: 2px solid #999;
+  border-bottom: 2px solid #999;
 }
 
 ul#logresults span.metadata {

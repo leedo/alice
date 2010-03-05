@@ -7176,6 +7176,19 @@ Object.extend(Alice, {
     });
   },
 
+  expandRange: function(channel, time, li) {
+    new Ajax.Request('/range', {
+      method: "post",
+      parameters: {time: time, channel: channel},
+      onSuccess: function (transport) {
+        var data = transport.responseText;
+        data = data.evalJSON();
+        li.insert({top: data[0], bottom: data[1]});
+        li.addClassName("context");
+      }
+    });
+  },
+
   makeSortable: function() {
     Sortable.create('tabs', {
       overlap: 'horizontal',
@@ -7869,7 +7882,7 @@ Alice.Keyboard = Class.create({
     this.enable();
 
     this.shortcut("Cmd+C", { propagate: true });
-    this.shortcut("Ctrl+C", { propogate: true });
+    this.shortcut("Ctrl+C", { propagate: true });
     this.shortcut("Cmd+K");
     this.shortcut("Cmd+B");
     this.shortcut("Cmd+F");
