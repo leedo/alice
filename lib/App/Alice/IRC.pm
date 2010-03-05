@@ -187,13 +187,7 @@ sub connect {
     $self->log(debug => "connecting");
   }
   $self->cl->connect(
-    $self->config->{host}, $self->config->{port},
-    {
-      nick     => $self->nick,
-      real     => $self->config->{ircname},
-      password => $self->config->{password},
-      user     => $self->config->{username},
-    }
+    $self->config->{host}, $self->config->{port}
   );
 }
 
@@ -208,6 +202,10 @@ sub connected {
     $self->reset_reconnect_count;
     $self->connect_time(time);
     $self->is_connected(1);
+    $self->cl->register(
+      $self->nick, $self->config->{username},
+      $self->config->{ircname}, $self->config->{password}
+    );
   }
 }
 
@@ -240,8 +238,8 @@ sub cancel_reconnect {
 sub registered {
   my $self = shift;
   my @log;
-  
-  $self->cl->enable_ping (60, sub {
+
+  $self->cl->enable_ping (300, sub {
     $self->is_connected(0);
     $self->log(debug => "ping timeout");
     $self->reconnect(0);
@@ -293,21 +291,13 @@ sub disconnected {
 }
 
 sub disconnect {
-  my ($self, $msg) = @_;
+  my ($self) = @_;
   
   $self->disabled(1);
   $self->app->remove_window($_) for $self->windows;
   
-  $self->log(debug => "disconnecting: $msg") if $msg;
-  
-  if ($self->is_connected) {
-    $self->send_srv("QUIT" => $self->app->config->quitmsg);
-    
-    AnyEvent->timer(after => 3, cb => sub {
-      $self->is_connected(0) if $self->is_connected;
-      $self->log(debug => "forced disconnect");
-    });
-  }
+  $self->log(debug => "disconnecting");
+  $self->cl->disconnect($self->app->config->quitmsg);
 }
 
 sub remove {
