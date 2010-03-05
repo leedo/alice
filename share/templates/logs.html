@@ -15,13 +15,30 @@
         });
         return false;
       };
+      
+      expandRange = function(channel, time, li) {
+        new Ajax.Request('/range', {
+          method: "post",
+          parameters: {time: time, channel: channel},
+          onSuccess: function (transport) {
+            $$('.context').each(function (item) {
+              item.select("ul").invoke("remove");
+              item.removeClassName("context");
+            });
+            var data = transport.responseText;
+            data = data.evalJSON();
+            li.insert({top: data[0], bottom: data[1]});
+            li.addClassName("context");
+          }
+        });
+      };
     </script>
   </head>
   <body>
     <div id="logsearch">
 <form id="query" onsubmit="return sendQuery(this)">
   <label for="nick">Nick</label><input size="8" type="text" name="nick" id="nick" />
-  <label for="body">Content</label><input type="text" name="body" id="body" />
+  <label for="body">Content</label><input type="text" name="body" id="body" size="14" />
   <label for="channel">Channel</label><input size="8" type="text" name="channel" id="channel" />
   <input type="submit" value="Search" />
 </form>

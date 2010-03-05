@@ -62,6 +62,7 @@ sub BUILD {
     '/get'          => sub{$self->image_proxy(@_)},
     '/logs'         => sub{$self->send_logs(@_)},
     '/search'       => sub{$self->send_search(@_)},
+    '/range'        => sub{$self->send_range(@_)},
     '/'             => sub{$self->send_index(@_)},
     'client_disconnected' => sub{$self->purge_disconnects(@_)},
     request         => sub{$self->check_authentication(@_)},
@@ -220,10 +221,22 @@ sub send_logs {
 sub send_search {
   my ($self, $httpd, $req) = @_;
   $httpd->stop_request;
-  my $results = $self->app->history->search($req->vars, sub {
+  $self->app->history->search($req->vars, sub {
     my $rows = shift;
-    my $content = $self->app->render('results', @$rows);
+    my $content = $self->app->render('results', $rows);
     $req->respond([200, 'ok', {'Content-Type' => 'text/html; charset=utf-8'}, encode_utf8 $content]);
+  });
+}
+
+sub send_range {
+  my ($self, $httpd, $req) = @_;
+  $httpd->stop_request;
+  my %query = $req->vars;
+  $self->app->history->range($query{channel}, $query{time}, sub {
+    my ($before, $after) = @_;
+    $before = $self->app->render('range', $before, 'before');
+    $after = $self->app->render('range', $after, 'after');
+   $req->respond([200, 'ok', {'Content-Type' => 'text/html; charset=utf-8'}, to_json [$before, $after]]);
   });
 }
 
