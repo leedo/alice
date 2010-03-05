@@ -1,7 +1,7 @@
 ? my ($app, $results, $position) = @_;
 
 <div style="display:none" id="wrap_<?= $position ?>" class="context_wrapper">
-  <ul class="context <?= $position ?>">
+  <ul class="<?= $position ?>">
 ? for my $result (@$results) {
   <li><strong><?= $result->[1] ?> </strong><?= $result->[3] ?></li>
 ? }
@@ -9,10 +9,10 @@
 </div>
 
 <script type="text/javascript">
-? if ($position eq "top") {
-  Effect.SlideDown("wrap_<?= $position ?>");  
+? if ($position eq "before") {
+  Effect.SlideDown("wrap_<?= $position ?>", { duration: 0.3 });  
 ? }
 ? else {
-  Effect.BlindDown("wrap_<?= $position ?>");  
+  Effect.BlindDown("wrap_<?= $position ?>", { duration: 0.3 });  
 ? }
 </script>

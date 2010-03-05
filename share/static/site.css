@@ -601,6 +601,11 @@ ul#logresults li {
   border-bottom: 1px solid #eee;
   padding: 0;
   font-size: 0.8em;
+  cursor: pointer;
+}
+
+ul#logresults div.focus:hover {
+  background: #eee;
 }
 
 ul#logresults li div.focus {
@@ -608,11 +613,14 @@ ul#logresults li div.focus {
   padding: 5px 10px;
 }
 
+ul#logresults li.context div.focus:hover {
+  background: #fff;
+}
+
 ul#logresults li.context ul {
   margin: 0;
   padding: 5px 10px;
   list-style: none;
-  background: #eee;
 }
 
 ul#logresults li.context ul li {
@@ -622,8 +630,9 @@ ul#logresults li.context ul li {
 }
 
 ul#logresults li.context {
-  border-top: 2px solid #999;
-  border-bottom: 2px solid #999;
+  border-top: 1px solid #999;
+  border-bottom: 1px solid #999;
+  background: url(image/shadow-bottom.png) bottom left repeat-x, url(image/shadow-top.png) top left repeat-x #eee;
 }
 
 ul#logresults span.metadata {
