@@ -16,7 +16,7 @@ use Encode;
 
 our $VERSION = '0.10';
 
-has cond => (
+has condvar => (
   is       => 'rw',
   isa      => 'AnyEvent::CondVar'
 );
@@ -35,7 +35,7 @@ has msgid => (
 sub next_msgid {$_[0]->msgid($_[0]->msgid + 1)}
 
 has irc_map => (
-  is      => 'ro',
+  is      => 'rw',
   isa     => 'HashRef[App::Alice::IRC]',
   default => sub {{}},
 );
@@ -55,7 +55,7 @@ has standalone => (
 );
 
 has httpd => (
-  is      => 'ro',
+  is      => 'rw',
   isa     => 'App::Alice::HTTPD',
   lazy    => 1,
   default => sub {
@@ -199,7 +199,7 @@ sub run {
     for keys %{$self->config->servers};
   
   if ($self->standalone) { 
-    $self->cond(AnyEvent->condvar);
+    $self->condvar(AnyEvent->condvar);
     my @sigs;
     for my $sig (qw/INT QUIT/) {
       my $w = AnyEvent->signal(
@@ -209,26 +209,34 @@ sub run {
       push @sigs, $w;
     }
 
-    $self->cond->wait;
-    
-    print STDERR "\nDisconnecting, please wait\n";
-    
-    $self->httpd->ping_timer(undef);
-    $self->shutting_down(1);
-    $_->disconnect for $self->connected_ircs;
-    
-    my $timer = AnyEvent->timer(
-      after => 3,
-      cb    => sub{$self->cond->send}
-    );
-    
-    $self->cond(AE::cv)->wait;
+    $self->condvar->recv;
   }
+}
+
+sub init_shutdown {
+  my ($self, $cb, $msg) = @_;
+  $self->{on_shutdown} = $cb;
+  $self->shutting_down(1);
+  $self->httpd->shutdown;
+  if (!$self->ircs) {
+    $self->shutdown;
+    return;
+  }
+  print STDERR "\nDisconnecting, please wait\n"
+    if $self->standalone;
+  $_->init_shutdown($msg) for $self->ircs;
+  $self->{shutdown_timer} = AnyEvent->timer(
+    after => 3,
+    cb    => sub{$self->shutdown}
+  );
 }
 
 sub shutdown {
   my $self = shift;
-  $self->cond->send if $self->cond;
+  $self->irc_map({});
+  delete $self->{shutdown_timer} if $self->{shutdown_timer};
+  $self->{on_shutdown}->() if $self->{on_shutdown};
+  $self->condvar->send if $self->condvar;
 }
 
 sub dispatch {

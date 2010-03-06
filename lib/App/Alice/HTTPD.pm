@@ -18,7 +18,7 @@ has 'app' => (
 
 has 'httpd' => (
   is  => 'rw',
-  isa => 'AnyEvent::HTTPD'
+  isa => 'AnyEvent::HTTPD|Undef'
 );
 
 has 'streams' => (
@@ -84,6 +84,14 @@ sub ping {
       });
     }
   ));
+}
+
+sub shutdown {
+  my $self = shift;
+  $_->close for $self->streams;
+  $self->streams([]);
+  $self->ping_timer(undef);
+  $self->httpd(undef);
 }
 
 sub image_proxy {

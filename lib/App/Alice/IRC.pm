@@ -123,6 +123,23 @@ sub broadcast {
   $self->app->broadcast(@_);
 }
 
+sub init_shutdown {
+  my ($self, $msg) = @_;
+  $self->disabled(1);
+  if ($self->is_connected) {
+    $self->disconnect($msg);
+    return;
+  }
+  $self->shutdown;
+}
+
+sub shutdown {
+  my $self = shift;
+  $self->cl(undef);
+  $self->app->remove_irc($self->alias);
+  $self->app->shutdown if !$self->app->ircs;
+}
+
 sub log {
   my ($self, $level, @messages) = @_;
   $self->broadcast(map {$self->format_info($_)} @messages);
@@ -265,6 +282,7 @@ sub registered {
 
 sub disconnected {
   my ($self, $cl, $reason) = @_;
+  delete $self->{disconnect_timer} if $self->{disconnect_timer};
   
   $reason = "" unless $reason;
   return if $reason eq "reconnect requested.";
@@ -291,13 +309,21 @@ sub disconnected {
 }
 
 sub disconnect {
-  my ($self) = @_;
-  
+  my ($self, $msg) = @_;
+
   $self->disabled(1);
   $self->app->remove_window($_) for $self->windows;
-  
-  $self->log(debug => "disconnecting");
-  $self->cl->disconnect($self->app->config->quitmsg);
+
+  $msg ||= $self->app->config->quitmsg;
+  $self->log(debug => "disconnecting: $msg") if $msg;
+  $self->send_srv(QUIT => $msg);
+  $self->{disconnect_timer} = AnyEvent->timer(
+    after => 1,
+    cb => sub {
+      delete $self->{disconnect_timer};
+      $self->cl->disconnect($msg);
+    }
+  );
 }
 
 sub remove {
