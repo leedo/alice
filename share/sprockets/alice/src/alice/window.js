@@ -157,10 +157,15 @@ Alice.Window = Class.create({
           this.messages.insert(full_html);
           var node = this.messages.down("li:last-child div.msg");
           node.innerHTML = this.application.applyFilters(node.innerHTML);
-          var span = this.messages.down('li:last-child span.nickhint');
-          if (span && this.nicksVisible) {
-            span.style.webkitTransition = 'none 0 linear';
-            span.style.opacity = 1;
+          var nick = this.messages.down('li:last-child span.nickhint');
+          if (nick && this.nicksVisible) {
+            nick.style.webkitTransition = 'none 0 linear';
+            nick.style.opacity = 1;
+          }
+          var time = this.messages.down('li:last-child div.timehint');
+          if (time && this.nicksVisible) {
+            time.style.webkitTransition = 'none 0 linear';
+            time.style.opacity = 1;
           }
         }
       }
