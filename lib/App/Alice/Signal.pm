@@ -21,8 +21,8 @@ sub BUILD {
   $self->$method();
 }
 
-sub sigint  {$_[0]->app->shutdown};
-sub sigquit {$_[0]->app->shutdown};
+sub sigint  {$_[0]->app->init_shutdown};
+sub sigquit {$_[0]->app->init_shutdown};
 
 __PACKAGE__->meta->make_immutable;
 1;

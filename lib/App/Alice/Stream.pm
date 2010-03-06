@@ -37,8 +37,8 @@ has 'timer' => (
 );
 
 has 'request' => (
-  is  => 'ro',
-  isa => 'AnyEvent::HTTPD::Request',
+  is  => 'rw',
+  isa => 'AnyEvent::HTTPD::Request|Undef',
   required => 1,
 );
 
@@ -69,6 +69,14 @@ sub broadcast {
   }
   $self->callback->( $self->to_string );
   $self->flush;
+}
+
+sub close {
+  my $self = shift;
+  $self->timer(undef);
+  $self->callback() if $self->callback;
+  $self->request(undef);
+  $self->disconnected(1);
 }
 
 sub flooded {
