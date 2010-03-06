@@ -41,7 +41,7 @@ sub range {
   $self->dbi->exec(
     "SELECT * FROM messages WHERE time < ? AND channel=? ORDER BY time DESC LIMIT ?",
     $time, $channel, $limit, sub {
-      my $before = $_[1];
+      my $before = [ reverse @{$_[1]} ];
       $self->dbi->exec(
         "SELECT * FROM messages WHERE time > ? AND channel=? ORDER BY time ASC LIMIT ?",
         $time, $channel, $limit, sub {
