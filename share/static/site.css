@@ -297,6 +297,17 @@ div.left span.nickhint {
   -webkit-transition: opacity 0.5s ease-in-out;
 }
 
+div.timehint {
+  position: absolute;
+  font-size: 0.8em;
+  right: 0px;
+  top: 6px;
+  padding: 2px 4px;
+  color: #333;
+  opacity: 0;
+  text-shadow: rgba(255,255,255,1) 0 0 3px;
+}
+
 div.msg {
   min-height: 1.2em;
   margin-left: 132px;
