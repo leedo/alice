@@ -261,6 +261,7 @@ sub server_config {
   $httpd->stop_request;
   $self->app->log(info => "serving blank server config");
   my $name = $req->parm('name');
+  $name =~ s/\s+//g;
   my $config = $self->app->render('new_server', $name);
   my $listitem = $self->app->render('server_listitem', $name);
   $req->respond([200, 'ok', {"Cache-control" => "no-cache"}, 
