@@ -39,7 +39,12 @@ $view->signal_connect(
 $view->signal_connect(
   new_window_policy_decision_requested => sub {
     my ($view, $frame, $req, $action, $policy) = @_;
-    print STDERR "new_window_policy_decision_requested\n";
+    if (get_domain($view->get_uri) ne get_domain($req->get_uri)) {
+      Gtk2::show_uri(undef, $req->get_uri);
+      $policy->ignore;
+      return 1;
+    }
+
     $policy->use;
     return 0;
   }
@@ -51,6 +56,12 @@ $view->signal_connect(
     return 0;
   }
 );
+
+sub get_domain {
+  my $uri = shift;
+  my ($domain) = ($uri =~ /https?:\/\/([^\/]+)\//);
+  return $domain;
+}
 
 $window->add($view);
 $view->open('http://127.0.0.1:8080/view');
