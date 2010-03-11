@@ -356,6 +356,7 @@ sub privatemsg {
     my $window = $self->window($from);
     $self->app->store($from, $from, $text);
     $self->broadcast($window->format_message($from, $text)); 
+    $self->send_srv(WHO => $from) unless $self->includes_nick($from);
   }
   elsif ($msg->{command} eq "NOTICE") {
     $self->log(debug => $text);
