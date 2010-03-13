@@ -7,7 +7,7 @@ div.msg {
 }
 
 html, body {
-  height: 416px;
+  height: 417px;
 }
 
 div#container {
@@ -17,35 +17,92 @@ div#container {
 }
 
 ul#tabs {
-  position: absolute;
-  bottom: 0px;
-  height: 22px;
+  display: none;
 }
 
 ul#controls {
   position: absolute;
-  bottom: 0px;
-  right: 0px;
+  bottom: 1px;
+  left: 0px;
+  right: auto;
+  padding: 0;
+  background: #eee;
+}
+
+ul#controls li:hover {
+  background: #eee;
 }
 
 div.window {
-  height: 416px;
+  height: 417px;
   position: relative;
 }
 
-div.input textarea {
+ul.messages {
+  height: 300px;
+  overflow: auto;
+}
+
+tr.input textarea {
   padding: 3px 0 0 0;
+  width: 188px;
+  margin-left: 75px;
+}
+
+tr.input input.send {
+  display: block;
+  position: absolute;
+  bottom: 1px;
+  right: 0px;
 }
 
 ul.messages {
   padding-bottom: 70px;
 }
 
-div.input {
-  position: fixed;
-  bottom: -36px;
+li#config_button {
+  display:none;
 }
 
 div.msg.monospace, div.msg.announce {
   line-height: 11px;
+}
+
+ul.messages li {
+  background: #fff;
+}
+
+ul.messages li.self {
+  background: #fffbd0;
+}
+
+#tab_overflow_button img {
+  display: none;
+}
+
+select.select_overlay {
+  display: block;
+  position: absolute;
+  width: 70px;
+  top: 1px;
+  left: 1px;
+  bottom: auto;
+  right: auto;
+  border: inherit;
+  padding: auto;
+  margin: auto;
+  opacity: 1;
+  font-size: 12px;
+}
+
+ul.messages li hr {
+  position: absolute;
+  bottom: 0px;
+  left: 0px;
+  right: 0px;
+  border: none;
+  height: 0px;
+  border-top: 1px solid #efefef;
+  margin: 0;
+  padding: 0;
 }

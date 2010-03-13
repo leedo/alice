@@ -41,7 +41,6 @@
 ?   my @classes = ();
 ?   if (@windows > 1) {
 ?     push @classes, "active" if $_ == 1;
-?     push @classes, "leftof_active" if $_ == 0;
 ?   }
 ?   else {
 ?     push @classes, "active" if $_ == 0;
@@ -56,7 +55,6 @@
 ?   my @classes;
 ?   if (@windows > 1) {
 ?     push @classes, "active" if $_ == 1;
-?     push @classes, "leftof_active" if $_ == 0;
 ?   }
 ?   else {
 ?     push @classes, "active" if $_ == 0;
