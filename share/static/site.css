@@ -99,6 +99,10 @@ tr.input textarea {
   font-family: "Lucida Grande", Helvetica, sans-serif;
 }
 
+tr.input input.send {
+  display: none;
+}
+
 div#tab_container {
   position: fixed;
   bottom: 0px;

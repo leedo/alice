@@ -119,6 +119,9 @@ Alice.Connection = Class.create({
     new Ajax.Request('/say', {
       method: 'get',
       parameters: form.serialize(),
+      onException: function (request, exception) {
+        alert("There was an error sending a message.");
+      }
     });
   },
   
