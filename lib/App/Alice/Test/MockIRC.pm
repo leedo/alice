@@ -86,6 +86,9 @@ sub ctcp_auto_reply {}
 sub connect {
   my $self = shift;
   $self->cbs->{connect}->();
+}
+sub register {
+  my $self = shift;
   $self->cbs->{registered}->();
 }
 sub disconnect {

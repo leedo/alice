@@ -200,7 +200,7 @@ sub format_message {
     avatar    => $self->irc->nick_avatar($nick),
     window    => $self->serialized,
     body      => $body,
-    highlight => $body =~ /\b$own_nick\b/i ? 1 : 0,
+    highlight => ($own_nick ne $nick and $body) =~ /\b$own_nick\b/i ? 1 : 0,
     html      => encoded_string($html),
     self      => $own_nick eq $nick,
     msgid     => $self->app->next_msgid,
