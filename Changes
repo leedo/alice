@@ -1,7 +1,8 @@
-0.11  Sun 28 Feb 2010
+0.11  Sat 13 Mar 2010
         - Improved unicode support
         - Faster shutdown process
         - Make / an alias for /view
+        - Show context for log search result on click
 
 0.10  Mon 22 Feb 2010
         - Added NullLogger to fix test failures
