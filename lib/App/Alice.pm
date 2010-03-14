@@ -301,7 +301,7 @@ sub create_window {
 
 sub _build_window_id {
   my ($title, $connection_alias) = @_;
-  return "win_" . md5_hex(encode_utf8("$title-$connection_alias"));
+  return "win_" . md5_hex(encode_utf8(lc "$title-$connection_alias"));
 }
 
 sub find_or_create_window {

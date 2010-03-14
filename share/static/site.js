@@ -63,9 +63,7 @@ if (window == window.parent) {
     Alice.makeSortable();
     
     if (navigator.userAgent.match(/Chrome/)) {
-      $$('tr.input textarea').each(function (textarea) {
-        textarea.setStyle({padding: '3px'});
-      });
+      $$('tr.input textarea').invoke('setStyle', {padding: '3px'});
     }
   });
 }
