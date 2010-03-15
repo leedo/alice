@@ -7478,7 +7478,7 @@ Alice.Connection = Class.create({
 
   requestWindow: function(title, windowId, message) {
     new Ajax.Request('/say', {
-      method: 'get',
+      method: 'post',
       parameters: {source: windowId, msg: "/create " + title},
       onSuccess: function (transport) {
         this.handleUpdate(transport);
@@ -7493,7 +7493,7 @@ Alice.Connection = Class.create({
 
   closeWindow: function(win) {
     new Ajax.Request('/say', {
-      method: 'get',
+      method: 'post',
       parameters: {source: win.id, msg: "/close"}
     });
   },
@@ -7514,14 +7514,17 @@ Alice.Connection = Class.create({
 
   sendMessage: function(form) {
     new Ajax.Request('/say', {
-      method: 'get',
+      method: 'post',
       parameters: form.serialize(),
+      onException: function (request, exception) {
+        alert("There was an error sending a message.");
+      }
     });
   },
 
   sendTabOrder: function (windows) {
     new Ajax.Request('/tabs', {
-      method: 'get',
+      method: 'post',
       parameters: {tabs: windows}
     });
   },
