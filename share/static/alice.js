@@ -7672,25 +7672,25 @@ Alice.Window = Class.create({
   },
 
   addMessage: function(message) {
-    if (message.html || message.full_html) {
+    console.log(message);
+    if (message.inner_html || message.outter_html) {
       if (message.event == "say" && message.nick && message.nick == this.lastNick) {
         if (this.application.messagesAreMonospacedFor(message.nick) || message.monospaced)
           this.messages.down('li:last-child div.msg').insert(
-            "<br>" + this.application.applyFilters(message.html));
+            "<br>" + this.application.applyFilters(message.inner_html));
         else if (message.event == "say")
           this.messages.down('li:last-child div.msg').insert(
-            Alice.stripNick(this.application.applyFilters("<hr class=\"consecutive\">"+message.html)));
+            Alice.stripNick(this.application.applyFilters("<hr class=\"consecutive\">"+message.inner_html)));
       }
       else {
         if (message.event == "topic") {
-          this.messages.insert(Alice.makeLinksClickable(message.full_html));
+          this.messages.insert(Alice.makeLinksClickable(message.html));
           this.displayTopic(message.body.escapeHTML());
         }
         else {
-          var full_html = Alice.uncacheGravatar(message.full_html);
-          this.messages.insert(full_html);
+          this.messages.insert(Alice.uncacheGravatar(message.outter_html));
           var node = this.messages.down("li:last-child div.msg");
-          node.innerHTML = this.application.applyFilters(node.innerHTML);
+          node.insert(this.application.applyFilters(message.inner_html));
           var nick = this.messages.down('li:last-child span.nickhint');
           if (nick && this.nicksVisible) {
             nick.style.webkitTransition = 'none 0 linear';

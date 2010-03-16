@@ -183,7 +183,7 @@ sub format_event {
     timestamp => $self->timestamp,
     nicks     => [ $self->all_nicks ],
   };
-  $message->{full_html} = $self->app->render("event", $message);
+  $message->{html} = $self->app->render("event", $message);
   $self->add_message($message);
   return $message;
 }
@@ -199,15 +199,13 @@ sub format_message {
     nick      => $nick,
     avatar    => $self->irc->nick_avatar($nick),
     window    => $self->serialized,
-    body      => $body,
     highlight => ($own_nick ne $nick and $body) =~ /\b$own_nick\b/i ? 1 : 0,
-    html      => encoded_string($html),
+    inner_html => $html,
     self      => $own_nick eq $nick,
     msgid     => $self->app->next_msgid,
     timestamp => $self->timestamp,
   };
-  $message->{full_html} = $self->app->render("message", $message);
-  $message->{html} = "$html";
+  $message->{outter_html} = $self->app->render("message", $message);
   $self->add_message($message);
   return $message;
 }
@@ -221,7 +219,7 @@ sub format_announcement {
     window  => $self->serialized,
     message => $msg,
   };
-  $message->{full_html} = $self->app->render('announcement', $message);
+  $message->{html} = $self->app->render('announcement', $message);
   return $message;
 }
 
