@@ -493,6 +493,7 @@ sub irc_352 {
   utf8::decode($_) for ($channel, $user, $nick, $real);
   my $info = {
     IP       => $ip     || "",
+    user     => $user || "",
     server   => $server || "",
     real     => $real   || "",
     channels => {$channel => $flags},
