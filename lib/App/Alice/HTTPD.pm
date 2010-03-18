@@ -153,12 +153,9 @@ sub setup_stream {
     my $respond = shift;
     $self->add_stream(
       App::Alice::Stream->new(
-        queue   => [
-          map {$_->nicks_action} $self->app->windows
-        ],
+        queue   => [],
         writer => $respond,
         start_time => $req->param('t'),
-        on_disconnect => sub {$self->purge_disconnects}
       )
     );
   }
@@ -252,7 +249,7 @@ sub send_config {
   $self->app->log(info => "serving config");
   my $output = $self->app->render('servers');
   my $res = $req->new_response(200);
-  $res->body('ok');
+  $res->body($output);
   return $res->finalize;
 }
 
@@ -273,24 +270,18 @@ sub save_config {
   my ($self, $req) = @_;
   $self->app->log(info => "saving config");
   my $new_config = {servers => {}};
-  my %params = %{$req->parameters};
-  for my $name (keys %params) {
-    next unless $params{$name};
+  for my $name (keys %{$req->parameters}) {
+    next unless $req->parameters->{$name};
     if ($name =~ /^(.+?)_(.+)/) {
       if ($2 eq "channels" or $2 eq "on_connect") {
-        if (ref $params{$name} eq "ARRAY") {
-          $new_config->{servers}{$1}{$2} = $params{$name};
-        }
-        else {
-          $new_config->{servers}{$1}{$2} = [$params{$name}];
-        }
+        $new_config->{servers}{$1}{$2} = [$req->parameters->get_all($name)];
       }
       else {
-        $new_config->{servers}{$1}{$2} = $params{$name};
+        $new_config->{servers}{$1}{$2} = $req->param($name);
       }
     }
     else {
-      $new_config->{$name} = $params{$name};
+      $new_config->{$name} = $req->param($name);
     }
   }
   $self->config->merge($new_config);
