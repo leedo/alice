@@ -2,6 +2,7 @@ package App::Alice::Stream;
 
 use JSON;
 use Time::HiRes qw/time/;
+use Try::Tiny;
 use Any::Moose;
 
 has queue => (
@@ -56,7 +57,6 @@ sub BUILD {
     [200, ['Content-Type' => 'multipart/mixed; boundary='.$self->seperator.'; charset=utf-8']]
   );
   $self->writer($writer);
-  $self->broadcast;
 }
 
 sub broadcast {
@@ -66,7 +66,11 @@ sub broadcast {
     $self->delay($delay);
     return;
   }
-  $self->writer->write( $self->to_string );
+  try {
+    $self->writer->write( $self->to_string );
+  } catch {
+    $self->close;
+  };
   $self->flush;
 }
 

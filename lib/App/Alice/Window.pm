@@ -183,7 +183,9 @@ sub format_event {
     timestamp => $self->timestamp,
     nicks     => [ $self->all_nicks ],
   };
-  $message->{html} = $self->app->render("event", $message);
+  $message->{html} = make_links_clickable(
+    $self->app->render("event", $message)
+  );
   $self->add_message($message);
   return $message;
 }
