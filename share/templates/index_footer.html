@@ -1,0 +1,22 @@
+? my @windows = $_[0]->sorted_windows;
+
+        <script type="text/javascript" src="/static/alice-min.js"></script>
+        <script type="text/javascript" src="/static/site.js?images=<?= $_[0]->config->images || 'show' ?>&amp;monospace_nicks=<?= join ",", @{$_[0]->config->monospace_nicks} ?>"></script>
+        <script type="text/javascript">
+? for (0 .. @windows - 1) {
+?   my $active;
+?   my $window = $windows[$_];
+?   if (@windows > 1 and $_ == 1) {
+?     $active = 1;
+?   }
+?   elsif (@windows == 1) {
+?     $active = 1;
+?   }
+          alice.connection.msgid = <?= $_[0]->msgid ?>;
+          alice.openWindow('<?= $window->id ?>','<?= $window->title ?>',<?= $active ? "true" : "false" ?>);
+? }
+        </script>
+      </div>
+    </div>
+  </body>
+</html>

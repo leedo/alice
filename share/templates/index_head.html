@@ -1,0 +1,52 @@
+? my @windows = $_[0]->sorted_windows;
+? my $titlewin = @windows > 1 ? $windows[1] : $windows[0];
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><?= $titlewin->title ?></title>
+    <link rel="shortcut icon" href="/static/favicon.ico">
+    <link type="text/css" rel="stylesheet" href="/static/site.css" />
+    <!--[if !IE]>--> 
+    <link rel="stylesheet" href="/static/iphone.css" type="text/css" 
+          media="only screen and (max-device-width: 480px)" /> 
+    <!--<![endif]-->
+    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no" />
+  </head>
+  <body>
+    <div id="container">
+      <ul id="controls">
+        <li id="config_button">
+          <img src="/static/image/config.png" />
+          <select class="select_overlay" id="config_overlay">
+            <option>Logs</option>
+            <option>Preferences</option>
+            <option>Connections</option>
+          </select>
+        </li>
+        <li id="tab_overflow_button">
+          <img src="/static/image/overflow.png" />
+          <select class="select_overlay" id="tab_overflow_overlay">
+            <? for (0 .. @windows -1) { ?>
+              <? my $window = $windows[$_]; ?>
+              <? my $selected = $_ == 1; ?>
+              <?= $_mt->render_file('select.html', $_[0], $window, $selected); ?>
+            <? } ?>
+          </select>
+        </li>
+      </ul>
+      <div id="tab_container">
+        <ul id="tabs">
+? for (0 .. @windows - 1) {
+?   my $window = $windows[$_];
+?   my @classes = ();
+?   if (@windows > 1) {
+?     push @classes, "active" if $_ == 1;
+?   }
+?   else {
+?     push @classes, "active" if $_ == 0;
+?   }
+?=  $_mt->render_file('tab.html', $_[0], $window, @classes)
+? }
+        </ul>
+      </div>
+      <div id="windows">

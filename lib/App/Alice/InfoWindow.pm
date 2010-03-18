@@ -36,14 +36,12 @@ sub format_message {
     event  => "say",
     nick   => $from,
     window => $self->serialized,
-    body   => $body,
+    inner_html => $monospaced ? "<span class=\"monospace\">$html</span>" : $html,
     self   => $highlight,
-    html   => encoded_string($html),
     msgid  => $self->app->next_msgid,
     monospaced => $monospaced ? 1 : 0,
   };
-  $message->{full_html} = $self->app->render("message", $message);
-  $message->{html} = $monospaced ? "<span class=\"monospace\">$html</span>" : "$html";
+  $message->{outter_html} = $self->app->render("message", $message);
   $self->add_message($message);
   return $message;
 }
