@@ -1,13 +1,17 @@
 package App::Alice::HTTPD;
 
 use AnyEvent;
+use AnyEvent::HTTP;
+
 use Twiggy::Server;
 use Plack::Request;
+use Plack::Builder;
 use Plack::Middleware::Static;
 use Plack::Middleware::Auth::Basic;
-use AnyEvent::HTTP;
+
 use App::Alice::Stream;
 use App::Alice::CommandDispatch;
+
 use MIME::Base64;
 use JSON;
 use Encode;
@@ -55,34 +59,35 @@ sub BUILD {
     host => $self->config->http_address,
     port => $self->config->http_port,
   );
-  my $static = Plack::Middleware::Static->new(
-    path => qr{^/static/},
-    root => $self->config->assetdir,
-  );
-  my $auth = Plack::Middleware::Auth::Basic->new(
-    authenticator => sub {$self->authenticate(@_)}
-  );
-  $httpd->register_service($auth->wrap($static->wrap(sub {
-    my $env = shift;
-    my $req = Plack::Request->new($env);
-    given ($req->path_info) {
-      when ('/serverconfig') {return $self->server_config($req)}
-      when ('/config')       {return $self->send_config($req)}
-      when ('/save')         {return $self->save_config($req)}
-      when ('/tabs')         {return $self->tab_order($req)}
-      when ('/view')         {return $self->send_index($req)}
-      when ('/stream')       {return $self->setup_stream($req)}
-      when ('/say')          {return $self->handle_message($req)}
-      when ('/get')          {return $self->image_proxy($req)}
-      when ('/logs')         {return $self->send_logs($req)}
-      when ('/search')       {return $self->send_search($req)}
-      when ('/range')        {return $self->send_range($req)}
-      when ('/')             {return $self->send_index($req)}
-      default                {return $self->not_found($req)}
+  $httpd->register_service(
+    builder {
+      enable "Auth::Basic", authenticator => sub {$self->authenticate(@_)};
+      enable "Static", path => qr{^/static/}, root => $self->config->assetdir;
+      sub {$self->dispatch(shift)} 
     }
-  })));
+  );
   $self->httpd($httpd);
   $self->ping;
+}
+
+sub dispatch {
+  my ($self, $env) = @_;
+  my $req = Plack::Request->new($env);
+  given ($req->path_info) {
+    when ('/serverconfig') {return $self->server_config($req)}
+    when ('/config')       {return $self->send_config($req)}
+    when ('/save')         {return $self->save_config($req)}
+    when ('/tabs')         {return $self->tab_order($req)}
+    when ('/view')         {return $self->send_index($req)}
+    when ('/stream')       {return $self->setup_stream($req)}
+    when ('/say')          {return $self->handle_message($req)}
+    when ('/get')          {return $self->image_proxy($req)}
+    when ('/logs')         {return $self->send_logs($req)}
+    when ('/search')       {return $self->send_search($req)}
+    when ('/range')        {return $self->send_range($req)}
+    when ('/')             {return $self->send_index($req)}
+    default                {return $self->not_found($req)}
+  }
 }
 
 sub ping {
