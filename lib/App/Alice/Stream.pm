@@ -14,7 +14,7 @@ sub clear_queue {$_[0]->queue([])}
 sub enqueue {push @{shift->queue}, @_}
 sub queue_empty {return @{$_[0]->queue} == 0}
 
-has [qw/offset last_send/]=> (
+has [qw/offset last_send start_time/]=> (
   is  => 'rw',
   isa => 'Num',
   default => 0,
@@ -40,8 +40,6 @@ has 'writer' => (
   is  => 'rw',
   required => 1,
 );
-
-has start_time => (is => 'ro');
 
 has callback => (
   is  => 'rw',
