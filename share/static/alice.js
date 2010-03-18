@@ -7143,13 +7143,6 @@ shortcut = {
 var Alice = { };
 
 Object.extend(Alice, {
-  makeLinksClickable: function(content) {
-    return content.replace(
-      /(\b)(([\w-]+:\/\/?|www[.])[^\s()<>]+(?:\([\w\d]+\)|([^[<,.;\s]|\/)))/gi,
-      "$1<a href=\"$2\" target=\"_blank\" rel=\"noreferrer\">$2</a>"
-    );
-  },
-
   uncacheGravatar: function(content) {
     if (!this.timestamp) {
       var date = new Date();
@@ -7217,7 +7210,7 @@ Alice.Application = Class.create({
     this.window_map = new Hash();
     this.previousFocus = 0;
     this.connection = new Alice.Connection(this);
-    this.filters = [ Alice.makeLinksClickable ];
+    this.filters = [];
     this.monospaceNicks = ['Shaniqua', 'root', 'p6eval'];
     this.keyboard = new Alice.Keyboard(this);
     setTimeout(this.connection.connect.bind(this.connection), 1000);
@@ -7668,7 +7661,7 @@ Alice.Window = Class.create({
   },
 
   displayTopic: function(topic) {
-    this.topic.update(Alice.makeLinksClickable(topic));
+    this.topic.update(topic);
   },
 
   addMessage: function(message) {
@@ -7684,7 +7677,7 @@ Alice.Window = Class.create({
       }
       else {
         if (message.event == "topic") {
-          this.messages.insert(Alice.makeLinksClickable(message.html));
+          this.messages.insert(message.html);
           this.displayTopic(message.body.escapeHTML());
         }
         else {

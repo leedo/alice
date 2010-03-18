@@ -20,8 +20,6 @@ if (window == window.parent) {
   alice.options = options;
  
   document.observe("dom:loaded", function () {
-    $$("tr.topic td").each(function (topic){
-      topic.innerHTML = Alice.makeLinksClickable(topic.innerHTML)});
     $$('#config_overlay option').each(function(opt){opt.selected = false});
     $('tab_overflow_overlay').observe("change", function (e) {
       var win = alice.getWindow($('tab_overflow_overlay').value);

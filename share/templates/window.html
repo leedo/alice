@@ -12,23 +12,29 @@
         <ul class="messages" id="<?= $window->id ?>_messages">
 ? my $previous_nick = "";
 ? for my $message (@{$window->msgbuffer}) {
-?   if ($message->{nick} ne $previous_nick) {
-?     my $html = $message->{outter_html};
-?     if ($previous_nick) {
-        </div></hr></li>
-?     }
-?     $html =~ s/<div class="msg">.*$//s;
-      <?= encoded_string $html ?><div class="msg"><?= encoded_string $message->{inner_html} ?>
-?   } else {
-      <?= encoded_string $message->{inner_html} ?>
-?     if ($message->{monospace}) {
-        <br />
-?     } else {
-        <hr class="consecutive" />
-?     }
+?   if ($message->{html}) {
+      <?= encoded_string $message->{html} ?>
 ?   }
-? $previous_nick = $message->{nick};
+?   else {
+?     if ($message->{nick} ne $previous_nick) {
+?       my $html = $message->{outter_html};
+?       if ($previous_nick) {
+          </div></hr></li>
+?       }
+?       $html =~ s/><\/div>.*$//s;
+        <?= encoded_string $html ?>><?= encoded_string $message->{inner_html} ?>
+?     } else {
+?       if ($message->{monospaced} or grep {$_ eq $message->{nick}} @{$app->config->monospace_nicks}) {
+          <br />
+?       } else {
+          <hr class="consecutive" />
+?       }
+        <?= encoded_string $message->{inner_html} ?>
+?     }
+?     $previous_nick = $message->{nick};
+?   }
 ? }
+</div></hr></li>
         </ul>
       </td>
     </tr>

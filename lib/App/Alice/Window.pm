@@ -192,6 +192,7 @@ sub format_message {
   my ($self, $nick, $body) = @_;
   $body = decode_utf8($body) unless utf8::is_utf8($body);
   my $html = IRC::Formatting::HTML->formatted_string_to_html($body);
+  $html = make_links_clickable($html);
   my $own_nick = $self->nick;
   my $message = {
     type      => "message",
@@ -236,6 +237,12 @@ sub close_action {
 sub nick_table {
   my $self = shift;
   return _format_nick_table($self->all_nicks(1));
+}
+
+sub make_links_clickable {
+  my $html = shift;
+  $html =~ s/\b(([\w-]+:\/\/?|www[.])[^\s()<>]+(?:\([\w\d]+\)|([^[:punct:]\s]|\/)))/<a href="$1">$1<\/a>/gi;
+  return $html;
 }
 
 sub _format_nick_table {
