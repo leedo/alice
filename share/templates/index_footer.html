@@ -12,7 +12,7 @@
 ?   elsif (@windows == 1) {
 ?     $active = 1;
 ?   }
-
+          alice.connection.msgid = <?= $_[0]->msgid ?>;
           alice.openWindow('<?= $window->id ?>','<?= $window->title ?>',<?= $active ? "true" : "false" ?>);
 ? }
         </script>

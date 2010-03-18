@@ -4,6 +4,7 @@ use AnyEvent;
 use Twiggy::Server;
 use Plack::Request;
 use Plack::Middleware::Static;
+use Plack::Middleware::Auth::Basic;
 use AnyEvent::HTTP;
 use App::Alice::Stream;
 use App::Alice::CommandDispatch;
@@ -58,7 +59,10 @@ sub BUILD {
     path => qr{^/static/},
     root => $self->config->assetdir,
   );
-  $httpd->register_service($static->wrap(sub {
+  my $auth = Plack::Middleware::Auth::Basic->new(
+    authenticator => sub {$self->authenticate(@_)}
+  );
+  $httpd->register_service($auth->wrap($static->wrap(sub {
     my $env = shift;
     my $req = Plack::Request->new($env);
     given ($req->path_info) {
@@ -68,7 +72,6 @@ sub BUILD {
       when ('/tabs')         {return $self->tab_order($req)}
       when ('/view')         {return $self->send_index($req)}
       when ('/stream')       {return $self->setup_stream($req)}
-      when ('/favicon.ico')  {return $self->not_found($req)}
       when ('/say')          {return $self->handle_message($req)}
       when ('/get')          {return $self->image_proxy($req)}
       when ('/logs')         {return $self->send_logs($req)}
@@ -77,7 +80,7 @@ sub BUILD {
       when ('/')             {return $self->send_index($req)}
       default                {return $self->not_found($req)}
     }
-  }));
+  })));
   $self->httpd($httpd);
   $self->ping;
 }
@@ -128,26 +131,18 @@ sub broadcast {
   }
 };
 
-sub check_authentication {
-  my ($self, $req) = @_;
-  return unless ($self->config->auth
+sub authenticate {
+  my ($self, $user, $pass) = @_;
+  return 1 unless ($self->config->auth
       and ref $self->config->auth eq 'HASH'
       and $self->config->auth->{username}
       and $self->config->auth->{password});
 
-  if (my $auth  = $req->headers->{authorization}) {
-    $auth =~ s/^Basic //;
-    $auth = decode_base64($auth);
-    my ($user,$password)  = split(/:/, $auth);
-    if ($self->config->auth->{username} eq $user &&
-        $self->config->auth->{password} eq $password) {
-      return;
-    }
-    else {
-      $self->app->log(info => "auth failed");
-    }
+  if ($self->config->auth->{username} eq $user &&
+      $self->config->auth->{password} eq $pass) {
+    return 1;
   }
-  $req->respond([401, 'unauthorized', {'WWW-Authenticate' => 'Basic realm="Alice"'}]);
+  return 0;
 }
 
 sub setup_stream {
@@ -218,34 +213,47 @@ sub send_index {
 sub send_logs {
   my ($self, $req) = @_;
   my $output = $self->app->render('logs');
-  $req->respond([200, 'ok', {'Content-Type' => 'text/html; charset=utf-8'}, encode_utf8 $output]);
+  my $res = $req->new_response(200);
+  $res->body(encode_utf8 $output);
+  return $res->finalize;
 }
 
 sub send_search {
   my ($self, $req) = @_;
-  $self->app->history->search($req->vars, sub {
-    my $rows = shift;
-    my $content = $self->app->render('results', $rows);
-    $req->respond([200, 'ok', {'Content-Type' => 'text/html; charset=utf-8'}, encode_utf8 $content]);
-  });
+  return sub {
+    my $respond = shift;
+    $self->app->history->search(%{$req->parameters}, sub {
+      my $rows = shift;
+      my $content = $self->app->render('results', $rows);
+      my $res = $req->new_response(200);
+      $res->body(encode_utf8 $content);
+      $respond->($res->finalize);
+    });
+  }
 }
 
 sub send_range {
   my ($self, $req) = @_;
-  my %query = $req->vars;
-  $self->app->history->range($query{channel}, $query{time}, sub {
-    my ($before, $after) = @_;
-    $before = $self->app->render('range', $before, 'before');
-    $after = $self->app->render('range', $after, 'after');
-   $req->respond([200, 'ok', {'Content-Type' => 'text/html; charset=utf-8'}, to_json [$before, $after]]);
-  });
+  return sub {
+    my $respond = shift;
+    $self->app->history->range($req->param('channel'), $req->param('time'), sub {
+      my ($before, $after) = @_;
+      $before = $self->app->render('range', $before, 'before');
+      $after = $self->app->render('range', $after, 'after');
+      my $res = $req->new_response(200);
+      $res->body(to_json [$before, $after]);
+      $respond->($res->finalize);
+    }); 
+  }
 }
 
 sub send_config {
   my ($self, $req) = @_;
   $self->app->log(info => "serving config");
   my $output = $self->app->render('servers');
-  $req->respond([200, 'ok', {}, $output]);
+  my $res = $req->new_response(200);
+  $res->body('ok');
+  return $res->finalize;
 }
 
 sub server_config {
@@ -255,15 +263,17 @@ sub server_config {
   $name =~ s/\s+//g;
   my $config = $self->app->render('new_server', $name);
   my $listitem = $self->app->render('server_listitem', $name);
-  $req->respond([200, 'ok', {"Cache-control" => "no-cache"}, 
-                to_json({config => $config, listitem => $listitem})]);
+  my $res = $req->new_response(200);
+  $res->body(to_json({config => $config, listitem => $listitem}));
+  $res->header("Cache-control" => "no-cache");
+  return $res->finalize;
 }
 
 sub save_config {
   my ($self, $req) = @_;
   $self->app->log(info => "saving config");
   my $new_config = {servers => {}};
-  my %params = $req->vars;
+  my %params = %{$req->parameters};
   for my $name (keys %params) {
     next unless $params{$name};
     if ($name =~ /^(.+?)_(.+)/) {
@@ -286,17 +296,20 @@ sub save_config {
   $self->config->merge($new_config);
   $self->app->reload_config();
   $self->config->write;
-  $req->respond([200, 'ok'])
+  my $res = $req->new_response(200);
+  $res->body('ok');
+  return $res->finalize;
 }
 
 sub tab_order  {
   my ($self, $req) = @_;
   $self->app->log(debug => "updating tab order");
-  my %vars = $req->vars;
   $self->app->tab_order([
-    grep {defined $_} @{$vars{tabs}}
+    grep {defined $_} $req->parameters->get_all('tabs')
   ]);
-  $req->respond([200,'ok']);
+  my $res = $req->new_response(200);
+  $res->body('ok');
+  return $res->finalize;
 }
 
 sub not_found  {
