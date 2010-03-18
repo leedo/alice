@@ -49,11 +49,6 @@ has callback => (
   default => sub {sub{}}
 );
 
-has on_disconnect => (
-  is => 'ro',
-  isa => 'CodeRef'
-);
-
 sub BUILD {
   my $self = shift;
   my $local_time = time;
