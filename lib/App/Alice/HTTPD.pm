@@ -118,15 +118,17 @@ sub image_proxy {
 sub broadcast {
   my ($self, @data) = @_;
   return if $self->no_streams or !@data;
+  my $purge = 0;
   for my $stream ($self->streams) {
     $stream->enqueue(@data);
     try {
       $stream->broadcast;
     } catch {
       $stream->close;
-      $self->purge_disconnects;
+      $purge = 1;
     };
   }
+  $self->purge_disconnects if $purge;
 };
 
 sub authenticate {
