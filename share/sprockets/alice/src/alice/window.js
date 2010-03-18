@@ -134,10 +134,11 @@ Alice.Window = Class.create({
   },
   
   displayTopic: function(topic) {
-    this.topic.update(Alice.makeLinksClickable(topic));
+    this.topic.update(topic);
   },
   
   addMessage: function(message) {
+    console.log(message);
     if (message.html || message.inner_html || message.outter_html) {
       if (message.event == "say" && message.nick && message.nick == this.lastNick) {
         if (this.application.messagesAreMonospacedFor(message.nick) || message.monospaced)
@@ -149,7 +150,7 @@ Alice.Window = Class.create({
       }
       else {
         if (message.event == "topic") {
-          this.messages.insert(Alice.makeLinksClickable(message.html));
+          this.messages.insert(message.html);
           this.displayTopic(message.body.escapeHTML());
         }
         else {
