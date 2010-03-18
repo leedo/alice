@@ -153,6 +153,9 @@ Alice.Window = Class.create({
           this.messages.insert(message.html);
           this.displayTopic(message.body.escapeHTML());
         }
+        else if (message.html) {
+          this.messages.insert(message.html);
+        }
         else {
           this.messages.insert(Alice.uncacheGravatar(message.outter_html));
           var node = this.messages.down("li:last-child div.msg");
