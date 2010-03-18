@@ -183,7 +183,7 @@ sub format_event {
     timestamp => $self->timestamp,
     nicks     => [ $self->all_nicks ],
   };
-  $message->{full_html} = $self->app->render("event", $message);
+  $message->{html} = $self->app->render("event", $message);
   $self->add_message($message);
   return $message;
 }
@@ -192,6 +192,7 @@ sub format_message {
   my ($self, $nick, $body) = @_;
   $body = decode_utf8($body) unless utf8::is_utf8($body);
   my $html = IRC::Formatting::HTML->formatted_string_to_html($body);
+  $html = make_links_clickable($html);
   my $own_nick = $self->nick;
   my $message = {
     type      => "message",
@@ -199,15 +200,13 @@ sub format_message {
     nick      => $nick,
     avatar    => $self->irc->nick_avatar($nick),
     window    => $self->serialized,
-    body      => $body,
     highlight => ($own_nick ne $nick and $body) =~ /\b$own_nick\b/i ? 1 : 0,
-    html      => encoded_string($html),
+    inner_html => $html,
     self      => $own_nick eq $nick,
     msgid     => $self->app->next_msgid,
     timestamp => $self->timestamp,
   };
-  $message->{full_html} = $self->app->render("message", $message);
-  $message->{html} = "$html";
+  $message->{outter_html} = $self->app->render("message", $message);
   $self->add_message($message);
   return $message;
 }
@@ -221,7 +220,7 @@ sub format_announcement {
     window  => $self->serialized,
     message => $msg,
   };
-  $message->{full_html} = $self->app->render('announcement', $message);
+  $message->{html} = $self->app->render('announcement', $message);
   return $message;
 }
 
@@ -238,6 +237,12 @@ sub close_action {
 sub nick_table {
   my $self = shift;
   return _format_nick_table($self->all_nicks(1));
+}
+
+sub make_links_clickable {
+  my $html = shift;
+  $html =~ s/\b(([\w-]+:\/\/?|www[.])[^\s()<>]+(?:\([\w\d]+\)|([^[:punct:]\s]|\/)))/<a href="$1">$1<\/a>/gi;
+  return $html;
 }
 
 sub _format_nick_table {

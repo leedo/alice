@@ -36,11 +36,12 @@ has 'timer' => (
   is  => 'rw',
 );
 
-has 'request' => (
+has 'writer' => (
   is  => 'rw',
-  isa => 'AnyEvent::HTTPD::Request|Undef',
   required => 1,
 );
+
+has start_time => (is => 'ro');
 
 has callback => (
   is  => 'rw',
@@ -51,12 +52,12 @@ has callback => (
 sub BUILD {
   my $self = shift;
   my $local_time = time;
-  my $remote_time = $self->request->parm('t') || $local_time;
+  my $remote_time = $self->start_time || $local_time;
   $self->offset($local_time - $remote_time);
-  $self->request->respond([
-    200, 'ok', {'Content-Type' => 'multipart/mixed; boundary='.$self->seperator.'; charset=utf-8'},
-    sub {ref $_[0] ? $self->callback($_[0]) : $self->disconnected(1)}
-  ]);
+  my $writer = $self->writer->(
+    [200, ['Content-Type' => 'multipart/mixed; boundary='.$self->seperator.'; charset=utf-8']]
+  );
+  $self->writer($writer);
   $self->broadcast;
 }
 
@@ -67,15 +68,14 @@ sub broadcast {
     $self->delay($delay);
     return;
   }
-  $self->callback->( $self->to_string );
+  $self->writer->write( $self->to_string );
   $self->flush;
 }
 
 sub close {
   my $self = shift;
+  $self->writer->close;
   $self->timer(undef);
-  $self->callback() if $self->callback;
-  $self->request(undef);
   $self->disconnected(1);
 }
 
