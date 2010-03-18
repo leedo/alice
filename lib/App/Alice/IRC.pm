@@ -493,6 +493,7 @@ sub irc_352 {
   utf8::decode($_) for ($channel, $user, $nick, $real);
   my $info = {
     IP       => $ip     || "",
+    user     => $user || "",
     server   => $server || "",
     real     => $real   || "",
     channels => {$channel => $flags},
@@ -561,7 +562,8 @@ sub whois_table {
   my ($self, $nick) = @_;
   my $info = $self->get_nick_info($nick);
   return "No info for user \"$nick\"" if !$info;
-  return "real: $info->{real}\nhost: $info->{IP}\nserver: $info->{server}\nchannels: " .
+  return "real: $info->{real}\nuser: $info->{user}\n" .
+         "host: $info->{IP}\nserver: $info->{server}\nchannels: " .
          join " ", keys %{$info->{channels}};
 }
 
