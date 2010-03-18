@@ -138,8 +138,7 @@ Alice.Window = Class.create({
   },
   
   addMessage: function(message) {
-    console.log(message);
-    if (message.inner_html || message.outter_html) {
+    if (message.html || message.inner_html || message.outter_html) {
       if (message.event == "say" && message.nick && message.nick == this.lastNick) {
         if (this.application.messagesAreMonospacedFor(message.nick) || message.monospaced)
           this.messages.down('li:last-child div.msg').insert(
