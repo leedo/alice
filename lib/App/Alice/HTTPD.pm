@@ -28,8 +28,15 @@ has 'app' => (
 has 'httpd' => (is  => 'rw');
 has 'ping_timer' => (is  => 'rw');
 
+has 'config' => (
+  is => 'ro',
+  isa => 'App::Alice::Config',
+  lazy => 1,
+  default => sub {shift->app->config},
+);
+
 has 'streams' => (
-  is  => 'rw',
+  is => 'rw',
   auto_deref => 1,
   isa => 'ArrayRef[App::Alice::Stream]',
   default => sub {[]},
@@ -38,13 +45,6 @@ has 'streams' => (
 sub add_stream {push @{shift->streams}, @_}
 sub no_streams {@{$_[0]->streams} == 0}
 sub stream_count {scalar @{$_[0]->streams}}
-
-has 'config' => (
-  is => 'ro',
-  isa => 'App::Alice::Config',
-  lazy => 1,
-  default => sub {shift->app->config},
-);
 
 sub BUILD {
   my $self = shift;
