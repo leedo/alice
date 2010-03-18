@@ -12,7 +12,6 @@ use Plack::Middleware::Auth::Basic;
 use App::Alice::Stream;
 use App::Alice::CommandDispatch;
 
-use MIME::Base64;
 use JSON;
 use Encode;
 use Any::Moose;
@@ -26,10 +25,8 @@ has 'app' => (
   required => 1,
 );
 
-has 'httpd' => (
-  is  => 'rw',
-  isa => 'Twiggy::Server|Undef'
-);
+has 'httpd' => (is  => 'rw');
+has 'ping_timer' => (is  => 'rw');
 
 has 'streams' => (
   is  => 'rw',
@@ -47,10 +44,6 @@ has 'config' => (
   isa => 'App::Alice::Config',
   lazy => 1,
   default => sub {shift->app->config},
-);
-
-has 'ping_timer' => (
-  is  => 'rw',
 );
 
 sub BUILD {
@@ -158,8 +151,8 @@ sub setup_stream {
     my $respond = shift;
     $self->add_stream(
       App::Alice::Stream->new(
-        queue   => [],
-        writer => $respond,
+        queue      => [],
+        writer     => $respond,
         start_time => $req->param('t'),
       )
     );
@@ -169,9 +162,7 @@ sub setup_stream {
 sub purge_disconnects {
   my ($self) = @_;
   $self->app->log(debug => "removing broken streams");
-  $self->streams([
-    grep {!$_->disconnected} $self->streams
-  ]);
+  $self->streams([grep {!$_->disconnected} $self->streams]);
 }
 
 sub handle_message {
@@ -252,7 +243,9 @@ sub send_range {
 sub send_config {
   my ($self, $req) = @_;
   $self->app->log(info => "serving config");
+  
   my $output = $self->app->render('servers');
+  
   my $res = $req->new_response(200);
   $res->body($output);
   return $res->finalize;
@@ -261,10 +254,12 @@ sub send_config {
 sub server_config {
   my ($self, $req) = @_;
   $self->app->log(info => "serving blank server config");
+  
   my $name = $req->param('name');
   $name =~ s/\s+//g;
   my $config = $self->app->render('new_server', $name);
   my $listitem = $self->app->render('server_listitem', $name);
+  
   my $res = $req->new_response(200);
   $res->body(to_json({config => $config, listitem => $listitem}));
   $res->header("Cache-control" => "no-cache");
@@ -274,24 +269,26 @@ sub server_config {
 sub save_config {
   my ($self, $req) = @_;
   $self->app->log(info => "saving config");
+  
   my $new_config = {servers => {}};
+  
   for my $name (keys %{$req->parameters}) {
     next unless $req->parameters->{$name};
     if ($name =~ /^(.+?)_(.+)/) {
       if ($2 eq "channels" or $2 eq "on_connect") {
         $new_config->{servers}{$1}{$2} = [$req->parameters->get_all($name)];
-      }
-      else {
+      } else {
         $new_config->{servers}{$1}{$2} = $req->param($name);
       }
-    }
-    else {
+    } else {
       $new_config->{$name} = $req->param($name);
     }
   }
+  
   $self->config->merge($new_config);
   $self->app->reload_config();
   $self->config->write;
+  
   my $res = $req->new_response(200);
   $res->body('ok');
   return $res->finalize;
@@ -300,9 +297,9 @@ sub save_config {
 sub tab_order  {
   my ($self, $req) = @_;
   $self->app->log(debug => "updating tab order");
-  $self->app->tab_order([
-    grep {defined $_} $req->parameters->get_all('tabs')
-  ]);
+  
+  $self->app->tab_order([grep {defined $_} $req->parameters->get_all('tabs')]);
+  
   my $res = $req->new_response(200);
   $res->body('ok');
   return $res->finalize;
