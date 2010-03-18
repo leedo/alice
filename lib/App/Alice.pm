@@ -99,7 +99,7 @@ has notifier => (
 );
 
 has history => (
-  is      => 'ro',
+  is      => 'rw',
   lazy    => 1,
   default => sub {
     my $self = shift;
@@ -218,6 +218,7 @@ sub init_shutdown {
   $self->{on_shutdown} = $cb;
   $self->shutting_down(1);
   $self->httpd->shutdown;
+  $self->history(undef);
   if (!$self->ircs) {
     $self->shutdown;
     return;
