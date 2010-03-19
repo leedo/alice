@@ -60,6 +60,7 @@ sub BUILD {
     [200, ['Content-Type' => 'multipart/mixed; boundary='.$self->seperator.'; charset=utf-8']]
   );
   $self->writer($writer);
+  $self->broadcast;
 }
 
 sub broadcast {
