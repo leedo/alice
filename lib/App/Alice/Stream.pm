@@ -5,6 +5,9 @@ use Time::HiRes qw/time/;
 use Try::Tiny;
 use Any::Moose;
 
+use strict;
+use warnings;
+
 has queue => (
   is  => 'rw',
   isa => 'ArrayRef[HashRef]',
@@ -84,8 +87,8 @@ sub close {
 sub flooded {
   my $self = shift;
   my $diff = time - $self->last_send;
-  if ($diff < 0.2) {
-    return 0.2 - $diff;
+  if ($diff < 0.1) {
+    return 0.1 - $diff;
   }
   return 0;
 }
