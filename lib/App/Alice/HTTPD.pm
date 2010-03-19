@@ -153,7 +153,9 @@ sub setup_stream {
     my $respond = shift;
     $self->add_stream(
       App::Alice::Stream->new(
-        queue      => [],
+        queue      => [
+          ($msgid ? $self->app->buffered_messages($msgid) : ())
+        ],
         writer     => $respond,
         start_time => $req->param('t'),
       )
