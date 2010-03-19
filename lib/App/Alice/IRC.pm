@@ -394,7 +394,8 @@ sub _join {
     $self->get_nick_info($nick)->{channels}{$channel} = '';
   }
   if ($is_self) {
-    $self->app->create_window($channel, $self);
+    my $window = $self->app->create_window($channel, $self);
+    $self->broadcast($window->join_action);
     # client library only sends WHO if the server doesn't
     # send hostnames with NAMES list (UHNAMES), we to WHO always
     $self->send_srv("WHO" => $channel) if $cl->isupport("UHNAMES");
@@ -515,7 +516,7 @@ sub irc_366 {
   my ($self, $cl, $msg) = @_;
   utf8::decode($msg->{params}[1]);
   if (my $window = $self->find_window($msg->{params}[1])) {
-    $self->broadcast($window->join_action);
+    $self->broadcast($window->nicks_action);
   }
 }
 
