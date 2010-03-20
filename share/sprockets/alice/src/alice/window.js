@@ -28,9 +28,11 @@ Alice.Window = Class.create({
     this.tabButton.observe("click", function(e) {if (this.active) this.close()}.bind(this));
     document.observe("mouseover", this.showNick.bind(this));
     this.scrollToBottom(true);
-    this.messages.select('.msg').each(function (msg) {
-      msg.innerHTML = application.applyFilters(msg.innerHTML);
-    });
+    setTimeout(function () {
+      this.messages.select('.msg').each(function (msg) {
+        msg.innerHTML = application.applyFilters(msg.innerHTML);
+      });
+    }.bind(this), 1000);
   },
   
   isTabWrapped: function() {
