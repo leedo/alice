@@ -7555,6 +7555,10 @@ Alice.Window = Class.create({
     this.tab.observe("click", function(e) {this.active = true}.bind(this));
     this.tabButton.observe("click", function(e) {if (this.active) this.close()}.bind(this));
     document.observe("mouseover", this.showNick.bind(this));
+    this.scrollToBottom(true);
+    this.messages.select('.msg').each(function (msg) {
+      msg.innerHTML = application.applyFilters(msg.innerHTML);
+    });
   },
 
   isTabWrapped: function() {
@@ -7665,7 +7669,6 @@ Alice.Window = Class.create({
   },
 
   addMessage: function(message) {
-    console.log(message);
     if (message.html || message.inner_html || message.outter_html) {
       if (message.event == "say" && message.nick && message.nick == this.lastNick) {
         if (this.application.messagesAreMonospacedFor(message.nick) || message.monospaced)
