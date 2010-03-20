@@ -1,9 +1,9 @@
 div.left {
-  width: 60px;
+  width: 40px;
 }
 
 div.msg {
-  margin-left: 71px;
+  margin-left: 52px;
 }
 
 html, body {
@@ -41,6 +41,11 @@ div.window {
 ul.messages {
   height: 300px;
   overflow: auto;
+}
+
+div.topic {
+  height: 1.2em;
+  overflow: hidden;
 }
 
 tr.input textarea {
