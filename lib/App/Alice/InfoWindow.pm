@@ -28,9 +28,9 @@ has '+irc' => (
 );
 
 sub format_message {
-  my ($self, $from, $body, $highlight, $monospaced) = @_;
+  my ($self, $from, $body, $highlight, $monospaced, $is_html) = @_;
   $highlight = 0 unless $highlight;
-  my $html = IRC::Formatting::HTML->formatted_string_to_html($body);
+  my $html = $is_html ? $body : IRC::Formatting::HTML->formatted_string_to_html($body);
   my $message = {
     type   => "message",
     event  => "say",

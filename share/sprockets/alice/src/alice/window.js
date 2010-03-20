@@ -49,9 +49,9 @@ Alice.Window = Class.create({
       this.visibleNick = li;
       // WTF, using down/select here completely breaks webkit
       var nick = li.down().down(2);
-      var time = li.childNodes[5];
+      var time = li.childNodes[3];
 
-      if (nick || time) {
+      if (nick || (time && time.hasClassName('timehint'))) {
         this.visibleNickTimeout = setTimeout(function(nick, time) {
           if (nick) {
             nick.style.opacity = 1;
