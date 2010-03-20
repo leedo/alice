@@ -98,9 +98,11 @@ sub msg {
 
 sub _join {
   my ($self, $window, $channel, $network) = @_;
-  my $irc = $window->irc;
+  my $irc;
   if ($network and $self->app->has_irc($network)) {
     $irc = $self->app->get_irc($network);
+  } else {
+    $irc = $window->irc;
   }
   my @params = split /\s+/, $channel;
   if ($irc and $irc->cl->is_channel_name($params[0])) {
