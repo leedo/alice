@@ -9,7 +9,6 @@ use Encode;
 
 has 'cl' => (
   is      => 'rw',
-  isa     => 'AnyEvent::IRC::Client|App::Alice::Test::MockIRC',
   default => sub {AnyEvent::IRC::Client->new},
 );
 
