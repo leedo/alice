@@ -154,7 +154,8 @@ sub setup_stream {
     $self->add_stream(
       App::Alice::Stream->new(
         queue      => [
-          ($msgid ? $self->app->buffered_messages($msgid) : ())
+          ($msgid ? $self->app->buffered_messages($msgid) : ()),
+          map({$_->nicks_action} $self->app->windows),
         ],
         writer     => $respond,
         start_time => $req->param('t'),
