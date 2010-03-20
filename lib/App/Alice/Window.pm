@@ -243,7 +243,7 @@ sub nick_table {
 
 sub make_links_clickable {
   my $html = shift;
-  $html =~ s/\b(([\w-]+:\/\/?|www[.])[^\s()<>]+(?:\([\w\d]+\)|([^[:punct:]\s]|\/)))/<a href="$1">$1<\/a>/gi;
+  $html =~ s/\b(([\w-]+:\/\/?|www[.])[^\s()<>]+(?:\([\w\d]+\)|([^[:punct:]\s]|\/)))/<a href="$1" target="_blank" rel="noreferrer">$1<\/a>/gi;
   return $html;
 }
 
