@@ -340,6 +340,11 @@ div.msg img {
   padding: 8px 5px;
 }
 
+span.monospace {
+  display: block;
+  padding: 0;
+}
+
 div.msg.monospace span[style*="bold"],
 div.msg.announce span[style*="bold"] {
   letter-spacing: -1px;

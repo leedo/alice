@@ -74,7 +74,7 @@ sub dispatch {
     when ('/view')         {return $self->send_index($req)}
     when ('/stream')       {return $self->setup_stream($req)}
     when ('/say')          {return $self->handle_message($req)}
-    when ('/get')          {return $self->image_proxy($req)}
+    when (/^\/get/)          {return $self->image_proxy($req)}
     when ('/logs')         {return $self->send_logs($req)}
     when ('/search')       {return $self->send_search($req)}
     when ('/range')        {return $self->send_range($req)}
@@ -109,10 +109,16 @@ sub image_proxy {
   my ($self, $req) = @_;
   my $url = $req->request_uri;
   $url =~ s/^\/get\///;
-  http_get $url, sub {
-    my ($data, $headers) = @_;
-    $req->respond([$headers->{Status},$headers->{Reason},$headers,$data]);
-  };
+  return sub {
+    my $respond = shift;
+    http_get $url, sub {
+      my ($data, $headers) = @_;
+      my $res = $req->new_response($headers->{Status});
+      $res->headers($headers);
+      $res->body($data);
+      $respond->($res->finalize);
+    };
+  }
 }
 
 sub broadcast {

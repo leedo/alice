@@ -207,6 +207,7 @@ sub format_message {
     self      => $own_nick eq $nick,
     msgid     => $self->app->next_msgid,
     timestamp => $self->timestamp,
+    monospaced => $self->app->is_monospace_nick($nick),
   };
   $message->{outter_html} = $self->app->render("message", $message);
   $self->add_message($message);

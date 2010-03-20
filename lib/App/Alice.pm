@@ -373,15 +373,16 @@ sub reload_config {
 }
 
 sub format_info {
-  my ($self, $session, $body, $highlight, $monospaced) = @_;
+  my ($self, $session, $body, $highlight, $monospaced, $is_html) = @_;
   $highlight = 0 unless $highlight;
-  $self->info_window->format_message($session, $body, $highlight, $monospaced);
+  $is_html = 0 unless $is_html;
+  $self->info_window->format_message($session, $body, $highlight, $monospaced, $is_html);
 }
 
 sub broadcast {
   my ($self, @messages) = @_;
   # add any highlighted messages to the log window
-  push @messages, map {$self->format_info($_->{nick}, $_->{body}, 1)}
+  push @messages, map {$self->format_info($_->{nick}, $_->{inner_html}, 1, 0, 1)}
                   grep {$_->{highlight}} @messages;
   
   $self->httpd->broadcast(@messages);
@@ -409,6 +410,14 @@ sub format_notice {
 sub render {
   my ($self, $template, @data) = @_;
   return $self->template->render_file("$template.html", $self, @data)->as_string;
+}
+
+sub is_monospace_nick {
+  my ($self, $nick) = @_;
+  for (@{$self->config->monospace_nicks}) {
+    return 1 if $_ eq $nick;
+  }
+  return 0;
 }
 
 sub is_ignore {

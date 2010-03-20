@@ -3,42 +3,46 @@
 <div class="window <?= join " ", @classes ?>" id="<?= $window->id ?>">
   <table cellspacing="0" cellpadding="0">
     <tr class="topic">
-      <td id="<?= $window->id ?>_topic">
-        <div class="topic"><?= $window->topic->{string} ?></div>
+      <td>
+        <div class="topic" id="<?= $window->id ?>_topic"><?= $window->topic->{string} ?></div>
       </td>
     </tr>
     <tr>
       <td valign="top">
         <ul class="messages" id="<?= $window->id ?>_messages">
 ? my $previous_nick = "";
+? my $close = 0;
 ? for my $message (@{$window->msgbuffer}) {
 ?   if ($message->{inner_html}) {
 ?     if ($message->{nick} ne $previous_nick) {
 ?       my $html = $message->{outter_html};
 ?       if ($previous_nick) {
-          </div><hr /></li>
+</div><hr /></li>
+?         $close = 0;
 ?       }
 ?       $html =~ s/><\/div>.*$//s;
-        <?= encoded_string $html ?>><?= encoded_string $message->{inner_html} ?>
+?       $close = 1;
+<?= encoded_string $html ?>><?= encoded_string $message->{inner_html} ?>
 ?     } else {
-?       if ($message->{monospaced} or grep {$_ eq $message->{nick}} @{$app->config->monospace_nicks}) {
-          <br />
-?       } else {
-          <hr class="consecutive" />
+?       if (!$message->{monospaced}) {
+<hr class="consecutive" />
 ?       }
-        <?= encoded_string $message->{inner_html} ?>
+<?= encoded_string $message->{inner_html} ?>
 ?     }
 ?     $previous_nick = $message->{nick};
 ?   }
 ?   elsif ($message->{html}) {
 ?     if ($previous_nick) {
         </div><hr /></li>
+?       $close = 0;
 ?       $previous_nick = "";
 ?     }
       <?= encoded_string $message->{html} ?>
 ?   }
 ? }
-</div><hr /></li>
+? if ($close) {
+  </div><hr /></li>
+? }
         </ul>
       </td>
     </tr>
