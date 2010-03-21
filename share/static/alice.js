@@ -7370,7 +7370,7 @@ Alice.Application = Class.create({
       case "clear":
         var win = this.getWindow(action['window'].id);
         if (win) {
-          win.messages.update("");
+          win.messages.down("ul").update("");
           win.lastNick = "";
         }
         break;
@@ -7672,13 +7672,9 @@ Alice.Window = Class.create({
 
   addMessage: function(message) {
     if (message.html) {
-      var li = this.messages.down('ul').insert(Alice.uncacheGravatar(message.html));
-      if (message.event == "topic") {
-        this.displayTopic(message.body.escapeHTML());
-      }
-      else if (this.lastNick == message.nick) {
-        li.addClassName("consecutive");
-        var msg = this.messages.down("li:last-child div.msg");
+      this.messages.down('ul').insert(Alice.uncacheGravatar(message.html));
+      if (message.event == "say") {
+        var msg = this.messages.down('li:last-child div.msg');
         msg.innerHTML = this.application.applyFilters(msg.innerHTML);
         var nick = this.messages.down('li:last-child span.nickhint');
         if (nick && this.nicksVisible) {
@@ -7691,10 +7687,16 @@ Alice.Window = Class.create({
           time.style.opacity = 1;
         }
       }
+      if (message.event == "topic") {
+        this.displayTopic(message.body.escapeHTML());
+      }
+      else if (this.lastNick == message.nick) {
+        li.addClassName("consecutive");
+      }
 
       if (!message.self) {
         this.messages.select('li.self.avatar + li:not(.self)').each(function (li) {
-          li.previous().setStyle({minHeight:"41px"});
+          li.previous().setStyle({minHeight:"42px"});
         });
       }
 
