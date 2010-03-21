@@ -333,6 +333,14 @@ ul.messages li.avatar:last-child {
   min-height: 41px;
 }
 
+ul.messages li {
+  min-height: 24px;
+}
+
+ul.messages li.monospace {
+  min-height: 0px;
+}
+
 ul.messages li.message:last-child {
   border-bottom: 1px solid #eee;
 }
