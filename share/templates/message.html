@@ -1,10 +1,10 @@
 ? my ($app, $msg) = @_;
-<li class="message <?= $msg->{nick} ?>
-  <? if ($msg->{self}) { ?> self<?}?>" id="<?= $msg->{msgid} ?>">
+? my $avatar = (!$msg->{consecutive} and $msg->{avatar} and $app->config->{avatars} eq "show") ? $msg->{avatar} : "";
+<li class="msg <?= $avatar ? "avatar " : "" ?><?= $msg->{nick} ?><?= $msg->{self} ? " self" : "" ?><?= $msg->{consecutive} ? " consecutive" : "" ?><?= $msg->{monospaced} ? " monospace" : ""?>" id="<?= $msg->{msgid} ?>">
     <div class="left">
       <a href="javascript:alice.connection.requestWindow('<?= $msg->{nick} ?>','<?= $msg->{window}{id} ?>')" class="nick">
-        <? if ($msg->{avatar} and ($app->config->{avatars} eq "show")) { ?>
-          <img src="<?= $msg->{avatar} ?>" alt="<?= $msg->{nick} ?>" />
+        <? if ($avatar) { ?>
+          <img src="<?= $avatar ?>" alt="<?= $msg->{nick} ?>" />
           <span class="nickhint"><?= $msg->{nick} ?></span>
         <? } else { ?>
           <?= $msg->{nick} ?>
@@ -14,6 +14,5 @@
     <? if ($msg->{timestamp}) { ?>
     <div class="timehint"><?= $msg->{timestamp} ?></div>
     <? } ?>
-    <div class="msg<? if ($msg->{monospaced}) { ?> monospace<?}?>"></div>
-  <hr />
+    <div class="msg"><?= $msg->{html} ?></div>
 </li>

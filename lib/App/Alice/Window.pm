@@ -38,6 +38,11 @@ has title => (
   required => 1,
 );
 
+has previous_nick => (
+  is       => 'rw',
+  default  => "",
+);
+
 has topic => (
   is      => 'rw',
   isa     => 'HashRef[Str|Undef]',
@@ -186,6 +191,7 @@ sub format_event {
   $message->{html} = make_links_clickable(
     $self->app->render("event", $message)
   );
+  $self->previous_nick("");
   $self->add_message($message);
   return $message;
 }
@@ -203,13 +209,15 @@ sub format_message {
     avatar    => $self->irc->nick_avatar($nick),
     window    => $self->serialized,
     highlight => ($own_nick ne $nick and $body) =~ /\b$own_nick\b/i ? 1 : 0,
-    inner_html => $html,
+    html      => encoded_string($html),
     self      => $own_nick eq $nick,
     msgid     => $self->app->next_msgid,
     timestamp => $self->timestamp,
     monospaced => $self->app->is_monospace_nick($nick),
+    consecutive => $nick eq $self->previous_nick ? 1 : 0,
   };
-  $message->{outter_html} = $self->app->render("message", $message);
+  $message->{html} = $self->app->render("message", $message);
+  $self->previous_nick($nick);
   $self->add_message($message);
   return $message;
 }
@@ -224,6 +232,7 @@ sub format_announcement {
     message => $msg,
   };
   $message->{html} = $self->app->render('announcement', $message);
+  $self->previous_nick("");
   return $message;
 }
 

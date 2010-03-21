@@ -7671,37 +7671,25 @@ Alice.Window = Class.create({
   },
 
   addMessage: function(message) {
-    if (message.html || message.inner_html || message.outter_html) {
-      if (message.event == "say" && message.nick && message.nick == this.lastNick) {
-        if (this.application.messagesAreMonospacedFor(message.nick) || message.monospaced)
-          this.messages.down('li:last-child div.msg').insert(
-            "<br>" + this.application.applyFilters(message.inner_html));
-        else if (message.event == "say")
-          this.messages.down('li:last-child div.msg').insert(
-            Alice.stripNick(this.application.applyFilters("<hr class=\"consecutive\">"+message.inner_html)));
+    if (message.html) {
+      this.messages.insert(Alice.uncacheGravatar(message.html));
+      if (message.event == "topic") {
+        this.displayTopic(message.body.escapeHTML());
       }
-      else {
-        if (message.event == "topic") {
-          this.messages.insert(message.html);
-          this.displayTopic(message.body.escapeHTML());
+      else if (this.lastNick == message.nick) {
+        var li = this.messages.down("li:last-child");
+        li.addClassName("consecutive");
+        var msg = this.messages.down("li:last-child div.msg");
+        msg.innerHTML = this.application.applyFilters(msg.innerHTML);
+        var nick = this.messages.down('li:last-child span.nickhint');
+        if (nick && this.nicksVisible) {
+          nick.style.webkitTransition = 'none 0 linear';
+          nick.style.opacity = 1;
         }
-        else if (message.html) {
-          this.messages.insert(message.html);
-        }
-        else {
-          this.messages.insert(Alice.uncacheGravatar(message.outter_html));
-          var node = this.messages.down("li:last-child div.msg");
-          node.insert(this.application.applyFilters(message.inner_html));
-          var nick = this.messages.down('li:last-child span.nickhint');
-          if (nick && this.nicksVisible) {
-            nick.style.webkitTransition = 'none 0 linear';
-            nick.style.opacity = 1;
-          }
-          var time = this.messages.down('li:last-child div.timehint');
-          if (time && this.nicksVisible) {
-            time.style.webkitTransition = 'none 0 linear';
-            time.style.opacity = 1;
-          }
+        var time = this.messages.down('li:last-child div.timehint');
+        if (time && this.nicksVisible) {
+          time.style.webkitTransition = 'none 0 linear';
+          time.style.opacity = 1;
         }
       }
 

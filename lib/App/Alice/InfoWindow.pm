@@ -36,12 +36,15 @@ sub format_message {
     event  => "say",
     nick   => $from,
     window => $self->serialized,
-    inner_html => $monospaced ? "<span class=\"monospace\">$html</span>" : $html,
+    html   => encoded_string($html),
     self   => $highlight,
     msgid  => $self->app->next_msgid,
+    timestamp => $self->timestamp,
     monospaced => $monospaced ? 1 : 0,
+    consecutive => $from eq $self->previous_nick ? 1 : 0,
   };
-  $message->{outter_html} = $self->app->render("message", $message);
+  $message->{html} = $self->app->render("message", $message);
+  $self->previous_nick($from);
   $self->add_message($message);
   return $message;
 }
