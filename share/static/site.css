@@ -207,27 +207,32 @@ tr.topic a {
   text-decoration: none;
 }
 
-ul.messages {
-  list-style: none;
-  margin: 0;
-  padding: 0;
+div.message_wrap {
   height: 100%;
   overflow-x: none;
   overflow-y: auto;
   background: #fff;
 }
 
+ul.messages {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  background: url(image/background.png) top left repeat-y;
+  margin-bottom: 3px;
+}
+
 ul.messages li {
   font-size: 13px;
-  clear: both;
   display: block;
-  overflow: hidden;
   position: relative;
-  background: url(image/background.png) top left repeat-y;
+}
+
+ul.messages li:not(.consecutive) {
+  clear: both;
 }
 
 ul.messages li:last-child {
-  margin-bottom: 3px;
 }
 
 ul.messages li:first-child {
@@ -248,28 +253,30 @@ ul.messages li.consecutive div.left {
 
 div.left {
   float: left;
-  width: 120px;
+  width: 127px;
   font-weight: bold;
   text-align: right;
-  padding: 5px;
-  overflow: hidden;
+  padding: 4px 0;
   text-overflow: ellipsis;
   position: relative;
+}
+
+ul.messages li.avatar {
+  z-index: 999;
 }
 
 div.left img {
   border: 1px solid #fff;
   display: block;
-  float: right;
-  margin-right: -2px;
-  margin-top: -1px;
   width: 32px;
   height: 32px;
+  float: right;
 }
 
 div.left span.nickhint {
   position: absolute;
-  right: 4px;
+  z-index: 999;
+  right: 1px;
   top: 5px;
   padding: 0 2px;
   min-width: 28px;
@@ -293,11 +300,15 @@ div.timehint {
 
 div.msg {
   margin-left: 132px;
-  padding: 5px;
+  padding: 3px 5px;
   word-wrap: break-word;
   -khtml-line-break: after-white-space;
   -khtml-nbsp-mode: space;
   border-top: 1px solid #eee;
+}
+
+li.event div.msg {
+  padding: 5px;
 }
 
 li.event + li.message div.msg {
@@ -308,7 +319,11 @@ ul.messages li:first-child div.msg {
   border-top: none;
 }
 
-ul.messages li:last-child {
+ul.messages li.avatar:last-child {
+  min-height: 41px;
+}
+
+ul.messages li.message:last-child {
   border-bottom: 1px solid #eee;
 }
 
@@ -318,18 +333,6 @@ ul.messages li.consecutive div.msg {
 
 ul.messages li + li.consecutive div.msg {
   padding-top: 0px;
-}
-
-ul.messages li.avatar {
-  z-index: 999;
-}
-
-ul.messages li.avatar + li.consecutive {
-  margin-top: -18px;
-}
-
-ul.messages li + li.consecutive {
-  margin-top: -2px;
 }
 
 div.msg a {
@@ -346,7 +349,6 @@ ul.messages li.monospace + li.monospace {
 }
 
 ul.messages li.monospace.avatar + li.monospace.consecutive {
-  margin-top: -24px;
 }
 
 ul.messages li.monospace div.msg {

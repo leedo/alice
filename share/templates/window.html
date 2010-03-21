@@ -9,11 +9,13 @@
     </tr>
     <tr>
       <td valign="top">
+        <div class="message_wrap">
         <ul class="messages" id="<?= $window->id ?>_messages">
           <? for (@{$window->msgbuffer}) { ?>
             <?= encoded_string $_->{html} ?>
           <? } ?>
         </ul>
+        </div>
       </td>
     </tr>
     <tr class="vert_dragger">

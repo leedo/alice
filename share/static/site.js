@@ -36,8 +36,6 @@ if (window == window.parent) {
       }
       $$('#config_overlay option').each(function(opt){opt.selected = false});
     });
-    var width = document.viewport.getWidth();
-    $$('.messages').invoke('setStyle', {width: width+"px"});
     if (alice.activeWindow()) alice.activeWindow().input.focus()
  
     window.onkeydown = function (e) {
@@ -46,8 +44,6 @@ if (window == window.parent) {
  
     window.onresize = function () {
       if (alice.activeWindow()) alice.activeWindow().scrollToBottom()
-      var width = document.viewport.getWidth();
-      $$('.messages').invoke('setStyle', {width: width+"px"});
     };
  
     window.status = " ";  
@@ -105,9 +101,8 @@ function loadInlineImage(image) {
   image.style.display = 'block';
   image.style.visibility = 'visible';
   setTimeout(function () {
-    var messagelist = image.up("ul.messages");
+    var messagelist = image.up(".message_wrap");
     messagelist.scrollTop = messagelist.scrollHeight;
-    console.log("scrolling to bottom");
   }, 50);
 }
 

@@ -13,7 +13,7 @@ Alice.Window = Class.create({
     this.tabOverflowButton = $(this.id + "_tab_overflow_button");
     this.form = $(this.id + "_form");
     this.topic = $(this.id + "_topic");
-    this.messages = $(this.id + "_messages");
+    this.messages = this.element.down('.message_wrap');
     this.submit = $(this.id + "_submit");
     this.lastNick = "";
     this.nicksVisible = false;
@@ -145,7 +145,7 @@ Alice.Window = Class.create({
   
   addMessage: function(message) {
     if (message.html) {
-      this.messages.insert(Alice.uncacheGravatar(message.html));
+      this.messages.down('ul').insert(Alice.uncacheGravatar(message.html));
       if (message.event == "topic") {
         this.displayTopic(message.body.escapeHTML());
       }
