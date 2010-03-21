@@ -7672,12 +7672,11 @@ Alice.Window = Class.create({
 
   addMessage: function(message) {
     if (message.html) {
-      this.messages.down('ul').insert(Alice.uncacheGravatar(message.html));
+      var li = this.messages.down('ul').insert(Alice.uncacheGravatar(message.html));
       if (message.event == "topic") {
         this.displayTopic(message.body.escapeHTML());
       }
       else if (this.lastNick == message.nick) {
-        var li = this.messages.down("li:last-child");
         li.addClassName("consecutive");
         var msg = this.messages.down("li:last-child div.msg");
         msg.innerHTML = this.application.applyFilters(msg.innerHTML);
@@ -7691,6 +7690,12 @@ Alice.Window = Class.create({
           time.style.webkitTransition = 'none 0 linear';
           time.style.opacity = 1;
         }
+      }
+
+      if (!message.self) {
+        this.messages.select('li.self.avatar + li:not(.self)').each(function (li) {
+          li.previous().setStyle({minHeight:"41px"});
+        });
       }
 
       this.lastNick = "";

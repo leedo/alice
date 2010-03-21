@@ -261,6 +261,11 @@ div.left {
   position: relative;
 }
 
+li.event div.left {
+  padding: 5px 0;
+  width: 125px;
+}
+
 ul.messages li.avatar {
   z-index: 999;
 }
@@ -291,7 +296,7 @@ div.timehint {
   position: absolute;
   font-size: 0.8em;
   right: 0px;
-  top: 6px;
+  top: 4px;
   padding: 2px 4px;
   color: #333;
   opacity: 0;
@@ -319,6 +324,7 @@ ul.messages li:first-child div.msg {
   border-top: none;
 }
 
+/* so the last avatar doesn't hang off the edge */
 ul.messages li.avatar:last-child {
   min-height: 41px;
 }
@@ -361,6 +367,10 @@ ul.messages li.monospace div.msg {
 
 li.monospace span[style*="bold"] div.msg {
   letter-spacing: -1px;
+}
+
+ul.messages li.avatar + li.event {
+  clear: both;
 }
 
 ul.messages li.event {
