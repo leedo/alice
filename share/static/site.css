@@ -257,8 +257,14 @@ div.left {
   font-weight: bold;
   text-align: right;
   padding: 4px 0;
+  padding-right: 4px;
+  padding-bottom: 0;
   text-overflow: ellipsis;
   position: relative;
+}
+
+ul.messages li.avatar div.left {
+  padding-bottom: 4px;
 }
 
 li.event div.left {
@@ -321,7 +327,7 @@ li.monospace div.msg {
 }
 
 li.event + li.message div.msg {
-  border-top: none;
+  border-top: 1px solid transparent;
 }
 
 ul.messages li:first-child div.msg {
@@ -331,10 +337,6 @@ ul.messages li:first-child div.msg {
 /* so the last avatar doesn't hang off the edge */
 ul.messages li.avatar:last-child {
   min-height: 41px;
-}
-
-ul.messages li {
-  min-height: 24px;
 }
 
 ul.messages li.monospace {
