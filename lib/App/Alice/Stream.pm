@@ -88,8 +88,8 @@ sub close {
 sub flooded {
   my $self = shift;
   my $diff = time - $self->last_send;
-  if ($diff < 0.1) {
-    return 0.1 - $diff;
+  if ($diff < 0.2) {
+    return 0.2 - $diff;
   }
   return 0;
 }

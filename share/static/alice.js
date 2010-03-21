@@ -7671,6 +7671,7 @@ Alice.Window = Class.create({
   },
 
   addMessage: function(message) {
+    console.log(message);
     if (message.html) {
       this.messages.down('ul').insert(Alice.uncacheGravatar(message.html));
       if (message.event == "say") {
@@ -7691,7 +7692,7 @@ Alice.Window = Class.create({
         this.displayTopic(message.body.escapeHTML());
       }
       else if (this.lastNick == message.nick) {
-        li.addClassName("consecutive");
+        this.messages.down('li:last-child').addClassName("consecutive");
       }
 
       if (!message.self) {

@@ -316,6 +316,10 @@ li.event div.msg {
   padding: 5px;
 }
 
+li.monospace div.msg {
+  padding: 6px 5px;
+}
+
 li.event + li.message div.msg {
   border-top: none;
 }
@@ -350,8 +354,8 @@ div.msg img {
   border: none;
 }
 
-ul.messages li.monospace + li.monospace {
-  margin-top: -4px;
+ul.messages li.monospace + li.monospace.consecutive {
+  margin-top: -5px;
 }
 
 ul.messages li.monospace.avatar + li.monospace.consecutive {
@@ -367,10 +371,6 @@ ul.messages li.monospace div.msg {
 
 li.monospace span[style*="bold"] div.msg {
   letter-spacing: -1px;
-}
-
-ul.messages li.avatar + li.event {
-  clear: both;
 }
 
 ul.messages li.event {
