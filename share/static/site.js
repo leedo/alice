@@ -21,7 +21,7 @@ if (window == window.parent) {
  
   document.observe("dom:loaded", function () {
     $$('ul.messages li.self.avatar + li:not(.self)').each(function (li) {
-      li.previous().setStyle({minHeight:"41px"});
+      li.previous().setStyle({minHeight:"42px"});
     });
     $$('#config_overlay option').each(function(opt){opt.selected = false});
     $('tab_overflow_overlay').observe("change", function (e) {

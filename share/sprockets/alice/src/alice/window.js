@@ -167,7 +167,7 @@ Alice.Window = Class.create({
       
       if (!message.self) {
         this.messages.select('li.self.avatar + li:not(.self)').each(function (li) {
-          li.previous().setStyle({minHeight:"41px"});
+          li.previous().setStyle({minHeight:"42px"});
         });
       }
 
