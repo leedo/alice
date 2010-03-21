@@ -120,6 +120,7 @@ sub add_message {
 
 sub clear_buffer {
   my $self = shift;
+  $self->previous_nick("");
   $self->msgbuffer([]);
 }
 

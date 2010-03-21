@@ -145,13 +145,9 @@ Alice.Window = Class.create({
   
   addMessage: function(message) {
     if (message.html) {
-      var li = this.messages.down('ul').insert(Alice.uncacheGravatar(message.html));
-      if (message.event == "topic") {
-        this.displayTopic(message.body.escapeHTML());
-      }
-      else if (this.lastNick == message.nick) {
-        li.addClassName("consecutive");
-        var msg = this.messages.down("li:last-child div.msg");
+      this.messages.down('ul').insert(Alice.uncacheGravatar(message.html));
+      if (message.event == "say") {
+        var msg = this.messages.down('li:last-child div.msg');
         msg.innerHTML = this.application.applyFilters(msg.innerHTML);
         var nick = this.messages.down('li:last-child span.nickhint');
         if (nick && this.nicksVisible) {
@@ -163,6 +159,12 @@ Alice.Window = Class.create({
           time.style.webkitTransition = 'none 0 linear';
           time.style.opacity = 1;
         }
+      }
+      if (message.event == "topic") {
+        this.displayTopic(message.body.escapeHTML());
+      }
+      else if (this.lastNick == message.nick) {
+        li.addClassName("consecutive");
       }
       
       if (!message.self) {
