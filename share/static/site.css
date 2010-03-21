@@ -300,7 +300,7 @@ div.msg {
   border-top: 1px solid #eee;
 }
 
-li.event + li.msg div.msg {
+li.event + li.message div.msg {
   border-top: none;
 }
 

@@ -7557,7 +7557,7 @@ Alice.Window = Class.create({
     document.observe("mouseover", this.showNick.bind(this));
     this.scrollToBottom(true);
     setTimeout(function () {
-      this.messages.select('.msg').each(function (msg) {
+      this.messages.select('li.message div.msg').each(function (msg) {
         msg.innerHTML = application.applyFilters(msg.innerHTML);
       });
     }.bind(this), 1000);

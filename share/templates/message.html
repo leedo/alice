@@ -1,6 +1,6 @@
 ? my ($app, $msg) = @_;
 ? my $avatar = (!$msg->{consecutive} and $msg->{avatar} and $app->config->{avatars} eq "show") ? $msg->{avatar} : "";
-<li class="msg <?= $avatar ? "avatar " : "" ?><?= $msg->{nick} ?><?= $msg->{self} ? " self" : "" ?><?= $msg->{consecutive} ? " consecutive" : "" ?><?= $msg->{monospaced} ? " monospace" : ""?>" id="<?= $msg->{msgid} ?>">
+<li class="message <?= $avatar ? "avatar " : "" ?><?= $msg->{nick} ?><?= $msg->{self} ? " self" : "" ?><?= $msg->{consecutive} ? " consecutive" : "" ?><?= $msg->{monospaced} ? " monospace" : ""?>" id="<?= $msg->{msgid} ?>">
     <div class="left">
       <a href="javascript:alice.connection.requestWindow('<?= $msg->{nick} ?>','<?= $msg->{window}{id} ?>')" class="nick">
         <? if ($avatar) { ?>
