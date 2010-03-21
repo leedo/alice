@@ -164,7 +164,7 @@ Alice.Window = Class.create({
         this.displayTopic(message.body.escapeHTML());
       }
       else if (this.lastNick == message.nick) {
-        li.addClassName("consecutive");
+        this.messages.down('li:last-child').addClassName("consecutive");
       }
       
       if (!message.self) {
