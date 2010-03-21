@@ -354,7 +354,7 @@ ul.messages li.monospace div.msg {
   font-size: 10px;
   line-height: 12px;
   word-wrap: normal;
-  white-space: pre-wrap;
+  white-space: pre;
 }
 
 li.monospace span[style*="bold"] div.msg {
@@ -376,8 +376,9 @@ ul.messages li.event div.left {
   font-weight: normal;
 }
 
-div.msg.announce {
+ul.messages li.announce div.msg {
   color: #777;
+  white-space: pre-wrap;
 }
 
 div.msg img.audio {
