@@ -8715,9 +8715,11 @@ Alice.Window = Class.create({
         time.style.opacity = 1;
       }
 
-      if (this.lastNick == message.nick) li.addClassName("consecutive");
+      if (this.lastNick == message.nick)
+        li.addClassName("consecutive");
 
-      if (!message.self) li.previous('li.self.avatar').setStyle({minHeight:"42px"});
+      if (!message.self)
+        li.previous('li.self.avatar').setStyle({minHeight:"42px"});
     }
     else if (message.event == "topic") {
       this.displayTopic(message.body.escapeHTML());
@@ -8784,7 +8786,6 @@ Alice.Input = Class.create({
     this.element.observe("keypress", this.onKeyPress.bind(this));
     this.element.observe("blur", this.onBlur.bind(this));
 
-    this.element.observe("keydown", this.resize.bind(this));
     this.element.observe("cut", this.resize.bind(this));
     this.element.observe("paste", this.resize.bind(this));
     this.element.observe("change", this.resize.bind(this));
