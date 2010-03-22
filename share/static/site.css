@@ -219,7 +219,7 @@ ul.messages {
   margin: 0;
   padding: 0;
   background: url(image/background.png) top left repeat-y;
-  margin-bottom: 3px;
+  margin: 3px 0;
 }
 
 ul.messages li {
@@ -230,13 +230,6 @@ ul.messages li {
 
 ul.messages li:not(.consecutive) {
   clear: both;
-}
-
-ul.messages li:last-child {
-}
-
-ul.messages li:first-child {
-  margin-top: 4px;
 }
 
 ul.messages li.self {
@@ -263,8 +256,17 @@ div.left {
   position: relative;
 }
 
+li.event div.left {
+  padding-top: 5px;
+}
+
+li.event div.msg {
+  border-top: none;
+}
+
 ul.messages li.avatar div.left {
-  padding-bottom: 4px;
+  padding-bottom: 3px;
+  padding-top: 3px;
 }
 
 li.event div.left {
@@ -287,8 +289,8 @@ div.left img {
 div.left span.nickhint {
   position: absolute;
   z-index: 999;
-  right: 1px;
-  top: 5px;
+  right: 5px;
+  top: 4px;
   padding: 0 2px;
   min-width: 28px;
   background: rgba(0, 0, 0, 0.5);
@@ -331,7 +333,7 @@ li.event + li.message div.msg {
 }
 
 ul.messages li:first-child div.msg {
-  border-top: none;
+  border-top: 1px solid transparent;
 }
 
 /* so the last avatar doesn't hang off the edge */
@@ -376,7 +378,7 @@ ul.messages li.monospace div.msg {
   font-size: 10px;
   line-height: 12px;
   word-wrap: normal;
-  white-space: pre;
+  white-space: pre-wrap;
 }
 
 li.monospace span[style*="bold"] div.msg {
