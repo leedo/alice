@@ -74,6 +74,7 @@ sub broadcast {
     $self->writer->write( $self->to_string );
   } catch {
     $self->close;
+    die $_;
   };
   $self->flush;
 }
