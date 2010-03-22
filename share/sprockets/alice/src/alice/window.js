@@ -144,57 +144,56 @@ Alice.Window = Class.create({
   },
   
   addMessage: function(message) {
-    if (message.html) {
-      this.messages.down('ul').insert(Alice.uncacheGravatar(message.html));
+    if (!message.html) return;
+    
+    this.messages.down('ul').insert(Alice.uncacheGravatar(message.html));
+    var li = this.messages.down('li:last-child');
+    if (message.event == "say") {
+      var msg = li.down('div.msg');
+      msg.innerHTML = this.application.applyFilters(msg.innerHTML);
+      
+      var nick = li.down('span.nickhint');
+      if (nick && this.nicksVisible) {
+        nick.style.webkitTransition = 'none 0 linear';
+        nick.style.opacity = 1;
+      }
+      var time = li.down('div.timehint');
+      if (time && this.nicksVisible) {
+        time.style.webkitTransition = 'none 0 linear';
+        time.style.opacity = 1;
+      }
+      
+      if (this.lastNick == message.nick)
+        li.addClassName("consecutive");
+      
+      if (!message.self)
+        li.previous('li.self.avatar').setStyle({minHeight:"42px"});
+    }
+    else if (message.event == "topic") {
+      this.displayTopic(message.body.escapeHTML());
+    }
+    
+    this.lastNick = "";
+    if (message.event == "say" && message.nick)
+      this.lastNick = message.nick;
+    
+    if (!this.application.isFocused && message.highlight)
+      Alice.growlNotify(message);
+    
+    if (message.nicks && message.nicks.length)
+      this.nicks = message.nicks;
+    
+    // scroll to bottom or highlight the tab
+    if (this.element.hasClassName('active'))
+      this.scrollToBottom();
+    else if (this.title != "info") {
       if (message.event == "say") {
-        var msg = this.messages.down('li:last-child div.msg');
-        msg.innerHTML = this.application.applyFilters(msg.innerHTML);
-        var nick = this.messages.down('li:last-child span.nickhint');
-        if (nick && this.nicksVisible) {
-          nick.style.webkitTransition = 'none 0 linear';
-          nick.style.opacity = 1;
-        }
-        var time = this.messages.down('li:last-child div.timehint');
-        if (time && this.nicksVisible) {
-          time.style.webkitTransition = 'none 0 linear';
-          time.style.opacity = 1;
-        }
+        this.tab.addClassName("unread");
+        this.tabOverflowButton.addClassName("unread");
+        if (this.isTabWrapped()) this.application.highlightChannelSelect();
       }
-      if (message.event == "topic") {
-        this.displayTopic(message.body.escapeHTML());
-      }
-      else if (this.lastNick == message.nick) {
-        this.messages.down('li:last-child').addClassName("consecutive");
-      }
-      
-      if (!message.self) {
-        this.messages.select('li.self.avatar + li:not(.self)').each(function (li) {
-          li.previous().setStyle({minHeight:"42px"});
-        });
-      }
-
-      this.lastNick = "";
-      if (message.event == "say" && message.nick)
-        this.lastNick = message.nick;
-      
-      if (!this.application.isFocused && message.highlight)
-        Alice.growlNotify(message);
-      
-      if (message.nicks && message.nicks.length)
-        this.nicks = message.nicks;
-
-      // scroll to bottom or highlight the tab
-      if (this.element.hasClassName('active'))
-        this.scrollToBottom();
-      else if (!message.buffered && this.title != "info") {
-        if (message.event == "say") {
-          this.tab.addClassName("unread");
-          this.tabOverflowButton.addClassName("unread");
-          if (this.isTabWrapped()) this.application.highlightChannelSelect();
-        }
-        if (message.highlight) {
-          this.tab.addClassName("highlight");
-        }
+      if (message.highlight) {
+        this.tab.addClassName("highlight");
       }
     }
 
