@@ -208,11 +208,7 @@ tr.topic a {
 }
 
 div.message_wrap {
-  position: absolute;
-  top: 0px;
-  bottom: 31px;
-  left: 0px;
-  right: 0px;
+  height: 100%;
   overflow-x: none;
   overflow-y: auto;
   background: #fff;
