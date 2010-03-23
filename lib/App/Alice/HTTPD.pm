@@ -74,7 +74,7 @@ sub dispatch {
     when ('/view')         {return $self->send_index($req)}
     when ('/stream')       {return $self->setup_stream($req)}
     when ('/say')          {return $self->handle_message($req)}
-    when (/^\/get/)          {return $self->image_proxy($req)}
+    when (/^\/get/)        {return $self->image_proxy($req)}
     when ('/logs')         {return $self->send_logs($req)}
     when ('/search')       {return $self->send_search($req)}
     when ('/range')        {return $self->send_range($req)}
