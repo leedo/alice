@@ -8674,6 +8674,10 @@ Alice.Window = Class.create({
     this.markRead();
     this.scrollToBottom(true);
     if (!Prototype.Browser.MobileSafari) this.input.focus();
+    if (Prototype.Browser.Gecko) {
+      this.resizeMessagearea();
+      this.scrollToBottom();
+    }
     this.element.redraw();
     this.application.updateChannelSelect();
   },
@@ -8702,6 +8706,8 @@ Alice.Window = Class.create({
       position: 'absolute',
       top: top+"px",
       bottom: bottom + "px",
+      right: "0px",
+      left: "0px",
       height: 'auto'
     });
   },
