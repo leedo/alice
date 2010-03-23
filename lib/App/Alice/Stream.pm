@@ -65,15 +65,13 @@ sub BUILD {
 
 sub _send {
   my $self = shift;
-  try {
-    $self->send;
-  } catch {
-    $self->close;
-  };
+  try   { $self->send }
+  catch { $self->close };
 }
 
 sub send {
   my ($self, @messages) = @_;
+  die "Sending on a disconnected stream" if $self->disconnected;
   $self->enqueue(@messages) if @messages;
   return if $self->delayed or $self->queue_empty;
   if (my $delay = $self->flooded) {

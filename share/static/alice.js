@@ -8718,8 +8718,10 @@ Alice.Window = Class.create({
       if (this.lastNick == message.nick)
         li.addClassName("consecutive");
 
-      if (!message.self)
-        li.previous('li.self.avatar').setStyle({minHeight:"42px"});
+      if (!message.self) {
+        var prev = li.previous('li.self.avatar')
+        if (prev) prev.setStyle({minHeight:"42px"});
+      }
     }
     else if (message.event == "topic") {
       this.displayTopic(message.body.escapeHTML());
