@@ -38,7 +38,7 @@ select.select_overlay {
   top: 0px;
   left: 0px;
   bottom: 0px;
-  right: 0px;
+  width: 22px;
   border: none;
   padding: 0;
   margin: 0;
