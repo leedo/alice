@@ -8695,6 +8695,17 @@ Alice.Window = Class.create({
     this.topic.update(topic);
   },
 
+  resizeMessagearea: function() {
+    var top = this.messages.up().cumulativeOffset().top;
+    var bottom = this.input.element.getHeight() + 10;
+    this.messages.setStyle({
+      position: 'absolute',
+      top: top+"px",
+      bottom: bottom + "px",
+      height: 'auto'
+    });
+  },
+
   addMessage: function(message) {
     if (!message.html) return;
 

@@ -46,7 +46,10 @@ if (window == window.parent) {
         alice.activeWindow().input.focus()};
  
     window.onresize = function () {
-      if (alice.activeWindow()) alice.activeWindow().scrollToBottom()
+      if (alice.activeWindow()) {
+        if (Prototype.Browser.Gecko) alice.activeWindow().resizeMessagearea();
+        alice.activeWindow().scrollToBottom();
+      }
     };
  
     window.status = " ";  
@@ -61,6 +64,10 @@ if (window == window.parent) {
     
     if (navigator.userAgent.match(/Chrome/)) {
       $$('tr.input textarea').invoke('setStyle', {padding: '3px'});
+    }
+    if (Prototype.Browser.Gecko) {
+      alice.activeWindow().resizeMessagearea();
+      alice.activeWindow().scrollToBottom();
     }
   });
 }
