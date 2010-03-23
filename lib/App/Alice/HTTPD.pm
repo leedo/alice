@@ -126,9 +126,8 @@ sub broadcast {
   return if $self->no_streams or !@data;
   my $purge = 0;
   for my $stream ($self->streams) {
-    $stream->enqueue(@data);
     try {
-      $stream->broadcast;
+      $stream->send(@data);
     } catch {
       $stream->close;
       $purge = 1;

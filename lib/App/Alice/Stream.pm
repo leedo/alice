@@ -60,22 +60,27 @@ sub BUILD {
     [200, ['Content-Type' => 'multipart/mixed; boundary='.$self->seperator.'; charset=utf-8']]
   );
   $self->writer($writer);
-  $self->broadcast;
+  $self->_send;
 }
 
-sub broadcast {
+sub _send {
   my $self = shift;
+  try {
+    $self->send;
+  } catch {
+    $self->close;
+  };
+}
+
+sub send {
+  my ($self, @messages) = @_;
+  $self->enqueue(@messages) if @messages;
   return if $self->delayed or $self->queue_empty;
   if (my $delay = $self->flooded) {
     $self->delay($delay);
     return;
   }
-  try {
-    $self->writer->write( $self->to_string );
-  } catch {
-    $self->close;
-    die $_;
-  };
+  $self->writer->write( $self->to_string );
   $self->flush;
 }
 
@@ -103,7 +108,7 @@ sub delay {
     cb    => sub {
       $self->delayed(0);
       $self->timer(undef);
-      $self->broadcast;
+      $self->_send;
     },
   ));
 }
