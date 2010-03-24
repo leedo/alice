@@ -8736,7 +8736,7 @@ Alice.Window = Class.create({
         li.addClassName("consecutive");
 
       if (!message.self) {
-        var prev = li.previous('li.self.avatar')
+        var prev = li.previous('li.self.avatar + li:not(.consecutive)')
         if (prev) prev.setStyle({minHeight:"42px"});
       }
     }
