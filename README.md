@@ -38,47 +38,47 @@ the bottom of the screen.
 
 # COMMANDS
 
-- /j[oin] [-network] $channel
+##/j[oin] [-network] $channel
 
 Takes a channel name as an argument. It will attempt to join this channel
 on the server of the channel that you typed the command into.
 
-- /close
+##/close
 
 Closes the current tab, even private message tabs. If used in a channel
 it will also part the channel.
 
-- /clear
+##/clear
 
 This will clear the current tab's messages from your browser. It will also 
 clear the tab's message buffer so when you refresh your browser the messages 
 won't re-appear (as they normally would.)
 
-- /msg [-network] $nick [$msg]
+##/msg [-network] $nick [$msg]
 
 Takes a nick as an argument. This will open a new tab for private messaging
 with a user. Only works in a channel.
 
-- /whois $nick
+##/whois $nick
 
 Takes a nick as an argument. This will print some information about the
 supplied user.
 
-- /quote $string
+##/quote $string
 
 Sends a string as a raw message to the server.
 
-- /topic [$topic]
+##/topic [$topic]
 
 Takes an optional topic string. This will display the topic for the current tab.
 If a string is supplied, it will attempt to update the channel's topic.
 Only works in a channel.
 
-- /n[ames]
+##/n[ames]
 
 This will print all of the nick's in the current tab in a tabular format.
 
-- /me $string
+##/me $string
 
 Sends a string as an ACTION to the channel
 
