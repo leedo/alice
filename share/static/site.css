@@ -344,7 +344,7 @@ ul.messages li:first-child div.msg {
 
 /* so the last avatar doesn't hang off the edge */
 ul.messages li.avatar:last-child {
-  min-height: 41px;
+  min-height: 42px;
 }
 
 ul.messages li.monospace {
@@ -374,9 +374,6 @@ div.msg img {
 
 ul.messages li.monospace + li.monospace.consecutive {
   margin-top: -5px;
-}
-
-ul.messages li.monospace.avatar + li.monospace.consecutive {
 }
 
 ul.messages li.monospace div.msg {
