@@ -305,11 +305,16 @@ div.timehint {
   position: absolute;
   font-size: 0.8em;
   right: 0px;
-  top: 4px;
+  top: 5px;
   padding: 2px 4px;
   color: #333;
   opacity: 0;
   text-shadow: rgba(255,255,255,1) 0 0 3px;
+  background: #fff;
+}
+
+li.self div.timehint {
+  background: #fffbd0;
 }
 
 div.msg {
