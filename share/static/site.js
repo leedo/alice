@@ -20,7 +20,7 @@ if (window == window.parent) {
   alice.options = options;
  
   document.observe("dom:loaded", function () {
-    $$('ul.messages li.self.avatar + li:not(.self)').each(function (li) {
+    $$('ul.messages li.avatar + li:not(.consecutive)').each(function (li) {
       li.previous().setStyle({minHeight:"42px"});
     });
     $$('#config_overlay option').each(function(opt){opt.selected = false});

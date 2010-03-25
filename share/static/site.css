@@ -305,7 +305,7 @@ div.timehint {
   position: absolute;
   font-size: 0.8em;
   right: 0px;
-  bottom: 4px;
+  top: 4px;
   padding: 2px 4px;
   color: #333;
   opacity: 0;
