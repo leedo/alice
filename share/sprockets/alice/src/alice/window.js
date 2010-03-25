@@ -15,7 +15,6 @@ Alice.Window = Class.create({
     this.topic = $(this.id + "_topic");
     this.messages = this.element.down('.message_wrap');
     this.submit = $(this.id + "_submit");
-    this.lastNick = "";
     this.nicksVisible = false;
     this.visibleNick = "";
     this.visibleNickTimeout = "";
@@ -180,21 +179,12 @@ Alice.Window = Class.create({
         time.style.opacity = 1;
       }
       
-      if (this.lastNick == message.nick)
-        li.addClassName("consecutive");
-      
-      if (!message.self) {
-        var prev = li.previous('li.self.avatar + li:not(.consecutive)')
-        if (prev) prev.setStyle({minHeight:"42px"});
-      }
+      if (!message.consecutive && li.previous().hasClassName("avatar"))
+        li.previous().setStyle({minHeight:"42px"});
     }
     else if (message.event == "topic") {
       this.displayTopic(message.body.escapeHTML());
     }
-    
-    this.lastNick = "";
-    if (message.event == "say" && message.nick)
-      this.lastNick = message.nick;
     
     if (!this.application.isFocused && message.highlight)
       Alice.growlNotify(message);
