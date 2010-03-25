@@ -27,11 +27,13 @@ Alice.Window = Class.create({
     this.tabButton.observe("click", function(e) {if (this.active) this.close()}.bind(this));
     document.observe("mouseover", this.showNick.bind(this));
     this.scrollToBottom(true);
-    setTimeout(function () {
-      this.messages.select('li.message div.msg').each(function (msg) {
-        msg.innerHTML = application.applyFilters(msg.innerHTML);
-      });
-    }.bind(this), 1000);
+    document.observe("dom:loaded", function () {
+      setTimeout(function () {
+        this.messages.select('li.message div.msg').each(function (msg) {
+          msg.innerHTML = application.applyFilters(msg.innerHTML);
+        });
+      }.bind(this), 1000);
+    }.bind(this));
   },
   
   isTabWrapped: function() {
@@ -184,10 +186,10 @@ Alice.Window = Class.create({
         time.style.opacity = 1;
       }
       
-      if (!message.consecutive && li.previous().hasClassName("avatar"))
-        li.previous().setStyle({minHeight:"42px"});
       if (message.consecutive)
         li.previous(".avatar").down(".timehint").innerHTML = message.timestamp;
+      else if (li.previous().hasClassName("avatar"))
+        li.previous().setStyle({minHeight:"42px"});
     }
     else if (message.event == "topic") {
       this.displayTopic(message.body.escapeHTML());
