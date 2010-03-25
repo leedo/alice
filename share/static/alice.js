@@ -8605,10 +8605,16 @@ Alice.Window = Class.create({
       clearTimeout(this.visibleNickTimeout);
 
       this.visibleNick = li;
-      var nick = li.down().down(2);
-      var time = li.childNodes[3];
+      var nick; var time;
+      if (li.hasClassName("consecutive")) {
+        nick = li.previous("li:not(.consecutive)").down(".nickhint");
+        time = li.previous("li:not(.consecutive)").down(".timehint");
+      } else {
+        nick = li.down(".nickhint");
+        time = li.down(".timehint");
+      }
 
-      if (nick || (time && time.hasClassName('timehint'))) {
+      if (nick || time) {
         this.visibleNickTimeout = setTimeout(function(nick, time) {
           if (nick) {
             nick.style.opacity = 1;
@@ -8733,6 +8739,8 @@ Alice.Window = Class.create({
 
       if (!message.consecutive && li.previous().hasClassName("avatar"))
         li.previous().setStyle({minHeight:"42px"});
+      if (message.consecutive)
+        li.previous(".avatar").down(".timehint").innerHTML = message.timestamp;
     }
     else if (message.event == "topic") {
       this.displayTopic(message.body.escapeHTML());
