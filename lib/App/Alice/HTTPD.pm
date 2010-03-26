@@ -54,7 +54,8 @@ sub BUILD {
   );
   $httpd->register_service(
     builder {
-      enable "Auth::Basic", authenticator => sub {$self->authenticate(@_)};
+      enable "Auth::Basic", authenticator => sub {$self->authenticate(@_)}
+        if $self->app->config->auth_enabled;
       enable "Static", path => qr{^/static/}, root => $self->config->assetdir;
       sub {$self->dispatch(shift)} 
     }
@@ -138,10 +139,7 @@ sub broadcast {
 
 sub authenticate {
   my ($self, $user, $pass) = @_;
-  return 1 unless ($self->config->auth
-      and ref $self->config->auth eq 'HASH'
-      and $self->config->auth->{username}
-      and $self->config->auth->{password});
+  return 1 unless ($self->app->config->auth_enabled);
 
   if ($self->config->auth->{username} eq $user &&
       $self->config->auth->{password} eq $pass) {
