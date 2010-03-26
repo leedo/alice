@@ -4,24 +4,19 @@ use strict;
 use warnings;
 
 use FindBin;
-require lib;
 
-if (-e "$FindBin::Bin/../lib/App/Alice") {
-  lib->import("$FindBin::Bin/../lib");
-  if (-e "$FindBin::Bin/../extlib/lib/perl5") {
-    lib->import("$FindBin::Bin/../extlib/lib/perl5");
-    require local::lib;
-    local::lib->import("$FindBin::Bin/../extlib");
+BEGIN {
+  # running from source dir
+  if (-e "$FindBin::Bin/../lib/App/Alice") {
+    use lib "$FindBin::Bin/../lib";
+    # extlib present
+    if (-e "$FindBin::Bin/../extlib") {
+      use lib "$FindBin::Bin/../extlib/lib/perl5";
+      use local::lib "$FindBin::Bin/../extlib";
+    }
   }
+  use App::Alice;
 }
-elsif ($FindBin::Script eq "script") {
-  lib->import("$FindBin::Bin/lib");
-  lib->import("$FindBin::Bin/extlib/lib/perl5");
-  require local::lib;
-  local::lib->import("$FindBin::Bin/extlib");
-}
-
-require App::Alice;
 
 $0 = "aliced\0";
 binmode(STDERR, ":utf8");

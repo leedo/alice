@@ -8474,7 +8474,6 @@ Alice.Connection = Class.create({
     data = data.slice(start, end);
     try {
       data = data.evalJSON();
-      console.log(data);
       var queue = data.queue;
       var length = queue.length;
       for (var i=0; i<length; i++) {
