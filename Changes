@@ -1,3 +1,10 @@
+0.12  Thu 25 Mar 2010
+        - Switched to Twiggy from AE:HTTPD
+        - Many HTML/CSS tweaks
+        - Sends buffered messages with initial page
+          load (loads much faster)
+        - Improved iPhone stylesheet
+
 0.11  Sat 13 Mar 2010
         - Improved unicode support
         - Faster shutdown process
