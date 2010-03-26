@@ -1,4 +1,4 @@
-package App::Alice::CommandDispatch;
+package App::Alice::Commands;
 
 use Any::Moose;
 use Encode;

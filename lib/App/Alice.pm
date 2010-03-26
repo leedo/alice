@@ -14,7 +14,7 @@ use File::Copy;
 use Digest::MD5 qw/md5_hex/;
 use Encode;
 
-our $VERSION = '0.11';
+our $VERSION = '0.12';
 
 has condvar => (
   is       => 'rw',
@@ -63,11 +63,11 @@ has httpd => (
   },
 );
 
-has dispatcher => (
+has commands => (
   is      => 'ro',
-  isa     => 'App::Alice::CommandDispatch',
+  isa     => 'App::Alice::Commands',
   default => sub {
-    App::Alice::CommandDispatch->new(app => shift);
+    App::Alice::Commands->new(app => shift);
   }
 );
 
@@ -240,9 +240,9 @@ sub shutdown {
   $self->condvar->send if $self->condvar;
 }
 
-sub dispatch {
+sub handle_command {
   my ($self, $command, $window) = @_;
-  $self->dispatcher->handle($command, $window);
+  $self->commands->handle($command, $window);
 }
 
 sub merge_config {

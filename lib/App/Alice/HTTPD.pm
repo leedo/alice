@@ -10,14 +10,12 @@ use Plack::Middleware::Static;
 use Plack::Middleware::Auth::Basic;
 
 use App::Alice::Stream;
-use App::Alice::CommandDispatch;
+use App::Alice::Commands;
 
 use JSON;
 use Encode;
 use Any::Moose;
 use Try::Tiny;
-
-use feature 'switch';
 
 has 'app' => (
   is  => 'ro',
@@ -33,6 +31,26 @@ has 'config' => (
   isa => 'App::Alice::Config',
   lazy => 1,
   default => sub {shift->app->config},
+);
+
+has 'url_handlers' => (
+  is => 'ro',
+  isa => 'ArrayRef',
+  default => sub {
+    [
+      { re => qr{^/serverconfig/?$}, sub  => 'server_config' },
+      { re => qr{^/config/?$},       sub  => 'save_config' },
+      { re => qr{^/tabs/?$},         sub  => 'tab_order' },
+      { re => qr{^/view/?$},         sub  => 'send_index' },
+      { re => qr{^/stream/?$},       sub  => 'setup_stream' },
+      { re => qr{^/say/?$},          sub  => 'handle_message' },
+      { re => qr{^/get},             sub  => 'image_proxy' },
+      { re => qr{^/logs/?$},         sub  => 'send_logs' },
+      { re => qr{^/search/?$},       sub  => 'send_search' },
+      { re => qr{^/range/?$},        sub  => 'send_range' },
+      { re => qr{^/$},               sub  => 'send_index' },
+    ]
+  }
 );
 
 has 'streams' => (
@@ -57,7 +75,7 @@ sub BUILD {
       enable "Auth::Basic", authenticator => sub {$self->authenticate(@_)}
         if $self->app->config->auth_enabled;
       enable "Static", path => qr{^/static/}, root => $self->config->assetdir;
-      sub {$self->dispatch(shift)} 
+      sub {$self->dispatch(shift)}
     }
   );
   $self->httpd($httpd);
@@ -67,21 +85,16 @@ sub BUILD {
 sub dispatch {
   my ($self, $env) = @_;
   my $req = Plack::Request->new($env);
-  given ($req->path_info) {
-    when ('/serverconfig') {return $self->server_config($req)}
-    when ('/config')       {return $self->send_config($req)}
-    when ('/save')         {return $self->save_config($req)}
-    when ('/tabs')         {return $self->tab_order($req)}
-    when ('/view')         {return $self->send_index($req)}
-    when ('/stream')       {return $self->setup_stream($req)}
-    when ('/say')          {return $self->handle_message($req)}
-    when (/^\/get/)        {return $self->image_proxy($req)}
-    when ('/logs')         {return $self->send_logs($req)}
-    when ('/search')       {return $self->send_search($req)}
-    when ('/range')        {return $self->send_range($req)}
-    when ('/')             {return $self->send_index($req)}
-    default                {return $self->not_found($req)}
+  for my $handler (@{$self->url_handlers}) {
+    my $re = $handler->{re};
+    if ($req->path_info =~ /$re/) {
+      my $sub = $handler->{sub};
+      if ($self->meta->find_method_by_name($sub)) {
+        return $self->$sub($req);
+      }
+    }
   }
+  return $self->not_found($req);
 }
 
 sub ping {
@@ -181,7 +194,7 @@ sub handle_message {
   my $window = $self->app->get_window($source);
   if ($window) {
     for (split /\n/, $msg) {
-      eval {$self->app->dispatch($_, $window) if length $_};
+      eval {$self->app->handle_command($_, $window) if length $_};
       if ($@) {$self->app->log(info => $@)}
     }
   }

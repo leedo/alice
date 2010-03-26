@@ -51,7 +51,8 @@
 \bshare/sprockets.*
 \balice.app.*
 \bAlice.app.*
-Sprockets.*
 TODO
 App-Alice
 README.md
+\.modulebuildrc
+bin/client
