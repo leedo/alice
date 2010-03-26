@@ -203,5 +203,13 @@ sub serialized {
   };
 }
 
+sub auth_enabled {
+  my $self = shift;
+  $self->auth
+      and ref $self->auth eq 'HASH'
+      and $self->auth->{username}
+      and $self->auth->{password};
+}
+
 __PACKAGE__->meta->make_immutable;
 1;
