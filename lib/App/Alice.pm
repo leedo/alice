@@ -373,16 +373,15 @@ sub reload_config {
 }
 
 sub format_info {
-  my ($self, $session, $body, $highlight, $monospaced, $is_html) = @_;
+  my ($self, $session, $body, $highlight, $monospaced) = @_;
   $highlight = 0 unless $highlight;
-  $is_html = 0 unless $is_html;
-  $self->info_window->format_message($session, $body, $highlight, $monospaced, $is_html);
+  $self->info_window->format_message($session, $body, $highlight, $monospaced);
 }
 
 sub broadcast {
   my ($self, @messages) = @_;
   # add any highlighted messages to the log window
-  push @messages, map {$self->format_info($_->{nick}, $_->{html}, 1, 0, 1)}
+  push @messages, map {$self->info_window->copy_message($_)}
                   grep {$_->{highlight}} @messages;
   
   $self->httpd->broadcast(@messages);

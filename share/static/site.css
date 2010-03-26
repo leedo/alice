@@ -233,10 +233,12 @@ ul.messages li:not(.consecutive) {
   clear: both;
 }
 
+#info ul.messages li.highlight,
 ul.messages li.self {
   background: url(image/background-self.png) top left repeat-y #fffbd0;
 }
 
+#info ul.messages li.highlight div.msg,
 ul.messages li.self div.msg {
   background: none;
 }
@@ -313,6 +315,7 @@ div.timehint {
   background: #fff;
 }
 
+#info ul.messages li.highlight div.timehint,
 li.self div.timehint {
   background: #fffbd0;
 }

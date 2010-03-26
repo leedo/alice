@@ -75,7 +75,7 @@ has session => (
   default => sub {return shift->irc->alias}
 );
 
-has irc => (
+has _irc => (
   is       => 'ro',
   isa      => 'App::Alice::IRC',
   required => 1,
@@ -87,6 +87,19 @@ has app => (
   isa     => 'App::Alice',
   required => 1,
 );
+
+# move irc arg to _irc, which is wrapped in a method
+# because infowindow has logic to choose which irc
+# connection to return
+sub BUILDARGS {
+  my $class = shift;
+  my $args = ref $_[0] ? $_[0] : {@_};
+  $args->{_irc} = $args->{irc};
+  delete $args->{irc};
+  return $args;
+}
+
+sub irc { $_[0]->_irc }
 
 sub serialized {
   my ($self) = @_;

@@ -186,16 +186,20 @@ Alice.Window = Class.create({
         time.style.opacity = 1;
       }
       
-      if (message.consecutive)
-        li.previous(".avatar").down(".timehint").innerHTML = message.timestamp;
-      else if (li.previous().hasClassName("avatar"))
-        li.previous().setStyle({minHeight:"42px"});
+      if (message.consecutive) {
+        var avatar = li.previous(".avatar");
+        if (avatar) avatar.down(".timehint").innerHTML = message.timestamp;
+      }
+      else {
+        var prev = li.previous();
+        if (prev && prev.hasClassName("avatar")) prev.setStyle({minHeight:"42px"});
+      }
     }
     else if (message.event == "topic") {
       this.displayTopic(message.body.escapeHTML());
     }
     
-    if (!this.application.isFocused && message.highlight)
+    if (!this.application.isFocused && message.highlight && message.window.title != "info")
       Alice.growlNotify(message);
     
     if (message.nicks && message.nicks.length)
