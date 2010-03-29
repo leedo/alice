@@ -8,14 +8,16 @@ use FindBin;
 BEGIN {
   # running from source dir
   if (-e "$FindBin::Bin/../lib/App/Alice") {
-    use lib "$FindBin::Bin/../lib";
+    require lib;
+    lib->import("$FindBin::Bin/../lib");
     # extlib present
     if (-e "$FindBin::Bin/../extlib") {
-      use lib "$FindBin::Bin/../extlib/lib/perl5";
-      use local::lib "$FindBin::Bin/../extlib";
+      lib->import("$FindBin::Bin/../extlib/lib/perl5");
+      require local::lib;
+      local::lib->import("$FindBin::Bin/../extlib");
     }
   }
-  use App::Alice;
+  require App::Alice;
 }
 
 $0 = "aliced\0";
