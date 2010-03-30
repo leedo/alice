@@ -24,7 +24,7 @@ has [qw/offset last_send start_time/]=> (
   default => 0,
 );
 
-has [qw/delayed started disconnected/] => (
+has [qw/delayed started closed/] => (
   is  => 'rw',
   isa => 'Bool',
   default => 0,
@@ -71,7 +71,7 @@ sub _send {
 
 sub send {
   my ($self, @messages) = @_;
-  die "Sending on a disconnected stream" if $self->disconnected;
+  die "Sending on a closed stream" if $self->closed;
   $self->enqueue(@messages) if @messages;
   return if $self->delayed or $self->queue_empty;
   if (my $delay = $self->flooded) {
@@ -86,7 +86,7 @@ sub close {
   my $self = shift;
   $self->writer->close;
   $self->timer(undef);
-  $self->disconnected(1);
+  $self->closed(1);
 }
 
 sub flooded {

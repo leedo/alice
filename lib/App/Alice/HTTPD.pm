@@ -184,7 +184,7 @@ sub setup_stream {
 sub purge_disconnects {
   my ($self) = @_;
   $self->app->log(debug => "removing broken streams");
-  $self->streams([grep {!$_->disconnected} $self->streams]);
+  $self->streams([grep {!$_->closed} $self->streams]);
 }
 
 sub handle_message {
