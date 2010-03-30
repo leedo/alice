@@ -39,7 +39,8 @@ has 'url_handlers' => (
   default => sub {
     [
       { re => qr{^/serverconfig/?$}, sub  => 'server_config' },
-      { re => qr{^/config/?$},       sub  => 'save_config' },
+      { re => qr{^/config/?$},       sub  => 'send_config' },
+      { re => qr{^/save/?$},         sub  => 'save_config' },
       { re => qr{^/tabs/?$},         sub  => 'tab_order' },
       { re => qr{^/view/?$},         sub  => 'send_index' },
       { re => qr{^/stream/?$},       sub  => 'setup_stream' },
