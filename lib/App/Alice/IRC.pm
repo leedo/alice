@@ -76,6 +76,18 @@ sub all_nicks {keys %{$_[0]->nicks}}
 sub all_nick_info {values %{$_[0]->nicks}}
 sub set_nick_info {$_[0]->nicks->{$_[1]} = $_[2]}
 
+has whois_cbs => (
+  is        => 'rw',
+  isa       => 'HashRef[CodeRef]',
+  default   => sub {{}},
+);
+
+sub add_whois_cb {
+  my ($self, $nick, $cb) = @_;
+  $self->whois_cbs->{$nick} = $cb;
+  $self->send_srv(WHO => $nick);
+}
+
 sub BUILD {
   my $self = shift;
   $self->cl->enable_ssl(1) if $self->config->{ssl};
@@ -509,6 +521,11 @@ sub irc_352 {
   }
   
   $self->set_nick_info($nick, $info);
+
+  if ($self->whois_cbs->{$nick}) {
+    $self->whois_cbs->{$nick}->();
+    delete $self->whois_cbs->{$nick};
+  }
 }
 
 sub irc_366 {
