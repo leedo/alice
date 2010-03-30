@@ -271,11 +271,9 @@ sub tab_order {
   $self->config->write;
 }
 
-sub buffered_messages {
-  my ($self, $min) = @_;
-  return map {$_->{buffered} = 1; $_;}
-         grep {$_->{msgid} > $min or $min > $self->msgid}
-         map {@{$_->msgbuffer}} $self->windows;
+sub with_buffers {
+  my ($self, $cb) = @_;
+  $_->with_buffer($cb) for $self->windows;
 }
 
 sub find_window {

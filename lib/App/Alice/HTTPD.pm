@@ -165,19 +165,24 @@ sub authenticate {
 sub setup_stream {
   my ($self, $req) = @_;
   $self->app->log(info => "opening new stream");
-  my $msgid = $req->param('msgid') || 0;
+  my $min = $req->param('msgid') || 0;
   return sub {
     my $respond = shift;
-    $self->add_stream(
-      App::Alice::Stream->new(
-        queue      => [
-          ($msgid ? $self->app->buffered_messages($msgid) : ()),
-          map({$_->join_action} $self->app->windows),
-        ],
-        writer     => $respond,
-        start_time => $req->param('t'),
-      )
+    my $stream = App::Alice::Stream->new(
+      queue      => [ map({$_->join_action} $self->app->windows) ],
+      writer     => $respond,
+      start_time => $req->param('t'),
     );
+    $self->add_stream($stream);
+    $self->app->with_buffers(sub {
+      return unless @_;
+      $stream->enqueue(
+        map  {$_->{buffered} = 1; $_}
+        grep {$_->{msgid} > $min or $min > $self->app->msgid}
+        @_
+      );
+      $stream->send(1); # force
+    });
   }
 }
 

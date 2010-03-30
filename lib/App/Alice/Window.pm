@@ -137,6 +137,12 @@ sub clear_buffer {
   $self->msgbuffer([]);
 }
 
+sub with_buffer {
+  my ($self, $cb, $start) = @_;
+  $start ||= 0;
+  $cb->(@{ $self->msgbuffer });
+}
+
 sub disconnect_action {
   my $self = shift;
   return {
