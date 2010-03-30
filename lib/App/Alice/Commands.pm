@@ -68,7 +68,14 @@ sub names {
 
 sub whois {
   my ($self, $window, $nick) = @_;
-  $self->reply($window, $window->irc->whois_table($nick));
+  if ($window->irc->includes_nick($nick)) {
+    $self->reply($window, $window->irc->whois_table($nick));
+  }
+  else {
+    $window->irc->add_whois_cb($nick => sub {
+      $self->reply($window, $window->irc->whois_table($nick));
+    });
+  }
 }
 
 sub msg {
