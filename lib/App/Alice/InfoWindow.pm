@@ -38,11 +38,10 @@ sub format_message {
     msgid  => $self->app->next_msgid,
     timestamp => $self->timestamp,
     monospaced => $monospaced ? 1 : 0,
-    consecutive => $from eq $self->messagelist->previous_nick ? 1 : 0,
+    consecutive => $from eq $self->buffer->previous_nick ? 1 : 0,
   };
   $message->{html} = $self->app->render("message", $message);
-  $self->messagelist->previous_nick($from);
-  $self->messagelist->add($message);
+  $self->buffer->add($message);
   return $message;
 }
 
@@ -59,9 +58,9 @@ sub copy_message {
     msgid  => $self->app->next_msgid,
     timestamp => $msg->{timestamp},
     monospaced => $msg->{monospaced},
-    consecutive => $msg->{nick} eq $self->messagelist->previous_nick ? 1 : 0,
+    consecutive => $msg->{nick} eq $self->buffer->previous_nick ? 1 : 0,
   };
-  $self->messagelist->add($copy);
+  $self->buffer->add($copy);
   return $copy;
 }
 

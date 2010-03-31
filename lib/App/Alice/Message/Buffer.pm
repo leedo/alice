@@ -1,30 +1,26 @@
-package App::Alice::MessageList;
+package App::Alice::Message::Buffer;
 
 use Any::Moose;
 
 has store => (
   is => 'ro',
+  lazy => 1,
   default => sub {
     my $self = shift;
-    eval "require ".$self->store_class;
-    $self->store_class->new;
+    eval "require App::Alice::Message::Store::".$self->store_class;
+    ("App::Alice::Message::Store::".$self->store_class)->new;
   }
 );
 
 has store_class => (
   is => 'ro',
-  default => 'App::Alice::MessageList::Memory',
+  default => 'Memory',
 );
 
 has previous_nick => (
   is => 'rw',
   default => "",
 );
-
-sub BUILD {
-  my $self = shift;
-  $self->store;
-}
 
 sub clear {
   my $self = shift;

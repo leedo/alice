@@ -236,7 +236,7 @@ sub send_windows {
     my $window = pop @windows;
     $writer->write(encode_utf8 $self->app->render('window_head', $window));
     delete $window->{active} if $window->{active};
-    $window->messagelist->with_messages(sub {
+    $window->buffer->with_messages(sub {
       my @messages = @_;
       $writer->write(encode_utf8 $_->{html}) for @messages;
     }, 0, sub {
