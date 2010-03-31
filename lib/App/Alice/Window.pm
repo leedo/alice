@@ -2,7 +2,7 @@ package App::Alice::Window;
 
 use Encode;
 use utf8;
-use App::Alice::MessageList;
+use App::Alice::Message::Buffer;
 use Text::MicroTemplate qw/encoded_string/;
 use IRC::Formatting::HTML;
 use Any::Moose;
@@ -27,14 +27,14 @@ has assetdir => (
   required => 1,
 );
 
-has messagelist => (
+has buffer => (
   is      => 'rw',
-  isa     => 'App::Alice::MessageList',
+  isa     => 'App::Alice::Message::Buffer',
   lazy    => 1,
   default => sub {
     my $self = shift;
-    App::Alice::MessageList->new(
-      store_class => $self->app->config->messagelist_store
+    App::Alice::Message::Buffer->new(
+      store_class => $self->app->config->message_store
     );
   },
 );
@@ -187,7 +187,7 @@ sub format_event {
   $message->{html} = make_links_clickable(
     $self->app->render("event", $message)
   );
-  $self->messagelist->add($message);
+  $self->buffer->add($message);
   return $message;
 }
 
@@ -209,10 +209,10 @@ sub format_message {
     msgid     => $self->app->next_msgid,
     timestamp => $self->timestamp,
     monospaced => $self->app->is_monospace_nick($nick),
-    consecutive => $nick eq $self->messagelist->previous_nick ? 1 : 0,
+    consecutive => $nick eq $self->buffer->previous_nick ? 1 : 0,
   };
   $message->{html} = $self->app->render("message", $message);
-  $self->messagelist->add($message);
+  $self->buffer->add($message);
   return $message;
 }
 

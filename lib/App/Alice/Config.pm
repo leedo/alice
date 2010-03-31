@@ -113,10 +113,10 @@ has ignore => (
   default => sub {[]},
 );
 
-has messagelist_store => (
+has message_store => (
   is      => 'rw',
   isa     => 'Str',
-  default => 'App::Alice::MessageList::Memory'
+  default => 'Memory'
 );
 
 sub add_ignore {push @{shift->ignore}, @_}

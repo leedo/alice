@@ -273,7 +273,7 @@ sub tab_order {
 
 sub with_messages {
   my ($self, $cb) = @_;
-  $_->messagelist->with_messages($cb) for $self->windows;
+  $_->buffer->with_messages($cb) for $self->windows;
 }
 
 sub find_window {

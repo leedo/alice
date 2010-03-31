@@ -137,7 +137,7 @@ sub create {
 
 sub clear {
   my ($self, $window) = @_;
-  $window->messagelist->clear;
+  $window->buffer->clear;
   $self->broadcast($window->clear_action);
 }
 
