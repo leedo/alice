@@ -2,6 +2,7 @@ package App::Alice::Window;
 
 use Encode;
 use utf8;
+use App::Alice::MessageList;
 use Text::MicroTemplate qw/encoded_string/;
 use IRC::Formatting::HTML;
 use Any::Moose;
@@ -26,21 +27,22 @@ has assetdir => (
   required => 1,
 );
 
-has msgbuffer => (
+has messagelist => (
   is      => 'rw',
-  isa     => 'ArrayRef',
-  default => sub {[]},
+  isa     => 'App::Alice::MessageList',
+  lazy    => 1,
+  default => sub {
+    my $self = shift;
+    App::Alice::MessageList->new(
+      store_class => $self->app->config->messagelist_store
+    );
+  },
 );
 
 has title => (
   is       => 'ro',
   isa      => 'Str',
   required => 1,
-);
-
-has previous_nick => (
-  is       => 'rw',
-  default  => "",
 );
 
 has topic => (
@@ -51,12 +53,6 @@ has topic => (
     author => '',
     time   => time,
   }}
-);
-
-has buffersize => (
-  is      => 'ro',
-  isa     => 'Int',
-  default => 100,
 );
 
 has id => (
@@ -121,26 +117,6 @@ sub all_nicks {
   my ($self) = @_;
   return unless $self->is_channel;
   return $self->irc->channel_nicks($self->title);
-}
-
-sub add_message {
-  my ($self, $message) = @_;
-  push @{$self->msgbuffer}, $message;
-  if (@{$self->msgbuffer} > $self->buffersize) {
-    shift @{$self->msgbuffer};
-  }
-}
-
-sub clear_buffer {
-  my $self = shift;
-  $self->previous_nick("");
-  $self->msgbuffer([]);
-}
-
-sub with_buffer {
-  my ($self, $cb, $start) = @_;
-  $start ||= 0;
-  $cb->(@{ $self->msgbuffer });
 }
 
 sub disconnect_action {
@@ -211,8 +187,7 @@ sub format_event {
   $message->{html} = make_links_clickable(
     $self->app->render("event", $message)
   );
-  $self->previous_nick("");
-  $self->add_message($message);
+  $self->messagelist->add($message);
   return $message;
 }
 
@@ -234,11 +209,10 @@ sub format_message {
     msgid     => $self->app->next_msgid,
     timestamp => $self->timestamp,
     monospaced => $self->app->is_monospace_nick($nick),
-    consecutive => $nick eq $self->previous_nick ? 1 : 0,
+    consecutive => $nick eq $self->messagelist->previous_nick ? 1 : 0,
   };
   $message->{html} = $self->app->render("message", $message);
-  $self->previous_nick($nick);
-  $self->add_message($message);
+  $self->messagelist->add($message);
   return $message;
 }
 
@@ -252,7 +226,6 @@ sub format_announcement {
     message => $msg,
   };
   $message->{html} = $self->app->render('announcement', $message);
-  $self->previous_nick("");
   return $message;
 }
 

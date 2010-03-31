@@ -174,7 +174,7 @@ sub setup_stream {
       start_time => $req->param('t'),
     );
     $self->add_stream($stream);
-    $self->app->with_buffers(sub {
+    $self->app->with_messages(sub {
       return unless @_;
       $stream->enqueue(
         map  {$_->{buffered} = 1; $_}
@@ -216,18 +216,37 @@ sub send_index {
     my $writer = $respond->([200, ["Content-type" => "text/html; charset=utf-8"]]);
     $writer->write(encode_utf8 $self->app->render('index_head'));
     my @windows = $self->app->sorted_windows;
-    for (0 .. scalar @windows - 1) {
-      my @classes;
-      if (scalar @windows > 1 and $_ == 1) {
-        push @classes, "active";
-      } elsif (scalar @windows == 1 and $_ == 0) {
-        push @classes, "active";
-      }
-      $writer->write(encode_utf8 $self->app->render('window', $windows[$_], @classes));
+    if (@windows == 1) {
+      $windows[0]->{active} = 1;
+    } elsif (@windows > 1) {
+      $windows[1]->{active} = 1;
     }
-    $writer->write(encode_utf8 $self->app->render('index_footer'));
-    $writer->close;
+    $self->send_windows(@windows, $writer, sub {
+      $writer->write(encode_utf8 $self->app->render('index_footer'));
+      $writer->close;
+    });
   }
+}
+
+sub send_windows {
+  my $cb = pop;
+  my $writer = pop;
+  my ($self, @windows) = @_;
+  if (@windows) {
+    my $window = pop @windows;
+    $writer->write(encode_utf8 $self->app->render('window_head', $window));
+    delete $window->{active} if $window->{active};
+    $window->messagelist->with_messages(sub {
+      my @messages = @_;
+      $writer->write(encode_utf8 $_->{html}) for @messages;
+    }, 0, sub {
+      $writer->write(encode_utf8 $self->app->render('window_footer', $window));
+      $self->send_windows(@windows, $writer, $cb);
+    });
+  }   
+  else {
+    $cb->(); 
+  }     
 }
 
 sub send_logs {
