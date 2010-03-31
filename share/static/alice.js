@@ -5596,13 +5596,48 @@ Form.EventObserver = Class.create(Abstract.EventObserver, {
     return Event.extend(event);
   }
 
+  Event.Handler = Class.create({
+    initialize: function(element, eventName, selector, callback) {
+      this.element   = $(element);
+      this.eventName = eventName;
+      this.selector  = selector;
+      this.callback  = callback;
+      this.handler   = this.handleEvent.bind(this);
+    },
+
+    start: function() {
+      Event.observe(this.element, this.eventName, this.handler);
+      return this;
+    },
+
+    stop: function() {
+      Event.stopObserving(this.element, this.eventName, this.handler);
+      return this;
+    },
+
+    handleEvent: function(event) {
+      var element = this.selector ? event.findElement(this.selector) :
+       this.element;
+      if (element) this.callback.call(element, event, element);
+    }
+  });
+
+  function on(element, eventName, selector, callback) {
+    element = $(element);
+    if (Object.isFunction(selector) && Object.isUndefined(callback)) {
+      callback = selector, selector = null;
+    }
+
+    return new Event.Handler(element, eventName, selector, callback).start();
+  }
 
   Object.extend(Event, Event.Methods);
 
   Object.extend(Event, {
     fire:          fire,
     observe:       observe,
-    stopObserving: stopObserving
+    stopObserving: stopObserving,
+    on:            on
   });
 
   Element.addMethods({
@@ -5610,7 +5645,9 @@ Form.EventObserver = Class.create(Abstract.EventObserver, {
 
     observe:       observe,
 
-    stopObserving: stopObserving
+    stopObserving: stopObserving,
+
+    on:            on
   });
 
   Object.extend(document, {
@@ -5619,6 +5656,8 @@ Form.EventObserver = Class.create(Abstract.EventObserver, {
     observe:       observe.methodize(),
 
     stopObserving: stopObserving.methodize(),
+
+    on:            on.methodize(),
 
     loaded:        false
   });
@@ -8377,10 +8416,12 @@ Alice.Application = Class.create({
   handleAction: function(action) {
     switch (action.event) {
       case "join":
-        this.insertWindow(action['window'].id, action.html);
-        var win = new Alice.Window(this, action['window'].id, action['window'].title, false);
+        if (!this.getWindow(action['window'].id)) {
+          this.insertWindow(action['window'].id, action.html);
+          var win = new Alice.Window(this, action['window'].id, action['window'].title, false);
+          this.addWindow(win);
+        }
         win.nicks = action.nicks;
-        this.addWindow(win);
         break;
       case "part":
         this.closeWindow(action['window'].id);
