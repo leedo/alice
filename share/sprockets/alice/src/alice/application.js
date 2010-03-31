@@ -147,10 +147,12 @@ Alice.Application = Class.create({
   handleAction: function(action) {
     switch (action.event) {
       case "join":
-        this.insertWindow(action['window'].id, action.html);
-        var win = new Alice.Window(this, action['window'].id, action['window'].title, false);
+        if (!this.getWindow(action['window'].id)) {
+          this.insertWindow(action['window'].id, action.html);
+          var win = new Alice.Window(this, action['window'].id, action['window'].title, false);
+          this.addWindow(win);
+        }
         win.nicks = action.nicks;
-        this.addWindow(win);
         break;
       case "part":
         this.closeWindow(action['window'].id);
