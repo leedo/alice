@@ -8416,12 +8416,14 @@ Alice.Application = Class.create({
   handleAction: function(action) {
     switch (action.event) {
       case "join":
-        if (!this.getWindow(action['window'].id)) {
+        var win = this.getWindow(action['window'].id);
+        if (!win) {
           this.insertWindow(action['window'].id, action.html);
-          var win = new Alice.Window(this, action['window'].id, action['window'].title, false);
+          win = new Alice.Window(this, action['window'].id, action['window'].title, false);
           this.addWindow(win);
+        } else {
+          win.nicks = action.nicks;
         }
-        win.nicks = action.nicks;
         break;
       case "part":
         this.closeWindow(action['window'].id);
