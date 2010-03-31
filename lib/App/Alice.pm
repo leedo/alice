@@ -271,9 +271,9 @@ sub tab_order {
   $self->config->write;
 }
 
-sub with_buffers {
+sub with_messages {
   my ($self, $cb) = @_;
-  $_->with_buffer($cb) for $self->windows;
+  $_->messagelist->with_messages($cb) for $self->windows;
 }
 
 sub find_window {

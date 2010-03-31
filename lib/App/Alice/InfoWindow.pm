@@ -12,7 +12,6 @@ has '+id' => (default => 'info');
 has '+title' => (required => 0, default => 'info');
 has '+session' => ( isa => 'Undef', default => undef);
 has 'topic' => (is => 'ro', isa => 'HashRef', default => sub {{string => ''}});
-has '+buffersize' => (default => 300);
 has '+type' => (lazy => 0, default => 'info');
 has '+_irc' => (required => 0, isa => 'Any');
 
@@ -39,11 +38,11 @@ sub format_message {
     msgid  => $self->app->next_msgid,
     timestamp => $self->timestamp,
     monospaced => $monospaced ? 1 : 0,
-    consecutive => $from eq $self->previous_nick ? 1 : 0,
+    consecutive => $from eq $self->messagelist->previous_nick ? 1 : 0,
   };
   $message->{html} = $self->app->render("message", $message);
-  $self->previous_nick($from);
-  $self->add_message($message);
+  $self->messagelist->previous_nick($from);
+  $self->messagelist->add($message);
   return $message;
 }
 
@@ -52,7 +51,7 @@ sub copy_message {
   my $copy = {
     type   => "message",
     event  => "say",
-    from   => $msg->{nick},
+    nick   => $msg->{nick},
     window => $self->serialized,
     html   => $msg->{html},
     self   => $msg->{self},
@@ -60,10 +59,9 @@ sub copy_message {
     msgid  => $self->app->next_msgid,
     timestamp => $msg->{timestamp},
     monospaced => $msg->{monospaced},
-    consecutive => $msg->{nick} eq $self->previous_nick ? 1 : 0,
+    consecutive => $msg->{nick} eq $self->messagelist->previous_nick ? 1 : 0,
   };
-  $self->previous_nick($copy->{from});
-  $self->add_message($copy);
+  $self->messagelist->add($copy);
   return $copy;
 }
 
