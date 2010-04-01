@@ -1,4 +1,4 @@
-package App::Alice::Message::Buffer;
+package App::Alice::MessageBuffer;
 
 use Any::Moose;
 
@@ -7,8 +7,8 @@ has store => (
   lazy => 1,
   default => sub {
     my $self = shift;
-    eval "require App::Alice::Message::Store::".$self->store_class;
-    ("App::Alice::Message::Store::".$self->store_class)->new;
+    eval "require App::Alice::MessageStore::".$self->store_class;
+    ("App::Alice::MessageStore::".$self->store_class)->new;
   }
 );
 

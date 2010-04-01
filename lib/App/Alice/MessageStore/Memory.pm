@@ -1,4 +1,4 @@
-package App::Alice::Message::Store::Memory;
+package App::Alice::MessageStore::Memory;
 
 use Any::Moose;
 
