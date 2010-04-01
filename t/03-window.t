@@ -39,9 +39,4 @@ is_deeply $window->serialized, {
   type => "channel",
 }, "serialize window";
 
-$window->add_message({}) for (0 .. 110);
-is scalar @{$window->msgbuffer}, $window->buffersize, "max message buffer size";
-$window->clear_buffer;
-is scalar @{$window->msgbuffer}, 0, "clear message buffer";
-
 done_testing();
