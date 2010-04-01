@@ -1,4 +1,4 @@
-package App::Alice::MessageStore::Memory;
+package App::Alice::MessageStore::Redis;
 
 use Any::Moose;
 use AnyEvent::Redis;
