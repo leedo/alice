@@ -159,13 +159,13 @@ sub log {
 
 sub mlog {
   my ($self, $level, @messages) = @_;
-  $self->broadcast(map {$self->format_info($_, 1)} @messages);
+  $self->broadcast(map {$self->format_info($_, mono => 1)} @messages);
   $self->app->log($level => "[".$self->alias . "] $_") for @messages;
 }
 
 sub format_info {
-  my ($self, $message, $monospaced) = @_;
-  $self->app->format_info($self->alias, $message, 0, $monospaced);
+  my ($self, $message, %options) = @_;
+  $self->app->format_info($self->alias, $message, %options);
 }
 
 sub window {

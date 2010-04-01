@@ -213,6 +213,10 @@ sub notfound {
 
 sub _say {
   my ($self, $window, $msg) = @_;
+  if ($window->type eq "info") {
+    $self->reply($window, "You can't talk here!");
+    return;
+  }
   $self->app->store($window->nick, $window->title, $msg);
   $self->show($window, $msg);
   $window->irc->send_srv(PRIVMSG => $window->title, $msg);

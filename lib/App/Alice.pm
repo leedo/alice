@@ -175,7 +175,7 @@ has 'shutting_down' => (
 sub BUILDARGS {
   my ($class, %options) = @_;
   my $self = {standalone => 1};
-  for (qw/standalone history notifier/) {
+  for (qw/standalone history notifier template/) {
     if (exists $options{$_}) {
       $self->{$_} = $options{$_};
       delete $options{$_};
@@ -371,9 +371,8 @@ sub reload_config {
 }
 
 sub format_info {
-  my ($self, $session, $body, $highlight, $monospaced) = @_;
-  $highlight = 0 unless $highlight;
-  $self->info_window->format_message($session, $body, $highlight, $monospaced);
+  my ($self, $session, $body, %options) = @_;
+  $self->info_window->format_message($session, $body, %options);
 }
 
 sub broadcast {
@@ -388,20 +387,6 @@ sub broadcast {
   for my $message (@messages) {
     $self->notifier->display($message) if $message->{highlight};
   }
-}
-
-sub format_notice {
-  my ($self, $event, $nick, $body) = @_;
-  my $message = {
-    type      => "action",
-    event     => $event,
-    nick      => $nick,
-    body      => $body,
-    msgid     => $self->next_msgid,
-  };
-  $message->{full_html} = $self->render('event',$message);
-  $message->{event} = "notice";
-  return $message;
 }
 
 sub render {

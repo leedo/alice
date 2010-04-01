@@ -2,7 +2,7 @@ package App::Alice::Window;
 
 use Encode;
 use utf8;
-use App::Alice::Message::Buffer;
+use App::Alice::MessageBuffer;
 use Text::MicroTemplate qw/encoded_string/;
 use IRC::Formatting::HTML;
 use Any::Moose;
@@ -29,11 +29,11 @@ has assetdir => (
 
 has buffer => (
   is      => 'rw',
-  isa     => 'App::Alice::Message::Buffer',
+  isa     => 'App::Alice::MessageBuffer',
   lazy    => 1,
   default => sub {
     my $self = shift;
-    App::Alice::Message::Buffer->new(
+    App::Alice::MessageBuffer->new(
       store_class => $self->app->config->message_store
     );
   },
