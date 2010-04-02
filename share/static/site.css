@@ -277,7 +277,7 @@ li.event div.left {
   width: 125px;
 }
 
-ul.messages li.avatar {
+ul.messages li.avatar:not(.consecutive) {
   z-index: 999;
 }
 
@@ -346,7 +346,7 @@ ul.messages li:first-child div.msg {
 }
 
 /* so the last avatar doesn't hang off the edge */
-ul.messages li.avatar:last-child {
+ul.messages li.avatar:not(.consecutive):last-child {
   min-height: 42px;
 }
 

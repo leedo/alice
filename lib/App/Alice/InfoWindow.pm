@@ -59,6 +59,11 @@ sub copy_message {
     monospaced => $msg->{monospaced},
     consecutive => $msg->{nick} eq $self->buffer->previous_nick ? 1 : 0,
   };
+  if ($msg->{consecutive} and !$copy->{consecutive}) {
+    $copy->{html} =~ s/(<li class="[^"]*)consecutive/$1/;
+  } elsif (!$msg->{consecutive} and $copy->{consecutive}) {
+    $copy->{html} =~ s/(<li class=")/$1 consecutive/;
+  }
   $self->buffer->add($copy);
   return $copy;
 }
