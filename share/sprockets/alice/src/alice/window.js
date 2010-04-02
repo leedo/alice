@@ -192,7 +192,8 @@ Alice.Window = Class.create({
       }
       else {
         var prev = li.previous();
-        if (prev && prev.hasClassName("avatar")) prev.setStyle({minHeight:"42px"});
+        if (prev && prev.hasClassName("avatar") && !prev.hasClassName("consecutive"))
+          prev.setStyle({minHeight:"42px"});
       }
     }
     else if (message.event == "topic") {
