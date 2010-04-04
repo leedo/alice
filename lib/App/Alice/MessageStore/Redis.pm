@@ -4,11 +4,7 @@ use Any::Moose;
 use AnyEvent::Redis;
 use Storable;
 
-has redis => (
-  is => 'rw',
-  isa => 'AnyEvent::Redis',
-  required => 1,
-);
+my $redis = AnyEvent::Redis->new;
 
 has queueid => (
   is => 'ro',
@@ -28,16 +24,16 @@ has lrange_size => (
 sub add {
   my ($self, $message) = @_;
   return unless $message;
-  $self->redis->rpush($self->queueid, freeze $message);
-  $self->redis->llen($self->queueid, sub {
-    $self->redis->lpop($self->queueid) if $_[0] > $self->buffersize;
+  $redis->rpush($self->queueid, freeze $message);
+  $redis->llen($self->queueid, sub {
+    $redis->lpop($self->queueid) if $_[0] > $self->buffersize;
   });
 }
 
 
 sub clear {
   my $self = shift;
-  $self->redis->del($self->queueid);
+  $redis->del($self->queueid);
 }
 
 sub with_messages {
@@ -47,7 +43,7 @@ sub with_messages {
   my $end = $start + $self->lrange_size - 1;
   $end = $self->buffersize if $end > $self->buffersize;
 
-  $self->app->redis->lrange(
+  $redis->lrange(
     $self->queueid, $start, $end, sub {
       my $msgs = ref $_[0] eq 'ARRAY' ? $_[0] : [];
       $cb->(

@@ -34,9 +34,21 @@ has buffer => (
   default => sub {
     my $self = shift;
     App::Alice::MessageBuffer->new(
-      store_class => $self->app->config->message_store
+      store_class => $self->app->config->message_store,
+      queueid     => $self->queueid,
     );
   },
+);
+
+has queueid => (
+  is => 'ro',
+  lazy => 1,
+  default => sub {
+    my $self = shift;
+    my $id = join "-", ($self->app->username, $self->session, $self->title);
+    $id =~ s/\s/-/g;
+    encode_utf8 $id;
+  }
 );
 
 has title => (
