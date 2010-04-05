@@ -10,7 +10,7 @@ extends 'App::Alice::Window';
 has '+is_channel' => (lazy => 0, default => 0);
 has '+id' => (default => 'info');
 has '+title' => (required => 0, default => 'info');
-has '+session' => ( isa => 'Undef', default => undef);
+has '+session' => (default => "");
 has 'topic' => (is => 'ro', isa => 'HashRef', default => sub {{string => ''}});
 has '+type' => (lazy => 0, default => 'info');
 has '+_irc' => (required => 0, isa => 'Any');
