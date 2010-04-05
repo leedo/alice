@@ -172,6 +172,11 @@ has 'shutting_down' => (
   isa => 'Bool',
 );
 
+has 'user' => (
+  is => 'ro',
+  default => $ENV{USER}
+);
+
 sub BUILDARGS {
   my ($class, %options) = @_;
   my $self = {standalone => 1};

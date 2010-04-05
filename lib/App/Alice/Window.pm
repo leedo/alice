@@ -45,7 +45,7 @@ has queueid => (
   lazy => 1,
   default => sub {
     my $self = shift;
-    my $id = join "-", ($self->app->username, $self->session, $self->title);
+    my $id = join "-", ($self->app->user, $self->session, $self->title);
     $id =~ s/\s/-/g;
     encode_utf8 $id;
   }
