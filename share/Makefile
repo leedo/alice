@@ -1,6 +1,6 @@
 BUILD := static
 SOURCE := sprockets
-SPROCKETS := alice prototype scriptaculous shortcut
+SPROCKETS := alice prototype scriptaculous shortcut iscroll
 INCLUDES := $(foreach sprocket,$(SPROCKETS),$(SOURCE)/$(sprocket)/src)
 INCLUDE := $(foreach dir,$(INCLUDES),-I $(dir))
 JAVASCRIPT_SOURCES := $(foreach dir,$(INCLUDES),$(wildcard $(dir)/*.js))

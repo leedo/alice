@@ -34,6 +34,12 @@ Alice.Window = Class.create({
         });
       }.bind(this), 1000);
     }.bind(this));
+    if (navigator.userAgent.match(/Chrome/)) {
+      $$('tr.input textarea').invoke('setStyle', {padding: '3px'});
+    } else if (Prototype.Browser.Gecko) {
+      this.resizeMessagearea();
+      this.scrollToBottom();
+    }
   },
   
   isTabWrapped: function() {
@@ -187,7 +193,7 @@ Alice.Window = Class.create({
       }
       
       if (message.consecutive) {
-        var avatar = li.previous(".avatar");
+        var avatar = li.previous(".avatar:not(.consecutive)");
         if (avatar) avatar.down(".timehint").innerHTML = message.timestamp;
       }
       else {
