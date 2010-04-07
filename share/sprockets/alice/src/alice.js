@@ -2,6 +2,7 @@
 //= require <effects>
 //= require <dragdrop>
 //= require <shortcut>
+//= require <iscroll>
 
 var Alice = { };
 
