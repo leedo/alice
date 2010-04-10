@@ -390,6 +390,7 @@ sub broadcast {
   
   return unless $self->notifier and ! $self->httpd->stream_count;
   for my $message (@messages) {
+    next if $message->{window}{type} eq "info";
     $self->notifier->display($message) if $message->{highlight};
   }
 }

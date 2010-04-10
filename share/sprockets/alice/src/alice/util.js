@@ -18,7 +18,7 @@ Object.extend(Alice, {
     if (!window.fluid) return;
     window.fluid.showGrowlNotification({
         title: message.window.title + ": " + message.nick,
-        description: message.body, 
+        description: message.html.stripTags(), 
         priority: 1, 
         sticky: false,
         identifier: message.msgid
