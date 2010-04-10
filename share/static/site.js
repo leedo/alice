@@ -36,6 +36,9 @@ if (window == window.parent) {
         case "Connections":
           alice.toggleConfig(e);
           break;
+        case "Logout":
+          window.location = "/logout";
+          break;
       }
       $$('#config_overlay option').each(function(opt){opt.selected = false});
     });

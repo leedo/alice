@@ -119,8 +119,8 @@ has message_store => (
   default => 'Memory'
 );
 
-sub add_ignore {push @{shift->ignore}, @_}
 sub ignores {@{$_[0]->ignore}}
+sub add_ignore {push @{$_[0]->ignores}, @_}
 
 sub BUILD {
   my $self = shift;
@@ -194,7 +194,7 @@ sub write {
     local $Data::Dumper::Terse = 1;
     local $Data::Dumper::Indent = 1;
     print $fh Dumper($config)
-      or die "Can not write config file: $!\n";
+      or warn "Can not write config file: $!\n";
   }
 }
 
@@ -207,14 +207,6 @@ sub serialized {
     } grep {$_->has_write_method}
     $self->meta->get_all_attributes
   };
-}
-
-sub auth_enabled {
-  my $self = shift;
-  $self->auth
-      and ref $self->auth eq 'HASH'
-      and $self->auth->{username}
-      and $self->auth->{password};
 }
 
 __PACKAGE__->meta->make_immutable;
