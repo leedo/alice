@@ -1,3 +1,9 @@
+0.13  Sat 10 Apr 2010
+        - Use cookie based auth
+        - Don't break on perl 5.8
+        - Added Redis message store
+        - Moved most display logic to CSS
+
 0.12  Thu 25 Mar 2010
         - Switched to Twiggy from AE:HTTPD
         - Many HTML/CSS tweaks

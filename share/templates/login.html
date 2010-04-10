@@ -1,0 +1,46 @@
+? my $app = shift;
+<html>
+  <head>
+    <title>alice login</title>
+    <style type="text/css">
+      body {
+        text-align: center;
+        font-family: Helvetica, Arial, sans-serif;
+        font-size: 12px;
+        background: #eee;
+      }
+      form {
+        display: block;
+        width: 150px;
+        margin: 0 auto;
+        text-align: left;
+        background: #fff;
+        border: 8px solid #ccc;
+        padding: 20px;
+      }
+      input, label {
+        display: block;
+        width: 150px;
+      }
+      input {
+        margin-bottom: 15px;
+      }
+      input[type="submit"] {
+        font-size: 16px;
+        margin-bottom: 0;
+        margin-top: 30px;
+      }
+    </style>
+  </head>
+  <body>
+    <form action="/login" method="post">
+      <label for="username">User Name:</label>
+      <input type="text" name="username" value="" id="username" />
+      
+      <label for="password">Password:</label>
+      <input type="password" name="password" value="" id="password" />
+      
+      <input type="submit" value="Log in" />
+    </form>
+  </body>
+</html>

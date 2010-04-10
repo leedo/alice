@@ -44,6 +44,8 @@ has 'url_handlers' => (
       { re => qr{^/tabs/?$},         sub  => 'tab_order' },
       { re => qr{^/view/?$},         sub  => 'send_index' },
       { re => qr{^/stream/?$},       sub  => 'setup_stream' },
+      { re => qr{^/login/?$},        sub  => 'login' },
+      { re => qr{^/logout/?$},       sub  => 'logout' },
       { re => qr{^/say/?$},          sub  => 'handle_message' },
       { re => qr{^/get},             sub  => 'image_proxy' },
       { re => qr{^/logs/?$},         sub  => 'send_logs' },
@@ -73,8 +75,7 @@ sub BUILD {
   );
   $httpd->register_service(
     builder {
-      enable "Auth::Basic", authenticator => sub {$self->authenticate(@_)}
-        if $self->app->config->auth_enabled;
+      enable "Session", expires => "24h" if $self->app->auth_enabled;
       enable "Static", path => qr{^/static/}, root => $self->config->assetdir;
       sub {$self->dispatch(shift)}
     }
@@ -86,6 +87,13 @@ sub BUILD {
 sub dispatch {
   my ($self, $env) = @_;
   my $req = Plack::Request->new($env);
+  if ($self->app->auth_enabled) {
+    unless ($req->path eq "/login" or $self->is_logged_in($req)) {
+      my $res = $req->new_response;
+      $res->redirect("/login");
+      return $res->finalize;
+    }
+  }
   for my $handler (@{$self->url_handlers}) {
     my $re = $handler->{re};
     if ($req->path_info =~ /$re/) {
@@ -96,6 +104,44 @@ sub dispatch {
     }
   }
   return $self->not_found($req);
+}
+
+sub is_logged_in {
+  my ($self, $req) = @_;
+  my $session = $req->env->{"psgix.session"};
+  return $session->{is_logged_in};
+}
+
+sub login {
+  my ($self, $req) = @_;
+  my $res = $req->new_response;
+  if (!$self->app->auth_enabled or $self->is_logged_in($req)) {
+    $res->redirect("/");
+    return $res->finalize;
+  }
+  elsif (my $user = $req->param("username")
+     and my $pass = $req->param("password")) {
+    if ($self->app->authenticate($user, $pass)) {
+      $req->env->{"psgix.session"}->{is_logged_in} = 1;
+      $res->redirect("/");
+      return $res->finalize;
+    }
+  }
+  $res->status(200);
+  $res->body($self->app->render("login"));
+  return $res->finalize;
+}
+
+sub logout {
+  my ($self, $req) = @_;
+  my $res = $req->new_response;
+  if (!$self->app->auth_enabled) {
+    $res->redirect("/");
+  } else {
+    $req->env->{"psgix.session"}{is_logged_in} = 0;
+    $res->redirect("/login");
+  }
+  return $res->finalize;
 }
 
 sub ping {
@@ -150,17 +196,6 @@ sub broadcast {
   }
   $self->purge_disconnects if $purge;
 };
-
-sub authenticate {
-  my ($self, $user, $pass) = @_;
-  return 1 unless ($self->app->config->auth_enabled);
-
-  if ($self->config->auth->{username} eq $user &&
-      $self->config->auth->{password} eq $pass) {
-    return 1;
-  }
-  return 0;
-}
 
 sub setup_stream {
   my ($self, $req) = @_;
@@ -289,9 +324,7 @@ sub send_range {
 sub send_config {
   my ($self, $req) = @_;
   $self->app->log(info => "serving config");
-  
   my $output = $self->app->render('servers');
-  
   my $res = $req->new_response(200);
   $res->body($output);
   return $res->finalize;
@@ -317,7 +350,6 @@ sub save_config {
   $self->app->log(info => "saving config");
   
   my $new_config = {servers => {}};
-  
   for my $name (keys %{$req->parameters}) {
     next unless $req->parameters->{$name};
     if ($name =~ /^(.+?)_(.+)/) {
@@ -345,7 +377,6 @@ sub tab_order  {
   $self->app->log(debug => "updating tab order");
   
   $self->app->tab_order([grep {defined $_} $req->parameters->get_all('tabs')]);
-  
   my $res = $req->new_response(200);
   $res->body('ok');
   return $res->finalize;

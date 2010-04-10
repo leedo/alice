@@ -21,6 +21,9 @@
             <option>Logs</option>
             <option>Preferences</option>
             <option>Connections</option>
+            <? if ($_[0]->auth_enabled) { ?>
+            <option>Logout</option>
+            <? } ?>
           </select>
         </li>
         <li id="tab_overflow_button">

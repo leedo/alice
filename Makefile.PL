@@ -10,6 +10,7 @@ requires 'AnyEvent::IRC' => '0.95';
 requires 'AnyEvent::HTTP' => '0';
 requires 'Twiggy' => '0';
 requires 'Plack' => '0';
+requires 'Plack::Session' => '0';
 requires 'DBD::SQLite' => '0';
 requires 'SQL::Abstract' => '0';
 requires 'AnyEvent::DBI' => '0';
