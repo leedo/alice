@@ -2,7 +2,7 @@ package App::Alice::MessageStore::Redis;
 
 use Any::Moose;
 use AnyEvent::Redis;
-use Storable;
+use Storable qw/freeze thaw/;
 
 my $redis = AnyEvent::Redis->new;
 
@@ -53,12 +53,11 @@ sub with_messages {
       if ($end == $self->buffersize or @$msgs != $self->lrange_size) {
         $complete_cb->() if $complete_cb;
       } else {
-        $self->with_buffer($cb, $end + 1, $complete_cb);
+        $self->with_messages($cb, $end + 1, $complete_cb);
       }
     }
   );
 }
-
 
 __PACKAGE__->meta->make_immutable;
 1;
