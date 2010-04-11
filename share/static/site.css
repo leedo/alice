@@ -398,7 +398,21 @@ ul.messages li.event {
 }
 
 ul.messages li.event.notice {
-  background: red;
+  background: #eb2222;
+  color: #fff;
+}
+
+ul.messages li.event.notice a {
+  color: #fffc00;
+  text-decoration: none;
+}
+
+ul.messages li.event.notice a:hover{
+  text-shadow: none;
+}
+
+ul.messages li.event.happynotice {
+  background: #3fc842;
   color: #fff;
 }
 

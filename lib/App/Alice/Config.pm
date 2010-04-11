@@ -125,6 +125,7 @@ sub add_ignore {push @{$_[0]->ignores}, @_}
 sub BUILD {
   my $self = shift;
   $self->load;
+  mkdir $self->path."/sessions" unless -e $self->path."/sessions";
 }
 
 sub load {
