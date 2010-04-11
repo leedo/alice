@@ -57,7 +57,7 @@ Alice.Connection = Class.create({
   
   handleUpdate: function(transport) {
     if (this.reconnecting) {
-      this.application.activeWindow().showHappyAlert("Reconnected to the Alice server.");
+      this.application.activeWindow().showHappyAlert("Reconnected to the Alice server");
       this.reconnecting = false;
     }
     this.reconnect_count = 0;
