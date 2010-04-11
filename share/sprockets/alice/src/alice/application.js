@@ -153,6 +153,7 @@ Alice.Application = Class.create({
           win = new Alice.Window(this, action['window'].id, action['window'].title, false);
           this.addWindow(win);
         } else {
+          win.enable();
           win.nicks = action.nicks;
         }
         break;
@@ -171,6 +172,12 @@ Alice.Application = Class.create({
         if (win) {
           win.messages.down("ul").update("");
           win.lastNick = "";
+        }
+        break;
+      case "disconnect":
+        var win = this.getWindow(action['window'].id);
+        if (win) {
+          win.disable();
         }
         break;
       default:

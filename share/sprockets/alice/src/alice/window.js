@@ -148,6 +148,15 @@ Alice.Window = Class.create({
     this.tabOverflowButton.removeClassName("unread");
   },
   
+  disable: function () {
+    this.markRead();
+    this.tab.addClassName('disabled');
+  },
+  
+  enable: function () {
+    this.tab.removeClassName('disabled');
+  },
+  
   close: function(event) {
     this.application.removeWindow(this);
     this.tab.remove();
