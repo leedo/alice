@@ -8816,6 +8816,8 @@ Alice.Connection = Class.create({
     this.request = null;
     this.seperator = "--xalicex\n";
     this.msgid = 0;
+    this.reconnect_count = 0;
+    this.reconnecting = false;
   },
 
   closeConnection: function() {
@@ -8826,8 +8828,14 @@ Alice.Connection = Class.create({
   },
 
   connect: function() {
+    if (this.reconnect_count > 3) {
+      this.aborting = true;
+      this.application.activeWindow().showAlert("Alice server is not responding (<a href='javascript:alice.connection.reconnect()'>reconnect</a>)");
+      return;
+    }
     this.closeConnection();
     this.len = 0;
+    this.reconnect_count++;
     var now = new Date();
     this.request = new Ajax.Request('/stream', {
       method: 'get',
@@ -8836,6 +8844,12 @@ Alice.Connection = Class.create({
       onInteractive: this.handleUpdate.bind(this),
       onComplete: this.handleComplete.bind(this)
     });
+  },
+
+  reconnect: function () {
+    this.reconnecting = true;
+    this.reconnect_count = 0;
+    this.connect();
   },
 
   handleException: function(request, exception) {
@@ -8849,6 +8863,11 @@ Alice.Connection = Class.create({
   },
 
   handleUpdate: function(transport) {
+    if (this.reconnecting) {
+      this.application.activeWindow().showHappyAlert("Reconnected to the Alice server.");
+      this.reconnecting = false;
+    }
+    this.reconnect_count = 0;
     var time = new Date();
     var data = transport.responseText.slice(this.len);
     var start, end;
@@ -9114,10 +9133,18 @@ Alice.Window = Class.create({
     });
   },
 
+  showHappyAlert: function (message) {
+    this.messages.down('ul').insert(
+      "<li class='event happynotice'><div class='msg'>"+message+"</div></li>"
+    );
+    this.scrollToBottom();
+  },
+
   showAlert: function (message) {
     this.messages.down('ul').insert(
       "<li class='event notice'><div class='msg'>"+message+"</div></li>"
     );
+    this.scrollToBottom();
   },
 
   addMessage: function(message) {

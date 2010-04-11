@@ -8,6 +8,7 @@ use Plack::Request;
 use Plack::Builder;
 use Plack::Middleware::Static;
 use Plack::Middleware::Auth::Basic;
+use Plack::Session::Store::File;
 
 use App::Alice::Stream;
 use App::Alice::Commands;
@@ -75,7 +76,11 @@ sub BUILD {
   );
   $httpd->register_service(
     builder {
-      enable "Session", expires => "24h" if $self->app->auth_enabled;
+      if ($self->app->auth_enabled) {
+        enable "Session",
+          store => Plack::Session::Store::File->new(dir => $self->config->path),
+          expires => "24h";
+      }
       enable "Static", path => qr{^/static/}, root => $self->config->assetdir;
       sub {$self->dispatch(shift)}
     }
@@ -214,7 +219,7 @@ sub setup_stream {
       return unless @_;
       $stream->enqueue(
         map  {$_->{buffered} = 1; $_}
-        grep {$_->{msgid} > $min or $min > $self->app->msgid}
+        grep {$_->{msgid} > $min}
         @_
       );
       $stream->send;
