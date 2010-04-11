@@ -323,7 +323,9 @@ sub disconnect {
   my ($self, $msg) = @_;
 
   $self->disabled(1);
-  $self->app->remove_window($_) for $self->windows;
+  if (!$self->app->shutting_down) {
+    $self->app->remove_window($_) for $self->windows; 
+  }
 
   $msg ||= $self->app->config->quitmsg;
   $self->log(debug => "disconnecting: $msg") if $msg;

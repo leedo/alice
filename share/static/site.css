@@ -397,6 +397,11 @@ ul.messages li.event {
   border-bottom: 1px solid #fff;
 }
 
+ul.messages li.event.notice {
+  background: red;
+  color: #fff;
+}
+
 ul.messages li.event div.msg {
   background: none;
   border-left: none;
