@@ -222,7 +222,7 @@ sub init_shutdown {
   my ($self, $cb, $msg) = @_;
   $self->{on_shutdown} = $cb;
   $self->shutting_down(1);
-  $self->alert("Shutting down");
+  $self->alert("Alice server is shutting down");
   if ($self->ircs) {
     print STDERR "\nDisconnecting, please wait\n" if $self->standalone;
     $_->init_shutdown($msg) for $self->ircs;
