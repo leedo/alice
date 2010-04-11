@@ -23,6 +23,7 @@ if (window == window.parent) {
     $$('ul.messages li.avatar:not(.consecutive) + li:not(.consecutive)').each(function (li) {
       li.previous().setStyle({minHeight:"42px"});
     });
+    alice.activeWindow().scrollToBottom();
     $$('#config_overlay option').each(function(opt){opt.selected = false});
     $('tab_overflow_overlay').observe("change", function (e) {
       var win = alice.getWindow($('tab_overflow_overlay').value);
