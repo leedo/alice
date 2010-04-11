@@ -241,6 +241,7 @@ sub shutdown {
   my $self = shift;
   $self->irc_map({});
   $self->httpd->shutdown;
+  $_->buffer->clear for $self->windows;
   $self->history(undef);
   delete $self->{shutdown_timer} if $self->{shutdown_timer};
   $self->{on_shutdown}->() if $self->{on_shutdown};
