@@ -8,8 +8,13 @@ has store => (
   default => sub {
     my $self = shift;
     eval "require App::Alice::MessageStore::".$self->store_class;
-    ("App::Alice::MessageStore::".$self->store_class)->new;
+    ("App::Alice::MessageStore::".$self->store_class)->new(id => $self->id);
   }
+);
+
+has id => (
+  is => 'ro',
+  required => 1,
 );
 
 has store_class => (

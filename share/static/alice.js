@@ -8778,8 +8778,8 @@ Alice.Application = Class.create({
         var win = this.getWindow(action['window'].id);
         if (win) win.nicks = action.nicks;
         break;
-      case "notice":
-        this.activeWindow().addMessage(action);
+      case "alert":
+        this.activeWindow().showAlert(action['body']);
         break;
       case "clear":
         var win = this.getWindow(action['window'].id);
@@ -9112,6 +9112,12 @@ Alice.Window = Class.create({
       left: "0px",
       height: 'auto'
     });
+  },
+
+  showAlert: function (message) {
+    this.messages.down('ul').insert(
+      "<li class='event notice'><div class='msg'>"+message+"</div></li>"
+    );
   },
 
   addMessage: function(message) {

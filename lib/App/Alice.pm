@@ -222,15 +222,15 @@ sub init_shutdown {
   my ($self, $cb, $msg) = @_;
   $self->{on_shutdown} = $cb;
   $self->shutting_down(1);
-  $self->httpd->shutdown;
-  $self->history(undef);
-  if (!$self->ircs) {
+  $self->alert("Shutting down");
+  if ($self->ircs) {
+    print STDERR "\nDisconnecting, please wait\n" if $self->standalone;
+    $_->init_shutdown($msg) for $self->ircs;
+  }
+  else {
     $self->shutdown;
     return;
   }
-  print STDERR "\nDisconnecting, please wait\n"
-    if $self->standalone;
-  $_->init_shutdown($msg) for $self->ircs;
   $self->{shutdown_timer} = AnyEvent->timer(
     after => 3,
     cb    => sub{$self->shutdown}
@@ -240,6 +240,8 @@ sub init_shutdown {
 sub shutdown {
   my $self = shift;
   $self->irc_map({});
+  $self->httpd->shutdown;
+  $self->history(undef);
   delete $self->{shutdown_timer} if $self->{shutdown_timer};
   $self->{on_shutdown}->() if $self->{on_shutdown};
   $self->condvar->send if $self->condvar;
@@ -284,15 +286,25 @@ sub with_messages {
 sub find_window {
   my ($self, $title, $connection) = @_;
   return $self->info_window if $title eq "info";
-  my $id = _build_window_id($title, $connection->alias);
+  my $id = $self->_build_window_id($title, $connection->alias);
   if (my $window = $self->get_window($id)) {
     return $window;
   }
 }
 
+sub alert {
+  my ($self, $message) = @_;
+  return unless $message;
+  $self->broadcast({
+    type => "action",
+    event => "alert",
+    body => $message,
+  });
+}
+
 sub create_window {
   my ($self, $title, $connection) = @_;
-  my $id = _build_window_id($title, $connection->alias);
+  my $id = $self->_build_window_id($title, $connection->alias);
   my $window = App::Alice::Window->new(
     title    => $title,
     irc      => $connection,
@@ -304,8 +316,8 @@ sub create_window {
 }
 
 sub _build_window_id {
-  my ($title, $connection_alias) = @_;
-  return "win_" . md5_hex(encode_utf8(lc "$title-$connection_alias"));
+  my ($self, $title, $connection_alias) = @_;
+  return "win_" . md5_hex(encode_utf8(lc $self->user."-$title-$connection_alias"));
 }
 
 sub find_or_create_window {
@@ -382,6 +394,7 @@ sub format_info {
 
 sub broadcast {
   my ($self, @messages) = @_;
+  
   # add any highlighted messages to the log window
   push @messages, map {$self->info_window->copy_message($_)}
                   grep {$_->{highlight}} @messages;
@@ -390,7 +403,7 @@ sub broadcast {
   
   return unless $self->notifier and ! $self->httpd->stream_count;
   for my $message (@messages) {
-    next if $message->{window}{type} eq "info";
+    next if !$message->{window} or $message->{window}{type} eq "info";
     $self->notifier->display($message) if $message->{highlight};
   }
 }

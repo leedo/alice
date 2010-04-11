@@ -172,6 +172,12 @@ Alice.Window = Class.create({
     });
   },
   
+  showAlert: function (message) {
+    this.messages.down('ul').insert(
+      "<li class='event notice'><div class='msg'>"+message+"</div></li>"
+    );
+  },
+  
   addMessage: function(message) {
     if (!message.html) return;
     

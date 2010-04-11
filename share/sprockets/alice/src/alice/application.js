@@ -163,8 +163,8 @@ Alice.Application = Class.create({
         var win = this.getWindow(action['window'].id);
         if (win) win.nicks = action.nicks;
         break;
-      case "notice":
-        this.activeWindow().addMessage(action);
+      case "alert":
+        this.activeWindow().showAlert(action['body']);
         break;
       case "clear":
         var win = this.getWindow(action['window'].id);

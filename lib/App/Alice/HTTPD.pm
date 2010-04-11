@@ -139,6 +139,7 @@ sub logout {
     $res->redirect("/");
   } else {
     $req->env->{"psgix.session"}{is_logged_in} = 0;
+    $req->env->{"psgix.session.options"}{expire} = 1;
     $res->redirect("/login");
   }
   return $res->finalize;
@@ -216,7 +217,7 @@ sub setup_stream {
         grep {$_->{msgid} > $min or $min > $self->app->msgid}
         @_
       );
-      $stream->send(1); # force
+      $stream->send;
     });
   }
 }

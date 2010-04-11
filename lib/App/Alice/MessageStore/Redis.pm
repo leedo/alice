@@ -6,7 +6,7 @@ use Storable;
 
 my $redis = AnyEvent::Redis->new;
 
-has queueid => (
+has id => (
   is => 'ro',
   required => 1
 );
@@ -24,16 +24,15 @@ has lrange_size => (
 sub add {
   my ($self, $message) = @_;
   return unless $message;
-  $redis->rpush($self->queueid, freeze $message);
-  $redis->llen($self->queueid, sub {
-    $redis->lpop($self->queueid) if $_[0] > $self->buffersize;
+  $redis->rpush($self->id, freeze $message);
+  $redis->llen($self->id, sub {
+    $redis->lpop($self->id) if $_[0] > $self->buffersize;
   });
 }
 
-
 sub clear {
   my $self = shift;
-  $redis->del($self->queueid);
+  $redis->del($self->id);
 }
 
 sub with_messages {
@@ -44,7 +43,7 @@ sub with_messages {
   $end = $self->buffersize if $end > $self->buffersize;
 
   $redis->lrange(
-    $self->queueid, $start, $end, sub {
+    $self->id, $start, $end, sub {
       my $msgs = ref $_[0] eq 'ARRAY' ? $_[0] : [];
       $cb->(
         grep {$_}

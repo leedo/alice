@@ -28,7 +28,7 @@ ok $info, "info window";
 my $window = $app->create_window("test-window", $irc);
 ok $window, "create window";
 
-my $window_id = App::Alice::_build_window_id("test-window", "test");
+my $window_id = $app->_build_window_id("test-window", "test");
 is $window_id, "win_d6c0344fe1630e09bf260711efc0412c", "build window id";
 ok $app->has_window($window_id), "window exists";
 ok $app->find_window("test-window", $irc), "find window by name";
@@ -44,7 +44,7 @@ ok !$app->has_window("test-window2"), "manually remove window";
 is_deeply $app->find_or_create_window("test-window", $irc), $window, "find or create existing window";
 my $window2 = $app->find_or_create_window("test-window2", $irc);
 ok $app->find_window("test-window2", $irc), "find or create non-existent window";
-$app->remove_window(App::Alice::_build_window_id("test-window2", "test"));
+$app->remove_window($app->_build_window_id("test-window2", "test"));
 
 $app->close_window($window);
 ok !$app->has_window($window_id), "close window";
