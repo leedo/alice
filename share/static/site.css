@@ -487,6 +487,10 @@ ul#tabs li.highlight.channel_tab div.tab_button {
   background: url(image/roomTabNewHighlightMessage.png);
 }
 
+ul#tabs li.disabled.channel_tab div.tab_button {
+  background: url(image/roomTabDisabled.png);
+}
+
 div.autocomplete ul {
   height: 1.6em;
   position: absolute;
