@@ -125,12 +125,12 @@ sub add_ignore {push @{$_[0]->ignores}, @_}
 sub BUILD {
   my $self = shift;
   $self->load;
-  mkdir $self->path."/sessions" unless -e $self->path."/sessions";
+  mkdir $self->path unless -d $self->path;
+  mkdir $self->path."/sessions" unless -d $self->path."/sessions";
 }
 
 sub load {
   my $self = shift;
-  mkdir $self->path if !-d $self->path;
   my $config = {};
   if (-e $self->fullpath) {
     $config = require $self->fullpath;
