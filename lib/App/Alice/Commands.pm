@@ -217,6 +217,10 @@ sub _say {
     $self->reply($window, "You can't talk here!");
     return;
   }
+  elsif (!$window->irc->is_connected) {
+    $self->reply($window, "You are not connected to ".$window->irc->alias.".");
+    return;
+  }
   $self->app->store($window->nick, $window->title, $msg);
   $self->show($window, $msg);
   $window->irc->send_srv(PRIVMSG => $window->title, $msg);
