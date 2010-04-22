@@ -8569,14 +8569,26 @@ Object.extend(Alice, {
   },
 
   growlNotify: function(message) {
-    if (!window.fluid) return;
-    window.fluid.showGrowlNotification({
+    if (window.fluid) {
+      window.fluid.showGrowlNotification({
         title: message.window.title + ": " + message.nick,
-        description: message.html.stripTags(),
+        description: message.body.unescapeHTML(),
         priority: 1,
         sticky: false,
         identifier: message.msgid
-    });
+      });
+    }
+    else if (window.webkitNotifications) {
+      if (window.webkitNotifications.checkPermission() == 0) {
+        var popup = window.webkitNotifications.createNotification(
+          "http://static.usealice.org/image/alice.png",
+          message.window.title + ": " + message.nick,
+          message.body.unescapeHTML()
+        );
+        console.log(popup);
+        popup.show();
+      }
+    }
   },
 
   makeSortable: function() {
@@ -8626,10 +8638,62 @@ Alice.Application = Class.create({
     setTimeout(this.connection.connect.bind(this.connection), 1000);
   },
 
-  toggleConfig: function(e) {
-    if (this.configWindow && this.configWindow.focus) {
-      this.configWindow.focus();
+  actionHandlers: {
+    join: function (action) {
+      var win = this.getWindow(action['window'].id);
+      if (!win) {
+        this.insertWindow(action['window'].id, action.html);
+        win = new Alice.Window(this, action['window'].id, action['window'].title, false);
+        this.addWindow(win);
+      } else {
+        win.enable();
+        win.nicks = action.nicks;
+      }
+    },
+    part: function (action) {
+      this.closeWindow(action['window'].id);
+    },
+    nicks: function (action) {
+      var win = this.getWindow(action['window'].id);
+      if (win) win.nicks = action.nicks;
+    },
+    alert: function (action) {
+      this.activeWindow().showAlert(action['body']);
+    },
+    clear: function (action) {
+      var win = this.getWindow(action['window'].id);
+      if (win) {
+        win.messages.down("ul").update("");
+        win.lastNick = "";
+      }
+    },
+    connect: function (action) {
+      action.windows.each(function (win_info) {
+        var win = this.getWindow(win_info.id);
+        if (win) {
+          win.enable();
+        }
+      }.bind(this));
+      if (this.configWindow) {
+        this.configWindow.connectServer(action.session);
+      }
+    },
+    disconnect: function (action) {
+      action.windows.each(function (win_info) {
+        var win = this.getWindow(win_info.id);
+        if (win) {
+          win.disable();
+        }
+      }.bind(this));
+      if (this.configWindow) {
+        this.configWindow.disconnectServer(action.session);
+      }
+    }
+  },
 
+  toggleConfig: function(e) {
+    if (this.configWindow && !this.configWindow.closed && this.configWindow.focus) {
+      this.configWindow.focus();
     } else {
       this.configWindow = window.open(null, "config", "resizable=no,scrollbars=no,status=no,toolbar=no,location=no,width=500,height=480");
       this.connection.getConfig(function (transport) {
@@ -8641,7 +8705,7 @@ Alice.Application = Class.create({
   },
 
   toggleLogs: function(e) {
-    if (this.logWindow && this.logWindow.focus) {
+    if (this.logWindow && !this.logWindow.closed && this.logWindow.focus) {
       this.logWindow.focus();
     } else {
       this.logWindow = window.open(null, "logs", "resizable=no,scrollbars=no,statusbar=no, toolbar=no,location=no,width=500,height=480");
@@ -8760,43 +8824,8 @@ Alice.Application = Class.create({
   },
 
   handleAction: function(action) {
-    switch (action.event) {
-      case "join":
-        var win = this.getWindow(action['window'].id);
-        if (!win) {
-          this.insertWindow(action['window'].id, action.html);
-          win = new Alice.Window(this, action['window'].id, action['window'].title, false);
-          this.addWindow(win);
-        } else {
-          win.enable();
-          win.nicks = action.nicks;
-        }
-        break;
-      case "part":
-        this.closeWindow(action['window'].id);
-        break;
-      case "nicks":
-        var win = this.getWindow(action['window'].id);
-        if (win) win.nicks = action.nicks;
-        break;
-      case "alert":
-        this.activeWindow().showAlert(action['body']);
-        break;
-      case "clear":
-        var win = this.getWindow(action['window'].id);
-        if (win) {
-          win.messages.down("ul").update("");
-          win.lastNick = "";
-        }
-        break;
-      case "disconnect":
-        var win = this.getWindow(action['window'].id);
-        if (win) {
-          win.disable();
-        }
-        break;
-      default:
-        break;
+    if (this.actionHandlers[action.event]) {
+      this.actionHandlers[action.event].call(this,action);
     }
   },
 
@@ -8974,7 +9003,6 @@ Alice.Window = Class.create({
     this.title = title;
     this.id = this.element.identify();
     this.active = active;
-
     this.tab = $(this.id + "_tab");
     this.input = new Alice.Input(this, this.id + "_msg");
     this.tabButton = $(this.id + "_tab_button");
@@ -8987,13 +9015,14 @@ Alice.Window = Class.create({
     this.visibleNick = "";
     this.visibleNickTimeout = "";
     this.nicks = [];
+    this.messageLimit = 250;
 
     this.submit.observe("click", function (e) {this.input.send(); e.stop()}.bind(this));
     this.tab.observe("mousedown", function(e) {
       if (!this.active) {this.focus(); this.active = false}}.bind(this));
     this.tab.observe("click", function(e) {this.active = true}.bind(this));
     this.tabButton.observe("click", function(e) {if (this.active) this.close()}.bind(this));
-    document.observe("mouseover", this.showNick.bind(this));
+    this.messages.observe("mouseover", this.showNick.bind(this));
     this.scrollToBottom(true);
     document.observe("dom:loaded", function () {
       setTimeout(function () {
@@ -9007,6 +9036,9 @@ Alice.Window = Class.create({
     } else if (Prototype.Browser.Gecko) {
       this.resizeMessagearea();
       this.scrollToBottom();
+    } else if (Prototype.Browser.MobileSafari) {
+      this.messageLimit = 50;
+      this.messages.select("li").reverse().slice(50).invoke("remove");
     }
   },
 
@@ -9108,6 +9140,8 @@ Alice.Window = Class.create({
     }
     this.element.redraw();
     this.application.updateChannelSelect();
+    window.location.hash = this.id;
+    window.location = window.location.toString();
   },
 
   markRead: function () {
@@ -9168,6 +9202,13 @@ Alice.Window = Class.create({
 
     this.messages.down('ul').insert(Alice.uncacheGravatar(message.html));
     var li = this.messages.down('li:last-child');
+
+    if (!message.consecutive) {
+      var prev = li.previous();
+      if (prev && prev.hasClassName("avatar") && !prev.hasClassName("consecutive"))
+        prev.setStyle({minHeight:"42px"});
+    }
+
     if (message.event == "say") {
       var msg = li.down('div.msg');
       msg.innerHTML = this.application.applyFilters(msg.innerHTML);
@@ -9187,18 +9228,15 @@ Alice.Window = Class.create({
         var avatar = li.previous(".avatar:not(.consecutive)");
         if (avatar) avatar.down(".timehint").innerHTML = message.timestamp;
       }
-      else {
-        var prev = li.previous();
-        if (prev && prev.hasClassName("avatar") && !prev.hasClassName("consecutive"))
-          prev.setStyle({minHeight:"42px"});
-      }
     }
     else if (message.event == "topic") {
       this.displayTopic(message.body.escapeHTML());
     }
 
-    if (!this.application.isFocused && message.highlight && message.window.title != "info")
+    if (!this.application.isFocused && message.highlight && message.window.title != "info") {
+      message.body = li.down(".msg").innerHTML.stripTags();
       Alice.growlNotify(message);
+    }
 
     if (message.nicks && message.nicks.length)
       this.nicks = message.nicks;
@@ -9217,7 +9255,7 @@ Alice.Window = Class.create({
     }
 
     var messages = this.messages.childElements();
-    if (messages.length > 250) messages.first().remove();
+    if (messages.length > this.messageLimit) messages.first().remove();
 
     this.element.redraw();
   },

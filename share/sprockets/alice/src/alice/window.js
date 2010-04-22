@@ -6,7 +6,6 @@ Alice.Window = Class.create({
     this.title = title;
     this.id = this.element.identify();
     this.active = active;
-    
     this.tab = $(this.id + "_tab");
     this.input = new Alice.Input(this, this.id + "_msg");
     this.tabButton = $(this.id + "_tab_button");
@@ -19,13 +18,14 @@ Alice.Window = Class.create({
     this.visibleNick = "";
     this.visibleNickTimeout = "";
     this.nicks = [];
+    this.messageLimit = 250;
     
     this.submit.observe("click", function (e) {this.input.send(); e.stop()}.bind(this));
     this.tab.observe("mousedown", function(e) {
       if (!this.active) {this.focus(); this.active = false}}.bind(this));
     this.tab.observe("click", function(e) {this.active = true}.bind(this));
     this.tabButton.observe("click", function(e) {if (this.active) this.close()}.bind(this));
-    document.observe("mouseover", this.showNick.bind(this));
+    this.messages.observe("mouseover", this.showNick.bind(this));
     this.scrollToBottom(true);
     document.observe("dom:loaded", function () {
       setTimeout(function () {
@@ -39,6 +39,10 @@ Alice.Window = Class.create({
     } else if (Prototype.Browser.Gecko) {
       this.resizeMessagearea();
       this.scrollToBottom();
+    } else if (Prototype.Browser.MobileSafari) {
+      // only keep 50 messages per tab to avoid memory limits
+      this.messageLimit = 50;
+      this.messages.select("li").reverse().slice(50).invoke("remove");
     }
   },
   
@@ -140,6 +144,8 @@ Alice.Window = Class.create({
     }
     this.element.redraw();
     this.application.updateChannelSelect();
+    window.location.hash = this.id;
+    window.location = window.location.toString();
   },
   
   markRead: function () {
@@ -200,6 +206,13 @@ Alice.Window = Class.create({
     
     this.messages.down('ul').insert(Alice.uncacheGravatar(message.html));
     var li = this.messages.down('li:last-child');
+    
+    if (!message.consecutive) {
+      var prev = li.previous();
+      if (prev && prev.hasClassName("avatar") && !prev.hasClassName("consecutive"))
+        prev.setStyle({minHeight:"42px"});
+    }
+    
     if (message.event == "say") {
       var msg = li.down('div.msg');
       msg.innerHTML = this.application.applyFilters(msg.innerHTML);
@@ -219,18 +232,15 @@ Alice.Window = Class.create({
         var avatar = li.previous(".avatar:not(.consecutive)");
         if (avatar) avatar.down(".timehint").innerHTML = message.timestamp;
       }
-      else {
-        var prev = li.previous();
-        if (prev && prev.hasClassName("avatar") && !prev.hasClassName("consecutive"))
-          prev.setStyle({minHeight:"42px"});
-      }
     }
     else if (message.event == "topic") {
       this.displayTopic(message.body.escapeHTML());
     }
     
-    if (!this.application.isFocused && message.highlight && message.window.title != "info")
+    if (!this.application.isFocused && message.highlight && message.window.title != "info") {
+      message.body = li.down(".msg").innerHTML.stripTags();
       Alice.growlNotify(message);
+    }
     
     if (message.nicks && message.nicks.length)
       this.nicks = message.nicks;
@@ -250,7 +260,7 @@ Alice.Window = Class.create({
     }
 
     var messages = this.messages.childElements();
-    if (messages.length > 250) messages.first().remove();
+    if (messages.length > this.messageLimit) messages.first().remove();
     
     this.element.redraw();
   },

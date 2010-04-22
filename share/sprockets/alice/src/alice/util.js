@@ -15,14 +15,25 @@ Object.extend(Alice, {
   },
 
   growlNotify: function(message) {
-    if (!window.fluid) return;
-    window.fluid.showGrowlNotification({
+    if (window.fluid) {
+      window.fluid.showGrowlNotification({
         title: message.window.title + ": " + message.nick,
-        description: message.html.stripTags(), 
+        description: message.body.unescapeHTML(),
         priority: 1, 
         sticky: false,
         identifier: message.msgid
-    });
+      });
+    }
+    else if (window.webkitNotifications) {
+      if (window.webkitNotifications.checkPermission() == 0) {
+        var popup = window.webkitNotifications.createNotification(
+          "http://static.usealice.org/image/alice.png",
+          message.window.title + ": " + message.nick,
+          message.body.unescapeHTML()
+        );
+        popup.show();
+      }
+    }
   },
 
   makeSortable: function() {

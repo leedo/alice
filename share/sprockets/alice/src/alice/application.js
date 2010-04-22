@@ -11,10 +11,62 @@ Alice.Application = Class.create({
     setTimeout(this.connection.connect.bind(this.connection), 1000);
   },
   
+  actionHandlers: {
+    join: function (action) {
+      var win = this.getWindow(action['window'].id);
+      if (!win) {
+        this.insertWindow(action['window'].id, action.html);
+        win = new Alice.Window(this, action['window'].id, action['window'].title, false);
+        this.addWindow(win);
+      } else {
+        win.enable();
+        win.nicks = action.nicks;
+      }
+    },
+    part: function (action) {
+      this.closeWindow(action['window'].id);
+    },
+    nicks: function (action) {
+      var win = this.getWindow(action['window'].id);
+      if (win) win.nicks = action.nicks;
+    },
+    alert: function (action) {
+      this.activeWindow().showAlert(action['body']);
+    },
+    clear: function (action) {
+      var win = this.getWindow(action['window'].id);
+      if (win) {
+        win.messages.down("ul").update("");
+        win.lastNick = "";
+      }
+    },
+    connect: function (action) {
+      action.windows.each(function (win_info) {
+        var win = this.getWindow(win_info.id);
+        if (win) {
+          win.enable();
+        }
+      }.bind(this));
+      if (this.configWindow) {
+        this.configWindow.connectServer(action.session);
+      }
+    },
+    disconnect: function (action) {
+      action.windows.each(function (win_info) {
+        var win = this.getWindow(win_info.id);
+        if (win) {
+          win.disable();
+        }
+      }.bind(this));
+      if (this.configWindow) {
+        this.configWindow.disconnectServer(action.session);
+      }
+    }
+  },
+  
   toggleConfig: function(e) {
-    if (this.configWindow && this.configWindow.focus) {
+    if (this.configWindow && !this.configWindow.closed && this.configWindow.focus) {
       this.configWindow.focus();
-
     } else {
       this.configWindow = window.open(null, "config", "resizable=no,scrollbars=no,status=no,toolbar=no,location=no,width=500,height=480");
       this.connection.getConfig(function (transport) {
@@ -26,7 +78,7 @@ Alice.Application = Class.create({
   },
 
   toggleLogs: function(e) {
-    if (this.logWindow && this.logWindow.focus) {
+    if (this.logWindow && !this.logWindow.closed && this.logWindow.focus) {
       this.logWindow.focus();
     } else {
       this.logWindow = window.open(null, "logs", "resizable=no,scrollbars=no,statusbar=no, toolbar=no,location=no,width=500,height=480");
@@ -145,43 +197,8 @@ Alice.Application = Class.create({
   },
   
   handleAction: function(action) {
-    switch (action.event) {
-      case "join":
-        var win = this.getWindow(action['window'].id);
-        if (!win) {
-          this.insertWindow(action['window'].id, action.html);
-          win = new Alice.Window(this, action['window'].id, action['window'].title, false);
-          this.addWindow(win);
-        } else {
-          win.enable();
-          win.nicks = action.nicks;
-        }
-        break;
-      case "part":
-        this.closeWindow(action['window'].id);
-        break;
-      case "nicks":
-        var win = this.getWindow(action['window'].id);
-        if (win) win.nicks = action.nicks;
-        break;
-      case "alert":
-        this.activeWindow().showAlert(action['body']);
-        break;
-      case "clear":
-        var win = this.getWindow(action['window'].id);
-        if (win) {
-          win.messages.down("ul").update("");
-          win.lastNick = "";
-        }
-        break;
-      case "disconnect":
-        var win = this.getWindow(action['window'].id);
-        if (win) {
-          win.disable();
-        }
-        break;
-      default:
-        break;
+    if (this.actionHandlers[action.event]) {
+      this.actionHandlers[action.event].call(this,action);
     }
   },
   

@@ -28,15 +28,9 @@ has 'nick_cached' => (
   },
 );
 
-has 'config' => (
-  isa      => 'HashRef',
-  is       => 'rw',
-  lazy     => 1,
-  default  => sub {
-    my $self = shift;
-    return $self->app->config->{$self->alias};
-  },
-);
+sub config {
+  $_[0]->app->config->servers->{$_[0]->alias};
+}
 
 has 'app' => (
   isa      => 'App::Alice',
@@ -90,7 +84,7 @@ sub add_whois_cb {
 
 sub BUILD {
   my $self = shift;
-  $self->cl->enable_ssl(1) if $self->config->{ssl};
+  $self->cl->enable_ssl if $self->config->{ssl};
   $self->disabled(1) unless $self->config->{autoconnect};
   $self->cl->reg_cb(
     registered     => sub{$self->registered($_)},
@@ -111,8 +105,9 @@ sub BUILD {
     irc_372        => sub{$self->mlog(debug => $_[1]->{params}[-1])}, # MOTD info
     irc_377        => sub{$self->mlog(debug => $_[1]->{params}[-1])}, # MOTD info
     irc_378        => sub{$self->mlog(debug => $_[1]->{params}[-1])}, # MOTD info
-    irc_432        => sub{$self->log(debug => $_[1]->{params}[-1])}, # Bad nick
-    irc_433        => sub{$self->log(debug => $_[1]->{params}[-1])}, # Bad nick
+    irc_401        => sub{$self->irc_401(@_)},
+    irc_432        => sub{$self->nick; $self->log(debug => $_[1]->{params}[-1])}, # Bad nick
+    irc_433        => sub{$self->nick; $self->log(debug => $_[1]->{params}[-1])}, # Bad nick
     irc_464        => sub{$self->disconnect("bad USER/PASS")},
   );
   $self->cl->ctcp_auto_reply ('VERSION', ['VERSION', "alice $App::Alice::VERSION"]);
@@ -191,7 +186,7 @@ sub nick {
 sub windows {
   my $self = shift;
   return grep
-    {$_->id ne "info" && $_->irc->alias eq $self->alias}
+    {$_->type ne "info" && $_->irc->alias eq $self->alias}
     $self->app->windows;
 }
 
@@ -203,6 +198,7 @@ sub channels {
 sub connect {
   my $self = shift;
   $self->disabled(0);
+  $self->cl->{enable_ssl} = $self->config->{ssl} ? 1 : 0;
   $self->increase_reconnect_count;
   if (!$self->config->{host} or !$self->config->{port}) {
     $self->log(info => "can't connect: missing either host or port");
@@ -234,6 +230,12 @@ sub connected {
       $self->nick, $self->config->{username},
       $self->config->{ircname}, $self->config->{password}
     );
+    $self->broadcast({
+      type => "action",
+      event => "connect",
+      session => $self->alias,
+      windows => [map {$_->serialized} $self->windows],
+    });
   }
 }
 
@@ -301,13 +303,19 @@ sub disconnected {
   
   $self->broadcast(map {
     $_->format_event("disconnect", $self->nick, $reason),
-    $_->disconnect_action
   } $self->windows);
+  
+  $self->broadcast({
+    type => "action",
+    event => "disconnect",
+    session => $self->alias,
+    windows => [map {$_->serialized} $self->windows],
+  });
   
   $self->is_connected(0);
   
   if ($self->app->shutting_down and !$self->app->connected_ircs) {
-    $self->app->shutdown;
+    $self->shutdown;
     return;
   }
   
@@ -390,6 +398,7 @@ sub ctcp_action {
 sub nick_change {
   my ($self, $cl, $old_nick, $new_nick, $is_self) = @_;
   utf8::decode($_) for ($old_nick, $new_nick);
+  $self->nick_cached($new_nick) if $is_self;
   $self->rename_nick($old_nick, $new_nick);
   $self->broadcast(
     map  {$_->format_event("nick", $old_nick, $new_nick)}
@@ -535,6 +544,14 @@ sub irc_366 {
   utf8::decode($msg->{params}[1]);
   if (my $window = $self->find_window($msg->{params}[1])) {
     $self->broadcast($window->nicks_action);
+  }
+}
+
+sub irc_401 {
+  my ($self, $cl, $msg) = @_;
+  utf8::decode($msg->{params}[1]);
+  if (my $window = $self->find_window($msg->{params}[1])) {
+    $self->broadcast($window->format_announcement("No such nick."));
   }
 }
 

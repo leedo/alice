@@ -46,6 +46,16 @@ has title => (
   required => 1,
 );
 
+has sort_name => (
+  is       => 'ro',
+  lazy     => 1,
+  default  => sub {
+    my $name = $_[0]->title;
+    $name =~ s/^#//;
+    $name;
+  }
+);
+
 has topic => (
   is      => 'rw',
   isa     => 'HashRef[Str|Undef]',
@@ -118,16 +128,6 @@ sub all_nicks {
   my ($self) = @_;
   return unless $self->is_channel;
   return $self->irc->channel_nicks($self->title);
-}
-
-sub disconnect_action {
-  my $self = shift;
-  return {
-    type   => "action",
-    event  => "disconnect",
-    nicks  => [],
-    window => $self->serialized,
-  }
 }
 
 sub join_action {
@@ -227,6 +227,7 @@ sub format_announcement {
     message => $msg,
   };
   $message->{html} = $self->app->render('announcement', $message);
+  $self->buffer->previous_nick('');
   return $message;
 }
 

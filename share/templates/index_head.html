@@ -1,13 +1,15 @@
-? my @windows = $_[0]->sorted_windows;
+? my ($app, @windows) = @_;
 ? my $titlewin = @windows > 1 ? $windows[1] : $windows[0];
 <!DOCTYPE html>
 <html>
   <head>
     <title><?= $titlewin->title ?></title>
-    <link rel="shortcut icon" href="/static/favicon.ico">
-    <link type="text/css" rel="stylesheet" href="/static/site.css" />
+    <link rel="shortcut icon" href="<?= $app->static_url("favicon.ico") ?>">
+    <link type="text/css" rel="stylesheet" href="<?= $app->static_url("site.css") ?>" />
+    <link rel="apple-touch-icon" href="<?= $app->static_url("alice.png") ?>" />
+    <link rel="apple-touch-startup-image" href="<?= $app->static_url("alice.png") ?>" />
     <!--[if !IE]>--> 
-    <link rel="stylesheet" href="/static/iphone.css" type="text/css" 
+    <link rel="stylesheet" href="<?= $app->static_url("iphone.css") ?>" type="text/css" 
           media="only screen and (max-device-width: 480px)" /> 
     <!--<![endif]-->
     <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no" />
@@ -16,40 +18,32 @@
     <div id="container">
       <ul id="controls">
         <li id="config_button">
-          <img src="/static/image/config.png" />
+          <img src="<?= $app->static_url("image/config.png") ?>" />
           <select class="select_overlay" id="config_overlay">
             <option>Logs</option>
             <option>Preferences</option>
             <option>Connections</option>
+            <option>Help</option>
             <? if ($_[0]->auth_enabled) { ?>
+            <option disabled>──────</option>
             <option>Logout</option>
             <? } ?>
           </select>
         </li>
         <li id="tab_overflow_button">
-          <img src="/static/image/overflow.png" />
+          <img src="<?= $app->static_url("image/overflow.png") ?>" />
           <select class="select_overlay" id="tab_overflow_overlay">
-            <? for (0 .. @windows -1) { ?>
-              <? my $window = $windows[$_]; ?>
-              <? my $selected = $_ == 1; ?>
-              <?= $_mt->render_file('select.html', $_[0], $window, $selected); ?>
+            <? for my $window (@windows) { ?>
+              <?= $_mt->render_file('select.html', $_[0], $window); ?>
             <? } ?>
           </select>
         </li>
       </ul>
       <div id="tab_container">
         <ul id="tabs">
-? for (0 .. @windows - 1) {
-?   my $window = $windows[$_];
-?   my @classes = ();
-?   if (@windows > 1) {
-?     push @classes, "active" if $_ == 1;
-?   }
-?   else {
-?     push @classes, "active" if $_ == 0;
-?   }
-?=  $_mt->render_file('tab.html', $_[0], $window, @classes)
-? }
+          <? for my $window (@windows) { ?>
+            <?= $_mt->render_file('tab.html', $_[0], $window) ?>
+          <? } ?>
         </ul>
       </div>
       <div id="windows">

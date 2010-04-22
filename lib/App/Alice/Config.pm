@@ -119,8 +119,14 @@ has message_store => (
   default => 'Memory'
 );
 
+has static_prefix => (
+  is      => 'rw',
+  isa     => 'Str',
+  default => '/static/',
+);
+
 sub ignores {@{$_[0]->ignore}}
-sub add_ignore {push @{$_[0]->ignores}, @_}
+sub add_ignore {push @{shift->ignore}, @_}
 
 sub BUILD {
   my $self = shift;

@@ -1,12 +1,14 @@
 ? my ($app, $window) = @_;
 
-<div class="window<?= $window->{active} ? " active" : "" ?>" id="<?= $window->id ?>">
+<div class="window<?= $window->{active} ? " active" : "" ?> <?= $window->type ?>" id="<?= $window->id ?>">
   <table cellspacing="0" cellpadding="0">
+    <? if ($window->type eq "channel") { ?>
     <tr class="topic">
       <td>
         <div class="topic" id="<?= $window->id ?>_topic"><?= $window->topic->{string} ?></div>
       </td>
     </tr>
+    <? } ?>
     <tr>
       <td valign="top">
         <div class="message_wrap">

@@ -12,15 +12,16 @@ my $app = App::Alice->new(
 );
 
 my $cl = App::Alice::Test::MockIRC->new(nick => "tester");
+$app->config->servers->{"test"} = {
+  host => "not.real.server",
+  port => 6667,
+  autoconnect => 1,
+  channels => ["#test"],
+  on_connect => ["JOIN #test2"],
+};
+
 my $irc = App::Alice::IRC->new(
   alias => "test",
-  config => {
-    host => "not.real.server",
-    port => 6667,
-    autoconnect => 1,
-    channels => ["#test"],
-    on_connect => ["JOIN #test2"],
-  },
   app => $app,
   cl => $cl,
 );

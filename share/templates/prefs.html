@@ -1,0 +1,43 @@
+? my $app = shift;
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Preferences</title>
+    <script type="text/javascript" src="/static/alice.js"></script>
+    <link type="text/css" rel="stylesheet" href="/static/site.css" />
+    <!--[if !IE]>--> 
+    <link rel="stylesheet" href="/static/styles/iphone.css" type="text/css" 
+          media="only screen and (max-device-width: 480px)" /> 
+    <!--<![endif]-->
+    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no" />
+  </head>
+	<body class="config">
+		<div id="config">
+		  <script type="text/javascript">
+			    submitConfig = function(form) {
+            new Ajax.Request('/save', {
+              method: 'get',
+              parameters: form.serialize(),
+              onSuccess: function () {window.close()}
+            });
+            return false;
+          };
+		  </script>
+  
+		  <form id="config_data" onsubmit="return submitConfig(this)">
+		    <div class="field" style="width:138px">
+		      <label>Inline images?</label>
+          <input type="checkbox"<? if ($app->config->{images} eq "show") { ?> checked<? } ?> name="images" />
+		    </div>
+		    <div class="field" style="width:138px">
+		      <label>Show avatars?</label>
+          <input type="checkbox"<? if ($app->config->{avatars} eq "show") { ?> checked="checked"<? } ?> name="avatars" />
+        </div>
+		  <div id="buttons">
+		    <button onclick="window.close(); return false;">Cancel</button>
+		    <button type="submit">Save</button>
+		  </div>
+		  </form>
+		</div>
+	</body>
+</html>

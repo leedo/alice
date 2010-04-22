@@ -14,7 +14,7 @@ use File::Copy;
 use Digest::MD5 qw/md5_hex/;
 use Encode;
 
-our $VERSION = '0.12';
+our $VERSION = '0.14';
 
 has condvar => (
   is       => 'rw',
@@ -161,7 +161,7 @@ has 'info_window' => (
       assetdir => $self->config->assetdir,
       app      => $self,
     );
-    $self->add_window($info->title, $info);
+    $self->add_window($info->id, $info);
     return $info;
   }
 );
@@ -187,6 +187,9 @@ sub BUILDARGS {
     }
   }
   $self->{config} = App::Alice::Config->new(%options);
+  # some options get overwritten by the config
+  # so merge options again
+  $self->{config}->merge(\%options);
   return $self;
 }
 
@@ -317,8 +320,8 @@ sub create_window {
 }
 
 sub _build_window_id {
-  my ($self, $title, $connection_alias) = @_;
-  return "win_" . md5_hex(encode_utf8(lc $self->user."-$title-$connection_alias"));
+  my ($self, $title, $session) = @_;
+  "w" . md5_hex(encode_utf8(lc $self->user."-$title-$session"));
 }
 
 sub find_or_create_window {
@@ -334,20 +337,14 @@ sub find_or_create_window {
 
 sub sorted_windows {
   my $self = shift;
-  my %order;
+  my %o;
   if ($self->config->order) {
-    %order = map {$self->config->order->[$_] => $_}
+    %o = map {$self->config->order->[$_] => $_ + 2}
              0 .. @{$self->config->order} - 1;
   }
-  $order{info} = "##";
-  sort {
-    my ($c, $d) = ($a->title, $b->title);
-    $c =~ s/^#//;
-    $d =~ s/^#//;
-    $c = $order{$a->title} . $c if exists $order{$a->title};
-    $d = $order{$b->title} . $d if exists $order{$b->title};
-    $c cmp $d;
-  } $self->windows
+  $o{info} = 1;
+  sort { ($o{$a->title} || $a->sort_name) cmp ($o{$b->title} || $b->sort_name) }
+       $self->windows;
 }
 
 sub close_window {
@@ -360,10 +357,10 @@ sub close_window {
 
 sub add_irc_server {
   my ($self, $name, $config) = @_;
+  $self->config->servers->{$name} = $config;
   my $irc = App::Alice::IRC->new(
     app    => $self,
-    alias  => $name,
-    config => $config
+    alias  => $name
   );
   $self->add_irc($name, $irc);
 }
@@ -464,6 +461,11 @@ sub authenticate {
        and $self->config->auth->{pass} eq $pass);
   }
   return 1;
+}
+
+sub static_url {
+  my ($self, $file) = @_;
+  return $self->config->static_prefix . $file;
 }
 
 __PACKAGE__->meta->make_immutable;
