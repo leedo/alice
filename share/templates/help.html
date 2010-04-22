@@ -1,0 +1,37 @@
+? my $app = shift;
+
+<div id="help">
+  <h1>Alice Help</h1>
+  <div id="helpclose">close</div>
+  <div id="topics">
+    <dl>
+      <h2>Commands</h2>
+      <? for my $command (@{$app->commands->handlers }) { ?>
+        <? next unless $command->{eg} and $command->{desc}; ?>
+        <dt><?= $command->{eg} ?></dt>
+        <dd><?= $command->{desc} ?></dd>
+      <? } ?>
+    </dl>
+    <dl>
+      <h2>Shortcuts</h2>
+      <dt>⌘K</dt>
+      <dd>Clear current tab</dd>
+      <dt>⌘B</dt>
+      <dd>Previous tab</dd>
+      <dt>⌘F</dt>
+      <dd>Next tab</dd>
+      <dt>⌥↑</dt>
+      <dd>Cycle through previous message</dd>
+      <dt>⌥↓</dt>
+      <dd>Cycle to next message</dd>
+      <dt>⌥↵</dt>
+      <dd>Insert a newline</dd>
+      <dt>⌥⇧M</dt>
+      <dd>Mark all tabs as read</dd>
+      <dt>⌥⇧J</dt>
+      <dd>Jump to bottom of tab</dd>
+      <dt>⌥⇧K</dt>
+      <dd>Show timestamps and nicks</dd>
+    </dl>
+  </div>
+</div>

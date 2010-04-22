@@ -8,7 +8,6 @@ use Text::MicroTemplate qw/encoded_string/;
 extends 'App::Alice::Window';
 
 has '+is_channel' => (lazy => 0, default => 0);
-has '+id' => (default => 'info');
 has '+title' => (required => 0, default => 'info');
 has '+session' => (default => "");
 has 'topic' => (is => 'ro', isa => 'HashRef', default => sub {{string => ''}});
@@ -62,7 +61,7 @@ sub copy_message {
   if ($msg->{consecutive} and !$copy->{consecutive}) {
     $copy->{html} =~ s/(<li class="[^"]*)consecutive/$1/;
   } elsif (!$msg->{consecutive} and $copy->{consecutive}) {
-    $copy->{html} =~ s/(<li class=")/$1 consecutive/;
+    $copy->{html} =~ s/(<li class=")/$1consecutive /;
   }
   $self->buffer->add($copy);
   return $copy;

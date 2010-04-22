@@ -16,6 +16,24 @@
 	<body class="config">
 		<div id="config">
 		  <script type="text/javascript">
+		      disconnectServer = function (alias) {
+		        $(alias + "_status").className = "disconnected";
+		        $(alias + "_status").innerHTML = "disconnected";
+		        $(alias + "_connection").innerHTML = "connect";
+		        $(alias + "_connection").onclick = function (e) {
+		          e.stop();
+		          serverConnection(alias, "connect");
+		        };
+		      };
+		      connectServer = function (alias) {
+		        $(alias + "_status").className = "connected";
+		        $(alias + "_status").innerHTML = "connected";
+		        $(alias + "_connection").innerHTML = "disconnect";
+		        $(alias + "_connection").onclick = function (e) {
+		          e.stop();
+		          serverConnection(alias, "disconnect");
+		        };
+		      };
 			    showConnection = function (alias) {
 			      $$("div#config .active").invoke("removeClassName","active");
 			      $("setting_" + alias).addClassName("active");
@@ -86,7 +104,7 @@
               method: 'get',
               parameters: {
                 msg: '/' + action + ' ' + alias,
-                source: 'info'
+                source: window.opener.alice.activeWindow().id
               }
             });
             return false;
@@ -122,7 +140,7 @@
 		    <div class="field" style="width:150px;margin-right:0">
 		      <label>Status</label>
 		      <? my $status = $connection->is_connected ? "connected" : "disconnected" ?>
-		      <span class="<?= $status ?>"><?= $status ?></span>
+		      <span class="<?= $status ?>" id="<?= $alias ?>_status"><?= $status ?></span>
 		    </div>
 		    <div class="field clear" style="width:138px">
 		      <label>Auto-connect?</label>
@@ -130,7 +148,7 @@
         </div>
 		    <div class="field">
 		      <? my $action = $connection->is_connected ? "disconnect" : "connect" ?>
-		      <button onclick="return serverConnection('<?= $connection->alias ?>', '<?= $action ?>')">
+		      <button id="<?= $alias ?>_connection" onclick="return serverConnection('<?= $connection->alias ?>', '<?= $action ?>')">
 		        <?= $action ?>
 		      </button>
 		    </div>

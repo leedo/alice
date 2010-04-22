@@ -1,3 +1,6 @@
+0.14  Sun 18 Apr 2010
+        - Fixed broken tests
+
 0.13  Sat 10 Apr 2010
         - Use cookie based auth
         - Don't break on perl 5.8

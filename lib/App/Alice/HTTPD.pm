@@ -7,7 +7,6 @@ use Twiggy::Server;
 use Plack::Request;
 use Plack::Builder;
 use Plack::Middleware::Static;
-use Plack::Middleware::Auth::Basic;
 use Plack::Session::Store::File;
 
 use App::Alice::Stream;
@@ -39,20 +38,20 @@ has 'url_handlers' => (
   isa => 'ArrayRef',
   default => sub {
     [
-      { re => qr{^/serverconfig/?$}, sub  => 'server_config' },
+      { re => qr{^/$},               sub  => 'send_index' },
+      { re => qr{^/say/?$},          sub  => 'handle_message' },
+      { re => qr{^/stream/?$},       sub  => 'setup_stream' },
       { re => qr{^/config/?$},       sub  => 'send_config' },
+      { re => qr{^/serverconfig/?$}, sub  => 'server_config' },
       { re => qr{^/save/?$},         sub  => 'save_config' },
       { re => qr{^/tabs/?$},         sub  => 'tab_order' },
-      { re => qr{^/view/?$},         sub  => 'send_index' },
-      { re => qr{^/stream/?$},       sub  => 'setup_stream' },
       { re => qr{^/login/?$},        sub  => 'login' },
       { re => qr{^/logout/?$},       sub  => 'logout' },
-      { re => qr{^/say/?$},          sub  => 'handle_message' },
-      { re => qr{^/get},             sub  => 'image_proxy' },
       { re => qr{^/logs/?$},         sub  => 'send_logs' },
       { re => qr{^/search/?$},       sub  => 'send_search' },
       { re => qr{^/range/?$},        sub  => 'send_range' },
-      { re => qr{^/$},               sub  => 'send_index' },
+      { re => qr{^/view/?$},         sub  => 'send_index' },
+      { re => qr{^/get},             sub  => 'image_proxy' },
     ]
   }
 );
@@ -103,9 +102,7 @@ sub dispatch {
     my $re = $handler->{re};
     if ($req->path_info =~ /$re/) {
       my $sub = $handler->{sub};
-      if ($self->meta->find_method_by_name($sub)) {
-        return $self->$sub($req);
-      }
+      return $self->$sub($req);
     }
   }
   return $self->not_found($req);
@@ -255,39 +252,33 @@ sub send_index {
   return sub {
     my $respond = shift;
     my $writer = $respond->([200, ["Content-type" => "text/html; charset=utf-8"]]);
-    $writer->write(encode_utf8 $self->app->render('index_head'));
     my @windows = $self->app->sorted_windows;
-    if (@windows == 1) {
-      $windows[0]->{active} = 1;
-    } elsif (@windows > 1) {
-      $windows[1]->{active} = 1;
-    }
-    $self->send_windows(@windows, $writer, sub {
-      $writer->write(encode_utf8 $self->app->render('index_footer'));
+    @windows > 1 ? $windows[1]->{active} = 1 : $windows[0]->{active} = 1;
+    $writer->write(encode_utf8 $self->app->render('index_head', @windows));
+    $self->send_windows($writer, sub {
+      $writer->write(encode_utf8 $self->app->render('index_footer', @windows));
       $writer->close;
-    });
+      delete $_->{active} for @windows;
+    }, @windows);
   }
 }
 
 sub send_windows {
-  my $cb = pop;
-  my $writer = pop;
-  my ($self, @windows) = @_;
-  if (@windows) {
+  my ($self, $writer, $cb, @windows) = @_;
+  if (!@windows) {
+    $cb->();
+  }
+  else {
     my $window = pop @windows;
     $writer->write(encode_utf8 $self->app->render('window_head', $window));
-    delete $window->{active} if $window->{active};
     $window->buffer->with_messages(sub {
       my @messages = @_;
       $writer->write(encode_utf8 $_->{html}) for @messages;
     }, 0, sub {
       $writer->write(encode_utf8 $self->app->render('window_footer', $window));
-      $self->send_windows(@windows, $writer, $cb);
+      $self->send_windows($writer, $cb, @windows);
     });
-  }   
-  else {
-    $cb->(); 
-  }     
+  }    
 }
 
 sub send_logs {
@@ -372,7 +363,11 @@ sub save_config {
   $self->config->merge($new_config);
   $self->app->reload_config();
   $self->config->write;
-  
+
+  $self->app->broadcast(
+    $self->app->format_info("config", "saved")
+  );
+
   my $res = $req->new_response(200);
   $res->body('ok');
   return $res->finalize;

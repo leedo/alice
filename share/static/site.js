@@ -20,6 +20,13 @@ if (window == window.parent) {
   alice.options = options;
  
   document.observe("dom:loaded", function () {
+    help.hide();
+    var hash = window.location.hash;
+    if (hash) {
+      hash = hash.replace(/^#/, "");
+      var focus = alice.getWindow(hash)
+      if (focus) focus.focus();
+    }
     $$('ul.messages li.avatar:not(.consecutive) + li:not(.consecutive)').each(function (li) {
       li.previous().setStyle({minHeight:"42px"});
     });
@@ -38,7 +45,15 @@ if (window == window.parent) {
           alice.toggleConfig(e);
           break;
         case "Logout":
-          window.location = "/logout";
+          if (confirm("Logout?"))
+            window.location = "/logout";
+          break;
+        case "Help":
+          var help = $('help');
+          if (help.visible())
+            help.hide();
+          else
+            help.show();
           break;
       }
       $$('#config_overlay option').each(function(opt){opt.selected = false});
@@ -63,7 +78,29 @@ if (window == window.parent) {
       alice.isFocused = true};
  
     window.onblur = function () {alice.isFocused = false};
+    
+    $('helpclose').observe("click", function () {
+      $('help').hide();
+    });
+
+    window.onhashchange = function () {
+      var hash = window.location.hash;
+      if (hash) {
+        hash = hash.replace(/^#/, "");
+        var focus = alice.getWindow(hash)
+        if (focus) focus.focus();
+      }
+    };
  
+    window.onclick = function () {
+      if (window.webkitNotifications &&
+          window.webkitNotifications.checkPermission() != 0) {
+        window.webkitNotifications.requestPermission();
+
+      }
+      window.onclick = undefined;
+    };
+    
     Alice.makeSortable();
   });
 }

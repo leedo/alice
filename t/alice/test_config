@@ -1,0 +1,16 @@
+{
+  'images' => 'show',
+  'quitmsg' => 'alice.',
+  'ignore' => [],
+  'port' => '8080',
+  'auth' => {},
+  'message_store' => 'Memory',
+  'order' => [],
+  'debug' => 0,
+  'servers' => {},
+  'address' => '127.0.0.1',
+  'avatars' => 'show',
+  'monospace_nicks' => [
+    'Shaniqua'
+  ]
+}
