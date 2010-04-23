@@ -45,7 +45,6 @@ has 'url_handlers' => (
       { re => qr{^/prefs/?$},        sub  => 'send_prefs' },
       { re => qr{^/serverconfig/?$}, sub  => 'server_config' },
       { re => qr{^/save/?$},         sub  => 'save_config' },
-      { re => qr{^/saveprefs/?$},    sub  => 'save_prefs' },
       { re => qr{^/tabs/?$},         sub  => 'tab_order' },
       { re => qr{^/login/?$},        sub  => 'login' },
       { re => qr{^/logout/?$},       sub  => 'logout' },
@@ -357,10 +356,14 @@ sub save_config {
   my ($self, $req) = @_;
   $self->app->log(info => "saving config");
   
-  my $new_config = {servers => {}};
+  my $new_config = {};
+  if ($req->parameters->{has_servers}) {
+    $new_config->{servers} = {};
+  }
   for my $name (keys %{$req->parameters}) {
     next unless $req->parameters->{$name};
-    if ($name =~ /^(.+?)_(.+)/) {
+    next if $name eq "has_servers";
+    if ($name =~ /^(.+?)_(.+)/ and exists $new_config->{servers}) {
       if ($2 eq "channels" or $2 eq "on_connect") {
         $new_config->{servers}{$1}{$2} = [$req->parameters->get_all($name)];
       } else {
@@ -379,22 +382,6 @@ sub save_config {
     $self->app->format_info("config", "saved")
   );
 
-  my $res = $req->new_response(200);
-  $res->body('ok');
-  return $res->finalize;
-}
-
-sub save_prefs {
-  my ($self, $req) = @_;
-  $self->app->log(info => "saving prefs");
-  $self->config->merge($req->parameters->mixed);
-  $self->app->reload_config();
-  $self->config->write;
-  
-  $self->app->broadcast(
-    $self->app->format_info("config", "saved")
-  );
-  
   my $res = $req->new_response(200);
   $res->body('ok');
   return $res->finalize;

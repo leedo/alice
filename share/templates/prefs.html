@@ -20,7 +20,7 @@
 			        options[pref] = $(pref).checked ? "show" : "hide";
 			      });
 			      window.opener.alice.options = options;
-            new Ajax.Request('/saveprefs', {
+            new Ajax.Request('/save', {
               method: 'get',
               parameters: options,
               onSuccess: function () {window.close()}
