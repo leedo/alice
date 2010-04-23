@@ -79,16 +79,6 @@ if (window == window.parent) {
     window.status = " ";  
     window.onblur = function () {alice.isFocused = false};
     window.onhashchange = alice.focusHash.bind(alice);
- 
-    window.onclick = function () {
-      if (window.webkitNotifications &&
-          window.webkitNotifications.checkPermission() != 0) {
-        window.webkitNotifications.requestPermission();
-
-      }
-      window.onclick = undefined;
-    };
-  });
 }
 
 alice.addFilters([
