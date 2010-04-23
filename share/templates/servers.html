@@ -128,6 +128,7 @@
 		  </div>
   
 		  <form id="config_data" onsubmit="return submitConfig(this)">
+		    <input type="hidden" name="has_servers" value="1" />
 		  <? for my $index (0 .. @connections - 1) { ?>
 		    <? my $connection = $connections[$index]; ?>
 		    <? my $alias = $connection->alias; ?>
