@@ -15,9 +15,14 @@
 		<div id="config">
 		  <script type="text/javascript">
 			    submitConfig = function(form) {
-            new Ajax.Request('/save', {
+			      var options = {};
+			      ["images", "avatars", "alerts"].each(function (pref) {
+			        options[pref] = $(pref).checked ? "show" : "hide";
+			      });
+			      window.opener.alice.options = options;
+            new Ajax.Request('/saveprefs', {
               method: 'get',
-              parameters: form.serialize(),
+              parameters: options,
               onSuccess: function () {window.close()}
             });
             return false;
@@ -27,11 +32,15 @@
 		  <form id="config_data" onsubmit="return submitConfig(this)">
 		    <div class="field" style="width:138px">
 		      <label>Inline images?</label>
-          <input type="checkbox"<? if ($app->config->{images} eq "show") { ?> checked<? } ?> name="images" />
+          <input type="checkbox"<? if ($app->config->{images} eq "show") { ?> checked<? } ?> name="images" id="images" />
 		    </div>
 		    <div class="field" style="width:138px">
 		      <label>Show avatars?</label>
-          <input type="checkbox"<? if ($app->config->{avatars} eq "show") { ?> checked="checked"<? } ?> name="avatars" />
+          <input type="checkbox"<? if ($app->config->{avatars} eq "show") { ?> checked="checked"<? } ?> name="avatars" id="avatars" />
+        </div>
+        <div class="field" style="width:138px">
+          <label>Enable alerts?</label>
+          <input type="checkbox"<? if ($app->config->{alerts} eq "show") { ?> checked="checked"<? } ?> name="alerts" id="alerts" />
         </div>
 		  <div id="buttons">
 		    <button onclick="window.close(); return false;">Cancel</button>
