@@ -42,8 +42,10 @@ has 'url_handlers' => (
       { re => qr{^/say/?$},          sub  => 'handle_message' },
       { re => qr{^/stream/?$},       sub  => 'setup_stream' },
       { re => qr{^/config/?$},       sub  => 'send_config' },
+      { re => qr{^/prefs/?$},        sub  => 'send_prefs' },
       { re => qr{^/serverconfig/?$}, sub  => 'server_config' },
       { re => qr{^/save/?$},         sub  => 'save_config' },
+      { re => qr{^/saveprefs/?$},    sub  => 'save_prefs' },
       { re => qr{^/tabs/?$},         sub  => 'tab_order' },
       { re => qr{^/login/?$},        sub  => 'login' },
       { re => qr{^/logout/?$},       sub  => 'logout' },
@@ -327,6 +329,15 @@ sub send_config {
   return $res->finalize;
 }
 
+sub send_prefs {
+  my ($self, $req) = @_;
+  $self->app->log(info => "serving prefs");
+  my $output = $self->app->render('prefs');
+  my $res = $req->new_response(200);
+  $res->body($output);
+  return $res->finalize;
+}
+
 sub server_config {
   my ($self, $req) = @_;
   $self->app->log(info => "serving blank server config");
@@ -368,6 +379,22 @@ sub save_config {
     $self->app->format_info("config", "saved")
   );
 
+  my $res = $req->new_response(200);
+  $res->body('ok');
+  return $res->finalize;
+}
+
+sub save_prefs {
+  my ($self, $req) = @_;
+  $self->app->log(info => "saving prefs");
+  $self->config->merge($req->parameters->mixed);
+  $self->app->reload_config();
+  $self->config->write;
+  
+  $self->app->broadcast(
+    $self->app->format_info("config", "saved")
+  );
+  
   my $res = $req->new_response(200);
   $res->body('ok');
   return $res->finalize;

@@ -7,8 +7,17 @@ Alice.Application = Class.create({
     this.filters = [];
     this.monospaceNicks = ['Shaniqua', 'root', 'p6eval'];
     this.keyboard = new Alice.Keyboard(this);
+    
     // Keep this as a timeout so the page doesn't show "loading..."
     setTimeout(this.connection.connect.bind(this.connection), 1000);
+    
+    // setup UI elements in initial state
+    this.makeSortable();
+    var active = this.activeWindow();
+    if (active) {
+      active.input.focus();
+      active.scrollToBottom();
+    }
   },
   
   actionHandlers: {
@@ -71,6 +80,19 @@ Alice.Application = Class.create({
       this.configWindow = window.open(null, "config", "resizable=no,scrollbars=no,status=no,toolbar=no,location=no,width=500,height=480");
       this.connection.getConfig(function (transport) {
         this.configWindow.document.write(transport.responseText);
+      }.bind(this));
+    }
+    
+    e.stop();
+  },
+  
+  togglePrefs: function(e) {
+    if (this.prefWindow && !this.prefWindow.closed && this.prefWindow.focus) {
+      this.prefWindow.focus();
+    } else {
+      this.prefWindow = window.open(null, "prefs", "resizable=no,scrollbars=no,status=no,toolbar=no,location=no,width=500,height=480");
+      this.connection.getPrefs(function (transport) {
+        this.prefWindow.document.write(transport.responseText);
       }.bind(this));
     }
     
@@ -170,7 +192,7 @@ Alice.Application = Class.create({
       $('tab_overflow_overlay').insert(html.select);
       $(windowId+"_tab_overflow_button").selected = false;
       this.activeWindow().tabOverflowButton.selected = true;
-      Alice.makeSortable();
+      this.makeSortable();
     }
   },
   
@@ -215,5 +237,30 @@ Alice.Application = Class.create({
   
   messagesAreMonospacedFor: function(nick) {
     return this.monospaceNicks.indexOf(nick) > -1;
+  },
+  
+  focusHash: function(hash) {
+    var hash = window.location.hash;
+    if (hash) {
+      hash = hash.replace(/^#/, "");
+      var focus = this.getWindow(hash)
+      if (focus) focus.focus();
+    }
+  },
+  
+  makeSortable: function() {
+    Sortable.create('tabs', {
+      overlap: 'horizontal',
+      constraint: 'horizontal',
+      format: /(.+)/,
+      onUpdate: function (res) {
+        var tabs = res.childElements();
+        var order = tabs.collect(function(t){
+          var m = t.id.match(/(win_[^_]+)_tab/);
+          if (m) return m[1]
+        });
+        if (order.length) this.connection.sendTabOrder(order);
+      }.bind(this)
+    });
   }
 });
