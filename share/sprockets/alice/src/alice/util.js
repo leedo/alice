@@ -35,22 +35,6 @@ Object.extend(Alice, {
       }
     }
   },
-
-  makeSortable: function() {
-    Sortable.create('tabs', {
-      overlap: 'horizontal',
-      constraint: 'horizontal',
-      format: /(.+)/,
-      onUpdate: function (res) {
-        var tabs = res.childElements();
-        var order = tabs.collect(function(t){
-          var m = t.id.match(/(win_[^_]+)_tab/);
-          if (m) return m[1]
-        });
-        if (order.length) alice.connection.sendTabOrder(order);
-      }
-    });
-  },
   
   isSpecialKey: function(keyCode) {
     var special_keys = [
@@ -59,6 +43,47 @@ Object.extend(Alice, {
 		];
 		return special_keys.indexOf(keyCode) > -1;
   },
+  
+  loadInlineImage: function(image) {
+    var maxWidth = arguments.callee.maxWidth || 300;
+    var maxHeight = arguments.callee.maxHeight || 300;
+    image.style.visibility = 'hidden';
+    if (image.height > image.width && image.height > maxHeight) {
+      image.style.width = 'auto';
+      image.style.height = maxHeight + 'px';
+    }
+    else if (image.width > maxWidth) {
+      image.style.height = 'auto';
+      image.style.width = maxWidth + 'px';
+    }
+    else {
+      image.style.height = 'auto';
+    }
+    image.style.display = 'block';
+    image.style.visibility = 'visible';
+    setTimeout(function () {
+      var messagelist = image.up(".message_wrap");
+      messagelist.scrollTop = messagelist.scrollHeight;
+    }, 50);
+  },
+
+  playAudio: function(image, audio) {
+    image.src = '/static/image/pause.png'; 
+    if (! audio) {
+      var url = image.nextSibling.href;
+      audio = new Audio(url);
+      audio.addEventListener('ended', function () {
+        image.src = '/static/image/play.png';
+        image.onclick = function () { playAudio(image, audio) };
+      });
+    }
+    audio.play();
+    image.onclick = function() {
+      audio.pause();
+      this.src = '/static/image/play.png';
+      this.onclick = function () { playAudio(this, audio) };
+    };
+  }
 });
 
 

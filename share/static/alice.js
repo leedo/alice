@@ -8585,26 +8585,9 @@ Object.extend(Alice, {
           message.window.title + ": " + message.nick,
           message.body.unescapeHTML()
         );
-        console.log(popup);
         popup.show();
       }
     }
-  },
-
-  makeSortable: function() {
-    Sortable.create('tabs', {
-      overlap: 'horizontal',
-      constraint: 'horizontal',
-      format: /(.+)/,
-      onUpdate: function (res) {
-        var tabs = res.childElements();
-        var order = tabs.collect(function(t){
-          var m = t.id.match(/(win_[^_]+)_tab/);
-          if (m) return m[1]
-        });
-        if (order.length) alice.connection.sendTabOrder(order);
-      }
-    });
   },
 
   isSpecialKey: function(keyCode) {
@@ -8614,6 +8597,47 @@ Object.extend(Alice, {
 		];
 		return special_keys.indexOf(keyCode) > -1;
   },
+
+  loadInlineImage: function(image) {
+    var maxWidth = arguments.callee.maxWidth || 300;
+    var maxHeight = arguments.callee.maxHeight || 300;
+    image.style.visibility = 'hidden';
+    if (image.height > image.width && image.height > maxHeight) {
+      image.style.width = 'auto';
+      image.style.height = maxHeight + 'px';
+    }
+    else if (image.width > maxWidth) {
+      image.style.height = 'auto';
+      image.style.width = maxWidth + 'px';
+    }
+    else {
+      image.style.height = 'auto';
+    }
+    image.style.display = 'block';
+    image.style.visibility = 'visible';
+    setTimeout(function () {
+      var messagelist = image.up(".message_wrap");
+      messagelist.scrollTop = messagelist.scrollHeight;
+    }, 50);
+  },
+
+  playAudio: function(image, audio) {
+    image.src = '/static/image/pause.png';
+    if (! audio) {
+      var url = image.nextSibling.href;
+      audio = new Audio(url);
+      audio.addEventListener('ended', function () {
+        image.src = '/static/image/play.png';
+        image.onclick = function () { playAudio(image, audio) };
+      });
+    }
+    audio.play();
+    image.onclick = function() {
+      audio.pause();
+      this.src = '/static/image/play.png';
+      this.onclick = function () { playAudio(this, audio) };
+    };
+  }
 });
 
 
@@ -8635,7 +8659,15 @@ Alice.Application = Class.create({
     this.filters = [];
     this.monospaceNicks = ['Shaniqua', 'root', 'p6eval'];
     this.keyboard = new Alice.Keyboard(this);
+
     setTimeout(this.connection.connect.bind(this.connection), 1000);
+
+    this.makeSortable();
+    var active = this.activeWindow();
+    if (active) {
+      active.input.focus();
+      active.scrollToBottom();
+    }
   },
 
   actionHandlers: {
@@ -8698,6 +8730,19 @@ Alice.Application = Class.create({
       this.configWindow = window.open(null, "config", "resizable=no,scrollbars=no,status=no,toolbar=no,location=no,width=500,height=480");
       this.connection.getConfig(function (transport) {
         this.configWindow.document.write(transport.responseText);
+      }.bind(this));
+    }
+
+    e.stop();
+  },
+
+  togglePrefs: function(e) {
+    if (this.prefWindow && !this.prefWindow.closed && this.prefWindow.focus) {
+      this.prefWindow.focus();
+    } else {
+      this.prefWindow = window.open(null, "prefs", "resizable=no,scrollbars=no,status=no,toolbar=no,location=no,width=500,height=480");
+      this.connection.getPrefs(function (transport) {
+        this.prefWindow.document.write(transport.responseText);
       }.bind(this));
     }
 
@@ -8797,7 +8842,7 @@ Alice.Application = Class.create({
       $('tab_overflow_overlay').insert(html.select);
       $(windowId+"_tab_overflow_button").selected = false;
       this.activeWindow().tabOverflowButton.selected = true;
-      Alice.makeSortable();
+      this.makeSortable();
     }
   },
 
@@ -8842,6 +8887,31 @@ Alice.Application = Class.create({
 
   messagesAreMonospacedFor: function(nick) {
     return this.monospaceNicks.indexOf(nick) > -1;
+  },
+
+  focusHash: function(hash) {
+    var hash = window.location.hash;
+    if (hash) {
+      hash = hash.replace(/^#/, "");
+      var focus = this.getWindow(hash)
+      if (focus) focus.focus();
+    }
+  },
+
+  makeSortable: function() {
+    Sortable.create('tabs', {
+      overlap: 'horizontal',
+      constraint: 'horizontal',
+      format: /(.+)/,
+      onUpdate: function (res) {
+        var tabs = res.childElements();
+        var order = tabs.collect(function(t){
+          var m = t.id.match(/(win_[^_]+)_tab/);
+          if (m) return m[1]
+        });
+        if (order.length) this.connection.sendTabOrder(order);
+      }.bind(this)
+    });
   }
 });
 Alice.Connection = Class.create({
@@ -8962,6 +9032,13 @@ Alice.Connection = Class.create({
 
   getConfig: function(callback) {
     new Ajax.Request('/config', {
+      method: 'get',
+      onSuccess: callback
+    });
+  },
+
+  getPrefs: function(callback) {
+    new Ajax.Request('/prefs', {
       method: 'get',
       onSuccess: callback
     });
