@@ -42,6 +42,7 @@ has 'url_handlers' => (
       { re => qr{^/say/?$},          sub  => 'handle_message' },
       { re => qr{^/stream/?$},       sub  => 'setup_stream' },
       { re => qr{^/config/?$},       sub  => 'send_config' },
+      { re => qr{^/prefs/?$},        sub  => 'send_prefs' },
       { re => qr{^/serverconfig/?$}, sub  => 'server_config' },
       { re => qr{^/save/?$},         sub  => 'save_config' },
       { re => qr{^/tabs/?$},         sub  => 'tab_order' },
@@ -327,6 +328,15 @@ sub send_config {
   return $res->finalize;
 }
 
+sub send_prefs {
+  my ($self, $req) = @_;
+  $self->app->log(info => "serving prefs");
+  my $output = $self->app->render('prefs');
+  my $res = $req->new_response(200);
+  $res->body($output);
+  return $res->finalize;
+}
+
 sub server_config {
   my ($self, $req) = @_;
   $self->app->log(info => "serving blank server config");
@@ -346,10 +356,14 @@ sub save_config {
   my ($self, $req) = @_;
   $self->app->log(info => "saving config");
   
-  my $new_config = {servers => {}};
+  my $new_config = {};
+  if ($req->parameters->{has_servers}) {
+    $new_config->{servers} = {};
+  }
   for my $name (keys %{$req->parameters}) {
     next unless $req->parameters->{$name};
-    if ($name =~ /^(.+?)_(.+)/) {
+    next if $name eq "has_servers";
+    if ($name =~ /^(.+?)_(.+)/ and exists $new_config->{servers}) {
       if ($2 eq "channels" or $2 eq "on_connect") {
         $new_config->{servers}{$1}{$2} = [$req->parameters->get_all($name)];
       } else {

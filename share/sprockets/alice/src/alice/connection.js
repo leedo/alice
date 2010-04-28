@@ -127,6 +127,13 @@ Alice.Connection = Class.create({
     });
   },
   
+  getPrefs: function(callback) {
+    new Ajax.Request('/prefs', {
+      method: 'get',
+      onSuccess: callback
+    });
+  },
+  
   getLog: function(callback) {
     new Ajax.Request('/logs', {
       method: 'get',

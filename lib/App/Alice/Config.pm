@@ -34,6 +34,12 @@ has avatars => (
   default => "show",
 );
 
+has alerts => (
+  is      => 'rw',
+  isa     => 'Str',
+  default => 'show',
+);
+
 has quitmsg => (
   is      => 'rw',
   isa     => 'Str',
