@@ -79,25 +79,26 @@ if (window == window.parent) {
     window.status = " ";  
     window.onblur = function () {alice.isFocused = false};
     window.onhashchange = alice.focusHash.bind(alice);
-}
 
-alice.addFilters([
-  function(content) {
-    var filtered = content;
-    filtered = filtered.replace(
-      /(<a href=\"(:?.*?\.(:?wav|mp3|ogg|aiff))")/gi,
-      "<img src=\"/static/image/play.png\" " +
-      "onclick=\"Alice.playAudio(this)\" class=\"audio\"/>$1");
-    return filtered;
-  },
-  function (content) {
-    var filtered = content;
-    if (alice.options.images == "show") {
-      filtered = filtered.replace(
-        /(<a[^>]*>)([^<]*\.(:?jpe?g|gif|png|bmp|svg)(:?\?v=0)?)</gi,
-        "$1<img src=\"/get/$2\" onload=\"Alice.loadInlineImage(this)\" " +
-        "alt=\"Loading Image...\" title=\"$2\" style=\"display:none\"/><");
-    }
-    return filtered;
-  }
-]);
+    alice.addFilters([
+      function(content) {
+        var filtered = content;
+        filtered = filtered.replace(
+          /(<a href=\"(:?.*?\.(:?wav|mp3|ogg|aiff))")/gi,
+          "<img src=\"/static/image/play.png\" " +
+          "onclick=\"Alice.playAudio(this)\" class=\"audio\"/>$1");
+        return filtered;
+      },
+      function (content) {
+        var filtered = content;
+        if (alice.options.images == "show") {
+          filtered = filtered.replace(
+            /(<a[^>]*>)([^<]*\.(:?jpe?g|gif|png|bmp|svg)(:?\?v=0)?)</gi,
+            "$1<img src=\"/get/$2\" onload=\"Alice.loadInlineImage(this)\" " +
+            "alt=\"Loading Image...\" title=\"$2\" style=\"display:none\"/><");
+        }
+        return filtered;
+      }
+    ]);
+  });
+}
