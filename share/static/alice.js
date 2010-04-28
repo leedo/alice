@@ -8894,7 +8894,7 @@ Alice.Application = Class.create({
     if (hash) {
       hash = hash.replace(/^#/, "");
       var focus = this.getWindow(hash)
-      if (focus) focus.focus();
+      if (focus && !focus.active) focus.focus();
     }
   },
 
