@@ -180,7 +180,7 @@ sub nick {
     $self->nick_cached($nick);
     return $nick;
   }
-  return $self->nick_cached;
+  return $self->nick_cached || "Failure";
 }
 
 sub windows {
