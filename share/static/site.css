@@ -465,11 +465,7 @@ li.privmsg_tab div.tab_button {
 }
 
 li.info_tab div.tab_button {
-  background: url(image/smartTranscriptTab.png);
-}
-
-li.info_tab div.tab_button {
-  background: url(image/smartTranscriptTab.png);
+  background: url(image/terminal.png);
 }
 
 ul#tabs li.active div.tab_button:hover {
@@ -482,10 +478,6 @@ ul#tabs li.unread.channel_tab div.tab_button {
 
 ul#tabs li.unread.privmsg_tab div.tab_button {
   background: url(image/privateChatTabNewMessage.png);
-}
-
-ul#tabs li.unread.info_tab div.tab_button {
-  background: url(image/smartTranscriptTabActivity.png);
 }
 
 ul#tabs li.highlight.channel_tab div.tab_button {
