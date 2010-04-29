@@ -225,6 +225,7 @@ sub init_shutdown {
   my ($self, $cb, $msg) = @_;
   $self->{on_shutdown} = $cb;
   $self->shutting_down(1);
+  $self->history(undef);
   $self->alert("Alice server is shutting down");
   if ($self->ircs) {
     print STDERR "\nDisconnecting, please wait\n" if $self->standalone;
@@ -245,7 +246,6 @@ sub shutdown {
   $self->irc_map({});
   $self->httpd->shutdown;
   $_->buffer->clear for $self->windows;
-  $self->history(undef);
   delete $self->{shutdown_timer} if $self->{shutdown_timer};
   $self->{on_shutdown}->() if $self->{on_shutdown};
   $self->condvar->send if $self->condvar;
