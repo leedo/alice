@@ -1,6 +1,7 @@
 if (window == window.parent) {
   document.observe("dom:loaded", function () {
     var alice = new Alice.Application();
+    window.alice = alice;
 
     var options = {
       images: 'show',
