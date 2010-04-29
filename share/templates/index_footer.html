@@ -3,15 +3,17 @@
         <script type="text/javascript" src="<?= $app->static_url("alice.js") ?>"></script>
         <script type="text/javascript" src="<?= $app->static_url("site.js") ?>?images=<?= $_[0]->config->images || 'show' ?>&amp;monospace_nicks=<?= join ",", @{$_[0]->config->monospace_nicks} ?>"></script>
         <script type="text/javascript">
-          alice.connection.msgid = <?= $_[0]->msgid ?>;
-          <? for my $window (@windows) { ?>
-            alice.openWindow(
-              '<?= $window->id ?>',
-              '<?= $window->title ?>',
-              <?= $window->{active} ? "true" : "false" ?>
-            );
-          <? } ?>
-          alice.focusHash();
+          document.observe("dom:loaded", function () {
+            alice.connection.msgid = <?= $_[0]->msgid ?>;
+            <? for my $window (@windows) { ?>
+              alice.openWindow(
+                '<?= $window->id ?>',
+                '<?= $window->title ?>',
+                <?= $window->{active} ? "true" : "false" ?>
+              );
+            <? } ?>
+            alice.focusHash();
+          });
         </script>
       </div>
     </div>
