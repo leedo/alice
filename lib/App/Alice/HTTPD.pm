@@ -294,7 +294,8 @@ sub send_search {
   my ($self, $req) = @_;
   return sub {
     my $respond = shift;
-    $self->app->history->search(%{$req->parameters}, sub {
+    $self->app->history->search(
+      user => $self->app->user, %{$req->parameters}, sub {
       my $rows = shift;
       my $content = $self->app->render('results', $rows);
       my $res = $req->new_response(200);
@@ -308,14 +309,16 @@ sub send_range {
   my ($self, $req) = @_;
   return sub {
     my $respond = shift;
-    $self->app->history->range($req->param('channel'), $req->param('time'), sub {
-      my ($before, $after) = @_;
-      $before = $self->app->render('range', $before, 'before');
-      $after = $self->app->render('range', $after, 'after');
-      my $res = $req->new_response(200);
-      $res->body(to_json [$before, $after]);
-      $respond->($res->finalize);
-    }); 
+    $self->app->history->range(
+      $self->app->user, $req->param('channel'), $req->param('id'), sub {
+        my ($before, $after) = @_;
+        $before = $self->app->render('range', $before, 'before');
+        $after = $self->app->render('range', $after, 'after');
+        my $res = $req->new_response(200);
+        $res->body(to_json [$before, $after]);
+        $respond->($res->finalize);
+      }
+    ); 
   }
 }
 

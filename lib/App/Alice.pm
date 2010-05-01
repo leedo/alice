@@ -103,9 +103,16 @@ has history => (
   lazy    => 1,
   default => sub {
     my $self = shift;
-    if (! -e $self->config->path ."/log.db") {
-      copy($self->config->assetdir."/log.db",
-           $self->config->path."/log.db");
+    my $config = $self->config->path."/log.db";
+    if (-e $config) {
+      my $mtime = (stat($config))[9];
+      if ($mtime < 1272757679) {
+        print STDERR "Log schema is out of date, updating\n";
+        copy($self->config->assetdir."/log.db", $config);
+      }
+    }
+    else {
+      copy($self->config->assetdir."/log.db", $config);
     }
     App::Alice::History->new(
       dbfile => $self->config->path ."/log.db"
@@ -115,7 +122,10 @@ has history => (
 
 sub store {
   my $self = shift;
-  $self->history->store(@_);
+  my %fields = @_;
+  $fields{user} = $self->user;
+  $fields{time} = time;
+  $self->history->store(%fields);
 }
 
 has logger => (
@@ -196,6 +206,7 @@ sub BUILDARGS {
 sub run {
   my $self = shift;
   # initialize template and httpd because they are lazy
+  $self->history;
   $self->info_window;
   $self->template;
   $self->httpd;

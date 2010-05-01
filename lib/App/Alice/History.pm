@@ -28,23 +28,22 @@ has dbfile => (
 );
 
 sub store {
-  my ($self, @fields) = @_;
-  my $sth = $self->dbi->exec(
-    "INSERT INTO messages (time,nick,channel,body) VALUES(?,?,?,?)"
-  , time, @fields, sub {});
+  my ($self, %fields) = @_;
+  my ($stmt, @bind) = $self->sql->insert("messages", \%fields);
+  $self->dbi->exec($stmt, @bind, sub {});
 }
 
 sub range {
   my $cb = pop;
-  my ($self, $channel, $time, $limit) = @_;
+  my ($self, $user, $channel, $id, $limit) = @_;
   $limit ||=5;
   $self->dbi->exec(
-    "SELECT * FROM messages WHERE time < ? AND channel=? ORDER BY time DESC LIMIT ?",
-    $time, $channel, $limit, sub {
+    "SELECT * FROM messages WHERE id < ? AND channel=? AND user=? ORDER BY id DESC LIMIT ?",
+    $id, $channel, $user, $limit, sub {
       my $before = [ reverse @{$_[1]} ];
       $self->dbi->exec(
-        "SELECT * FROM messages WHERE time > ? AND channel=? ORDER BY time ASC LIMIT ?",
-        $time, $channel, $limit, sub {
+        "SELECT * FROM messages WHERE id > ? AND channel=? AND user=? ORDER BY id ASC LIMIT ?",
+        $id, $channel, $user, $limit, sub {
           my $after = $_[1];
           $cb->($before, $after);
         }
@@ -57,8 +56,8 @@ sub range {
 sub search {
   my $cb = pop;
   my ($self, %query) = @_;
-  %query = map {$_ => "%$query{$_}%"} grep {$query{$_}} keys %query;
-  my ($stmt, @bind) = $self->sql->select("messages", '*', \%query, {-desc => 'time'});
+  %query = map {$_ => "%$query{$_}%"} grep {$query{$_}} qw/body channel nick user/;
+  my ($stmt, @bind) = $self->sql->select("messages", '*', \%query, {-desc => 'id'});
   $self->dbi->exec($stmt, @bind, sub {
     my ($db, $rows, $rv) = @_;
     $cb->($rows);
