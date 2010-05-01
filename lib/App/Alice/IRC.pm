@@ -361,7 +361,7 @@ sub publicmsg {
     return if $self->app->is_ignore($nick);
     my $text = $msg->{params}[1];
     utf8::decode($_) for ($text, $nick);
-    $self->app->store($nick, $channel, $text);
+    $self->app->store(nick => $nick, channel => $channel, body => $text);
     $self->broadcast($window->format_message($nick, $text)); 
   }
 }
@@ -375,7 +375,7 @@ sub privatemsg {
     utf8::decode($from);
     return if $self->app->is_ignore($from);
     my $window = $self->window($from);
-    $self->app->store($from, $from, $text);
+    $self->app->store(nick => $from, channel => $from, body => $text);
     $self->broadcast($window->format_message($from, $text)); 
     $self->send_srv(WHO => $from) unless $self->includes_nick($from);
   }
@@ -390,7 +390,7 @@ sub ctcp_action {
   return if $self->app->is_ignore($nick);
   if (my $window = $self->find_window($channel)) {
     my $text = "• $msg";
-    $self->app->store($nick, $channel, $text);
+    $self->app->store(nick => $nick, channel => $channel, body => $text);
     $self->broadcast($window->format_message($nick, $text));
   }
 }

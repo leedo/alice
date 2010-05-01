@@ -333,7 +333,7 @@ sub _say {
     $self->reply($window, "You are not connected to ".$window->irc->alias.".");
     return;
   }
-  $self->app->store($window->nick, $window->title, $msg);
+  $self->app->store(nick => $window->nick, channel => $window->title, body => $msg);
   $self->show($window, $msg);
   $window->irc->send_srv(PRIVMSG => $window->title, $msg);
 }

@@ -1,14 +1,14 @@
 ? my ($app, $results) = @_;
 <ul id="logresults">
 ? for my $result (@$results) {
-<li onclick="expandRange('<?= $result->[2] ?>', <?= $result->[0] ?>, this)">
-? my @date = localtime($result->[0]);
+<li onclick="expandRange('<?= $result->[4] ?>', <?= $result->[0] ?>, this)">
+? my @date = localtime($result->[1]);
 ? $date[5] = $date[5] % 100;
 ? $date[4] = $date[4] + 1;
   <div class="focus">
-    <strong><?= $result->[1] ?> </strong><?= $result->[3] ?>
+    <strong><?= $result->[3] ?> </strong><?= $result->[5] ?>
     <br/><span class="metadata">
-      <?= $result->[2] ?>
+      <?= $result->[4] ?>
       <?= sprintf("%02d:%02d %02d-%02d-%02d", @date[2,1,4,3,5]) ?>
     </span>
   </div>

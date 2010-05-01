@@ -20,10 +20,10 @@
         return false;
       };
       
-      expandRange = function(channel, time, li) {
+      expandRange = function(channel, id, li) {
         new Ajax.Request('/range', {
           method: "post",
-          parameters: {time: time, channel: channel},
+          parameters: {id: id, channel: channel},
           onSuccess: function (transport) {
             $$('.context').each(function (item) {
               item.select(".context_wrapper").invoke("remove");
