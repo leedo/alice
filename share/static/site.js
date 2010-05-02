@@ -55,6 +55,7 @@ if (window == window.parent) {
           help.visible() ? help.hide() : help.show();
           break;
       }
+   });
       $$('#config_overlay option').each(function(opt){opt.selected = false});
 
       // setup window events
@@ -99,6 +100,5 @@ if (window == window.parent) {
           return filtered;
         }
       ]);
-    });
   });
 }

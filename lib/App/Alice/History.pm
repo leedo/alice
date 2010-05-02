@@ -24,7 +24,7 @@ has sql => (
 has dbfile => (
   is => 'ro',
   isa => 'Str',
-  required => 1,
+  #required => 1,
 );
 
 sub store {
