@@ -32,7 +32,6 @@ my $window_id = $app->_build_window_id("test-window", "test");
 ok $app->has_window($window_id), "window exists";
 ok $app->find_window("test-window", $irc), "find window by name";
 ok ref $app->get_window($window_id) eq "App::Alice::Window", "get window";
-is_deeply [$app->window_ids], ["info", $window_id], "window id list";
 is_deeply [$app->windows], [$info, $window], "window list";
 
 $app->add_window("test-window2", {});

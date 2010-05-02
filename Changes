@@ -1,3 +1,14 @@
+0.15  Sub 02 May 2010
+        - Added a help dialog
+        - Added a preferences window that allows:
+          - disabling inline images
+          - disabling avatars
+          - disabling alerts
+        - Put current tab in the URL hash
+          - refocuses current tab on reload
+        - Style highlighted lines w/ a red stripe
+        - Various CSS and JS fixes
+
 0.14  Sun 18 Apr 2010
         - Fixed broken tests
 
