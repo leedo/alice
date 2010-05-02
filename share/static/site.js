@@ -94,7 +94,7 @@ if (window == window.parent) {
         if (alice.options.images == "show") {
           filtered = filtered.replace(
             /(<a[^>]*>)([^<]*\.(:?jpe?g|gif|png|bmp|svg)(:?\?v=0)?)</gi,
-            "$1<img src=\"/get/$2\" onload=\"Alice.loadInlineImage(this)\" " +
+            "$1<img src=\"http://i.usealice.org/$2\" onload=\"Alice.loadInlineImage(this)\" " +
             "alt=\"Loading Image...\" title=\"$2\" style=\"display:none\"/><");
         }
         return filtered;
