@@ -126,6 +126,7 @@ has 'handlers' => (
 has 'app' => (
   is       => 'ro',
   isa      => 'App::Alice',
+  weak_ref => 1,
   required => 1,
 );
 
