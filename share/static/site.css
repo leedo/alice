@@ -235,7 +235,7 @@ ul.messages li:not(.consecutive) {
 }
 
 ul.messages li.highlight {
-  border-right: 5px solid #fffc00;
+  border-right: 5px solid #eb2222;
 }
 
 .info ul.messages li.highlight,
