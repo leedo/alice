@@ -9101,13 +9101,11 @@ Alice.Window = Class.create({
     this.tabButton.observe("click", function(e) {if (this.active) this.close()}.bind(this));
     this.messages.observe("mouseover", this.showNick.bind(this));
     this.scrollToBottom(true);
-    document.observe("dom:loaded", function () {
-      setTimeout(function () {
-        this.messages.select('li.message div.msg').each(function (msg) {
-          msg.innerHTML = application.applyFilters(msg.innerHTML);
-        });
-      }.bind(this), 1000);
-    }.bind(this));
+    setTimeout(function () {
+      this.messages.select('li.message div.msg').each(function (msg) {
+        msg.innerHTML = application.applyFilters(msg.innerHTML);
+      });
+    }.bind(this), 1000);
     if (navigator.userAgent.match(/Chrome/)) {
       $$('tr.input textarea').invoke('setStyle', {padding: '3px'});
     } else if (Prototype.Browser.Gecko) {
