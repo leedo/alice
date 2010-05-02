@@ -583,7 +583,7 @@ sub nick_avatar {
   if ($info and $info->{real}) {
     if ($info->{real} =~ /([^<\s]+@[^\s>]+\.[^\s>]+)/) {
       my $email = $1;
-      return "//www.gravatar.com/avatar/"
+      return "http://www.gravatar.com/avatar/"
            . md5_hex($email) . "?s=32&amp;r=x";
     }
     elsif ($info->{real} =~ /^https?:(\/\/\S+(?:jpe?g|png|gif))/) {
