@@ -586,7 +586,7 @@ sub nick_avatar {
       return "http://www.gravatar.com/avatar/"
            . md5_hex($email) . "?s=32&amp;r=x";
     }
-    elsif ($info->{real} =~ /^https?:(\/\/\S+(?:jpe?g|png|gif))/) {
+    elsif ($info->{real} =~ /(https?:\/\/\S+(?:jpe?g|png|gif))/) {
       return $1;
     }
     else {
