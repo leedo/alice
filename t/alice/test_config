@@ -1,13 +1,22 @@
 {
   'images' => 'show',
+  'alerts' => 'show',
   'quitmsg' => 'alice.',
+  'static_prefix' => '/static/',
   'ignore' => [],
   'port' => '8080',
   'auth' => {},
   'message_store' => 'Memory',
   'order' => [],
   'debug' => 0,
-  'servers' => {},
+  'servers' => {
+    'test' => {
+      'nick' => 'tester',
+      'autoconnect' => 0,
+      'port' => 6667,
+      'host' => 'not.real.server'
+    }
+  },
   'address' => '127.0.0.1',
   'avatars' => 'show',
   'monospace_nicks' => [
