@@ -35,6 +35,7 @@ sub config {
 has 'app' => (
   isa      => 'App::Alice',
   is       => 'ro',
+  weak_ref => 1,
   required => 1,
 );
 

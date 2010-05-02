@@ -190,7 +190,7 @@ has 'user' => (
 sub BUILDARGS {
   my ($class, %options) = @_;
   my $self = {standalone => 1};
-  for (qw/standalone history notifier template/) {
+  for (qw/standalone history notifier template user/) {
     if (exists $options{$_}) {
       $self->{$_} = $options{$_};
       delete $options{$_};
@@ -212,7 +212,8 @@ sub run {
   $self->httpd;
   $self->notifier;
 
-  print STDERR "Location: http://".$self->config->http_address.":".$self->config->http_port."/\n";
+  print STDERR "Location: http://".$self->config->http_address.":".$self->config->http_port."/\n"
+    if $self->standalone;
 
   $self->add_irc_server($_, $self->config->servers->{$_})
     for keys %{$self->config->servers};
