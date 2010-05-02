@@ -190,7 +190,7 @@ has 'user' => (
 sub BUILDARGS {
   my ($class, %options) = @_;
   my $self = {standalone => 1};
-  for (qw/standalone history notifier template user/) {
+  for (qw/standalone history notifier template/) {
     if (exists $options{$_}) {
       $self->{$_} = $options{$_};
       delete $options{$_};
