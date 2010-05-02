@@ -56,49 +56,49 @@ if (window == window.parent) {
           break;
       }
       $$('#config_overlay option').each(function(opt){opt.selected = false});
-
-      // setup window events
-
-      window.onkeydown = function (e) {
-        if (alice.activeWindow() && !$('config') && !Alice.isSpecialKey(e.which))
-          alice.activeWindow().input.focus()};
-
-      window.onresize = function () {
-        if (alice.activeWindow()) {
-          if (Prototype.Browser.Gecko) alice.activeWindow().resizeMessagearea();
-            alice.activeWindow().scrollToBottom();
-        }
-      };
-
-      window.onfocus = function () {
-        if (alice.activeWindow()) alice.activeWindow().input.focus();
-          alice.isFocused = true
-      };
-
-      window.status = " ";  
-      window.onblur = function () {alice.isFocused = false};
-      window.onhashchange = alice.focusHash.bind(alice);
-
-      alice.addFilters([
-        function(content) {
-          var filtered = content;
-          filtered = filtered.replace(
-            /(<a href=\"(:?.*?\.(:?wav|mp3|ogg|aiff))")/gi,
-            "<img src=\"/static/image/play.png\" " +
-            "onclick=\"Alice.playAudio(this)\" class=\"audio\"/>$1");
-          return filtered;
-        },
-        function (content) {
-          var filtered = content;
-          if (alice.options.images == "show") {
-            filtered = filtered.replace(
-              /(<a[^>]*>)([^<]*\.(:?jpe?g|gif|png|bmp|svg)(:?\?v=0)?)</gi,
-              "$1<img src=\"/get/$2\" onload=\"Alice.loadInlineImage(this)\" " +
-              "alt=\"Loading Image...\" title=\"$2\" style=\"display:none\"/><");
-          }
-          return filtered;
-        }
-      ]);
     });
+    
+    // setup window events
+    
+    window.onkeydown = function (e) {
+      if (alice.activeWindow() && !$('config') && !Alice.isSpecialKey(e.which))
+        alice.activeWindow().input.focus()};
+    
+    window.onresize = function () {
+      if (alice.activeWindow()) {
+        if (Prototype.Browser.Gecko) alice.activeWindow().resizeMessagearea();
+          alice.activeWindow().scrollToBottom();
+      }
+    };
+    
+    window.onfocus = function () {
+      if (alice.activeWindow()) alice.activeWindow().input.focus();
+        alice.isFocused = true
+    };
+    
+    window.status = " ";  
+    window.onblur = function () {alice.isFocused = false};
+    window.onhashchange = alice.focusHash.bind(alice);
+    
+    alice.addFilters([
+      function(content) {
+        var filtered = content;
+        filtered = filtered.replace(
+          /(<a href=\"(:?.*?\.(:?wav|mp3|ogg|aiff))")/gi,
+          "<img src=\"/static/image/play.png\" " +
+          "onclick=\"Alice.playAudio(this)\" class=\"audio\"/>$1");
+        return filtered;
+      },
+      function (content) {
+        var filtered = content;
+        if (alice.options.images == "show") {
+          filtered = filtered.replace(
+            /(<a[^>]*>)([^<]*\.(:?jpe?g|gif|png|bmp|svg)(:?\?v=0)?)</gi,
+            "$1<img src=\"/get/$2\" onload=\"Alice.loadInlineImage(this)\" " +
+            "alt=\"Loading Image...\" title=\"$2\" style=\"display:none\"/><");
+        }
+        return filtered;
+      }
+    ]);
   });
 }
