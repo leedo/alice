@@ -155,11 +155,11 @@
 		    </div>
 		    <div class="field clear">
 		      <label>Server address</label>
-		      <input type="text" name="<?= $alias ?>_host" value="<?= $connection->config->{host} ?>" size="15"/>
+		      <input type="text" name="<?= $alias ?>_host" value="<?= $connection->config->{host} || "" ?>" size="15"/>
 		    </div>
 		    <div class="field">
 		      <label>Port</label>
-		      <input type="text" name="<?= $alias ?>_port" value="<?= $connection->config->{port} ?>" size="6" style="float:left"/>
+		      <input type="text" name="<?= $alias ?>_port" value="<?= $connection->config->{port} || "" ?>" size="6" style="float:left"/>
 		      <div style="float:left">
 		      <input type="checkbox" name="<?= $alias ?>_ssl"<? if ($connection->config->{ssl}) { ?> checked="checked"<? } ?> style="display:inline;margin-right:0px"/>
 		      <span style="font-size:0.7em">SSL</span>
