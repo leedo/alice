@@ -537,13 +537,13 @@ div#config div.setting.active {
   display: block;
 }
 
-div#config div.setting div.field {
+div#config div.field {
   float: left;
   margin-bottom: 10px;
   margin-right: 8px;
 }
 
-div#config div.setting div.field.clear {
+div#config div.field.clear {
   clear: both;
 }
 
@@ -586,6 +586,11 @@ div#config div.controls a:hover {
 
 div#config label {
   color: #666;
+}
+
+div#config input[type="checkbox"] {
+  float: left;
+  margin-right: 4px;
 }
 
 div#config ul#connections {
