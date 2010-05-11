@@ -372,11 +372,14 @@ sub save_config {
       } else {
         $new_config->{servers}{$1}{$2} = $req->param($name);
       }
-    } else {
+    }
+    elsif ($name eq "highlights") {
+      $new_config->{$name} = [$req->parameters->get_all($name)];
+    }
+    else {
       $new_config->{$name} = $req->param($name);
     }
   }
-  
   $self->config->merge($new_config);
   $self->app->reload_config();
   $self->config->write;
