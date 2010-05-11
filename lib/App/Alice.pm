@@ -424,6 +424,15 @@ sub render {
   return $self->template->render_file("$template.html", $self, @data)->as_string;
 }
 
+sub is_highlight {
+  my ($self, $own_nick, $body) = @_;
+  return 1 if $body =~ /\b$own_nick\b/i;
+  for (@{$self->config->highlights}) {
+    return 1 if $body =~ /\b$_\b/i;
+  }
+  return 0;
+}
+
 sub is_monospace_nick {
   my ($self, $nick) = @_;
   for (@{$self->config->monospace_nicks}) {
