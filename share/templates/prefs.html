@@ -13,12 +13,26 @@
   </head>
 	<body class="config">
 		<div id="config">
-		  <script type="text/javascript">
+		    <script type="text/javascript">
+		      addHighlight  = function (alias) {
+		        var channel = prompt("Please enter a channel name.");
+		        if (channel)
+		          $('highlights').insert("<option value=\""+channel+"\">"+channel+"</option>");
+		        return false;
+		      };
+		      removeHighlights = function (alias) {
+		        $A($('highlights').options).each(function (option) {
+		          if (option.selected) option.remove()});
+		        return false;
+		      };
 			    submitConfig = function(form) {
-			      var options = {};
+			      var options = {highlights: []};
 			      ["images", "avatars", "alerts"].each(function (pref) {
 			        options[pref] = $(pref).checked ? "show" : "hide";
 			      });
+			      $A($("highlights").options).each(function(option) {
+              options.highlights.push(option.value);
+            });
 			      window.opener.alice.options = options;
             new Ajax.Request('/save', {
               method: 'get',
@@ -27,26 +41,38 @@
             });
             return false;
           };
-		  </script>
-  
-		  <form id="config_data" onsubmit="return submitConfig(this)">
-		    <div class="field" style="width:138px">
-		      <label>Inline images?</label>
-          <input type="checkbox"<? if ($app->config->{images} eq "show") { ?> checked<? } ?> name="images" id="images" />
-		    </div>
-		    <div class="field" style="width:138px">
-		      <label>Show avatars?</label>
-          <input type="checkbox"<? if ($app->config->{avatars} eq "show") { ?> checked="checked"<? } ?> name="avatars" id="avatars" />
-        </div>
-        <div class="field" style="width:138px">
-          <label>Enable alerts?</label>
-          <input type="checkbox"<? if ($app->config->{alerts} eq "show") { ?> checked="checked"<? } ?> name="alerts" id="alerts" />
-        </div>
-		  <div id="buttons">
-		    <button onclick="window.close(); return false;">Cancel</button>
-		    <button type="submit">Save</button>
-		  </div>
-		  </form>
+		    </script>
+        
+		    <form id="config_data" onsubmit="return submitConfig(this)">
+		      <div class="field" style="width:150px">
+		        <input type="checkbox"<? if ($app->config->images eq "show") { ?> checked<? } ?> name="images" id="images" />
+		        <label>Inline images?</label>
+		      </div>
+		      <div class="field clear" style="width:150px">
+		        <input type="checkbox"<? if ($app->config->avatars eq "show") { ?> checked="checked"<? } ?> name="avatars" id="avatars" />
+		        <label>Show avatars?</label>
+          </div>
+          <div class="field clear" style="width:150px">
+            <input type="checkbox"<? if ($app->config->alerts eq "show") { ?> checked="checked"<? } ?> name="alerts" id="alerts" />
+            <label>Enable alerts?</label>
+          </div>
+          <div class="field clear" style="width:150px">
+            <label>Highlights</label>
+            <select name="highlights" multiple="multiple" id="highlights">
+              <? for my $highlight (@{$app->config->highlights}) { ?>
+              <option value="<?= $highlight ?>"><?= $highlight ?></option>
+              <? } ?>
+            </select>
+            <div class="controls">
+		          <a href="#" onclick="return addHighlight()">Add</a>
+		          <a href="#" onclick="return removeHighlights()">Remove</a>
+		        </div>
+          </div>
+		      <div id="buttons" style="left:10px">
+		        <button onclick="window.close(); return false;">Cancel</button>
+		        <button type="submit">Save</button>
+		      </div>
+		    </form>
 		</div>
 	</body>
 </html>

@@ -70,6 +70,12 @@ has auth => (
   default => sub {{}},
 );
 
+has highlights => (
+  is      => 'rw',
+  isa     => 'ArrayRef[Str]',
+  default => sub {[]},
+);
+
 has servers => (
   is      => 'rw',
   isa     => 'HashRef[HashRef]',

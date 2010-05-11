@@ -6,7 +6,6 @@
     <title>Connections</title>
     <script type="text/javascript" src="/static/alice.js"></script>
     <link type="text/css" rel="stylesheet" href="/static/site.css" />
-    <link type="text/css" rel="stylesheet" href="/static/config.css" />
     <!--[if !IE]>--> 
     <link rel="stylesheet" href="/static/styles/iphone.css" type="text/css" 
           media="only screen and (max-device-width: 480px)" /> 
@@ -161,7 +160,7 @@
 		      <label>Port</label>
 		      <input type="text" name="<?= $alias ?>_port" value="<?= $connection->config->{port} || "" ?>" size="6" style="float:left"/>
 		      <div style="float:left">
-		      <input type="checkbox" name="<?= $alias ?>_ssl"<? if ($connection->config->{ssl}) { ?> checked="checked"<? } ?> style="display:inline;margin-right:0px"/>
+		      <input type="checkbox" name="<?= $alias ?>_ssl"<? if ($connection->config->{ssl}) { ?> checked="checked"<? } ?> />
 		      <span style="font-size:0.7em">SSL</span>
 		      </div>
 		    </div>
