@@ -9275,7 +9275,7 @@ Alice.Window = Class.create({
   addMessage: function(message) {
     if (!message.html) return;
 
-    this.messages.down('ul').insert(Alice.uncacheGravatar(message.html));
+    this.messages.down('ul').insert(message.html);
     var li = this.messages.down('li:last-child');
 
     if (!message.consecutive) {
