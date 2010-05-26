@@ -8906,7 +8906,7 @@ Alice.Application = Class.create({
       onUpdate: function (res) {
         var tabs = res.childElements();
         var order = tabs.collect(function(t){
-          var m = t.id.match(/(win_[^_]+)_tab/);
+          var m = t.id.match(/(w[^_]+)_tab/);
           if (m) return m[1]
         });
         if (order.length) this.connection.sendTabOrder(order);
