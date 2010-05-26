@@ -74,14 +74,14 @@ Object.extend(Alice, {
       audio = new Audio(url);
       audio.addEventListener('ended', function () {
         image.src = '/static/image/play.png';
-        image.onclick = function () { playAudio(image, audio) };
+        image.onclick = function () { Alice.playAudio(image, audio) };
       });
     }
     audio.play();
     image.onclick = function() {
       audio.pause();
       this.src = '/static/image/play.png';
-      this.onclick = function () { playAudio(this, audio) };
+      this.onclick = function () { Alice.playAudio(this, audio) };
     };
   }
 });
