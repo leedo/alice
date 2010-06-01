@@ -8720,6 +8720,22 @@ Alice.Application = Class.create({
       if (this.configWindow) {
         this.configWindow.disconnectServer(action.session);
       }
+    },
+    focus: function (action) {
+      if (!action.window_number) return;
+      if (action.window_number == "next") {
+        this.nextWindow();
+      }
+      else if (action.window_number.match(/^prev/)) {
+        this.previousWindow();
+      }
+      else if (action.window_number.match(/^\d+$/)) {
+        var tab = $('tabs').down('li', action.window_number);
+        if (tab) {
+          var window_id = tab.id.replace('_tab','');
+          this.getWindow(window_id).focus();
+        }
+      }
     }
   },
 
