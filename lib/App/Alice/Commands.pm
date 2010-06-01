@@ -112,6 +112,12 @@ has 'handlers' => (
         desc => "Lists ignored nicks.",
       },
       {
+        sub => 'window',
+        re => qr{^/window\s+(\d+|next|prev(?:ious)?)},
+        eg => "/WINDOW <window number>",
+        desc => "Focuses the provided window number",
+      },
+      {
         sub => 'help',
         re => qr{^/help(?:\s+(\S+))?},
       },
@@ -317,6 +323,15 @@ sub unignore {
   my ($self, $window, $nick) = @_;
   $self->app->remove_ignore($nick);
   $self->reply($window, "No longer ignoring $nick");
+}
+
+sub window {
+  my ($self, $window, $window_number) = @_;
+  $self->broadcast({
+    type => "action",
+    event => "focus",
+    window_number => $window_number,
+  });
 }
 
 sub notfound {
