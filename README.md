@@ -80,7 +80,11 @@ This will print all of the nick's in the current tab in a tabular format.
 
 **/me $string**
   
-Sends a string as an ACTION to the channel
+Sends a string as an ACTION to the channel.
+
+**/window $number**
+
+Focus the provided tab number. Also accepts "next" or "prev"
 
 # NOTIFICATIONS
 
