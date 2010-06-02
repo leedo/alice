@@ -58,7 +58,7 @@ has 'handlers' => (
       },
       {
         sub => 'topic',
-        re => qr{^/topic(?:\s+(.+))?},
+        re => qr{^/t(?:opic)?(?:\s+(.+))?},
         in_channel => 1,
         eg => "/TOPIC [<topic>]",
         desc => "Shows and/or changes the topic of the current channel.",
@@ -113,7 +113,7 @@ has 'handlers' => (
       },
       {
         sub => 'window',
-        re => qr{^/window\s+(\d+|next|prev(?:ious)?)},
+        re => qr{^/w(?:indow)?\s+(\d+|next|prev(?:ious)?)},
         eg => "/WINDOW <window number>",
         desc => "Focuses the provided window number",
       },
