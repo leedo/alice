@@ -22,8 +22,8 @@ has 'handlers' => (
       },
       {
         sub => 'nick',
-        re => qr{^/nick\s+(\S+)},
-        eg => "/NICK <new nick>",
+        re => qr{^/nick\s+$SRVOPT(\S+)},
+        eg => "/NICK [-<server name>] <new nick>",
         desc => "Changes your nick.",
       },
       {
@@ -162,7 +162,8 @@ sub handle {
 sub help {
   my ($self, $window, $command) = @_;
   if (!$command) {
-    $self->reply($window, "Available commands\n" . join " ", map {
+    $self->reply($window, '/HELP <command> for help with a specific command');
+    $self->reply($window, "Available commands: " . join " ", map {
       my $name = $_->{sub};
       $name =~ s/^_//;
       uc $name;
@@ -244,8 +245,15 @@ sub part {
 }
 
 sub nick {
-  my ($self, $window, $nick) = @_;
-  $window->irc->send_srv(NICK => $nick);
+  my ($self, $window, $nick, $network) = @_;
+  my $irc;
+  if ($network and $self->app->has_irc($network)) {
+    $irc = $self->app->get_irc($network);
+  } else {
+    $irc = $window->irc;
+  }
+  $irc->log(info => "now known as $nick");
+  $irc->send_srv(NICK => $nick);
 }
 
 sub create {
