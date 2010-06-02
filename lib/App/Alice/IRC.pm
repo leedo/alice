@@ -70,6 +70,7 @@ sub get_nick_info {$_[0]->nicks->{$_[1]}}
 sub all_nicks {keys %{$_[0]->nicks}}
 sub all_nick_info {values %{$_[0]->nicks}}
 sub set_nick_info {$_[0]->nicks->{$_[1]} = $_[2]}
+sub clear_nicks {$_[0]->nicks({})}
 
 has whois_cbs => (
   is        => 'rw',
@@ -314,6 +315,7 @@ sub disconnected {
   });
   
   $self->is_connected(0);
+  $self->clear_nicks;
   
   if ($self->app->shutting_down and !$self->app->connected_ircs) {
     $self->shutdown;
@@ -450,6 +452,9 @@ sub part {
   if ($is_self and my $window = $self->find_window($channel)) {
     $self->log(debug => "leaving $channel");
     $self->app->close_window($window);
+    for ($self->all_nick_info) {
+      delete $_->{channels}{$channel} if exists $_->{channels}{$channel};
+    }
   }
 }
 
