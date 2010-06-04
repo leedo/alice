@@ -20,6 +20,7 @@ requires 'JSON' => '2.12';
 requires 'File::ShareDir' => '0.01';
 requires 'File::Copy' => '0';
 test_requires 'Test::More' => '0.86';
+test_requires 'Test::TCP' => '0';
 install_share 'share';
 install_script 'bin/alice';
 no_index 'directory' => 'share/sprockets';
