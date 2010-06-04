@@ -1,13 +1,15 @@
 use Test::More;
 use App::Alice;
 use App::Alice::Test::NullHistory;
+use Test::TCP;
 
 my $history = App::Alice::Test::NullHistory->new;
 my $app = App::Alice->new(
   history => $history,
   standalone => 0,
   path => 't/alice',
-  file => "test_config"
+  file => "test_config",
+  port => empty_port(),
 );
 
 $app->add_irc_server("test", {
@@ -32,7 +34,7 @@ my $window_id = $app->_build_window_id("test-window", "test");
 ok $app->has_window($window_id), "window exists";
 ok $app->find_window("test-window", $irc), "find window by name";
 ok ref $app->get_window($window_id) eq "App::Alice::Window", "get window";
-is_deeply [$app->windows], [$info, $window], "window list";
+is_deeply [$app->sorted_windows], [$info, $window], "window list";
 
 $app->add_window("test-window2", {});
 ok $app->has_window("test-window2"), "manually add window";
