@@ -14,7 +14,7 @@ use File::Copy;
 use Digest::MD5 qw/md5_hex/;
 use Encode;
 
-our $VERSION = '0.14';
+our $VERSION = '0.15';
 
 has condvar => (
   is       => 'rw',
