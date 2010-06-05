@@ -3,10 +3,9 @@
 <html>
   <head>
     <title>Preferences</title>
-    <script type="text/javascript" src="/static/alice.js"></script>
-    <link type="text/css" rel="stylesheet" href="/static/site.css" />
+    <link type="text/css" rel="stylesheet" href="<?= $app->static_url("alice.css") ?>" />
     <!--[if !IE]>--> 
-    <link rel="stylesheet" href="/static/styles/iphone.css" type="text/css" 
+    <link rel="stylesheet" href="<?= $app->static_url("iphone.css") ?>" type="text/css" 
           media="only screen and (max-device-width: 480px)" /> 
     <!--<![endif]-->
     <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no" />
@@ -74,5 +73,6 @@
 		      </div>
 		    </form>
 		</div>
+    <script type="text/javascript" src="<?= $app->static_url("alice.js") ?>"></script>
 	</body>
 </html>
