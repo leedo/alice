@@ -2,8 +2,7 @@
 <html>
   <head>
     <title>Logs</title>
-    <link type="text/css" rel="stylesheet" href="/static/site.css" />
-    <script type="text/javascript" src="/static/alice.js"></script>
+    <link type="text/css" rel="stylesheet" href="<?= $app->static_url("alice.css") ?>" />
     <script type="text/javascript">
       sendQuery = function (form) {
         $('submit').value = "Searching...";
@@ -49,5 +48,6 @@
 </div>
 <ul id="logresults">
 </ul>
+  <script type="text/javascript" src="<?= $app->static_url("alice.js") ?>"></script>
 </body>
 </html>
