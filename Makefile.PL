@@ -27,34 +27,49 @@ no_index 'directory' => 'share/sprockets';
 
 postamble q{
 BUILD := share/static
-SOURCE := share/sprockets
+SOURCE := src
+JS_SOURCE := $(SOURCE)/js
+CSS_SOURCE := $(SOURCE)/css
 SPROCKETS := alice prototype scriptaculous shortcut iscroll
-INCLUDES := $(foreach sprocket,$(SPROCKETS),$(SOURCE)/$(sprocket)/src)
+INCLUDES := $(foreach sprocket,$(SPROCKETS),$(JS_SOURCE)/$(sprocket)/src)
 INCLUDE := $(foreach dir,$(INCLUDES),-I $(dir))
 JAVASCRIPT_SOURCES := $(foreach dir,$(INCLUDES),$(wildcard $(dir)/*.js))
 
+CAN_COMPRESS := `which yuicompressor`
+
+ALICE_CSS := $(CSS_SOURCE)/alice.css
+SITE_CSS := $(BUILD)/alice.css
+ALICE_JS := $(JS_SOURCE)/alice/src/alice.js
 SITE_JS := $(BUILD)/alice.js
-MIN_JS := $(BUILD)/alice-min.js
-ALICE_JS := $(SOURCE)/alice/src/alice.js
 
 define build_submodules
 	sh -c "git submodule init && git submodule update"
 endef
 
-javascript: $(SITE_JS) compressed
+clean_assets:
+	rm $(BUILD)/*.css
+	rm $(BUILD)/*.js
 
-$(SITE_JS): $(JAVASCRIPT_SOURCES) submodules
-	sprocketize $(INCLUDE) $(ALICE_JS) > $@
+assets: stylesheets javascript
+	yuicompressor $(SITE_CSS) > $(SITE_CSS)
+	yuicompressor $(BUILD)/iphone.css > $(BUILD)/iphone.css
+	yuicompressor $(SITE_JS) > $(SITE_JS)
+	yuicompressor $(BUILD)/site.js > $(BUILD)/site.js
+		
+stylesheets:
+	cp $(ALICE_CSS) $(SITE_CSS)
+	cp $(CSS_SOURCE)/iphone.css $(BUILD)/iphone.css
+  
+javascript: $(JAVASCRIPT_SOURCES) submodules
+	sprocketize $(INCLUDE) $(ALICE_JS) > $(SITE_JS)
+	cp $(JS_SOURCE)/site.js $(BUILD)/site.js
 
-compressed:
-	yuicompressor $(SITE_JS) > $(MIN_JS)
-
-$(SOURCE)/prototype/.git/refs/heads/master:
+$(JS_SOURCE)/prototype/.git/refs/heads/master:
 	$(build_submodules)
-$(SOURCE)/scriptaculous/.git/refs/heads/master:
+$(JS_SOURCE)/scriptaculous/.git/refs/heads/master:
 	$(build_submodules)
 
-submodules: $(SOURCE)/prototype/.git/refs/heads/master $(SOURCE)/scriptaculous/.git/refs/heads/master
+submodules: $(JS_SOURCE)/prototype/.git/refs/heads/master $(JS_SOURCE)/scriptaculous/.git/refs/heads/master
 };
 
 WriteAll;
