@@ -24,4 +24,37 @@ test_requires 'Test::TCP' => '0';
 install_share 'share';
 install_script 'bin/alice';
 no_index 'directory' => 'share/sprockets';
+
+postamble q{
+BUILD := share/static
+SOURCE := share/sprockets
+SPROCKETS := alice prototype scriptaculous shortcut iscroll
+INCLUDES := $(foreach sprocket,$(SPROCKETS),$(SOURCE)/$(sprocket)/src)
+INCLUDE := $(foreach dir,$(INCLUDES),-I $(dir))
+JAVASCRIPT_SOURCES := $(foreach dir,$(INCLUDES),$(wildcard $(dir)/*.js))
+
+SITE_JS := $(BUILD)/alice.js
+MIN_JS := $(BUILD)/alice-min.js
+ALICE_JS := $(SOURCE)/alice/src/alice.js
+
+define build_submodules
+	sh -c "git submodule init && git submodule update"
+endef
+
+javascript: $(SITE_JS) compressed
+
+$(SITE_JS): $(JAVASCRIPT_SOURCES) submodules
+	sprocketize $(INCLUDE) $(ALICE_JS) > $@
+
+compressed:
+	yuicompressor $(SITE_JS) > $(MIN_JS)
+
+$(SOURCE)/prototype/.git/refs/heads/master:
+	$(build_submodules)
+$(SOURCE)/scriptaculous/.git/refs/heads/master:
+	$(build_submodules)
+
+submodules: $(SOURCE)/prototype/.git/refs/heads/master $(SOURCE)/scriptaculous/.git/refs/heads/master
+};
+
 WriteAll;
