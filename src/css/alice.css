@@ -80,12 +80,21 @@ tr.input td {
   height: 20px;
   background: #efefef;
   border-bottom: 1px solid #999;
+  border-top: 1px solid #aaa;
 }
 
-tr.vert_dragger td {
-  height: 3px;
-  background: #efefef;
-  border-top: 1px solid #aaa;
+tr.input form {
+  display: block;
+  margin: 0;
+  padding: 0;
+  height: auto;
+  line-height: 0px;
+}
+
+tr.input div {
+  padding: 0 3px;
+  background: #fff;
+  margin: 3px 0;
 }
 
 tr.input textarea {

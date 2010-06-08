@@ -32,9 +32,7 @@ Alice.Window = Class.create({
         msg.innerHTML = application.applyFilters(msg.innerHTML);
       });
     }.bind(this), 1000);
-    if (navigator.userAgent.match(/Chrome/)) {
-      $$('tr.input textarea').invoke('setStyle', {padding: '3px'});
-    } else if (Prototype.Browser.Gecko) {
+    if (Prototype.Browser.Gecko) {
       this.resizeMessagearea();
       this.scrollToBottom();
     } else if (Prototype.Browser.MobileSafari) {
@@ -174,7 +172,7 @@ Alice.Window = Class.create({
   
   resizeMessagearea: function() {
     var top = this.messages.up().cumulativeOffset().top;
-    var bottom = this.input.element.getHeight() + 10;
+    var bottom = this.input.element.getHeight() + 14;
     this.messages.setStyle({
       position: 'absolute',
       top: top+"px",
