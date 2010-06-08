@@ -3,16 +3,15 @@
         </div>
       </td>
     </tr>
-    <tr class="vert_dragger">
-      <td id="<?= $window->id ?>_dragger"></td>
-    </tr>
     <tr class="input">
       <td id="<?= $window->id ?>_input">
+        <div>
         <form id="<?= $window->id ?>_form" autocomplete="off">
           <input type="hidden" name="source" value="<?= $window->id ?>" />
           <input type="submit" class="send" id="<?= $window->id ?>_submit" value="Send">
           <textarea name="msg" id="<?= $window->id ?>_msg" rows="1" autocapitalize="off"></textarea>
         </form>
+      </div>
       </td>
     </tr>
   </table>
