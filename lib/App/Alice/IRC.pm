@@ -2,6 +2,7 @@ package App::Alice::IRC;
 
 use AnyEvent;
 use AnyEvent::IRC::Client;
+use List::MoreUtils qw/uniq/;
 use Digest::MD5 qw/md5_hex/;
 use Any::Moose;
 use utf8;
@@ -282,12 +283,10 @@ sub registered {
     $self->send_raw($_);
   }
   
-  # merge auto-joined channel list with existing
-  # channels
-  my %channels = map {$_ => $_}
-    (@{$self->config->{channels}}, $self->channels);
+  # merge auto-joined channel list with existing channels
+  my @channels = uniq @{$self->config->{channels}}, $self->channels;
     
-  for (keys %channels) {
+  for (@channels) {
     push @log, "joining $_";
     $self->send_srv("JOIN", split /\s+/);
   }
