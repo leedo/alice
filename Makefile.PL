@@ -3,6 +3,7 @@ name 'App-Alice';
 perl_version '5.008';
 author 'Lee Aylward <leedo@cpan.org>';
 all_from 'lib/App/Alice.pm';
+requires 'List::MoreUtils' => '0';
 requires 'Any::Moose' => '0';
 requires 'Try::Tiny' => '0';
 requires 'AnyEvent' => '5.2';
