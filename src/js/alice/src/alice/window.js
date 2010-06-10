@@ -22,9 +22,11 @@ Alice.Window = Class.create({
     
     this.submit.observe("click", function (e) {this.input.send(); e.stop()}.bind(this));
     this.tab.observe("mousedown", function(e) {
-      if (!this.active) {this.focus(); this.active = false}}.bind(this));
-    this.tab.observe("click", function(e) {this.active = true}.bind(this));
-    this.tabButton.observe("click", function(e) {if (this.active) this.close()}.bind(this));
+      if (!this.active) {this.focus(); this.focusing = true}
+    }.bind(this));
+    this.tab.observe("click", function(e) {this.focusing = false}.bind(this));
+    this.tabButton.observe("click", function(e) {
+      if (this.active && !this.focusing) this.close()}.bind(this));
     this.messages.observe("mouseover", this.showNick.bind(this));
     this.scrollToBottom(true);
     setTimeout(function () {
