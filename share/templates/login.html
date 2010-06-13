@@ -1,4 +1,4 @@
-? my $app = shift;
+? my ($app, $error) = @_;
 <html>
   <head>
     <title>alice login</title>
@@ -30,6 +30,11 @@
         margin-bottom: 0;
         margin-top: 30px;
       }
+      .error {
+        color: #d00b0b;
+        display: block;
+        margin-top: 15px;
+      }
     </style>
   </head>
   <body>
@@ -41,6 +46,9 @@
       <input type="password" name="password" value="" id="password" />
       
       <input type="submit" value="Log in" />
+      <? if ($error) { ?>
+      <span class="error"><?= $error ?></span>
+      <? } ?>
     </form>
   </body>
 </html>
