@@ -129,9 +129,12 @@ sub login {
       $res->redirect("/");
       return $res->finalize;
     }
+    $res->body($self->app->render("login", "bad username or password"));
+  }
+  else {
+    $res->body($self->app->render("login"));
   }
   $res->status(200);
-  $res->body($self->app->render("login"));
   return $res->finalize;
 }
 
