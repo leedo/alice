@@ -380,7 +380,7 @@ sub add_irc_server {
 sub reload_config {
   my ($self, $new_config) = @_;
 
-  my %previous = map {$_ => $self->config->servers->{$_}{ircname} || ""}
+  my %prev = map {$_ => $self->config->servers->{$_}{ircname} || ""}
                  keys %{ $self->config->servers };
 
   if ($new_config) {
@@ -388,17 +388,17 @@ sub reload_config {
     $self->config->write;
   }
   
-  for my $irc (keys %{$self->config->servers}) {
-    if (!$self->has_irc($irc)) {
-      $self->add_irc_server(
-        $irc, $self->config->servers->{$irc}
-      );
+  for my $network (keys %{$self->config->servers}) {
+    my $config = $self->config->servers->{$network};
+    if (!$self->has_irc($network)) {
+      $self->add_irc_server($network, $config);
     }
     else {
-      if ($self->config->servers->{$irc}{ircname} ne $previous{$irc}) {
-        $self->get_irc($irc)->update_realname($self->config->servers->{$irc}{ircname});
+      my $irc = $self->get_irc($network);
+      if ($config->{ircname} ne $prev{$network}) {
+        $irc->update_realname($config->{ircname});
       }
-      $self->get_irc($irc)->config($self->config->servers->{$irc});
+      $irc->config($config);
     }
   }
   for my $irc ($self->ircs) {
