@@ -533,6 +533,12 @@ sub irc_352 {
     $info->{channels} = {
       %{$prev_info->{channels}},
       %{$info->{channels}},
+    };
+
+    if ($info->{real} ne $prev_info->{real}) {
+      for (grep {$_->previous_nick eq $nick} $self->windows) {
+        $_->reset_previous_nick;
+      }
     }
   }
   
