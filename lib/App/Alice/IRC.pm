@@ -608,5 +608,10 @@ sub whois_table {
          join " ", keys %{$info->{channels}};
 }
 
+sub update_realname {
+  my ($self, $realname) = @_;
+  $self->send_srv(REALNAME => $realname);
+}
+
 __PACKAGE__->meta->make_immutable;
 1;

@@ -380,9 +380,7 @@ sub save_config {
       $new_config->{$name} = $req->param($name);
     }
   }
-  $self->config->merge($new_config);
-  $self->app->reload_config();
-  $self->config->write;
+  $self->app->reload_config($new_config);
 
   $self->app->broadcast(
     $self->app->format_info("config", "saved")

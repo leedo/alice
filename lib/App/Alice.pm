@@ -378,7 +378,16 @@ sub add_irc_server {
 }
 
 sub reload_config {
-  my $self = shift;
+  my ($self, $new_config) = @_;
+
+  my %previous = map {$_ => $self->config->servers->{$_}{ircname} || ""}
+                 keys %{ $self->config->servers };
+
+  if ($new_config) {
+    $self->config->merge($new_config);
+    $self->config->write;
+  }
+  
   for my $irc (keys %{$self->config->servers}) {
     if (!$self->has_irc($irc)) {
       $self->add_irc_server(
@@ -386,6 +395,9 @@ sub reload_config {
       );
     }
     else {
+      if ($self->config->servers->{$irc}{ircname} ne $previous{$irc}) {
+        $self->get_irc($irc)->update_realname($self->config->servers->{$irc}{ircname});
+      }
       $self->get_irc($irc)->config($self->config->servers->{$irc});
     }
   }
