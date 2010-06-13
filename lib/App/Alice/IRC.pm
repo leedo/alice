@@ -412,7 +412,7 @@ sub _join {
   my ($self, $cl, $nick, $channel, $is_self) = @_;
   utf8::decode($_) for ($nick, $channel);
   if (!$self->includes_nick($nick)) {
-    $self->add_nick($nick, {nick => $nick, channels => {$channel => ''}}); 
+    $self->add_nick($nick, {nick => $nick, real => "", channels => {$channel => ''}}); 
   }
   else {
     $self->get_nick_info($nick)->{channels}{$channel} = '';
@@ -436,7 +436,7 @@ sub channel_add {
   if (my $window = $self->find_window($channel)) {
     for (@nicks) {
       if (!$self->includes_nick($_)) {
-        $self->add_nick($_, {nick => $_, channels => {$channel => ''}}); 
+        $self->add_nick($_, {nick => $_, real => "", channels => {$channel => ''}}); 
       }
       else {
         $self->get_nick_info($_)->{channels}{$channel} = '';
