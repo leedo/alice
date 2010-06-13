@@ -65,9 +65,9 @@ has 'handlers' => (
       },
       {
         sub => 'whois',
-        re => qr{^/whois\s+(\S+)},
-        eg => "/WHOIS <nick>",
-        desc => "Shows info about the specified nick.",
+        re => qr{^/whois(?:\s+(-force))?\s+(\S+)},
+        eg => "/WHOIS [-force] <nick>",
+        desc => "Shows info about the specified nick. Use -force option to refresh",
       },
       {
         sub => 'me',
@@ -187,8 +187,14 @@ sub names {
 }
 
 sub whois {
-  my ($self, $window, $nick) = @_;
-  if ($window->irc->includes_nick($nick)) {
+  my ($self, $window, @args) = @_;
+  my ($force, $nick);
+  if (@args > 1) {
+    ($nick, $force) = @args;
+  } else {
+    $nick = $args[0];
+  }
+  if (!$force and $window->irc->includes_nick($nick)) {
     $self->reply($window, $window->irc->whois_table($nick));
   }
   else {
