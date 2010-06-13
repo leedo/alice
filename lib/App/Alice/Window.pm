@@ -230,7 +230,7 @@ sub format_announcement {
     message => $msg,
   };
   $message->{html} = $self->app->render('announcement', $message);
-  $self->buffer->previous_nick('');
+  $self->reset_previous_nick;
   return $message;
 }
 
@@ -274,6 +274,16 @@ sub _format_nick_table {
   }
   push @rows, [@row] if @row;
   return join "\n", map {join " ", @$_} @rows;
+}
+
+sub reset_previous_nick {
+  my $self = shift;
+  $self->buffer->previous_nick("");
+}
+
+sub previous_nick {
+  my $self = shift;
+  return $self->buffer->previous_nick;
 }
 
 __PACKAGE__->meta->make_immutable;
