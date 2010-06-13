@@ -381,7 +381,7 @@ sub reload_config {
   my ($self, $new_config) = @_;
 
   my %prev = map {$_ => $self->config->servers->{$_}{ircname} || ""}
-                 keys %{ $self->config->servers };
+             keys %{ $self->config->servers };
 
   if ($new_config) {
     $self->config->merge($new_config);

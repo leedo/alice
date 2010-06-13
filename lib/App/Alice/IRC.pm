@@ -610,7 +610,12 @@ sub whois_table {
 
 sub update_realname {
   my ($self, $realname) = @_;
+  my $nick = $self->nick_cached;
   $self->send_srv(REALNAME => $realname);
+  $self->get_nick_info($nick)->{real} = $realname;
+  for (grep {$_->previous_nick eq $nick} $self->windows) {
+    $_->reset_previous_nick;
+  }
 }
 
 __PACKAGE__->meta->make_immutable;
