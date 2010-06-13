@@ -187,13 +187,7 @@ sub names {
 }
 
 sub whois {
-  my ($self, $window, @args) = @_;
-  my ($force, $nick);
-  if (@args > 1) {
-    ($nick, $force) = @args;
-  } else {
-    $nick = $args[0];
-  }
+  my ($self, $window, $nick, $force) = @_;
   if (!$force and $window->irc->includes_nick($nick)) {
     $self->reply($window, $window->irc->whois_table($nick));
   }
