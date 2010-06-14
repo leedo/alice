@@ -455,8 +455,8 @@ ul.messages li.announce div.msg ul.avatar_grid {
   white-space: normal;
 }
 ul.messages li.announce div.msg ul.avatar_grid li {
-  width: 42px;
-  height: 42px;
+  width: 50px;
+  height: 50px;
   float: left;
   margin: 0;
   padding: 0;
@@ -465,9 +465,10 @@ ul.messages li.announce div.msg ul.avatar_grid li {
   display: block;
   overflow: hidden;
   font-size: 10px;
+  text-overflow: ellipsis;
 }
 
-ul.messages li.announce div.msg ul.avatar_grid li div.noimg {
+ul.messages li.announce div.msg ul.avatar_grid li div.gridimg {
   width: 32px;
   height: 32px;
   margin: 0 auto;
