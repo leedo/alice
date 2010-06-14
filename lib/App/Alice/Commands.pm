@@ -28,10 +28,10 @@ has 'handlers' => (
       },
       {
         sub => 'names',
-        re => qr{^/n(?:ames)?},
+        re => qr{^/n(?:ames)?(?:\s(-a(?:vatars)?))?},
         in_channel => 1,
-        eg => "/NAMES",
-        desc => "Lists nicks in current channel.",
+        eg => "/NAMES [-avatars]",
+        desc => "Lists nicks in current channel. Pass the -avatars option to display avatars with the nicks.",
         
       },
       {
@@ -65,7 +65,7 @@ has 'handlers' => (
       },
       {
         sub => 'whois',
-        re => qr{^/whois(?:\s+(-force))?\s+(\S+)},
+        re => qr{^/whois(?:\s+(-f(?:orce)?))?\s+(\S+)},
         eg => "/WHOIS [-force] <nick>",
         desc => "Shows info about the specified nick. Use -force option to refresh",
       },
@@ -182,8 +182,8 @@ sub help {
 }
 
 sub names {
-  my ($self, $window) = @_;
-  $self->reply($window, $window->nick_table);
+  my ($self, $window, $avatars) = @_;
+  $self->reply($window, $window->nick_table($avatars));
 }
 
 sub whois {

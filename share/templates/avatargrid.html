@@ -1,0 +1,15 @@
+? my ($app, $window) = @_;
+
+<ul class="avatar_grid">
+? for my $nick ($window->all_nicks) {
+  <li>
+    <? my $avatar = $window->irc->nick_avatar($nick); ?>
+    <? if ($avatar) { ?>
+      <img src="<?= $avatar ?>" />
+    <? } else { ?>
+      <div class="noimg"></div>
+    <? } ?>
+    <span><?= $nick ?></span>
+  </li>
+? }
+</ul>
