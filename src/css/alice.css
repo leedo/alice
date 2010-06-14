@@ -498,28 +498,6 @@ ul#tabs li.disabled.channel_tab div.tab_button {
   background: url(image/roomTabDisabled.png);
 }
 
-div.autocomplete ul {
-  height: 1.6em;
-  position: absolute;
-  bottom: 20px;
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  border-top: 1px solid #ccc;
-  background: #fff;
-  font-size: 0.8em;
-}
-
-div.autocomplete ul li.selected { background-color: #ffb; text-decoration: underline;}
-
-div.autocomplete ul li {
-  float: left;
-  height: 1.2em;
-  margin: 0;
-  padding: 0.2em 5px;
-  border-right: 1px solid #ccc;
-}
-
 div#config {
   position: absolute;
   width: 480px;
