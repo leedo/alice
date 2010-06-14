@@ -126,7 +126,7 @@ sub nick {
 }
 
 sub all_nicks {
-  my ($self) = @_;
+  my $self = shift;
   return unless $self->is_channel;
   return $self->irc->channel_nicks($self->title);
 }
@@ -222,7 +222,8 @@ sub format_message {
 
 sub format_announcement {
   my ($self, $msg) = @_;
-  $msg = decode_utf8($msg) unless utf8::is_utf8($msg);
+  $msg = decode_utf8($msg) unless utf8::is_utf8($msg)
+          or ref $msg eq "Text::MicroTemplate::EncodedString";
   my $message = {
     type    => "message",
     event   => "announce",
@@ -230,6 +231,7 @@ sub format_announcement {
     message => $msg,
   };
   $message->{html} = $self->app->render('announcement', $message);
+  $message->{message} = "$message->{message}";
   $self->reset_previous_nick;
   return $message;
 }
@@ -245,8 +247,11 @@ sub close_action {
 }
 
 sub nick_table {
-  my $self = shift;
-  return _format_nick_table($self->all_nicks(1));
+  my ($self, $avatars) = @_;
+  if ($avatars) {
+    return encoded_string($self->app->render("avatargrid", $self));
+  }
+  return _format_nick_table($self->all_nicks);
 }
 
 sub make_links_clickable {

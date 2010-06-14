@@ -299,8 +299,8 @@ ul.messages li.avatar:not(.consecutive) {
 div.left img {
   border: 1px solid #fff;
   display: block;
-  width: 32px;
-  height: 32px;
+  max-width: 32px;
+  max-height: 32px;
   float: right;
 }
 
@@ -443,6 +443,43 @@ ul.messages li.event div.left {
 ul.messages li.announce div.msg {
   color: #777;
   white-space: pre-wrap;
+}
+
+ul.messages li.announce div.msg ul.avatar_grid {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  width: 100%;
+  overflow: hidden;
+  word-wrap: normal;
+  white-space: normal;
+}
+ul.messages li.announce div.msg ul.avatar_grid li {
+  width: 42px;
+  height: 42px;
+  float: left;
+  margin: 0;
+  padding: 0;
+  text-align: center;
+  clear: none;
+  display: block;
+  overflow: hidden;
+  font-size: 10px;
+}
+
+ul.messages li.announce div.msg ul.avatar_grid li div.noimg {
+  width: 32px;
+  height: 32px;
+  margin: 0 auto;
+}
+
+ul.messages li.announce div.msg ul.avatar_grid li img {
+  max-width: 32px;
+  max-height: 32px;
+  margin: 0 auto;
+  padding: 0;
+  position: relative;
+  display: block;
 }
 
 div.msg img.audio {
