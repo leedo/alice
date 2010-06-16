@@ -16,6 +16,8 @@ Alice.Input = Class.create({
     this.element.observe("cut", this.resize.bind(this));
     this.element.observe("paste", this.resize.bind(this));
     this.element.observe("change", this.resize.bind(this));
+
+    this.editor = WysiHat.Editor.attach(this.element);
   },
   
   onKeyPress: function(event) {
