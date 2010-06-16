@@ -97,7 +97,9 @@ tr.input div {
   margin: 3px 0;
 }
 
+tr.input div.editor,
 tr.input textarea {
+  line-height: 1em;
   width: 100%;
   padding: 3px 0;
   border: none;
