@@ -267,6 +267,14 @@ my $commands = [
     },
   },
   {
+    name => 'reload commands',
+    re => qr{^/reload commands$},
+    code => sub {
+      my ($self, $window) = @_;
+      $self->reload_handlers;
+    }
+  },
+  {
     name => 'help',
     re => qr{^/help(?:\s+(\S+))?},
     code => sub {
