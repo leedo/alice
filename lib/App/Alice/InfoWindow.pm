@@ -2,7 +2,7 @@ package App::Alice::InfoWindow;
 
 use Any::Moose;
 use Encode;
-use IRC::Formatting::HTML;
+use IRC::Formatting::HTML qw/irc_to_html/;
 use Text::MicroTemplate qw/encoded_string/;
 
 extends 'App::Alice::Window';
@@ -24,7 +24,7 @@ sub irc {
 
 sub format_message {
   my ($self, $from, $body, %options) = @_;
-  my $html = IRC::Formatting::HTML->formatted_string_to_html($body);
+  my $html = irc_to_html($body);
   my $message = {
     type   => "message",
     event  => "say",
