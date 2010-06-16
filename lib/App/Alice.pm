@@ -268,6 +268,11 @@ sub handle_command {
   $self->commands->handle($command, $window);
 }
 
+sub reload_commands {
+  my $self = shift;
+  $self->commands->reload_handlers;
+}
+
 sub merge_config {
   my ($self, $new_config) = @_;
   for my $newserver (values %$new_config) {
