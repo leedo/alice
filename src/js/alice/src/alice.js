@@ -11,6 +11,7 @@ var Alice = { };
 //= require <alice/application>
 //= require <alice/connection>
 //= require <alice/window>
+//= require <alice/toolbar>
 //= require <alice/input>
 //= require <alice/keyboard>
 //= require <alice/completion>

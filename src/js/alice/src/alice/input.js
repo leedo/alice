@@ -7,7 +7,7 @@ Alice.Input = Class.create({
 
     if (this.editor.readAttribute("contentEditable") == "true") {
       this.element = this.editor;
-      this.toolbar = new WysiHat.Toolbar(this.element)
+      this.toolbar = new Alice.Toolbar(this.element)
       this.toolbar.addButtonSet(WysiHat.Toolbar.ButtonSets.Basic);
       var input = new Element("input", {type: "hidden", name: "html", value: 1});
       this.textarea.form.appendChild(input);
