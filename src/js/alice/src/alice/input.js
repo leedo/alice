@@ -32,10 +32,7 @@ Alice.Input = Class.create({
   },
 
   setValue: function(value) {
-    if (this.editor) {
-      this.editor.update(value);
-    }
-    this.textarea.setValue(value);
+    this.editor ? this.editor.update(value) : this.textarea.setValue(value);
   },
 
   getValue: function() {
@@ -61,17 +58,23 @@ Alice.Input = Class.create({
       return;
     }
 
-    this.element.focus();
     this.focused = true;
 
-    // hack to focus an empty editor...
-    if (this.editor && this.editor.innerHTML == "") {
-      this.editor.appendChild(document.createTextNode(""));
-      window.getSelection().selectNode(this.editor.childNodes[0]);
+    // hack to focus the end of editor...
+    if (this.editor) {
+      var text = document.createTextNode("");
+      this.editor.appendChild(text);
+      window.getSelection().selectNode(text);
+    } else {
+      this.element.focus();
     }
   },
   
-  onBlur: function() {
+  onBlur: function(e) {
+    // clicking the toolbar fires a blur event but does not
+    // unfocus the editor, so ignore that
+    if (e.findElement("div.editor")) this.skipThisFocus = true;
+
     this.focused = false;
   },
   
