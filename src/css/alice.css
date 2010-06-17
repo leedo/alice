@@ -129,15 +129,24 @@ tr.input div.editor_toolbar {
   z-index: 900;
 }
 
-tr.input div.editor_toolbar a.button {
+tr.input div.editor_toolbar button {
   visibility: hidden;
+  text-shadow: rgba( 0, 0, 0, .3 ) 0 1px 1px;
   display: block;
   float: left;
   color: #fff;
   text-decoration: none;
   line-height: 10px;
   font-size: 11px;
-  padding: 6px 3px;
+  padding: 4px 3px;
+  text-align: center;
+  background: none;
+  cursor: pointer;
+  border: none;
+}
+
+tr.input div.editor_toolbar button.selected {
+  color: yellow;
 }
 
 .bold {font-weight: bold;}
@@ -149,7 +158,7 @@ tr.input div.editor_toolbar:hover {
   background: rgba(0,0,0,0.7);
   width: auto;
 }
-tr.input div.editor_toolbar:hover a.button{
+tr.input div.editor_toolbar:hover button{
   visibility: visible;
 }
 
