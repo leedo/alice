@@ -4,7 +4,16 @@ Alice.Input = Class.create({
     this.application = this.window.application;
     this.textarea = $(element);
     this.editor = WysiHat.Editor.attach(this.textarea);
-    this.element = this.editor ? this.editor : this.textarea;
+
+    if (this.editor.readAttribute("contentEditable") == "true") {
+      this.element = this.editor;
+      this.toolbar = new WysiHat.Toolbar(this.element)
+      this.toolbar.addButtonSet(WysiHat.Toolbar.ButtonSets.Basic);
+      var input = new Element("input", {type: "hidden", name: "html", value: 1});
+      this.textarea.form.appendChild(input);
+    } else {
+      this.element = this.textarea;
+    }
 
     this.history = [];
     this.index = -1;
