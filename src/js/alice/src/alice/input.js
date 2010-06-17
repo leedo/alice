@@ -54,6 +54,12 @@ Alice.Input = Class.create({
 
     this.element.focus();
     this.focused = true;
+
+    // hack to focus an empty editor...
+    if (this.editor && this.editor.innerHTML == "") {
+      this.editor.appendChild(document.createTextNode(""));
+      window.getSelection().selectNode(this.editor.childNodes[0]);
+    }
   },
   
   onBlur: function() {
@@ -87,6 +93,7 @@ Alice.Input = Class.create({
     this.application.connection.sendMessage(this.textarea.form);
     this.history.push(this.getValue());
     this.setValue("");
+    if (this.editor) this.editor.update();
     this.index = -1;
     this.stash();
     this.update();
