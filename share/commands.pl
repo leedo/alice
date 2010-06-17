@@ -254,7 +254,7 @@ my $commands = [
   },
   {
     name => 'window',
-    re => qr{^/w(?:indow)?\s+(\d+|next|prev(?:ious)?)},
+    re => qr{^/w(?:indow)?\s*(\d+|next|prev(?:ious)?)},
     eg => "/WINDOW <window number>",
     desc => "Focuses the provided window number",
     code => sub  {
