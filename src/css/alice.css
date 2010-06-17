@@ -99,7 +99,8 @@ tr.input div {
 
 tr.input div.editor,
 tr.input textarea {
-  line-height: 1em;
+  line-height: 1.2em;
+  min-height: 1.2em;
   width: 100%;
   padding: 3px 0;
   border: none;
@@ -109,6 +110,16 @@ tr.input textarea {
   overflow: hidden;
   resize: none;
   font-family: "Lucida Grande", Helvetica, sans-serif;
+}
+
+div.editor {
+  white-space: pre-wrap;
+  -khtml-nbsp-mode: space;
+}
+
+div.editor div {
+  margin: 0;
+  padding: 0;
 }
 
 tr.input input.send {

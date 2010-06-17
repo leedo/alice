@@ -2,7 +2,10 @@ Alice.Input = Class.create({
   initialize: function(win, element) {
     this.window = win;
     this.application = this.window.application;
-    this.element = $(element);
+    this.textarea = $(element);
+    this.editor = WysiHat.Editor.attach(this.textarea);
+    this.element = this.editor ? this.editor : this.textarea;
+
     this.history = [];
     this.index = -1;
     this.buffer = "";
@@ -17,9 +20,22 @@ Alice.Input = Class.create({
     this.element.observe("paste", this.resize.bind(this));
     this.element.observe("change", this.resize.bind(this));
 
-    this.editor = WysiHat.Editor.attach(this.element);
   },
-  
+
+  setValue: function(value) {
+    if (this.editor) {
+      this.editor.update(value);
+    }
+    this.textarea.setValue(value);
+  },
+
+  getValue: function() {
+    if (this.editor) {
+      return this.editor.innerHTML;
+    }
+    return this.textarea.getValue();
+  },
+
   onKeyPress: function(event) {
     if (event.keyCode != Event.KEY_TAB) {
       this.completion = false;
@@ -35,7 +51,7 @@ Alice.Input = Class.create({
       this.skipThisFocus = false;
       return;
     }
-    
+
     this.element.focus();
     this.focused = true;
   },
@@ -68,17 +84,18 @@ Alice.Input = Class.create({
   },
   
   send: function() {
-    this.application.connection.sendMessage(this.element.form);
-    this.history.push(this.element.getValue());
-    this.element.setValue("");
+    this.application.connection.sendMessage(this.textarea.form);
+    this.history.push(this.getValue());
+    this.setValue("");
     this.index = -1;
     this.stash();
     this.update();
+    this.focus();
   },
   
   completeNickname: function() {
     if (!this.completion) {
-      this.completion = new Alice.Completion(this.element, this.window.getNicknames());
+      this.completion = new Alice.Completion(this, this.window.getNicknames());
     }
 
     this.completion.next();
@@ -92,11 +109,11 @@ Alice.Input = Class.create({
   },
 
   stash: function() {
-    this.buffer = this.element.getValue();
+    this.buffer = this.getValue();
   },
   
   update: function() {
-    this.element.setValue(this.getCommand(this.index));
+    this.setValue(this.getCommand(this.index));
   },
   
   getCommand: function(index) {
@@ -108,6 +125,9 @@ Alice.Input = Class.create({
   },
   
   resize: function() {
+    if (this.editor) {
+      this.textarea.setValue(this.editor.innerHTML);
+    }
     (function() {
       if (!this.window.active) return;
       var height = this.getContentHeight();
@@ -132,7 +152,7 @@ Alice.Input = Class.create({
       wordWrap:   "break-word"
     });
 
-    var value = this.element.getValue().escapeHTML();
+    var value = this.getValue();
     element.update(value.replace(/\n$/, "\n\n").replace("\n", "<br>"));
     $(document.body).insert(element);
 

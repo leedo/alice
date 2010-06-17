@@ -1,8 +1,11 @@
 Alice.Completion = Class.create({
-  initialize: function(element, candidates) {
-    this.element = $(element);
-    this.value = this.element.getValue();
-    this.index = this.element.selectionStart;
+  initialize: function(input, candidates) {
+    this.input = input;
+    this.element = this.input.editor;
+    this.value = this.input.getValue();
+    
+    var range = window.getSelection().getRangeAt(0);
+    this.index = range.startOffset;
     this.findStem();
     this.matches = this.matchAgainst(candidates);
     this.matchIndex = -1;
@@ -18,13 +21,18 @@ Alice.Completion = Class.create({
   },
   
   restore: function(stem, index) {
-    this.element.setValue(this.stemLeft + (stem || this.stem) + this.stemRight);
+    this.input.setValue(this.stemLeft + (stem || this.stem) + this.stemRight);
     this.setCursorToIndex(Object.isUndefined(index) ? this.index : index);
   },
   
   setCursorToIndex: function(index) {
-    this.element.selectionStart = index;
-    this.element.selectionEnd = index;
+    var selection = window.getSelection();
+    var range = selection.getRangeAt(0);
+    var container = range.startContainer;
+    range.setStart(container, index);
+    range.setEnd(container, index);
+    selection.removeAllRanges();
+    selection.addRange(range);
   },
 
   findStem: function() {
@@ -41,7 +49,7 @@ Alice.Completion = Class.create({
       if (!Alice.Completion.PATTERN.test(chr)) break;
       right.push(chr);
     }
-    
+
     this.stem = left.concat(right).join("");
     this.stemLeft  = this.value.substr(0, this.index - left.length);
     this.stemRight = this.value.substr(this.index + right.length);
