@@ -27,12 +27,14 @@ Alice.Completion = Class.create({
   
   setCursorToIndex: function(index) {
     var selection = window.getSelection();
-    var range = selection.getRangeAt(0);
-    var container = range.startContainer;
-    range.setStart(container, index);
-    range.setEnd(container, index);
-    selection.removeAllRanges();
-    selection.addRange(range);
+    if (selection.rangeCount > 0) {
+      var range = selection.getRangeAt(0);
+      var container = range.startContainer;
+      range.setStart(container, index);
+      range.setEnd(container, index);
+      selection.removeAllRanges();
+      selection.addRange(range);
+    }
   },
 
   findStem: function() {
