@@ -61,12 +61,14 @@ Alice.Input = Class.create({
     this.skipThisFocus = false;
   },
   
-  focus: function() {
-    if (this.focused) return;
+  focus: function(force) {
+    if (!force) {
+      if (this.focused) return;
 
-    if (this.skipThisFocus) {
-      this.skipThisFocus = false;
-      return;
+      if (this.skipThisFocus) {
+        this.skipThisFocus = false;
+        return;
+      }
     }
 
     this.focused = true;
@@ -116,8 +118,7 @@ Alice.Input = Class.create({
     this.index = -1;
     this.stash();
     this.update();
-    this.uncancelNextFocus();
-    this.focus();
+    this.focus(1);
   },
   
   completeNickname: function() {
