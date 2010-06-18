@@ -1,18 +1,22 @@
 Alice.Input = Class.create({
   initialize: function(win, element) {
-    if (!this.canContentEditable) return;
 
     this.window = win;
     this.application = this.window.application;
     this.textarea = $(element);
-    this.editor = WysiHat.Editor.attach(this.textarea);
 
-    this.element = this.editor;
-    this.toolbar = new Alice.Toolbar(this.element)
-    this.toolbar.addButtonSet(WysiHat.Toolbar.ButtonSets.Basic);
-    this.toolbar.element.on("mousedown", "button", this.cancelNextFocus.bind(this));
-    var input = new Element("input", {type: "hidden", name: "html", value: 1});
-    this.textarea.form.appendChild(input);
+    if (this.canContentEditable()) {
+      this.editor = WysiHat.Editor.attach(this.textarea);
+      this.element = this.editor;
+      this.toolbar = new Alice.Toolbar(this.element)
+      this.toolbar.addButtonSet(WysiHat.Toolbar.ButtonSets.Basic);
+      this.toolbar.element.on("mousedown", "button", this.cancelNextFocus.bind(this));
+      this.element.observe("keyup", this.onKeyUp.bind(this));
+      var input = new Element("input", {type: "hidden", name: "html", value: 1});
+      this.textarea.form.appendChild(input);
+    } else {
+      this.element = this.textarea;
+    }
 
     this.history = [];
     this.index = -1;
@@ -20,10 +24,8 @@ Alice.Input = Class.create({
     this.completion = false;
     this.focused = false;
     
-    this.element.observe("keyup", this.onKeyUp.bind(this));
     this.element.observe("keypress", this.onKeyPress.bind(this));
     this.element.observe("blur", this.onBlur.bind(this));
-    
     this.element.observe("keydown", this.resize.bind(this));
     this.element.observe("cut", this.resize.bind(this));
     this.element.observe("paste", this.resize.bind(this));
@@ -186,6 +188,6 @@ Alice.Input = Class.create({
 
   canContentEditable: function () {
     var element = new Element("div", {contentEditable: "true"});
-    return !! element.contentEditable == "true";
+    return element.contentEditable == "true" && ! Prototype.Browser.MobileSafari;
   }
 });
