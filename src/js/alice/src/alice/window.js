@@ -53,6 +53,7 @@ Alice.Window = Class.create({
     this.element.removeClassName('active');
     this.tab.removeClassName('active');
     this.tabOverflowButton.selected = false;
+    this.input.uncancelNextFocus();
   },
 
   showNick: function (e) {
