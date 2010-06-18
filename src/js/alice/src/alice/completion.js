@@ -1,16 +1,35 @@
 Alice.Completion = Class.create({
-  initialize: function(input, candidates) {
-    this.input = input;
-    this.element = this.input.editor;
-    this.value = this.input.getValue();
-    
-    var range = window.getSelection().getRangeAt(0);
+  initialize: function(candidates) {
+    var range = this.getRange();
+    if (!range) return;
+
+    this.element = range.startContainer;
+    this.value = this.element.data;
     this.index = range.startOffset;
+
     this.findStem();
     this.matches = this.matchAgainst(candidates);
     this.matchIndex = -1;
   },
   
+  getRange: function() {
+    var selection = window.getSelection();
+    if (selection.rangeCount > 0) {
+      return selection.getRangeAt(0);
+    }
+    if (document.createRange) {
+      return document.createRange();
+    }
+    return null;
+  },
+
+  setRange: function(range) {
+    if (!range) return;
+    var selection = window.getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
+  },
+
   next: function() {
     if (!this.matches.length) return;
     if (++this.matchIndex == this.matches.length) this.matchIndex = 0;
@@ -21,20 +40,15 @@ Alice.Completion = Class.create({
   },
   
   restore: function(stem, index) {
-    this.input.setValue(this.stemLeft + (stem || this.stem) + this.stemRight);
+    this.element.data = this.stemLeft + (stem || this.stem) + this.stemRight;
     this.setCursorToIndex(Object.isUndefined(index) ? this.index : index);
   },
   
   setCursorToIndex: function(index) {
-    var selection = window.getSelection();
-    if (selection.rangeCount > 0) {
-      var range = selection.getRangeAt(0);
-      var container = range.startContainer;
-      range.setStart(container, index);
-      range.setEnd(container, index);
-      selection.removeAllRanges();
-      selection.addRange(range);
-    }
+    var range = this.getRange();
+    range.setStart(this.element, index);
+    range.setEnd(this.element, index);
+    this.setRange(range);
   },
 
   findStem: function() {
