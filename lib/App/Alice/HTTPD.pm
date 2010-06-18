@@ -9,6 +9,8 @@ use Plack::Builder;
 use Plack::Middleware::Static;
 use Plack::Session::Store::File;
 
+use IRC::Formatting::HTML qw/html_to_irc/;
+
 use App::Alice::Stream;
 use App::Alice::Commands;
 
@@ -237,7 +239,9 @@ sub purge_disconnects {
 sub handle_message {
   my ($self, $req) = @_;
   my $msg  = $req->param('msg');
+  my $is_html = $req->param('html');
   utf8::decode($msg);
+  $msg = html_to_irc($msg) if $is_html;
   my $source = $req->param('source');
   my $window = $self->app->get_window($source);
   if ($window) {

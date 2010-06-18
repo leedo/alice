@@ -4,7 +4,7 @@ use Encode;
 use utf8;
 use App::Alice::MessageBuffer;
 use Text::MicroTemplate qw/encoded_string/;
-use IRC::Formatting::HTML;
+use IRC::Formatting::HTML qw/irc_to_html/;
 use Any::Moose;
 
 has type => (
@@ -196,7 +196,7 @@ sub format_event {
 sub format_message {
   my ($self, $nick, $body) = @_;
   $body = decode_utf8($body) unless utf8::is_utf8($body);
-  my $html = IRC::Formatting::HTML->formatted_string_to_html($body);
+  my $html = irc_to_html($body);
   $html = make_links_clickable($html);
   my $own_nick = $self->nick;
   my $message = {

@@ -61,8 +61,10 @@ if (window == window.parent) {
     // setup window events
     
     window.onkeydown = function (e) {
-      if (alice.activeWindow() && !$('config') && !Alice.isSpecialKey(e.which))
-        alice.activeWindow().input.focus()};
+      var win = alice.activeWindow();
+      if (win && !$('config') && !Alice.isSpecialKey(e.which))
+        win.input.focus();
+    };
     
     window.onresize = function () {
       if (alice.activeWindow()) {

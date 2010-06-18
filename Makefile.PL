@@ -15,7 +15,7 @@ requires 'Plack::Session' => '0';
 requires 'DBD::SQLite' => '0';
 requires 'SQL::Abstract' => '0';
 requires 'AnyEvent::DBI' => '0';
-requires 'IRC::Formatting::HTML' => '0.17';
+requires 'IRC::Formatting::HTML' => '0.21';
 requires 'Text::MicroTemplate' => '0.09';
 requires 'JSON' => '2.12';
 requires 'File::ShareDir' => '0.01';
@@ -31,7 +31,7 @@ BUILD := share/static
 SOURCE := src
 JS_SOURCE := $(SOURCE)/js
 CSS_SOURCE := $(SOURCE)/css
-SPROCKETS := alice prototype scriptaculous shortcut iscroll
+SPROCKETS := alice prototype scriptaculous shortcut iscroll wysihat
 INCLUDES := $(foreach sprocket,$(SPROCKETS),$(JS_SOURCE)/$(sprocket)/src)
 INCLUDE := $(foreach dir,$(INCLUDES),-I $(dir))
 JAVASCRIPT_SOURCES := $(foreach dir,$(INCLUDES),$(wildcard $(dir)/*.js))
@@ -70,7 +70,7 @@ $(JS_SOURCE)/prototype/.git/refs/heads/master:
 $(JS_SOURCE)/scriptaculous/.git/refs/heads/master:
 	$(build_submodules)
 
-submodules: $(JS_SOURCE)/prototype/.git/refs/heads/master $(JS_SOURCE)/scriptaculous/.git/refs/heads/master
+submodules: $(JS_SOURCE)/prototype/.git/refs/heads/master $(JS_SOURCE)/scriptaculous/.git/refs/heads/master $(JS_SOURCE)/wysihat/.git/refs/heads/master
 };
 
 WriteAll;
