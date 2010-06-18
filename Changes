@@ -1,3 +1,11 @@
+0.16  Fri 18 Jun 2010
+        - Added basic wysiwyg input field
+        - Reload commands without restarting
+        - Added /names -avatars to view a grid of
+          nicks and avatars in the channel
+        - Added support for REALNAME command
+          (only works on hector irc server)
+
 0.15  Thu 03 Jun 2010
         - Added a help dialog
         - Added a preferences window that allows:

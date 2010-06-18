@@ -119,6 +119,7 @@ Alice.Input = Class.create({
     this.index = -1;
     this.stash();
     this.update();
+    this.uncancelNextFocus();
     this.focus();
   },
   
