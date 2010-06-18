@@ -5,13 +5,14 @@ Alice.Input = Class.create({
     this.textarea = $(element);
     this.editor = WysiHat.Editor.attach(this.textarea);
 
-    if (this.editor.readAttribute("contentEditable") == "true") {
+    if (this.editor.contentEditable == "true") {
       this.element = this.editor;
       this.toolbar = new Alice.Toolbar(this.element)
       this.toolbar.addButtonSet(WysiHat.Toolbar.ButtonSets.Basic);
       var input = new Element("input", {type: "hidden", name: "html", value: 1});
       this.textarea.form.appendChild(input);
     } else {
+      this.editor.remove();
       this.element = this.textarea;
     }
 
@@ -66,14 +67,14 @@ Alice.Input = Class.create({
       this.editor.appendChild(text);
       window.getSelection().selectNode(text);
     } else {
-      this.element.focus();
+      this.textarea.focus();
     }
   },
   
   onBlur: function(e) {
     // clicking the toolbar fires a blur event but does not
     // unfocus the editor, so ignore that
-    if (e.findElement("div.editor")) this.skipThisFocus = true;
+    if (e.findElement("div.editor")) this.cancelNextFocus();
 
     this.focused = false;
   },
