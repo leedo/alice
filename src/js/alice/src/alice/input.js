@@ -115,7 +115,7 @@ Alice.Input = Class.create({
   
   completeNickname: function() {
     if (!this.completion) {
-      this.completion = new Alice.Completion(this, this.window.getNicknames());
+      this.completion = new Alice.Completion(this.window.getNicknames());
     }
 
     this.completion.next();
