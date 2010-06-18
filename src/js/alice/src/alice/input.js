@@ -1,8 +1,23 @@
 Alice.Input = Class.create({
   initialize: function(win, element) {
+
     this.window = win;
     this.application = this.window.application;
-    this.element = $(element);
+    this.textarea = $(element);
+
+    if (this.canContentEditable()) {
+      this.editor = WysiHat.Editor.attach(this.textarea);
+      this.element = this.editor;
+      this.toolbar = new Alice.Toolbar(this.element)
+      this.toolbar.addButtonSet(WysiHat.Toolbar.ButtonSets.Basic);
+      this.toolbar.element.on("mousedown", "button", this.cancelNextFocus.bind(this));
+      this.element.observe("keyup", this.onKeyUp.bind(this));
+      var input = new Element("input", {type: "hidden", name: "html", value: 1});
+      this.textarea.form.appendChild(input);
+    } else {
+      this.element = this.textarea;
+    }
+
     this.history = [];
     this.index = -1;
     this.buffer = "";
@@ -11,13 +26,28 @@ Alice.Input = Class.create({
     
     this.element.observe("keypress", this.onKeyPress.bind(this));
     this.element.observe("blur", this.onBlur.bind(this));
-    
     this.element.observe("keydown", this.resize.bind(this));
     this.element.observe("cut", this.resize.bind(this));
     this.element.observe("paste", this.resize.bind(this));
     this.element.observe("change", this.resize.bind(this));
+
   },
-  
+
+  setValue: function(value) {
+    this.editor ? this.editor.update(value) : this.textarea.setValue(value);
+  },
+
+  getValue: function() {
+    if (this.editor) {
+      return this.editor.innerHTML;
+    }
+    return this.textarea.getValue();
+  },
+
+  onKeyUp: function(event) {
+    this.cancelNextFocus();
+  },
+
   onKeyPress: function(event) {
     if (event.keyCode != Event.KEY_TAB) {
       this.completion = false;
@@ -27,18 +57,30 @@ Alice.Input = Class.create({
   cancelNextFocus: function() {
     this.skipThisFocus = true;
   },
+
+  uncancelNextFocus: function() {
+    this.skipThisFocus = false;
+  },
   
   focus: function() {
     if (this.skipThisFocus) {
       this.skipThisFocus = false;
       return;
     }
-    
-    this.element.focus();
+
     this.focused = true;
+
+    // hack to focus the end of editor...
+    if (this.editor) {
+      var text = document.createTextNode("");
+      this.editor.appendChild(text);
+      window.getSelection().selectNode(text);
+    } else {
+      this.textarea.focus();
+    }
   },
   
-  onBlur: function() {
+  onBlur: function(e) {
     this.focused = false;
   },
   
@@ -66,17 +108,19 @@ Alice.Input = Class.create({
   },
   
   send: function() {
-    this.application.connection.sendMessage(this.element.form);
-    this.history.push(this.element.getValue());
-    this.element.setValue("");
+    this.application.connection.sendMessage(this.textarea.form);
+    this.history.push(this.getValue());
+    this.setValue("");
+    if (this.editor) this.editor.update();
     this.index = -1;
     this.stash();
     this.update();
+    this.focus();
   },
   
   completeNickname: function() {
     if (!this.completion) {
-      this.completion = new Alice.Completion(this.element, this.window.getNicknames());
+      this.completion = new Alice.Completion(this.window.getNicknames());
     }
 
     this.completion.next();
@@ -90,11 +134,11 @@ Alice.Input = Class.create({
   },
 
   stash: function() {
-    this.buffer = this.element.getValue();
+    this.buffer = this.getValue();
   },
   
   update: function() {
-    this.element.setValue(this.getCommand(this.index));
+    this.setValue(this.getCommand(this.index));
   },
   
   getCommand: function(index) {
@@ -106,6 +150,9 @@ Alice.Input = Class.create({
   },
   
   resize: function() {
+    if (this.editor) {
+      this.textarea.setValue(this.editor.innerHTML);
+    }
     (function() {
       if (!this.window.active) return;
       var height = this.getContentHeight();
@@ -130,12 +177,17 @@ Alice.Input = Class.create({
       wordWrap:   "break-word"
     });
 
-    var value = this.element.getValue().escapeHTML();
+    var value = this.getValue();
     element.update(value.replace(/\n$/, "\n\n").replace("\n", "<br>"));
     $(document.body).insert(element);
 
     var height = element.getHeight();
     element.remove();
     return height;
+  },
+
+  canContentEditable: function () {
+    var element = new Element("div", {contentEditable: "true"});
+    return element.contentEditable != "true" && ! Prototype.Browser.MobileSafari;
   }
 });

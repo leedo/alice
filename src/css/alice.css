@@ -95,9 +95,13 @@ tr.input div {
   padding: 0 3px;
   background: #fff;
   margin: 3px 0;
+  position: relative;
 }
 
+tr.input div.editor,
 tr.input textarea {
+  line-height: 1.2em;
+  min-height: 1.2em;
   width: 100%;
   padding: 3px 0;
   border: none;
@@ -107,6 +111,60 @@ tr.input textarea {
   overflow: hidden;
   resize: none;
   font-family: "Lucida Grande", Helvetica, sans-serif;
+}
+
+div.editor {
+  white-space: pre-wrap;
+  -khtml-nbsp-mode: space;
+}
+
+tr.input div.editor_toolbar {
+  position: absolute;
+  right: 2px;
+  top: -4px;
+  width: 18px;
+  height: 22px;
+  -webkit-border-radius: 3px;
+  background: rgba(0,0,0,0);
+  z-index: 900;
+}
+
+tr.input div.editor_toolbar button {
+  visibility: hidden;
+  text-shadow: rgba( 0, 0, 0, .3 ) 0 1px 1px;
+  display: block;
+  float: left;
+  color: #fff;
+  text-decoration: none;
+  line-height: 10px;
+  font-size: 11px;
+  padding: 4px 3px;
+  text-align: center;
+  background: none;
+  cursor: pointer;
+  border: none;
+}
+
+tr.input div.editor_toolbar button.selected {
+  color: yellow;
+}
+
+.bold {font-weight: bold;}
+.italic {font-style: italic;}
+.underline {text-decoration: underline;}
+
+
+tr.input div.editor_toolbar:hover {
+  background: rgba(0,0,0,0.7);
+  width: auto;
+}
+tr.input div.editor_toolbar:hover button{
+  visibility: visible;
+}
+
+div.editor div {
+  margin: 0;
+  padding: 0;
 }
 
 tr.input input.send {
