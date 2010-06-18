@@ -3,8 +3,6 @@ Alice.Keyboard = Class.create({
     this.application = application;
     this.enable();
     
-    this.shortcut("Cmd+C", { propagate: true });
-    this.shortcut("Ctrl+C", { propagate: true });
     this.shortcut("Cmd+K");
     this.shortcut("Cmd+B");
     this.shortcut("Cmd+F");
@@ -30,16 +28,6 @@ Alice.Keyboard = Class.create({
         delete this.activeWindow;
       }
     }.bind(this), options);
-  },
-  
-  onCmdC: function(event) {
-    if (!this.activeWindow.input.focused) {
-      this.activeWindow.input.cancelNextFocus();
-    }
-  },
-  
-  onCtrlC: function(event) {
-    this.onCmdC(event);
   },
 
   onCmdK: function() {

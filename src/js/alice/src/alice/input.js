@@ -1,20 +1,18 @@
 Alice.Input = Class.create({
   initialize: function(win, element) {
+    if (!this.canContentEditable) return;
+
     this.window = win;
     this.application = this.window.application;
     this.textarea = $(element);
     this.editor = WysiHat.Editor.attach(this.textarea);
 
-    if (this.editor.contentEditable == "true") {
-      this.element = this.editor;
-      this.toolbar = new Alice.Toolbar(this.element)
-      this.toolbar.addButtonSet(WysiHat.Toolbar.ButtonSets.Basic);
-      var input = new Element("input", {type: "hidden", name: "html", value: 1});
-      this.textarea.form.appendChild(input);
-    } else {
-      this.editor.remove();
-      this.element = this.textarea;
-    }
+    this.element = this.editor;
+    this.toolbar = new Alice.Toolbar(this.element)
+    this.toolbar.addButtonSet(WysiHat.Toolbar.ButtonSets.Basic);
+    this.toolbar.element.on("mousedown", "button", this.cancelNextFocus.bind(this));
+    var input = new Element("input", {type: "hidden", name: "html", value: 1});
+    this.textarea.form.appendChild(input);
 
     this.history = [];
     this.index = -1;
@@ -22,6 +20,7 @@ Alice.Input = Class.create({
     this.completion = false;
     this.focused = false;
     
+    this.element.observe("keyup", this.onKeyUp.bind(this));
     this.element.observe("keypress", this.onKeyPress.bind(this));
     this.element.observe("blur", this.onBlur.bind(this));
     
@@ -43,6 +42,10 @@ Alice.Input = Class.create({
     return this.textarea.getValue();
   },
 
+  onKeyUp: function(event) {
+    this.cancelNextFocus();
+  },
+
   onKeyPress: function(event) {
     if (event.keyCode != Event.KEY_TAB) {
       this.completion = false;
@@ -51,6 +54,10 @@ Alice.Input = Class.create({
   
   cancelNextFocus: function() {
     this.skipThisFocus = true;
+  },
+
+  uncancelNextFocus: function() {
+    this.skipThisFocus = false;
   },
   
   focus: function() {
@@ -72,10 +79,6 @@ Alice.Input = Class.create({
   },
   
   onBlur: function(e) {
-    // clicking the toolbar fires a blur event but does not
-    // unfocus the editor, so ignore that
-    if (e.findElement("div.editor")) this.cancelNextFocus();
-
     this.focused = false;
   },
   
@@ -179,5 +182,10 @@ Alice.Input = Class.create({
     var height = element.getHeight();
     element.remove();
     return height;
+  },
+
+  canContentEditable: function () {
+    var element = new Element("div", {contentEditable: "true"});
+    return !! element.contentEditable == "true";
   }
 });
