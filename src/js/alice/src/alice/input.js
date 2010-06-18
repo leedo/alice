@@ -10,7 +10,11 @@ Alice.Input = Class.create({
       this.element = this.editor;
       this.toolbar = new Alice.Toolbar(this.element)
       this.toolbar.addButtonSet(WysiHat.Toolbar.ButtonSets.Basic);
-      this.toolbar.element.on("mousedown", "button", this.cancelNextFocus.bind(this));
+      this.toolbar.element.on("mousedown", "button", function () {
+        this.uncancelNextFocus();
+        this.focus();
+        this.cancelNextFocus();
+      }.bind(this));
       this.element.observe("keyup", this.onKeyUp.bind(this));
       var input = new Element("input", {type: "hidden", name: "html", value: 1});
       this.textarea.form.appendChild(input);
