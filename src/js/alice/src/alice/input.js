@@ -67,6 +67,8 @@ Alice.Input = Class.create({
   },
   
   focus: function() {
+    if (this.focused) return;
+
     if (this.skipThisFocus) {
       this.skipThisFocus = false;
       return;
