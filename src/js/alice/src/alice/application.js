@@ -135,6 +135,7 @@ Alice.Application = Class.create({
   openWindow: function(element, title, active) {
     var win = new Alice.Window(this, element, title, active);
     this.addWindow(win);
+    if (win.active) win.input.focus();
     return win;
   },
   
