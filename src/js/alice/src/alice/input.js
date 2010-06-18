@@ -15,7 +15,6 @@ Alice.Input = Class.create({
         this.focus();
         this.cancelNextFocus();
       }.bind(this));
-      this.element.observe("keyup", this.onKeyUp.bind(this));
       var input = new Element("input", {type: "hidden", name: "html", value: 1});
       this.textarea.form.appendChild(input);
     } else {
@@ -46,10 +45,6 @@ Alice.Input = Class.create({
       return this.editor.innerHTML;
     }
     return this.textarea.getValue();
-  },
-
-  onKeyUp: function(event) {
-    this.cancelNextFocus();
   },
 
   onKeyPress: function(event) {
