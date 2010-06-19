@@ -16,6 +16,7 @@ use App::Alice::Commands;
 
 use JSON;
 use Encode;
+use utf8;
 use Any::Moose;
 use Try::Tiny;
 
@@ -240,7 +241,7 @@ sub handle_message {
   my ($self, $req) = @_;
   my $msg  = $req->param('msg');
   my $is_html = $req->param('html');
-  utf8::decode($msg);
+  utf8::decode($msg) unless utf8::is_utf8($msg);
   $msg = html_to_irc($msg) if $is_html;
   my $source = $req->param('source');
   my $window = $self->app->get_window($source);
