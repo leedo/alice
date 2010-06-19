@@ -120,30 +120,35 @@ div.editor {
 
 tr.input div.editor_toolbar {
   position: absolute;
-  right: 2px;
-  top: -4px;
-  width: 18px;
-  height: 22px;
-  -webkit-border-radius: 3px;
-  background: rgba(0,0,0,0);
+  right: -4px;
+  padding-right: 8px;
+  top: -3px;
+  width: 14px;
+  height: 20px;
+  -webkit-border-radius: 3px 0 0 3px;
+  background: url(image/formatting.png) top left no-repeat #000;
   z-index: 900;
+  opacity: 0.2;
 }
 
 tr.input div.editor_toolbar button {
   visibility: hidden;
-  text-shadow: rgba( 0, 0, 0, .3 ) 0 1px 1px;
   display: block;
   float: left;
-  color: #fff;
+  color: #eee;
   text-decoration: none;
   line-height: 10px;
   font-size: 11px;
   margin: 0;
-  padding: 5px 3px 6px 3px;
+  padding: 4px 3px 5px 3px;
   text-align: center;
   background: none;
   cursor: pointer;
   border: none;
+}
+
+tr.input div.editor_toolbar button:hover {
+  color: #fff;
 }
 
 tr.input div.editor_toolbar button.selected {
@@ -156,8 +161,10 @@ tr.input div.editor_toolbar button.selected {
 
 
 tr.input div.editor_toolbar:hover {
-  background: rgba(0,0,0,0.7);
+  background-color: rgba(0,0,0,0.6);
+  background-image: none;
   width: auto;
+  opacity: 1;
 }
 tr.input div.editor_toolbar:hover button{
   visibility: visible;
