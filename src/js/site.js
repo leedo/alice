@@ -81,6 +81,10 @@ if (window == window.parent) {
     window.status = " ";  
     window.onblur = function () {alice.isFocused = false};
     window.onhashchange = alice.focusHash.bind(alice);
+
+    window.onorientationchange = function() {
+      alice.activeWindow().scrollToBottom(true);
+    };
     
     alice.addFilters([
       function(content) {
