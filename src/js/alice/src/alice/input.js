@@ -17,6 +17,13 @@ Alice.Input = Class.create({
       }.bind(this));
       var input = new Element("input", {type: "hidden", name: "html", value: 1});
       this.textarea.form.appendChild(input);
+      this.editor.observe("paste", function(e) {
+        var url = e.clipboardData.getData("URL");
+        if (url) {
+          e.preventDefault();
+          this.editor.insertHTML(url);
+        }
+      }.bind(this));
     } else {
       this.element = this.textarea;
     }
