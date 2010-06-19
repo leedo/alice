@@ -14,7 +14,7 @@ Alice.Input = Class.create({
       this.textarea.form.appendChild(input);
 
       document.observe("mousedown", function(e) {
-        if (!e.findElement(".editor")) this.skipThisFocus = false;
+        if (!e.findElement(".editor")) this.uncancelNextFocus();
       }.bind(this));
 
       this.editor.observe("keydown", function(){this.cancelNextFocus()}.bind(this));
@@ -61,6 +61,10 @@ Alice.Input = Class.create({
     }
   },
   
+  uncancelNextFocus: function() {
+    this.skipThisFocus = false;
+  },
+
   cancelNextFocus: function() {
     this.skipThisFocus = true;
   },

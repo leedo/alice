@@ -50,6 +50,7 @@ Alice.Window = Class.create({
   
   unFocus: function() {
     this.active = false;
+    this.input.uncancelNextFocus();
     this.element.removeClassName('active');
     this.tab.removeClassName('active');
     this.tabOverflowButton.selected = false;
