@@ -10,20 +10,18 @@ Alice.Input = Class.create({
       this.element = this.editor;
       this.toolbar = new Alice.Toolbar(this.element)
       this.toolbar.addButtonSet(WysiHat.Toolbar.ButtonSets.Basic);
-      this.toolbar.element.on("mousedown", "button", function () {
-        this.uncancelNextFocus();
-        this.focus();
-        this.cancelNextFocus();
-      }.bind(this));
       var input = new Element("input", {type: "hidden", name: "html", value: 1});
       this.textarea.form.appendChild(input);
-      this.editor.observe("paste", function(e) {
-        var url = e.clipboardData.getData("URL");
-        if (url) {
-          e.preventDefault();
-          this.editor.insertHTML(url);
-        }
+
+      document.observe("mousedown", function(e) {
+        if (!e.findElement(".editor")) this.skipNextFocus = false;
       }.bind(this));
+
+      this.editor.observe("keydown", function(){this.skipNextFocus = true}.bind(this));
+      this.editor.observe("keyup", this.updateRange.bind(this));
+      this.editor.observe("mouseup", this.updateRange.bind(this));
+      this.editor.observe("paste", this.pasteHandler.bind(this));
+      this.toolbar.element.on("mouseup","button",function(){this.skipNextFocus = true}.bind(this));
     } else {
       this.element = this.textarea;
     }
@@ -64,10 +62,6 @@ Alice.Input = Class.create({
     this.skipThisFocus = true;
   },
 
-  uncancelNextFocus: function() {
-    this.skipThisFocus = false;
-  },
-  
   focus: function(force) {
     if (!force) {
       if (this.focused) return;
@@ -82,9 +76,16 @@ Alice.Input = Class.create({
 
     // hack to focus the end of editor...
     if (this.editor) {
-      var text = document.createTextNode("");
-      this.editor.appendChild(text);
-      window.getSelection().selectNode(text);
+      var selection = window.getSelection();
+      selection.removeAllRanges();
+      if (this.range) {
+        selection.addRange(this.range);
+      } else {
+        var text = document.createTextNode("");
+        this.editor.appendChild(text);
+        selection.selectNode(text);
+        this.range = selection.getRangeAt(0);
+      }
     } else {
       this.textarea.focus();
     }
@@ -196,8 +197,24 @@ Alice.Input = Class.create({
     return height;
   },
 
-  canContentEditable: function () {
+  canContentEditable: function() {
     var element = new Element("div", {contentEditable: "true"});
     return element.contentEditable != "true" && ! Prototype.Browser.MobileSafari;
+  },
+
+  updateRange: function (e) {
+    var selection = window.getSelection();
+    if (selection.rangeCount > 0) {
+      var range = selection.getRangeAt(0);
+      this.range = range;
+    }
+  },
+
+  pasteHandler: function(e) {
+    var url = e.clipboardData.getData("URL");
+    if (url) {
+      e.preventDefault();
+      this.editor.insertHTML(url);
+    }
   }
 });
