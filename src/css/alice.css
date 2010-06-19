@@ -119,11 +119,12 @@ div.editor {
 }
 
 tr.input div.editor_toolbar {
+  overflow: hidden;
   position: absolute;
-  right: -4px;
+  right: -120px;
   padding-right: 8px;
   top: -3px;
-  width: 14px;
+  width: 130px;
   height: 20px;
   -webkit-border-radius: 3px 0 0 3px;
   background: url(image/formatting.png) top left no-repeat #000;
@@ -163,7 +164,10 @@ tr.input div.editor_toolbar button.selected {
 tr.input div.editor_toolbar:hover {
   background-color: rgba(0,0,0,0.6);
   background-image: none;
-  width: auto;
+  right: -4px;
+  -webkit-transition-property: right;
+  -webkit-transition-duration: 0.3s;
+  
   opacity: 1;
 }
 tr.input div.editor_toolbar:hover button{
