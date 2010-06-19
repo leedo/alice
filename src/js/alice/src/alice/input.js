@@ -14,14 +14,17 @@ Alice.Input = Class.create({
       this.textarea.form.appendChild(input);
 
       document.observe("mousedown", function(e) {
-        if (!e.findElement(".editor")) this.skipNextFocus = false;
+        if (!e.findElement(".editor")) this.skipThisFocus = false;
       }.bind(this));
 
-      this.editor.observe("keydown", function(){this.skipNextFocus = true}.bind(this));
+      this.editor.observe("keydown", function(){this.cancelNextFocus()}.bind(this));
       this.editor.observe("keyup", this.updateRange.bind(this));
       this.editor.observe("mouseup", this.updateRange.bind(this));
       this.editor.observe("paste", this.pasteHandler.bind(this));
-      this.toolbar.element.on("mouseup","button",function(){this.skipNextFocus = true}.bind(this));
+
+      this.toolbar.element.on("mouseup","button",function(){
+        this.cancelNextFocus();
+      }.bind(this));
     } else {
       this.element = this.textarea;
     }
