@@ -890,3 +890,8 @@ div#help dd {
   margin: 0;
   margin-bottom: 10px
 }
+span[style*="color: #fff"][style*="background-color: #000"] {
+  color: #000 !important;
+  background: none !important;
+  font-style: italic !important;
+}
