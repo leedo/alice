@@ -76,6 +76,8 @@ Sends a string as an ACTION to the channel.
 
 Focus the supplied tab number. Also accepts "next" or "prev"
 
+=back
+
 =head1 NOTIFICATIONS
 
 If you get a message with your nick in the body, while no browsers are
