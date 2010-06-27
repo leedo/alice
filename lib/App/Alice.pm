@@ -400,6 +400,7 @@ sub reload_config {
     }
     else {
       my $irc = $self->get_irc($network);
+      $config->{ircname} ||= "";
       if ($config->{ircname} ne $prev{$network}) {
         $irc->update_realname($config->{ircname});
       }
