@@ -279,6 +279,10 @@ tr.topic td {
   border-bottom: 1px solid #aaa;
   padding: 1px 0;
   height: 1.2em;
+}
+
+tr.topic td div.topic {
+  height: 1.2em;
   overflow: hidden;
 }
 

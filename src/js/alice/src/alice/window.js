@@ -11,7 +11,19 @@ Alice.Window = Class.create({
     this.tabButton = $(this.id + "_tab_button");
     this.tabOverflowButton = $(this.id + "_tab_overflow_button");
     this.form = $(this.id + "_form");
+
     this.topic = $(this.id + "_topic");
+    if (this.topic) {
+      var orig_height = this.topic.getStyle("height");
+      this.topic.observe("click", function(e) {
+        if (this.topic.getStyle("height") == orig_height) {
+          this.topic.setStyle({height: "auto"});
+        } else {
+          this.topic.setStyle({height: orig_height});
+        }
+      }.bind(this));
+    }
+
     this.messages = this.element.down('.message_wrap');
     this.submit = $(this.id + "_submit");
     this.nicksVisible = false;
