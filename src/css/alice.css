@@ -52,6 +52,7 @@ select#tab_overflow_overlay option.unread {
 
 body {
   font-family: "Lucida Grande", Helvetica, sans-serif;
+  text-rendering: optimizeLegibility;
   background: #fff;
 }
 
