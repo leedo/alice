@@ -80,6 +80,8 @@ sub BUILD {
   $httpd->register_service(
     builder {
       if ($self->app->auth_enabled) {
+        mkdir $self->config->path."/sessions"
+          unless -d $self->config->path."/sessions";
         enable "Session",
           store => Plack::Session::Store::File->new(dir => $self->config->path),
           expires => "24h";
