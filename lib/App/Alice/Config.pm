@@ -144,7 +144,6 @@ sub BUILD {
   my $self = shift;
   $self->load;
   mkdir $self->path unless -d $self->path;
-  mkdir $self->path."/sessions" unless -d $self->path."/sessions";
 }
 
 sub load {
