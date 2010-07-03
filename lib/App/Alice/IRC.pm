@@ -165,7 +165,7 @@ sub log_message {
 
   my ($self, %options) = @_;
   if (@{$message->{params}}) {
-    $self->log("debug", %options, [ $message->{params}[-1] ]);
+    $self->log("debug", %options, [ pop @{$message->{params}} ]);
   }
 }
 
@@ -412,7 +412,7 @@ sub nick_change {
   $self->rename_nick($old_nick, $new_nick);
   $self->broadcast(
     map  {$_->format_event("nick", $old_nick, $new_nick)}
-    grep {$_} $self->nick_windows($new_nick)
+    $self->nick_windows($new_nick)
   );
 }
 
@@ -500,7 +500,7 @@ sub channel_topic {
 
 sub channel_nicks {
   my ($self, $channel) = @_;
-  return map {$_->{nick}} grep {exists $_->{channels}{$channel}} $self->all_nick_info;
+  return [ map {$_->{nick}} grep {exists $_->{channels}{$channel}} $self->all_nick_info ];
 }
 
 sub nick_channels {
@@ -512,7 +512,7 @@ sub nick_channels {
 sub nick_windows {
   my ($self, $nick) = @_;
   if ($self->nick_channels($nick)) {
-    return map {$self->find_window($_)} $self->nick_channels($nick);
+    return grep {$_} map {$self->find_window($_)} $self->nick_channels($nick);
   }
   return;
 }
