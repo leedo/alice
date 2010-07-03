@@ -12,6 +12,7 @@ use App::Alice::History;
 use Any::Moose;
 use File::Copy;
 use Digest::MD5 qw/md5_hex/;
+use List::Util qw/first/;
 use Encode;
 
 our $VERSION = '0.15';
@@ -34,18 +35,18 @@ has msgid => (
 
 sub next_msgid {$_[0]->msgid($_[0]->msgid + 1)}
 
-has irc_map => (
+has _ircs => (
   is      => 'rw',
-  isa     => 'HashRef[App::Alice::IRC]',
-  default => sub {{}},
+  isa     => 'ArrayRef',
+  default => sub {[]},
 );
 
-sub ircs {values %{$_[0]->irc_map}}
-sub add_irc {$_[0]->irc_map->{$_[1]} = $_[2]}
-sub has_irc {exists $_[0]->irc_map->{$_[1]}}
-sub get_irc {$_[0]->irc_map->{$_[1]}}
-sub remove_irc {delete $_[0]->irc_map->{$_[1]}}
-sub irc_aliases {keys %{$_[0]->irc_map}}
+sub ircs {@{$_[0]->_ircs}}
+sub add_irc {push @{$_[0]->_ircs}, $_[1]}
+sub has_irc {$_[0]->get_irc($_[1])}
+sub get_irc {first {$_->alias eq $_[1]} $_[0]->ircs}
+sub remove_irc {$_[0]->_ircs([ grep { $_->alias ne $_[1] } $_[0]->ircs])}
+sub irc_aliases {map {$_->alias} $_[0]->ircs}
 sub connected_ircs {grep {$_->is_connected} $_[0]->ircs}
 
 has standalone => (
@@ -105,8 +106,7 @@ has history => (
     my $self = shift;
     my $config = $self->config->path."/log.db";
     if (-e $config) {
-      my $mtime = (stat($config))[9];
-      if ($mtime < 1272757679) {
+      if ((stat($config))[9] < 1272757679) {
         print STDERR "Log schema is out of date, updating\n";
         copy($self->config->assetdir."/log.db", $config);
       }
@@ -135,18 +135,18 @@ has logger => (
 
 sub log {$_[0]->logger->log($_[1] => $_[2]) if $_[0]->config->show_debug}
 
-has window_map => (
+has _windows => (
   is        => 'rw',
-  isa       => 'HashRef[App::Alice::Window|App::Alice::InfoWindow]',
-  default   => sub {{}},
+  isa       => 'ArrayRef',
+  default   => sub {[]},
 );
 
-sub windows {values %{$_[0]->window_map}}
-sub add_window {$_[0]->window_map->{$_[1]} = $_[2]}
-sub has_window {exists $_[0]->window_map->{$_[1]}}
-sub get_window {$_[0]->window_map->{$_[1]}}
-sub remove_window {delete $_[0]->window_map->{$_[1]}}
-sub window_ids {keys %{$_[0]->window_map}}
+sub windows {@{$_[0]->_windows}}
+sub add_window {push @{$_[0]->_windows}, $_[1]}
+sub has_window {$_[0]->get_window($_[1])}
+sub get_window {first {$_->id eq $_[1]} $_[0]->windows}
+sub remove_window {$_[0]->_windows([grep {$_->id ne $_[1]} $_[0]->windows])}
+sub window_ids {map {$_->id} $_[0]->windows}
 
 has 'template' => (
   is => 'ro',
@@ -171,7 +171,7 @@ has 'info_window' => (
       assetdir => $self->config->assetdir,
       app      => $self,
     );
-    $self->add_window($info->id, $info);
+    $self->add_window($info);
     return $info;
   }
 );
@@ -255,7 +255,7 @@ sub init_shutdown {
 
 sub shutdown {
   my $self = shift;
-  $self->irc_map({});
+  $self->_ircs([]);
   $self->httpd->shutdown;
   $_->buffer->clear for $self->windows;
   delete $self->{shutdown_timer} if $self->{shutdown_timer};
@@ -332,7 +332,7 @@ sub create_window {
     assetdir => $self->config->assetdir,
     app      => $self,
   );
-  $self->add_window($id, $window);
+  $self->add_window($window);
   return $window;
 }
 
@@ -379,7 +379,7 @@ sub add_irc_server {
     app    => $self,
     alias  => $name
   );
-  $self->add_irc($name, $irc);
+  $self->add_irc($irc);
 }
 
 sub reload_config {

@@ -36,11 +36,6 @@ ok $app->find_window("test-window", $irc), "find window by name";
 ok ref $app->get_window($window_id) eq "App::Alice::Window", "get window";
 is_deeply [$app->sorted_windows], [$info, $window], "window list";
 
-$app->add_window("test-window2", {});
-ok $app->has_window("test-window2"), "manually add window";
-$app->remove_window("test-window2");
-ok !$app->has_window("test-window2"), "manually remove window";
-
 is_deeply $app->find_or_create_window("test-window", $irc), $window, "find or create existing window";
 my $window2 = $app->find_or_create_window("test-window2", $irc);
 ok $app->find_window("test-window2", $irc), "find or create non-existent window";
