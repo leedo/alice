@@ -9,7 +9,7 @@ Alice.Input = Class.create({
       this.editor = WysiHat.Editor.attach(this.textarea);
       this.element = this.editor;
       this.toolbar = new Alice.Toolbar(this.element)
-      this.toolbar.addButtonSet(WysiHat.Toolbar.ButtonSets.Basic);
+      this.toolbar.addButtonSet(Alice.Toolbar.ButtonSet);
       var input = new Element("input", {type: "hidden", name: "html", value: 1});
       this.textarea.form.appendChild(input);
 
