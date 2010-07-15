@@ -15,3 +15,13 @@ Alice.Toolbar = Class.create(WysiHat.Toolbar, {
     }.bind(this));
   }
 });
+
+Alice.Toolbar.ButtonSet = WysiHat.Toolbar.ButtonSets.Basic.concat(
+  [
+    {
+      label: "Colors",
+      handler: function (editor) {
+      }
+    }
+  ]
+);

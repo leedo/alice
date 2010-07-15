@@ -121,10 +121,10 @@ div.editor {
 tr.input div.editor_toolbar {
   overflow: hidden;
   position: absolute;
-  right: -120px;
+  right: -140px;
   padding-right: 8px;
   top: -3px;
-  width: 130px;
+  width: 150px;
   height: 20px;
   -webkit-border-radius: 3px 0 0 3px;
   background: url(image/formatting.png) top left no-repeat #000;
