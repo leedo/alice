@@ -36,29 +36,25 @@ has 'config' => (
   default => sub {shift->app->config},
 );
 
-has 'url_handlers' => (
-  is => 'ro',
-  isa => 'ArrayRef',
-  default => sub {
-    [
-      { re => qr{^/$},               sub  => 'send_index' },
-      { re => qr{^/say/?$},          sub  => 'handle_message' },
-      { re => qr{^/stream/?$},       sub  => 'setup_stream' },
-      { re => qr{^/config/?$},       sub  => 'send_config' },
-      { re => qr{^/prefs/?$},        sub  => 'send_prefs' },
-      { re => qr{^/serverconfig/?$}, sub  => 'server_config' },
-      { re => qr{^/save/?$},         sub  => 'save_config' },
-      { re => qr{^/tabs/?$},         sub  => 'tab_order' },
-      { re => qr{^/login/?$},        sub  => 'login' },
-      { re => qr{^/logout/?$},       sub  => 'logout' },
-      { re => qr{^/logs/?$},         sub  => 'send_logs' },
-      { re => qr{^/search/?$},       sub  => 'send_search' },
-      { re => qr{^/range/?$},        sub  => 'send_range' },
-      { re => qr{^/view/?$},         sub  => 'send_index' },
-      { re => qr{^/get},             sub  => 'image_proxy' },
-    ]
-  }
-);
+my $url_handlers = [
+  [ qr{^/$}               => \&send_index ],
+  [ qr{^/say/?$}          => \&handle_message ],
+  [ qr{^/stream/?$}       => \&setup_stream ],
+  [ qr{^/config/?$}       => \&send_config ],
+  [ qr{^/prefs/?$}        => \&send_prefs ],
+  [ qr{^/serverconfig/?$} => \&server_config ],
+  [ qr{^/save/?$}         => \&save_config ],
+  [ qr{^/tabs/?$}         => \&tab_order ],
+  [ qr{^/login/?$}        => \&login ],
+  [ qr{^/logout/?$}       => \&logout ],
+  [ qr{^/logs/?$}         => \&send_logs ],
+  [ qr{^/search/?$}       => \&send_search ],
+  [ qr{^/range/?$}        => \&send_range ],
+  [ qr{^/view/?$}         => \&send_index ],
+  [ qr{^/get}             => \&image_proxy ],
+];
+
+sub url_handlers { return $url_handlers }
 
 has 'streams' => (
   is => 'rw',
@@ -80,6 +76,8 @@ sub BUILD {
   $httpd->register_service(
     builder {
       if ($self->app->auth_enabled) {
+        mkdir $self->config->path."/sessions"
+          unless -d $self->config->path."/sessions";
         enable "Session",
           store => Plack::Session::Store::File->new(dir => $self->config->path),
           expires => "24h";
@@ -103,10 +101,9 @@ sub dispatch {
     }
   }
   for my $handler (@{$self->url_handlers}) {
-    my $re = $handler->{re};
+    my $re = $handler->[0];
     if ($req->path_info =~ /$re/) {
-      my $sub = $handler->{sub};
-      return $self->$sub($req);
+      return $handler->[1]->($self, $req);
     }
   }
   return $self->not_found($req);

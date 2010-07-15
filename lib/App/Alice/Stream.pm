@@ -122,19 +122,19 @@ sub flush {
 sub to_string {
   my $self = shift;
   my $output;
+
   if (! $self->started) {
     $output .= "--".$self->seperator."\n";
     $self->started(1);
   }
+
   $output .= to_json({
     queue => $self->queue,
     time  => time - $self->offset,
   }, {utf8 => 1});
-  use bytes;
-  $output .= " " x (1024 - bytes::length $output)
-    if bytes::length $output < 1024;
-  no bytes;
+
   $output .= "\n--" . $self->seperator . "\n";
+
   return $output
 }
 

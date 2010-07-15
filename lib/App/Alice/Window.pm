@@ -127,7 +127,7 @@ sub nick {
 
 sub all_nicks {
   my $self = shift;
-  return unless $self->is_channel;
+  return [] unless $self->is_channel;
   return $self->irc->channel_nicks($self->title);
 }
 
@@ -136,7 +136,7 @@ sub join_action {
   my $action = {
     type      => "action",
     event     => "join",
-    nicks     => [ $self->all_nicks ],
+    nicks     => $self->all_nicks,
     window    => $self->serialized,
   };
   $action->{html}{window} = $self->app->render("window", $self);
@@ -150,7 +150,7 @@ sub nicks_action {
   return {
     type   => "action",
     event  => "nicks",
-    nicks  => [ $self->all_nicks ],
+    nicks  => $self->all_nicks,
     window => $self->serialized,
   };
 }
@@ -184,7 +184,7 @@ sub format_event {
     body      => $body,
     msgid     => $self->app->next_msgid,
     timestamp => $self->timestamp,
-    nicks     => [ $self->all_nicks ],
+    nicks     => $self->all_nicks,
   };
   $message->{html} = make_links_clickable(
     $self->app->render("event", $message)
@@ -261,16 +261,16 @@ sub make_links_clickable {
 }
 
 sub _format_nick_table {
-  my @nicks = @_;
-  return "" unless @nicks;
+  my $nicks = shift;
+  return "" unless @$nicks;
   my $maxlen = 0;
-  for (@nicks) {
+  for (@$nicks) {
     my $length = length $_;
     $maxlen = $length if $length > $maxlen;
   }
   my $cols = int(74  / $maxlen + 2);
   my (@rows, @row);
-  for (sort {lc $a cmp lc $b} @nicks) {
+  for (sort {lc $a cmp lc $b} @$nicks) {
     push @row, $_ . " " x ($maxlen - length $_);
     if (@row >= $cols) {
       push @rows, [@row];
