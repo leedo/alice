@@ -182,9 +182,22 @@ tr.input div.editor_toolbar:hover button{
   visibility: visible;
 }
 
-div.editor div {
-  margin: 0;
-  padding: 0;
+div.editor div,
+div.editor p,
+div.editor h1,
+div.editor h2,
+div.editor h3,
+div.editor h4,
+div.editor h5,
+div.editor span
+{
+  font-size: 1em !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+div.editor img {
+  display: none !important;
 }
 
 tr.input input.send {
