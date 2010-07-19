@@ -195,6 +195,9 @@ Alice.Input = Class.create({
       wordWrap:   "break-word"
     });
 
+    // add classname so collapsed margins/paddings are applied
+    if (this.editor) element.addClassName("editor");
+
     var value = this.getValue();
     element.update(value.replace(/\n$/, "\n\n").replace("\n", "<br>"));
     $(document.body).insert(element);
