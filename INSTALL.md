@@ -5,8 +5,8 @@ Alice has a number of dependencies, all of which can be installed from CPAN. The
 
 Install the `cpanminus` client by running
 
-  curl -L http://cpanmin.us | perl - --sudo App::cpanminus
+    curl -L http://cpanmin.us | perl - --sudo App::cpanminus
 
 Install alice's dependencies with the following command
 
-  cpanm --sudo --installdeps App::Alice
+    cpanm --sudo --installdeps App::Alice
