@@ -11,6 +11,7 @@ Alice.Input = Class.create({
       this.toolbar = new Alice.Toolbar(this.element)
       this.toolbar.addButtonSet(Alice.Toolbar.ButtonSet);
       this.toolbar.element.observe("click", function(e) {
+        if (this.toolbar.element.hasClassName("visible")) return;
         this.toolbar.element.addClassName("visible");
         this.focus();
       }.bind(this));
