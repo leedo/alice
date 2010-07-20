@@ -10,6 +10,10 @@ Alice.Input = Class.create({
       this.element = this.editor;
       this.toolbar = new Alice.Toolbar(this.element)
       this.toolbar.addButtonSet(Alice.Toolbar.ButtonSet);
+      this.toolbar.element.observe("click", function(e) {
+        this.toolbar.element.addClassName("visible");
+        this.focus();
+      }.bind(this));
       var input = new Element("input", {type: "hidden", name: "html", value: 1});
       this.textarea.form.appendChild(input);
 

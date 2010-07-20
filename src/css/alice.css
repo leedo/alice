@@ -130,15 +130,17 @@ div.editor {
 tr.input div.editor_toolbar {
   overflow: hidden;
   position: absolute;
-  right: -160px;
+  right: -170px;
   padding-right: 8px;
   top: -3px;
-  width: 170px;
+  width: 180px;
   height: 20px;
   -webkit-border-radius: 3px 0 0 3px;
   background: url(image/formatting.png) top left no-repeat #000;
   z-index: 900;
   opacity: 0.2;
+  -webkit-transition-property: right;
+  -webkit-transition-duration: 0.3s;
 }
 
 tr.input div.editor_toolbar button {
@@ -169,7 +171,7 @@ tr.input div.editor_toolbar button.selected {
 .underline {text-decoration: underline;}
 
 
-tr.input div.editor_toolbar:hover {
+tr.input div.editor_toolbar.visible {
   background-color: rgba(0,0,0,0.6);
   background-image: none;
   right: -4px;
@@ -178,7 +180,7 @@ tr.input div.editor_toolbar:hover {
   
   opacity: 1;
 }
-tr.input div.editor_toolbar:hover button{
+tr.input div.editor_toolbar.visible button{
   visibility: visible;
 }
 

@@ -24,6 +24,12 @@ Alice.Toolbar.ButtonSet = WysiHat.Toolbar.ButtonSets.Basic.concat(
         var cb = editor.colorSelection.bind(editor);
         var picker = new Alice.Colorpicker(button, cb);
       }
+    },
+    {
+      label: "&raquo;",
+      handler: function (editor, button) {
+        button.up("div.editor_toolbar").removeClassName("visible");
+      }
     }
   ]
 );
