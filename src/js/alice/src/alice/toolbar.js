@@ -34,8 +34,10 @@ Alice.Toolbar.ButtonSet = WysiHat.Toolbar.ButtonSets.Basic.concat(
       label: "&raquo;",
       handler: function (editor, button, toolbar) {
         button.up("div.editor_toolbar").removeClassName("visible");
-        toolbar.picker.remove();
-        toolbar.picker = undefined;
+        if (toolbar.picker) {
+          toolbar.picker.remove();
+          toolbar.picker = undefined;
+        }
       }
     }
   ]
@@ -51,7 +53,7 @@ Alice.Colorpicker = Class.create({
       elem.insert(box); 
     });
 
-    $('container').insert(elem);
+    button.up('.channel').insert(elem);
     elem.observe("mousedown", this.clicked.bind(this));
 
     this.elem = elem;

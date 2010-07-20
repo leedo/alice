@@ -947,8 +947,8 @@ span[style*="color: #fff"][style*="background-color: #000"] {
 }
 div.color_picker {
   position: absolute;
-  right: 15px;
-  bottom: 47px;
+  right: 25px;
+  bottom: 25px;
   border: 1px solid rgba(0,0,0,0.8);
   width: 88px;
   margin: 0;
