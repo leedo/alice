@@ -22,7 +22,12 @@ Alice.Toolbar.ButtonSet = WysiHat.Toolbar.ButtonSets.Basic.concat(
       label: "Colors",
       handler: function (editor, button) {
         var cb = editor.colorSelection.bind(editor);
-        var picker = new Alice.Colorpicker(button, cb);
+        if (this.picker) {
+          this.picker.remove();
+          this.picker = undefined;
+        } else {
+          this.picker = new Alice.Colorpicker(button, cb);
+        }
       }
     },
     {
@@ -58,6 +63,9 @@ Alice.Colorpicker = Class.create({
       var color = box.getStyle("background-color");
       if (color) this.cb(color);
     }
+  },
+
+  remove: function() {
     this.elem.remove();
   },
 
