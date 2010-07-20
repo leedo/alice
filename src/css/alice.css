@@ -171,15 +171,24 @@ tr.input div.editor_toolbar button.selected {
 .underline {text-decoration: underline;}
 
 
+tr.input div.editor_toolbar:hover {
+  opacity: 0.4;
+  cursor: pointer;
+}
+tr.input div.editor_toolbar.visible:hover {
+  opacity: 1;
+  cursor: inherit;
+}
+
 tr.input div.editor_toolbar.visible {
   background-color: rgba(0,0,0,0.6);
   background-image: none;
   right: -4px;
   -webkit-transition-property: right;
   -webkit-transition-duration: 0.3s;
-  
   opacity: 1;
 }
+
 tr.input div.editor_toolbar.visible button{
   visibility: visible;
 }
@@ -948,9 +957,10 @@ span[style*="color: #fff"][style*="background-color: #000"] {
 div.color_picker {
   position: absolute;
   right: 25px;
-  bottom: 25px;
-  border: 1px solid rgba(0,0,0,0.8);
-  width: 88px;
+  bottom: 24px;
+  width: 80px;
+  background: rgba(0,0,0,0.2);
+  border-bottom: none;
   margin: 0;
   padding: 0;
   z-index: 903;
@@ -960,5 +970,8 @@ div.color_picker span {
   display: block;
   width: 20px;
   height: 20px;
-  border: 1px solid rgba(0,0,0,0.8);
+  margin: 0;
+  -webkit-box-shadow: 0 0 3px rgba(0,0,0,0.6);
+  -moz-box-shadow: 0 0 3px rgba(0,0,0,0.6);
+  box-shadow: 0 0 3px rgba(0,0,0,0.6);
 }
