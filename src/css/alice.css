@@ -130,10 +130,10 @@ div.editor {
 tr.input div.editor_toolbar {
   overflow: hidden;
   position: absolute;
-  right: -140px;
+  right: -160px;
   padding-right: 8px;
   top: -3px;
-  width: 150px;
+  width: 170px;
   height: 20px;
   -webkit-border-radius: 3px 0 0 3px;
   background: url(image/formatting.png) top left no-repeat #000;
@@ -942,4 +942,21 @@ span[style*="color: #fff"][style*="background-color: #000"] {
   color: #000 !important;
   background: none !important;
   font-style: italic !important;
+}
+div.color_picker {
+  position: absolute;
+  right: 15px;
+  bottom: 47px;
+  border: 1px solid rgba(0,0,0,0.8);
+  width: 88px;
+  margin: 0;
+  padding: 0;
+  z-index: 500;
+}
+div.color_picker span {
+  float: left;
+  display: block;
+  width: 20px;
+  height: 20px;
+  border: 1px solid rgba(0,0,0,0.8);
 }
