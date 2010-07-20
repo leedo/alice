@@ -67,6 +67,7 @@ has httpd => (
 has commands => (
   is      => 'ro',
   isa     => 'App::Alice::Commands',
+  lazy    => 1,
   default => sub {
     App::Alice::Commands->new(app => shift);
   }
@@ -205,7 +206,8 @@ sub BUILDARGS {
 
 sub run {
   my $self = shift;
-  # initialize template and httpd because they are lazy
+  # initialize lazy stuff
+  $self->commands;
   $self->history;
   $self->info_window;
   $self->template;
