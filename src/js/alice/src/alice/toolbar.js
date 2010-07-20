@@ -53,7 +53,7 @@ Alice.Colorpicker = Class.create({
       elem.insert(box); 
     });
 
-    button.up('.channel').insert(elem);
+    button.up('.window').insert(elem);
     elem.observe("mousedown", this.clicked.bind(this));
 
     this.elem = elem;
