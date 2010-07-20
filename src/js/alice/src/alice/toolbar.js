@@ -9,7 +9,7 @@ Alice.Toolbar = Class.create(WysiHat.Toolbar, {
   },
   observeButtonClick: function(element, handler) {
     element.on('click', function(event) {
-      handler(this, element);
+      handler(this.editor, element, this);
       this.editor.fire("selection:change");
       event.stop();
     }.bind(this));
@@ -20,8 +20,8 @@ Alice.Toolbar.ButtonSet = WysiHat.Toolbar.ButtonSets.Basic.concat(
   [
     {
       label: "Colors",
-      handler: function (toolbar, button) {
-        var cb = toolbar.editor.colorSelection.bind(toolbar.editor);
+      handler: function (editor, button, toolbar) {
+        var cb = editor.colorSelection.bind(editor);
         if (toolbar.picker) {
           toolbar.picker.remove();
           toolbar.picker = undefined;
@@ -32,7 +32,7 @@ Alice.Toolbar.ButtonSet = WysiHat.Toolbar.ButtonSets.Basic.concat(
     },
     {
       label: "&raquo;",
-      handler: function (toolbar, button) {
+      handler: function (editor, button, toolbar) {
         button.up("div.editor_toolbar").removeClassName("visible");
         toolbar.picker.remove();
         toolbar.picker = undefined;
