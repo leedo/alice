@@ -137,7 +137,7 @@ tr.input div.editor_toolbar {
   height: 20px;
   -webkit-border-radius: 3px 0 0 3px;
   background: url(image/formatting.png) top left no-repeat #000;
-  z-index: 900;
+  z-index: 902;
   opacity: 0.2;
   -webkit-transition-property: right;
   -webkit-transition-duration: 0.3s;
@@ -412,7 +412,7 @@ li.event div.left {
 }
 
 ul.messages li.avatar:not(.consecutive) {
-  z-index: 999;
+  z-index: 900;
 }
 
 div.left img {
@@ -425,7 +425,7 @@ div.left img {
 
 div.left span.nickhint {
   position: absolute;
-  z-index: 999;
+  z-index: 901;
   right: 5px;
   top: 4px;
   padding: 0 2px;
@@ -953,7 +953,7 @@ div.color_picker {
   width: 88px;
   margin: 0;
   padding: 0;
-  z-index: 500;
+  z-index: 903;
 }
 div.color_picker span {
   float: left;
