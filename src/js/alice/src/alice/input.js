@@ -236,7 +236,7 @@ Alice.Input = Class.create({
     var text = e.clipboardData.getData("Text");
     if (text) {
       e.preventDefault();
-      this.editor.insertHTML(text);
+      this.editor.insertHTML(text.escapeHTML());
       return;
     }
   }
