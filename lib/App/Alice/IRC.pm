@@ -426,8 +426,13 @@ sub _join {
     $self->get_nick_info($nick)->{channels}{$channel} = '';
   }
   if ($is_self) {
-    my $window = $self->app->create_window($channel, $self);
+
+    # self->window uses find_or_create, so we don't create
+    # duplicate windows here
+    my $window = $self->window($channel);
+
     $self->broadcast($window->join_action);
+
     # client library only sends WHO if the server doesn't
     # send hostnames with NAMES list (UHNAMES), we to WHO always
     $self->send_srv("WHO" => $channel) if $cl->isupport("UHNAMES");
