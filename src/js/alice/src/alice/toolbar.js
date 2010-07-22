@@ -1,3 +1,5 @@
+
+// override a few of the default toolbar methods
 Alice.Toolbar = Class.create(WysiHat.Toolbar, {
   createButtonElement: function(toolbar, options) {
     var button = Element('button');
@@ -9,8 +11,15 @@ Alice.Toolbar = Class.create(WysiHat.Toolbar, {
   },
   observeButtonClick: function(element, handler) {
     element.on('click', function(event) {
+
+      // pass in the button and toolbar in addition
+      // to the default editor parameter
       handler(this.editor, element, this);
+
+      // need to fire this event to immediately toggle
+      // the active class
       this.editor.fire("selection:change");
+
       event.stop();
     }.bind(this));
   }
@@ -21,7 +30,9 @@ Alice.Toolbar.ButtonSet = WysiHat.Toolbar.ButtonSets.Basic.concat(
     {
       label: "Colors",
       handler: function (editor, button, toolbar) {
-        var cb = editor.colorSelection.bind(editor);
+        var cb = function (color, fg) {
+          fg ? editor.colorSelection(color) : editor.backgroundColorSelection(color)
+        };
         if (toolbar.picker) {
           toolbar.picker.remove();
           toolbar.picker = undefined;
@@ -47,25 +58,52 @@ Alice.Colorpicker = Class.create({
   initialize: function(button, callback) {
     var elem = new Element("div").addClassName("color_picker");
 
+    var toggle = new Element("div").addClassName("toggle");
+    var blank = new Element("span").addClassName("blank").addClassName("color");
+    blank.setStyle({"background-color": "none"});
+    blank.insert("&#8416;");
+    toggle.insert('<span id="fg" class="active">fg</span><span id="bg">bg</span>');
+    toggle.insert(blank);
+    elem.insert(toggle);
+
+    var colorcontainer = new Element("div").addClassName("colors");
     this.colors().each(function(color) {
-      var box = new Element("span");
+      var box = new Element("span").addClassName("color");
       box.setStyle({"background-color": color});
-      elem.insert(box); 
+      colorcontainer.insert(box); 
     });
+    elem.insert(colorcontainer);
 
     button.up('.window').insert(elem);
     elem.observe("mousedown", this.clicked.bind(this));
 
     this.elem = elem;
     this.cb = callback;
+    this.fg = true;
   },
 
   clicked: function(e) {
     e.stop();
-    var box = e.findElement("span");
+
+    var box = e.findElement("span.color");
     if (box) {
       var color = box.getStyle("background-color");
-      if (color) this.cb(color);
+      if (color) this.cb(color, this.fg);
+      return;
+    }
+
+    if (e.findElement("span#fg")) {
+      this.elem.down("#bg").removeClassName("active");
+      this.elem.down("#fg").addClassName("active");
+      this.fg = true;
+      return;
+    }
+
+    if (e.findElement("span#bg")) {
+      this.elem.down("#fg").removeClassName("active");
+      this.elem.down("#bg").addClassName("active");
+      this.fg = false;
+      return;
     }
   },
 

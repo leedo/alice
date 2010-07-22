@@ -957,15 +957,20 @@ span[style*="color: #fff"][style*="background-color: #000"] {
 div.color_picker {
   position: absolute;
   right: 25px;
-  bottom: 24px;
+  bottom: 27px;
   width: 80px;
-  background: rgba(0,0,0,0.2);
   border-bottom: none;
   margin: 0;
   padding: 0;
   z-index: 903;
 }
 div.color_picker span {
+  cursor: pointer;
+}
+div.color_picker div.colors {
+  clear: both;
+}
+div.color_picker div.colors span {
   float: left;
   display: block;
   width: 20px;
@@ -974,4 +979,32 @@ div.color_picker span {
   -webkit-box-shadow: 0 0 3px rgba(0,0,0,0.6);
   -moz-box-shadow: 0 0 3px rgba(0,0,0,0.6);
   box-shadow: 0 0 3px rgba(0,0,0,0.6);
+}
+div.color_picker div.toggle {
+  height: 18px;
+}
+div.color_picker div.toggle span.blank {
+  float: right;
+  color: red;
+  font-weight: bold;
+  text-align: center;
+  width: 20px;
+  line-height: 9px;
+}
+
+div.color_picker div.toggle span#fg,
+div.color_picker div.toggle span#bg {
+  float: left;
+  font-size: 9px;
+  background: none;
+  -webkit-border-radius: 10px;
+  color: #000;
+  text-align: center;
+  padding: 2px 5px;
+}
+
+div.color_picker div.toggle span#fg.active,
+div.color_picker div.toggle span#bg.active {
+  background: rgba(0,0,0,0.6);
+  color: #fff;
 }
