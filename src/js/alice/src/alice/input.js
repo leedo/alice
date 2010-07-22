@@ -236,7 +236,8 @@ Alice.Input = Class.create({
     var text = e.clipboardData.getData("Text");
     if (text) {
       e.preventDefault();
-      this.editor.insertHTML(text.escapeHTML());
+      text = text.escapeHTML().replace(/\n+/g, "<br>");
+      this.editor.insertHTML(text);
       return;
     }
   }
