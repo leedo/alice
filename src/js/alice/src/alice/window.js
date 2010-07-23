@@ -60,6 +60,8 @@ Alice.Window = Class.create({
       this.messageLimit = 50;
       this.messages.select("li").reverse().slice(50).invoke("remove");
     }
+
+    this.makeTopicClickable();
   },
   
   isTabWrapped: function() {
@@ -189,6 +191,12 @@ Alice.Window = Class.create({
   
   displayTopic: function(topic) {
     this.topic.update(topic);
+    this.makeTopicClickable();
+  },
+
+  makeTopicClickable: function() {
+    if (!this.topic) return;
+    this.topic.innerHTML = this.topic.innerHTML.replace(/(https?:\/\/[^\s]+)/ig, '<a href="$1" target="_blank" rel="noreferrer">$1</a>');
   },
   
   resizeMessagearea: function() {
