@@ -74,14 +74,16 @@ if (window == window.parent) {
     };
     
     window.onfocus = function () {
-      window.document.body.removeClassName("blurred");
+      if (!Prototype.Browser.MobileSafari)
+        window.document.body.removeClassName("blurred");
       if (alice.activeWindow()) alice.activeWindow().input.focus();
         alice.isFocused = true
     };
     
     window.status = " ";  
     window.onblur = function () {
-      window.document.body.addClassName("blurred");
+      if (!Prototype.Browser.MobileSafari)
+        window.document.body.addClassName("blurred");
       alice.isFocused = false
     };
     window.onhashchange = alice.focusHash.bind(alice);
