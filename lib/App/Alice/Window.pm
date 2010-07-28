@@ -196,7 +196,11 @@ sub format_event {
 sub format_message {
   my ($self, $nick, $body) = @_;
   $body = decode_utf8($body) unless utf8::is_utf8($body);
-  my $html = irc_to_html($body);
+
+  my $monospace = $self->app->is_monospace_nick($nick);
+  # pass the inverse => italic option if this is NOT monospace
+  my $html = irc_to_html($body, ($monospace ? () : (invert => "italic")));
+
   $html = make_links_clickable($html);
   my $own_nick = $self->nick;
   my $message = {
@@ -209,7 +213,7 @@ sub format_message {
     self      => $own_nick eq $nick,
     msgid     => $self->app->next_msgid,
     timestamp => $self->timestamp,
-    monospaced => $self->app->is_monospace_nick($nick),
+    monospaced => $monospace,
     consecutive => $nick eq $self->buffer->previous_nick ? 1 : 0,
   };
   unless ($message->{self}) {
