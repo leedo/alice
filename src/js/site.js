@@ -3,6 +3,7 @@ if (window == window.parent) {
     var alice = new Alice.Application();
     window.alice = alice;
 
+    // read in options from query string
     var options = {
       images: 'show',
       avatars: 'show'
@@ -22,11 +23,13 @@ if (window == window.parent) {
     alice.options = options;
 
     // fix height of non-consecutive avatar messages
+
     $$('ul.messages li.avatar:not(.consecutive) + li:not(.consecutive)').each(function (li) {
       li.previous().setStyle({minHeight:"42px"});
     });
 
     // connect close botton for help 
+
     $('helpclose').observe("click", function () { $('help').hide(); });
 
     // setup select menus
@@ -92,6 +95,8 @@ if (window == window.parent) {
       alice.activeWindow().scrollToBottom(true);
     };
     
+    // setup default filters
+
     alice.addFilters([
       function(content) {
         var filtered = content;

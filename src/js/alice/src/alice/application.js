@@ -5,7 +5,6 @@ Alice.Application = Class.create({
     this.previousFocus = 0;
     this.connection = new Alice.Connection(this);
     this.filters = [];
-    this.monospaceNicks = ['Shaniqua', 'root', 'p6eval'];
     this.keyboard = new Alice.Keyboard(this);
     
     // Keep this as a timeout so the page doesn't show "loading..."
@@ -250,10 +249,6 @@ Alice.Application = Class.create({
         message['window'].title, message['window'].id, message
       );
     }
-  },
-  
-  messagesAreMonospacedFor: function(nick) {
-    return this.monospaceNicks.indexOf(nick) > -1;
   },
   
   focusHash: function(hash) {
