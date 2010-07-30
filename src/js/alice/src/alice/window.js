@@ -13,6 +13,8 @@ Alice.Window = Class.create({
     this.form = $(this.id + "_form");
 
     this.topic = $(this.id + "_topic");
+
+    // setup topic expanding on click (if it is multiline)
     if (this.topic) {
       var orig_height = this.topic.getStyle("height");
       this.topic.observe("click", function(e) {
@@ -34,6 +36,8 @@ Alice.Window = Class.create({
     
     this.submit.observe("click", function (e) {this.input.send(); e.stop()}.bind(this));
 
+    // huge mess of click logic to get the right behavior.
+    // (e.g. clicking on unfocused (x) button does not close tab)
     this.tab.observe("mousedown", function(e) {
       if (!this.active) {this.focus(); this.focusing = true}
     }.bind(this));
@@ -44,24 +48,30 @@ Alice.Window = Class.create({
       if (this.active && !this.focusing) this.close()}.bind(this));
 
     this.messages.observe("mouseover", this.showNick.bind(this));
-    this.scrollToBottom(true);
 
+    // manually resize message area in ff, ew
+    if (Prototype.Browser.Gecko) {
+      this.resizeMessagearea();
+      this.scrollToBottom();
+    }
+
+    // only keep 50 messages per tab to avoid memory limits
+    else if (Prototype.Browser.MobileSafari) {
+      this.messageLimit = 50;
+      this.messages.select("li").reverse().slice(50).invoke("remove");
+    }
+
+    this.scrollToBottom(true);
+    this.makeTopicClickable();
+
+    // wait a second to load images, otherwise the browser will say "loading..."
     setTimeout(function () {
       this.messages.select('li.message div.msg').each(function (msg) {
         msg.innerHTML = application.applyFilters(msg.innerHTML);
       });
     }.bind(this), 1000);
 
-    if (Prototype.Browser.Gecko) {
-      this.resizeMessagearea();
-      this.scrollToBottom();
-    } else if (Prototype.Browser.MobileSafari) {
-      // only keep 50 messages per tab to avoid memory limits
-      this.messageLimit = 50;
-      this.messages.select("li").reverse().slice(50).invoke("remove");
-    }
 
-    this.makeTopicClickable();
   },
   
   isTabWrapped: function() {
