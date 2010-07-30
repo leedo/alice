@@ -119,6 +119,7 @@ sub serialized {
     title      => $self->title,
     is_channel => $self->is_channel,
     type       => $self->type,
+    hashtag    => $self->hashtag,
   };
 }
 
@@ -295,6 +296,14 @@ sub reset_previous_nick {
 sub previous_nick {
   my $self = shift;
   return $self->buffer->previous_nick;
+}
+
+sub hashtag {
+  my $self = shift;
+  if ($self->type eq "info") {
+    return "/" . $self->title;
+  }
+  return "/" . $self->session . "/" . $self->title;
 }
 
 __PACKAGE__->meta->make_immutable;
