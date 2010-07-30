@@ -9,3 +9,4 @@
 - Document message buffer API
 - Document javascript API so adding filters is easy
 - Some perl-side plugin system, need to add hooks
+- More tests
