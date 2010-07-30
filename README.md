@@ -168,6 +168,19 @@ Disconnect from a network. The network must be the name of a server
 from the Connections window. This command will also stop any reconnect
 timers for that network.
 
+- /ignore $nick
+
+Ignore any nick that matches the one provided. __This applies across
+all networks.__
+
+- /ignores
+
+List all active ignored nicks.
+
+- /unignore $nick
+
+Unignore a nick.
+
 # NOTIFICATIONS
 
 If you get a message with your nick in the body while no browsers
