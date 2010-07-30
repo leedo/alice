@@ -172,28 +172,37 @@ Alice.Application = Class.create({
   },
   
   nextWindow: function() {
-    var nextWindow = this.activeWindow().tab.next();
-    if (!nextWindow)
-      nextWindow = $$('ul#tabs li').first();
-    if (!nextWindow) return;
-    nextWindow = nextWindow.id.replace('_tab','');
-    this.getWindow(nextWindow).focus();
+    var active = this.activeWindow();
+
+    var nextTab = active.tab.next();
+    if (!nextTab)
+      nextTab = $$('ul#tabs li').first();
+    if (!nextTab) return;
+
+    var id = nextTab.id.replace('_tab','');
+    if (id != active.id) {
+      this.getWindow(id).focus();
+    }
   },
   
   focusLast: function() {
-    if (this.previousFocus)
+    if (this.previousFocus && this.previousFocus.id != this.activeWindow().id)
       this.previousFocus.focus();
     else
       this.nextWindow();
   },
   
   previousWindow: function() {
-    var previousWindow = this.activeWindow().tab.previous();
-    if (!previousWindow)
-      previousWindow = $$('ul#tabs li').last();
-    if (!previousWindow) return;
-    previousWindow = previousWindow.id.replace('_tab','');
-    this.getWindow(previousWindow).focus();
+    var active = this.activeWindow();
+
+    var previousTab = this.activeWindow().tab.previous();
+    if (!previousTab)
+      previousTab = $$('ul#tabs li').last();
+    if (!previousTab) return;
+
+    var id = previousTab.id.replace('_tab','');
+    if (id != active.id)
+      this.getWindow(id).focus();
   },
   
   closeWindow: function(windowId) {
