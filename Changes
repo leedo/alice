@@ -7,6 +7,8 @@
         - Better iPad display
         - Some changes to improve memory usage
           by a small amount 
+        - URL hash tags for each tab include network
+          and tab name, instead of md5 of them
 
 0.16  Fri 18 Jun 2010
         - Added basic wysiwyg input field
