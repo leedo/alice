@@ -340,7 +340,7 @@ sub create_window {
 
 sub _build_window_id {
   my ($self, $title, $session) = @_;
-  "w" . md5_hex(encode_utf8(lc $self->user."-$title-$session"));
+  md5_hex(encode_utf8(lc $self->user."-$title-$session"));
 }
 
 sub find_or_create_window {
