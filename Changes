@@ -1,3 +1,13 @@
+0.17  Fri 30 Jul 2010
+        - Improved URL regex (thanks gruber)
+        - Added color chooser to wysiwyg
+        - Smooth out wysiwyg interface
+        - Bump IRC::Formatting::HTML requirement
+          for improved invert/italic support
+        - Better iPad display
+        - Some changes to improve memory usage
+          by a small amount 
+
 0.16  Fri 18 Jun 2010
         - Added basic wysiwyg input field
         - Reload commands without restarting
