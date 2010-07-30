@@ -24,7 +24,7 @@ Alice.Application = Class.create({
       var win = this.getWindow(action['window'].id);
       if (!win) {
         this.insertWindow(action['window'].id, action.html);
-        win = new Alice.Window(this, action['window'].id, action['window'].title, false);
+        win = new Alice.Window(this, action['window'].id, action['window'].title, false, action['window'].hashtag);
         this.addWindow(win);
       } else {
         win.enable();
@@ -131,8 +131,8 @@ Alice.Application = Class.create({
     return this.window_map.values();
   },
   
-  openWindow: function(element, title, active) {
-    var win = new Alice.Window(this, element, title, active);
+  openWindow: function(element, title, active, hashtag) {
+    var win = new Alice.Window(this, element, title, active, hashtag);
     this.addWindow(win);
     if (win.active) win.input.focus();
     return win;
@@ -255,8 +255,14 @@ Alice.Application = Class.create({
     var hash = window.location.hash;
     if (hash) {
       hash = hash.replace(/^#/, "");
-      var focus = this.getWindow(hash)
-      if (focus && !focus.active) focus.focus();
+      var windows = this.windows();
+      for (var i = 0; i < windows.length; i++) {
+        var win = windows[i];
+        if (win.hashtag == hash) {
+          if (win && !win.active) win.focus();
+          return;
+        }
+      }
     }
   },
   

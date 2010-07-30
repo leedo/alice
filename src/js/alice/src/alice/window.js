@@ -1,9 +1,10 @@
 Alice.Window = Class.create({
-  initialize: function(application, element, title, active) {
+  initialize: function(application, element, title, active, hashtag) {
     this.application = application;
     
     this.element = $(element);
     this.title = title;
+    this.hashtag = hashtag;
     this.id = this.element.identify();
     this.active = active;
     this.tab = $(this.id + "_tab");
@@ -173,7 +174,7 @@ Alice.Window = Class.create({
     }
     this.element.redraw();
     this.application.updateChannelSelect();
-    window.location.hash = this.id;
+    window.location.hash = this.hashtag;
     window.location = window.location.toString();
   },
   
