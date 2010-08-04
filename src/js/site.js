@@ -101,7 +101,7 @@ if (window == window.parent) {
       function(content) {
         var filtered = content;
         filtered = filtered.replace(
-          /(<a href=\"(:?.*?\.(:?wav|mp3|ogg|aiff))")/gi,
+          /(<a href=\"(:?.*?\.(:?wav|mp3|ogg|aiff|m4a))")/gi,
           "<img src=\"/static/image/play.png\" " +
           "onclick=\"Alice.playAudio(this)\" class=\"audio\"/>$1");
         return filtered;
