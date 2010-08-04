@@ -263,6 +263,7 @@ Alice.Application = Class.create({
   focusHash: function(hash) {
     var hash = window.location.hash;
     if (hash) {
+      hash = decodeURIComponent(hash);
       hash = hash.replace(/^#/, "");
       var windows = this.windows();
       for (var i = 0; i < windows.length; i++) {
