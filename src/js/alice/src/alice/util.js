@@ -31,10 +31,12 @@ Object.extend(Alice, {
           message.window.title + ": " + message.nick,
           message.body.unescapeHTML()
         );
+
+        popup.ondisplay = function() {
+          setTimeout(function () {popup.cancel();}, 3000);
+        };
+
         popup.show();
-        setTimeout(function () {
-          popup.cancel();
-        }, 3000);
       }
     }
   },
