@@ -20,7 +20,11 @@ Alice.Keyboard = Class.create({
   },
   
   shortcut: function(name, options) {
-    var keystroke = name.replace("Cmd", "Meta").replace("Opt", "Alt"), 
+
+    // use control as command on non-Mac platforms
+    var meta = navigator.platform.match(/mac/i) ? "Cmd" : "Ctrl";
+
+    var keystroke = name.replace("Cmd", meta).replace("Opt", "Alt"), 
         method = "on" + name.replace(/\+/g, "");
 
     window.shortcut.add(keystroke, function(event) {
