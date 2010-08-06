@@ -32,6 +32,9 @@ Object.extend(Alice, {
           message.body.unescapeHTML()
         );
         popup.show();
+        setTimeout(function () {
+          popup.cancel();
+        }, 3000);
       }
     }
   },
