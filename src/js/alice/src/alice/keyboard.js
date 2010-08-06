@@ -17,6 +17,10 @@ Alice.Keyboard = Class.create({
     this.shortcut("Enter");
     this.shortcut("Esc");
     this.shortcut("Tab");
+    for (var i = 0; i < 10; i++) {
+      this.shortcut("Cmd+"+i);
+      this.shortcut("Opt+"+i);
+    }
   },
   
   shortcut: function(name, options) {
@@ -30,10 +34,20 @@ Alice.Keyboard = Class.create({
     window.shortcut.add(keystroke, function(event) {
       if (this.enabled) {
         this.activeWindow = this.application.activeWindow();
-        this[method].call(this, event);
+        if (method.match(/\d$/)) {
+          this.onNumeric.call(this, event, method.substr(-1));
+        }
+        else {
+          this[method].call(this, event);
+        }
         delete this.activeWindow;
       }
     }.bind(this), options);
+  },
+
+  onNumeric: function(event, number) {
+    var windows = this.application.windows();
+    if (windows[number]) windows[number].focus();
   },
 
   onCmdC: function(event) {
