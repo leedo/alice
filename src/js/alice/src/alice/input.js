@@ -98,6 +98,7 @@ Alice.Input = Class.create({
         selection.selectNode(text);
         this.range = selection.getRangeAt(0);
       }
+      this.editor.focus();
     } else {
       this.textarea.focus();
     }

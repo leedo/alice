@@ -12,11 +12,6 @@ Alice.Application = Class.create({
     
     // setup UI elements in initial state
     this.makeSortable();
-    var active = this.activeWindow();
-    if (active) {
-      active.input.focus();
-      active.scrollToBottom();
-    }
   },
   
   actionHandlers: {
@@ -134,7 +129,9 @@ Alice.Application = Class.create({
   openWindow: function(element, title, active, hashtag) {
     var win = new Alice.Window(this, element, title, active, hashtag);
     this.addWindow(win);
-    if (win.active) win.input.focus();
+    if (active) {
+      win.focus();
+    }
     return win;
   },
   
