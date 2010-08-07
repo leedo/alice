@@ -296,7 +296,7 @@ Alice.Window = Class.create({
       }
     }
 
-    var messages = this.messages.childElements();
+    var messages = this.messages.down('ul').childElements();
     if (messages.length > this.messageLimit) messages.first().remove();
     
     this.element.redraw();
