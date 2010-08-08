@@ -100,7 +100,7 @@ Alice.Application = Class.create({
     if (this.prefWindow && !this.prefWindow.closed && this.prefWindow.focus) {
       this.prefWindow.focus();
     } else {
-      this.prefWindow = window.open(null, "prefs", "resizable=no,scrollbars=no,status=no,toolbar=no,location=no,width=200,height=300");
+      this.prefWindow = window.open(null, "prefs", "resizable=no,scrollbars=no,status=no,toolbar=no,location=no,width=200,height=400");
       this.connection.getPrefs(function (transport) {
         this.prefWindow.document.write(transport.responseText);
       }.bind(this));
