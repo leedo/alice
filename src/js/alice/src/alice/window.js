@@ -244,8 +244,6 @@ Alice.Window = Class.create({
     //this.messages.down('ul').insert(Alice.uncacheGravatar(message.html));
     var li = this.messages.down('ul.messages > li:last-child');
     
-    console.log(li);
-
     if (!message.consecutive) {
       var prev = li.previous();
       if (prev && prev.hasClassName("avatar") && !prev.hasClassName("consecutive"))
@@ -306,7 +304,7 @@ Alice.Window = Class.create({
   
   scrollToBottom: function(force) {
     if (!force) {
-      var lastmsg = this.messages.down('li:last-child');
+      var lastmsg = this.messages.down('ul.messages > li:last-child');
       if (!lastmsg) return;
       var msgheight = lastmsg.offsetHeight; 
       var bottom = this.messages.scrollTop + this.messages.offsetHeight;
