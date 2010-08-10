@@ -530,7 +530,7 @@ ul.messages li.monospace div.msg {
   white-space: pre-wrap;
 }
 
-li.monospace span[style*="bold"] div.msg {
+li.monospace div.msg span[style*="bold"] {
   letter-spacing: -1px;
 }
 
