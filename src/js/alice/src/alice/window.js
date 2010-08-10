@@ -242,8 +242,10 @@ Alice.Window = Class.create({
     
     this.messages.down('ul').insert(message.html);
     //this.messages.down('ul').insert(Alice.uncacheGravatar(message.html));
-    var li = this.messages.down('li:last-child');
+    var li = this.messages.down('ul.messages > li:last-child');
     
+    console.log(li);
+
     if (!message.consecutive) {
       var prev = li.previous();
       if (prev && prev.hasClassName("avatar") && !prev.hasClassName("consecutive"))
