@@ -1,7 +1,7 @@
 ? my ($app, $window) = @_;
 
 <ul class="avatar_grid">
-? for my $nick ($window->all_nicks) {
+? for my $nick (@{$window->all_nicks}) {
   <li>
     <? my $avatar = $window->irc->nick_avatar($nick); ?>
     <div class="gridimg">
