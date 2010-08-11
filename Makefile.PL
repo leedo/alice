@@ -43,10 +43,6 @@ SITE_CSS := $(BUILD)/alice.css
 ALICE_JS := $(JS_SOURCE)/alice/src/alice.js
 SITE_JS := $(BUILD)/alice.js
 
-define build_submodules
-	sh -c "git submodule init && git submodule update"
-endef
-
 clean_assets:
 	rm $(BUILD)/*.css
 	rm $(BUILD)/*.js
@@ -61,16 +57,9 @@ stylesheets:
 	cp $(ALICE_CSS) $(SITE_CSS)
 	cp $(CSS_SOURCE)/iphone.css $(BUILD)/iphone.css
   
-javascript: $(JAVASCRIPT_SOURCES) submodules
+javascript: $(JAVASCRIPT_SOURCES)
 	sprocketize $(INCLUDE) $(ALICE_JS) > $(SITE_JS)
 	cp $(JS_SOURCE)/site.js $(BUILD)/site.js
-
-$(JS_SOURCE)/prototype/.git/refs/heads/master:
-	$(build_submodules)
-$(JS_SOURCE)/scriptaculous/.git/refs/heads/master:
-	$(build_submodules)
-
-submodules: $(JS_SOURCE)/prototype/.git/refs/heads/master $(JS_SOURCE)/scriptaculous/.git/refs/heads/master $(JS_SOURCE)/wysihat/.git/refs/heads/master
 };
 
 WriteAll;
