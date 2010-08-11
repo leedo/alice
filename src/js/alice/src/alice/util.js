@@ -9,6 +9,14 @@ Object.extend(Alice, {
       "$1time=" + this.timestamp + "&"
     ); 
   },
+
+  epochToLocal: function(epoch) {
+    var date = new Date(parseInt(epoch) * 1000);
+    if (date) {
+      return sprintf("%02d:%02d", date.getHours(), date.getMinutes());
+    }
+    return epoch;
+  },
   
   stripNick: function(html) {
     return html.replace(/<div class="left">.*<\/div>/, '');

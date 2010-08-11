@@ -28,6 +28,11 @@ if (window == window.parent) {
       li.previous().setStyle({minHeight:"42px"});
     });
 
+    // change timestamps from epoch to local time
+    $$('span.timestamp').each(function(elem) {
+      elem.innerHTML = Alice.epochToLocal(elem.innerHTML.trim());
+    });
+
     // connect close botton for help 
 
     $('helpclose').observe("click", function () { $('help').hide(); });

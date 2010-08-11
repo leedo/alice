@@ -13,6 +13,6 @@
     </div>
     <div class="msg"><?= $msg->{html} ?></div>
     <? if (!$msg->{consecutive} and $msg->{timestamp}) { ?>
-    <div class="timehint"><?= $msg->{timestamp} ?></div>
+    <div class="timehint"><span class="timestamp"><?= $msg->{timestamp} ?></span></div>
     <? } ?>
 </li>
