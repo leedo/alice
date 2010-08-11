@@ -231,6 +231,7 @@ Alice.Input = Class.create({
     if (url) {
       e.preventDefault();
       this.editor.insertHTML(url);
+      this.updateRange();
       return;
     }
 
@@ -239,6 +240,7 @@ Alice.Input = Class.create({
       e.preventDefault();
       text = text.escapeHTML().replace(/\n+/g, "<br>");
       this.editor.insertHTML(text);
+      this.updateRange();
       return;
     }
   }
