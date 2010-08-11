@@ -1,6 +1,6 @@
 ? my ($app, $msg) = @_;
 <li class="event" id="<?= $msg->{msgid} ?>">
-    <div class="left"><?= $msg->{timestamp} ?></div>
+    <div class="left"><span class="timestamp"><?= $msg->{timestamp} ?></span></div>
     <div class="msg">
 
 ? if ($msg->{event} eq "topic") {

@@ -96,8 +96,10 @@ Alice.Window = Class.create({
       this.visibleNick = li;
       var nick; var time;
       if (li.hasClassName("consecutive")) {
-        nick = li.previous("li:not(.consecutive)").down(".nickhint");
-        time = li.previous("li:not(.consecutive)").down(".timehint");
+        var stem = li.previous("li:not(.consecutive)");
+        if (!stem) return;
+        nick = stem.down(".nickhint");
+        time = stem.down(".timehint");
       } else {
         nick = li.down(".nickhint");
         time = li.down(".timehint");

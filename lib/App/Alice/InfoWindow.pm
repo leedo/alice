@@ -34,7 +34,7 @@ sub format_message {
     self   => $options{self} ? 1 : 0,
     hightlight => $options{highlight} ? 1 : 0,
     msgid  => $self->app->next_msgid,
-    timestamp => $self->timestamp,
+    timestamp => time,
     monospaced => $options{mono} ? 1 : 0,
     consecutive => $from eq $self->buffer->previous_nick ? 1 : 0,
   };

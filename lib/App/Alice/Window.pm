@@ -167,16 +167,6 @@ sub clear_action {
   };
 }
 
-sub timestamp {
-  my $self = shift;
-  my @time = localtime(time);
-  my $hour = $time[2];
-  my $ampm = $hour > 11 ? 'p' : 'a';
-  $hour = $hour > 12 ? $hour - 12 : $hour;
-  $hour = 12 if $hour == 0;
-  return sprintf("%d:%02d%s",$hour, $time[1], $ampm);
-}
-
 sub format_event {
   my ($self, $event, $nick, $body) = @_;
   my $message = {
@@ -186,7 +176,7 @@ sub format_event {
     window    => $self->serialized,
     body      => $body,
     msgid     => $self->app->next_msgid,
-    timestamp => $self->timestamp,
+    timestamp => time,
     nicks     => $self->all_nicks,
   };
   $message->{html} = make_links_clickable(
@@ -215,7 +205,7 @@ sub format_message {
     html      => encoded_string($html),
     self      => $own_nick eq $nick,
     msgid     => $self->app->next_msgid,
-    timestamp => $self->timestamp,
+    timestamp => time,
     monospaced => $monospace,
     consecutive => $nick eq $self->buffer->previous_nick ? 1 : 0,
   };
