@@ -125,6 +125,16 @@ Alice.Application = Class.create({
   windows: function () {
     return this.window_map.values();
   },
+
+  nth_window: function(n) {
+    var tab = $('tabs').down('li', n);
+    if (tab) {
+      var m = tab.id.match(/([^_]+)_tab/);
+      if (m) {
+        return this.window_map.get(m[1]);
+      }
+    }
+  },
   
   openWindow: function(element, title, active, hashtag) {
     var win = new Alice.Window(this, element, title, active, hashtag);
