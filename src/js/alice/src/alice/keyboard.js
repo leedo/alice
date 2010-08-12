@@ -46,8 +46,8 @@ Alice.Keyboard = Class.create({
   },
 
   onNumeric: function(event, number) {
-    var windows = this.application.windows();
-    if (windows[number]) windows[number].focus();
+    var win = this.application.nth_window(number);
+    if (win) win.focus();
   },
 
   onCmdC: function(event) {
