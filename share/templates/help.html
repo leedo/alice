@@ -12,26 +12,44 @@
         <dd><?= $command->{desc} ?></dd>
       <? } ?>
     </dl>
-    <dl>
+    <dl id="shortcuts">
       <h2>Shortcuts</h2>
-      <dt title="Command + K">⌘K</dt>
+      <dt>[Mod1] K</dt>
       <dd>Clear current tab</dd>
-      <dt title="Command + B">⌘B</dt>
+      <dt>[Mod1] B</dt>
       <dd>Previous tab</dd>
-      <dt title="Command + F">⌘F</dt>
+      <dt>[Mod1] F</dt>
       <dd>Next tab</dd>
-      <dt title="Option + Up Arrow">⌥↑</dt>
+      <dt>[Meta] [Up]</dt>
       <dd>Cycle through previous message</dd>
-      <dt title="Option + Down Arrow">⌥↓</dt>
+      <dt>[Meta] [Down]</dt>
       <dd>Cycle to next message</dd>
-      <dt title="Option + Return">⌥↵</dt>
+      <dt>[Meta] [Return]</dt>
       <dd>Insert a newline</dd>
-      <dt title="Command + M" >⌘⇧M</dt>
+      <dt >[Mod1] M</dt>
       <dd>Mark all tabs as read</dd>
-      <dt title="Command + J">⌘⇧J</dt>
+      <dt>[Mod1] [Shift] J</dt>
       <dd>Jump to bottom of tab</dd>
-      <dt title="Cmomand + Shift + K">⌘⇧K</dt>
+      <dt>[Mod1] [Shift] K</dt>
       <dd>Show timestamps and nicks</dd>
     </dl>
+    <script type="text/javascript">
+      var isMac = navigator.platform.match(/mac/i);
+      var modmap = {
+        "[Meta]":   isMac ? "⌥" : "&lt;Alt&gt;",
+        "[Mod1]":   isMac ? "⌘" : "&lt;Ctrl&gt;",
+        "[Shift]":  isMac ? "⇧" : "&lt;Shift&gt;",
+        "[Up]":     isMac ? "↑" : "&lt;Up&gt;",
+        "[Down]":   isMac ? "↓" : "&lt;Down&gt;",
+        "[Return]": isMac ? "↵" : "&lt;Return&gt;",
+      };
+      $('shortcuts').select("dt").each(function(dt) {
+        var terms = dt.innerHTML.split(" ");
+        terms = terms.map(function(term) {
+          return modmap[term] ? modmap[term] : term;  
+        });
+        dt.innerHTML = terms.join(isMac ? "" : " ");
+      });
+    </script>
   </div>
 </div>
