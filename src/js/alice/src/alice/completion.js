@@ -4,6 +4,22 @@ Alice.Completion = Class.create({
     if (!range) return;
 
     this.element = range.startContainer;
+
+    // gross hack to make this work when
+    // element is the editor div, which only
+    // happens when the editor is blank
+
+    if (this.element.nodeName == "DIV") {
+      this.element.innerHTML = ""; // removes any leading <br>s
+      var node = document.createTextNode("");
+      this.element.appendChild(node);
+      var selection = window.getSelection();
+      selection.removeAllRanges();
+      selection.selectNode(node);
+      range = selection.getRangeAt(0);
+      this.element = node;
+    }
+
     this.value = this.element.data;
     this.index = range.startOffset;
 
