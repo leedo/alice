@@ -23,8 +23,8 @@ Alice.Application = Class.create({
         this.addWindow(win);
       } else {
         win.enable();
-        win.nicks = action.nicks;
       }
+      win.nicks = action.nicks;
     },
     part: function (action) {
       this.closeWindow(action['window'].id);

@@ -130,8 +130,13 @@ sub nick {
 
 sub all_nicks {
   my $self = shift;
-  return [] unless $self->is_channel;
-  return $self->irc->channel_nicks($self->title);
+  return [] if $self->type eq "info";
+
+  if ($self->is_channel) {
+    return $self->irc->channel_nicks($self->title);
+  } else {
+    return [$self->title, $self->nick];
+  }
 }
 
 sub join_action {
