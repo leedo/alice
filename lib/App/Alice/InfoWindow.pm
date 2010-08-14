@@ -22,6 +22,10 @@ sub irc {
   return undef;
 }
 
+sub all_nicks {
+  return [];
+}
+
 sub format_message {
   my ($self, $from, $body, %options) = @_;
   my $html = irc_to_html($body);
