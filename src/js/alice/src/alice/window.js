@@ -279,6 +279,7 @@ Alice.Window = Class.create({
     if (!this.application.isFocused && message.highlight && message.window.title != "info") {
       message.body = li.down(".msg").innerHTML.stripTags();
       Alice.growlNotify(message);
+      this.application.addMissed();
     }
     
     if (message.nicks && message.nicks.length)
