@@ -6,7 +6,7 @@ from the CPAN. The simplest way to get these installed is with the
 
 Install the `cpanm` by running
 
-    curl -L http://cpanmin.us | perl - --sudo App::cpanminus
+    curl -L http://xrl.us/cpanm | perl - --sudo App::cpanminus
 
 Install alice's dependencies with the following command
 
