@@ -59,8 +59,7 @@ if (window == window.parent) {
           if (confirm("Logout?")) window.location = "/logout";
           break;
         case "Help":
-          var help = $('help');
-          help.visible() ? help.hide() : help.show();
+          alice.toggleHelp();
           break;
       }
       $$('#config_overlay option').each(function(opt){opt.selected = false});

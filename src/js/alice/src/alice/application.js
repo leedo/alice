@@ -83,6 +83,11 @@ Alice.Application = Class.create({
     }
   },
   
+  toggleHelp: function() {
+    var help = $('help');
+    help.visible() ? help.hide() : help.show();
+  },
+
   toggleConfig: function(e) {
     if (this.configWindow && !this.configWindow.closed && this.configWindow.focus) {
       this.configWindow.focus();
