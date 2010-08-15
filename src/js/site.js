@@ -83,8 +83,12 @@ if (window == window.parent) {
     window.onfocus = function () {
       if (!Prototype.Browser.MobileSafari)
         window.document.body.removeClassName("blurred");
-      if (alice.activeWindow()) alice.activeWindow().input.focus();
-        alice.isFocused = true
+
+      if (alice.activeWindow())
+        alice.activeWindow().input.focus();
+
+      alice.isFocused = true
+      alice.clearMissed();
     };
     
     window.status = " ";  

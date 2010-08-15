@@ -306,5 +306,16 @@ Alice.Application = Class.create({
         if (order.length) this.connection.sendTabOrder(order);
       }.bind(this)
     });
+  },
+
+  addMissed: function() {
+    if (!window.fluid) return;
+    window.fluid.dockBadge ? window.fluid.dockBadge++ :
+                             window.fluid.dockBadge = 1;
+  },
+
+  clearMissed: function() {
+    if (!window.fluid) return;
+    window.fluid.dockBadge = "";
   }
 });
