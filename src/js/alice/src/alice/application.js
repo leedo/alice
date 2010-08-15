@@ -152,10 +152,14 @@ Alice.Application = Class.create({
   
   addWindow: function(win) {
     this.window_map.set(win.id, win);
+    if (window.fluid)
+      window.fluid.addDockMenuItem(win.title, win.focus.bind(win));
   },
   
   removeWindow: function(win) {
     if (win.active) this.focusLast();
+    if (window.fluid)
+      window.fluid.removeDockMenuItem(win.title);
     this.window_map.unset(win.id);
     this.connection.closeWindow(win);
     win = null;
