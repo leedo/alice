@@ -2,6 +2,7 @@ package App::Alice::IRC;
 
 use AnyEvent;
 use AnyEvent::IRC::Client;
+use List::Util qw/min/;
 use List::MoreUtils qw/uniq/;
 use Digest::MD5 qw/md5_hex/;
 use Any::Moose;
@@ -228,40 +229,46 @@ sub connect {
 
 sub connected {
   my ($self, $cl, $err) = @_;
+
   if (defined $err) {
     $self->log(info => "connect error: $err");
-    $self->reconnect(60);
+    $self->reconnect();
+    return;
   }
-  else {
-    $self->log(info => "connected");
-    $self->reset_reconnect_count;
-    $self->connect_time(time);
-    $self->is_connected(1);
-    $self->cl->register(
-      $self->nick, $self->config->{username},
-      $self->config->{ircname}, $self->config->{password}
-    );
-    $self->broadcast({
-      type => "action",
-      event => "connect",
-      session => $self->alias,
-      windows => [map {$_->serialized} $self->windows],
-    });
-  }
+
+  $self->log(info => "connected");
+  $self->reset_reconnect_count;
+  $self->connect_time(time);
+  $self->is_connected(1);
+
+  $self->cl->register(
+    $self->nick, $self->config->{username},
+    $self->config->{ircname}, $self->config->{password}
+  );
+
+  $self->broadcast({
+    type => "action",
+    event => "connect",
+    session => $self->alias,
+    windows => [map {$_->serialized} $self->windows],
+  });
 }
 
 sub reconnect {
   my ($self, $time) = @_;
-  if ($self->reconnect_count > 4) {
-    $self->log(info => "too many failed reconnects, giving up");
-    return;
-  }
+
   my $interval = time - $self->connect_time;
-  if ($interval < 30) {
-    $time = 30 - $interval;
-    $self->log(debug => "last attempt was within 30 seconds, delaying $time seconds")
+
+  if ($interval < 15) {
+    $time = 15 - $interval;
+    $self->log(debug => "last attempt was within 15 seconds, delaying $time seconds")
   }
-  $time = 60 unless $time >= 0;
+
+  if (!defined $time) {
+    # increase timer by 15 seconds each time, until it hits 5 minutes
+    $time = min 60 * 5, 15 * $self->reconnect_count;
+  }
+
   $self->log(debug => "reconnecting in $time seconds");
   $self->reconnect_timer(
     AnyEvent->timer(after => $time, cb => sub {
