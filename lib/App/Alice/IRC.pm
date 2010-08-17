@@ -209,19 +209,22 @@ sub channels {
 
 sub connect {
   my $self = shift;
+
   $self->disabled(0);
-  $self->cl->{enable_ssl} = $self->config->{ssl} ? 1 : 0;
   $self->increase_reconnect_count;
+
+  $self->cl->{enable_ssl} = $self->config->{ssl} ? 1 : 0;
+
+  # some people don't set these, wtf
   if (!$self->config->{host} or !$self->config->{port}) {
     $self->log(info => "can't connect: missing either host or port");
     return;
   }
-  if ($self->reconnect_count > 1) {
-    $self->log(info => "reconnecting: attempt " . $self->reconnect_count);
-  }
-  else {
-    $self->log(debug => "connecting");
-  }
+
+  $self->reconnect_count > 1 ? 
+    $self->log(info => "reconnecting: attempt " . $self->reconnect_count)
+  : $self->log(debug => "connecting");
+
   $self->cl->connect(
     $self->config->{host}, $self->config->{port}
   );
