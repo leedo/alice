@@ -22,6 +22,13 @@ if (window == window.parent) {
 
     alice.options = options;
 
+    var orig_console_log = console.log;
+    console.log = function () {
+      if (options.debug == "true" && console) {
+        orig_console_log.apply(console, arguments);
+      }
+    };
+
     // fix height of non-consecutive avatar messages
 
     $$('ul.messages li.avatar:not(.consecutive) + li:not(.consecutive)').each(function (li) {
