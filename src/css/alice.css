@@ -888,17 +888,18 @@ div#help {
   color: #fff;
   left: 20px;
   right: 20px;
-  top: 20px;
-  bottom: 70px;
-  padding: 10px 30px;
-  -webkit-border-radius: 20px;
+  top: 25px;
+  bottom: 60px;
+  padding: 10px 20px;
+  -webkit-border-radius: 10px;
+  -moz-border-radius: 10px;
   text-shadow: 0 0 3px rgba(0,0,0,0.9);
 }
 
 div#help div#helpclose {
   position: absolute;
   top: 17px;
-  right: 30px;
+  right: 20px;
   color: rgba(255, 255, 255, 0.75);
   font-size: 9px;
   letter-spacing: 1px;
@@ -913,31 +914,35 @@ div#help div#helpclose:hover {
 
 div#help div#topics {
   position: absolute;
-  top: 39px;
-  bottom: 25px;
-  left: 30px;
-  right: 30px;
+  top: 34px;
+  bottom: 15px;
+  left: 20px;
+  right: 20px;
   overflow-y: auto;
 }
 
 div#help h1 {
   margin: 0;
-  font-size: 24px;
+  font-size: 20px;
   text-align: center;
   border-bottom: 1px solid #eee;
   font-weight: normal;
 }
 
 div#help dl {
-  width: 50%;
+  width: 48%;
   font-size: 12px;
   float: left;
   display: block;
 }
 
+div#help dl#shortcuts {
+  float: right;
+}
+
 div#help h2 {
   color: yellow;
-  text-align: center;
+  margin-top: 0;
 }
 
 div#help dt {
