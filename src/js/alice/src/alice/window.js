@@ -302,6 +302,11 @@ Alice.Window = Class.create({
     var messages = this.messages.down('ul').childElements();
     if (messages.length > this.messageLimit) messages.first().remove();
     
+    // fix timestamps
+    li.select("span.timestamp").each(function(elem) {
+      elem.innerHTML = Alice.epochToLocal(elem.innerHTML.trim());
+    });
+
     this.element.redraw();
   },
   
