@@ -215,7 +215,7 @@ Alice.Input = Class.create({
 
   canContentEditable: function() {
     var element = new Element("div", {contentEditable: "true"});
-    return element.contentEditable != "true" && ! Prototype.Browser.MobileSafari;
+    return element.contentEditable != null && ! Prototype.Browser.MobileSafari;
   },
 
   updateRange: function (e) {
