@@ -924,25 +924,32 @@ div#help div#topics {
 div#help h1 {
   margin: 0;
   font-size: 20px;
-  text-align: center;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid #999;
   font-weight: normal;
 }
 
 div#help dl {
   width: 48%;
   font-size: 12px;
+  margin-top: 0;
+  padding-top: 10px;
   float: left;
   display: block;
+  border-right: 1px solid #666;
+  padding-right: 2%;
 }
 
 div#help dl#shortcuts {
+  border-right: none;
   float: right;
+  padding-right: 0;
+  padding-left: 2%;
 }
 
 div#help h2 {
   color: yellow;
   margin-top: 0;
+  font-weight: normal;
 }
 
 div#help dt {
