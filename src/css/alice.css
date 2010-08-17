@@ -136,6 +136,8 @@ tr.input div.editor_toolbar {
   width: 180px;
   height: 20px;
   -webkit-border-radius: 3px 0 0 3px;
+  -moz-border-radius: 3px 0 0 3px;
+  border-radius: 3px 0 0 3px;
   background: url(image/formatting.png) top left no-repeat #000;
   z-index: 902;
   opacity: 0.2;
@@ -893,6 +895,7 @@ div#help {
   padding: 10px 20px;
   -webkit-border-radius: 10px;
   -moz-border-radius: 10px;
+  border-radius: 10px;
   text-shadow: 0 0 3px rgba(0,0,0,0.9);
 }
 
@@ -1010,6 +1013,8 @@ div.color_picker div.toggle span#bg {
   font-size: 9px;
   background: none;
   -webkit-border-radius: 10px;
+  -moz-border-radius: 10px;
+  border-radius: 10px;
   color: #000;
   text-align: center;
   padding: 2px 5px;
