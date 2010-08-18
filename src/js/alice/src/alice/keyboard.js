@@ -1,6 +1,7 @@
 Alice.Keyboard = Class.create({
   initialize: function(application) {
     this.application = application;
+    this.isMac = navigator.platform.match(/mac/i);
     this.enable();
     
     this.shortcut("Cmd+C", { propagate: true });
@@ -20,14 +21,14 @@ Alice.Keyboard = Class.create({
     this.shortcut("Tab");
     for (var i = 0; i < 10; i++) {
       this.shortcut("Cmd+"+i);
-      this.shortcut("Opt+"+i);
+      if (!this.isMac) this.shortcut("Opt+"+i);
     }
   },
   
   shortcut: function(name, options) {
 
     // use control as command on non-Mac platforms
-    var meta = navigator.platform.match(/mac/i) ? "Meta" : "Ctrl";
+    var meta = this.isMac ? "Meta" : "Ctrl";
 
     var keystroke = name.replace("Cmd", meta).replace("Opt", "Alt"), 
         method = "on" + name.replace(/\+/g, "");
