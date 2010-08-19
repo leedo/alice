@@ -38,11 +38,6 @@ div.window {
   position: relative;
 }
 
-ul.messages {
-  height: 300px;
-  overflow: auto;
-}
-
 div.topic {
   height: 1.2em;
   overflow: hidden;
@@ -57,12 +52,14 @@ tr.input textarea {
 tr.input input.send {
   display: block;
   position: absolute;
-  bottom: 0px;
+  bottom: -4px;
   right: 0px;
 }
 
 ul.messages {
-  padding-bottom: 70px;
+  background: #fff;
+  background: red;
+  border-top: 2px solid red;
 }
 
 li#config_button {
@@ -110,4 +107,11 @@ ul.messages li hr {
   border-top: 1px solid #efefef;
   margin: 0;
   padding: 0;
+}
+
+div.message_wrap {
+  overflow: hidden;
+  position: relative;
+  height: 370px;
+  background: blue;
 }
