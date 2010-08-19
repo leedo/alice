@@ -312,7 +312,7 @@ Alice.Window = Class.create({
   
   scrollToBottom: function(force) {
     if (Prototype.Browser.MobileSafari) {
-      this.mobileScrollToBottom(arguments);
+      this.mobileScrollToBottom(force);
       return;
     }
 
@@ -340,6 +340,13 @@ Alice.Window = Class.create({
 
       var offset = inner_height - container_height;
       if (offset > 0) {
+        // force is used for initial scrolling, we only want
+        // to smooth scroll any new lines
+        if (!force) {
+	        ul.style.webkitTransitionProperty = '-webkit-transform';
+	        ul.style.webkitTransitionTimingFunction = 'cubic-bezier(0,0,0.25,1)';
+	        ul.style.webkitTransitionDuration = '0.2s';
+        }
         ul.style.webkitTransform = "translateY(-"+(offset + 6)+"px)";
       }
     }.bind(this), 0);
