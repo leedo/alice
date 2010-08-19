@@ -22,6 +22,11 @@ if (window == window.parent) {
 
     alice.options = options;
 
+    // don't load images on the iphone
+    if (navigator.platform.match(/iphone/i)) {
+      alice.options.images = "hide";
+    }
+
     var orig_console_log = console.log;
     console.log = function () {
       if (options.debug == "true" && console) {
