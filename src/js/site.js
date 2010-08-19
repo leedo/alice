@@ -37,7 +37,8 @@ if (window == window.parent) {
 
     // change timestamps from epoch to local time
     $$('span.timestamp').each(function(elem) {
-      elem.innerHTML = Alice.epochToLocal(elem.innerHTML.trim());
+      if (elem.innerHTML)
+        elem.innerHTML = Alice.epochToLocal(elem.innerHTML.strip());
     });
 
     // connect close botton for help 

@@ -57,7 +57,7 @@ tr.input textarea {
 tr.input input.send {
   display: block;
   position: absolute;
-  bottom: 1px;
+  bottom: 0px;
   right: 0px;
 }
 
