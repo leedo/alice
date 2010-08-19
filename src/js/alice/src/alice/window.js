@@ -62,7 +62,7 @@ Alice.Window = Class.create({
       this.messages.select("li").reverse().slice(50).invoke("remove");
     }
 
-    this.scrollToBottom(true);
+    if (this.active) this.scrollToBottom(true);
     this.makeTopicClickable();
 
     // wait a second to load images, otherwise the browser will say "loading..."
@@ -311,17 +311,39 @@ Alice.Window = Class.create({
   },
   
   scrollToBottom: function(force) {
+    if (Prototype.Browser.MobileSafari) {
+      this.mobileScrollToBottom(arguments);
+      return;
+    }
+
+    var bottom, height;
+
     if (!force) {
       var lastmsg = this.messages.down('ul.messages > li:last-child');
       if (!lastmsg) return;
       var msgheight = lastmsg.offsetHeight; 
-      var bottom = this.messages.scrollTop + this.messages.offsetHeight;
-      var height = this.messages.scrollHeight;
+      bottom = this.messages.scrollTop + this.messages.offsetHeight;
+      height = this.messages.scrollHeight;
     }
+
     if (force || bottom + msgheight + 100 >= height) {
       this.messages.scrollTop = this.messages.scrollHeight;
       this.element.redraw();
     }
+  },
+
+  mobileScrollToBottom: function(force) {
+    var ul = this.messages.down("ul");
+    var container_height = this.messages.getHeight();
+    var inner_height = ul.getHeight();
+
+      var offset = inner_height - container_height;
+      console.error(this.title);
+      console.error("container: "+container_height+", inner: "+inner_height);
+      console.error("offset: "+offset);
+      if (offset > 0) {
+        ul.style.webkitTransform = "translateY(-"+offset+"px)";
+      }
   },
   
   getNicknames: function() {
