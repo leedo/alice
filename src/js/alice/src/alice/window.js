@@ -333,17 +333,16 @@ Alice.Window = Class.create({
   },
 
   mobileScrollToBottom: function(force) {
-    var ul = this.messages.down("ul");
-    var container_height = this.messages.getHeight();
-    var inner_height = ul.getHeight();
+    setTimeout(function() {
+      var ul = this.messages.down("ul");
+      var container_height = this.messages.getHeight();
+      var inner_height = ul.getHeight();
 
       var offset = inner_height - container_height;
-      console.error(this.title);
-      console.error("container: "+container_height+", inner: "+inner_height);
-      console.error("offset: "+offset);
       if (offset > 0) {
-        ul.style.webkitTransform = "translateY(-"+offset+"px)";
+        ul.style.webkitTransform = "translateY(-"+(offset + 6)+"px)";
       }
+    }.bind(this), 0);
   },
   
   getNicknames: function() {
