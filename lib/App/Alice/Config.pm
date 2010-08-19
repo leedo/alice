@@ -13,12 +13,7 @@ has assetdir => (
     if (-e "$FindBin::Bin/../share/templates") {
       return "$FindBin::Bin/../share";
     }
-    elsif ($FindBin::Script eq "script") {
-      return "$FindBin::Bin/share";
-    }
-    else {
-      return dist_dir('App-Alice');
-    }
+    return dist_dir('App-Alice');
   }
 );
 
