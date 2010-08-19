@@ -49,13 +49,11 @@ clean_assets:
 
 assets: stylesheets javascript
 	yuicompressor $(SITE_CSS) -o $(SITE_CSS)
-	yuicompressor $(BUILD)/iphone.css -o $(BUILD)/iphone.css
 	yuicompressor $(SITE_JS) -o $(SITE_JS)
 	yuicompressor $(BUILD)/site.js -o $(BUILD)/site.js
 		
 stylesheets:
 	cp $(ALICE_CSS) $(SITE_CSS)
-	cp $(CSS_SOURCE)/iphone.css $(BUILD)/iphone.css
   
 javascript: $(JAVASCRIPT_SOURCES)
 	sprocketize $(INCLUDE) $(ALICE_JS) > $(SITE_JS)
