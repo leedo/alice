@@ -1025,3 +1025,47 @@ div.color_picker div.toggle span#bg.active {
   background: rgba(0,0,0,0.6);
   color: #fff;
 }
+
+@media screen and (max-width: 480px) {
+  div.left {
+    width: 40px !important;
+  }
+
+  div.msg {
+    margin-left: 52px !important;
+  }
+
+  div.topic {
+    height: 1.2em;
+    overflow: hidden;
+  }
+
+  tr.input div {
+    margin-right: 55px;
+    background: none;
+  }
+
+  tr.input input.send {
+    display: block;
+    position: absolute;
+    bottom: 2px;
+    right: 0px;
+    z-index: 999;
+  }
+
+  ul.messages {
+    background: #fff;
+  }
+
+  div.msg.monospace, div.msg.announce {
+    line-height: 11px;
+  }
+
+  ul.messages li {
+    background: #fff;
+  }
+
+  ul.messages li.self {
+    background: #fffbd0;
+  }
+}
