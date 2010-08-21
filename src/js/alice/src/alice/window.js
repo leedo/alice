@@ -312,8 +312,8 @@ Alice.Window = Class.create({
   
   scrollToBottom: function(force) {
     if (Prototype.Browser.MobileSafari) {
-      this.mobileScrollToBottom(force);
-      return;
+      //this.mobileScrollToBottom(force);
+      //return;
     }
 
     var bottom, height;

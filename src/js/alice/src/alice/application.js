@@ -8,8 +8,9 @@ Alice.Application = Class.create({
     this.keyboard = new Alice.Keyboard(this);
     
     // Keep this as a timeout so the page doesn't show "loading..."
-    var timeout = Prototype.Browser.MobileSafari ? 4000 : 1000;
-    setTimeout(this.connection.connect.bind(this.connection), timeout);
+    window.onload = function () {
+      setTimeout(this.connection.connect.bind(this.connection), 1000);
+    }.bind(this);
     
     // setup UI elements in initial state
     this.makeSortable();
