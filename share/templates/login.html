@@ -1,7 +1,8 @@
 ? my ($app, $error) = @_;
 <html>
   <head>
-    <title>alice login</title>
+    <title>Use Alice Login</title>
+    <link rel="shortcut icon" href="<?= $app->static_url("favicon.ico") ?>">
     <style type="text/css">
       body {
         text-align: center;
@@ -36,6 +37,11 @@
         margin-top: 15px;
       }
     </style>
+    <link rel="apple-touch-icon" href="<?= $app->static_url("image/alice.png") ?>" />
+    <link rel="apple-touch-startup-image" href="<?= $app->static_url("image/alice.png") ?>" />
+    <meta name="viewport" content="width=device-width; initial-scale=1; maximum-scale=1" />
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="format-detection" content="telephone=no">
   </head>
   <body>
     <form action="/login" method="post">
