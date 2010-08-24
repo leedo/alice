@@ -6,7 +6,10 @@ Alice.Application = Class.create({
     this.connection = new Alice.Connection(this);
     this.filters = [];
     this.keyboard = new Alice.Keyboard(this);
-    
+
+    this.isPhone = window.navigator.platform.match(/(android|iphone)/i) ? 1 : 0;
+    this.isMobile = this.isPhone || Prototype.Browser.MobileSafari;
+
     // Keep this as a timeout so the page doesn't show "loading..."
     window.onload = function () {
       setTimeout(this.connection.connect.bind(this.connection), 1000);

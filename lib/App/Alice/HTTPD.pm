@@ -214,6 +214,7 @@ sub setup_stream {
       queue      => [ map({$_->join_action} $self->app->windows) ],
       writer     => $respond,
       start_time => $req->param('t'),
+      min_bytes  => $req->user_agent =~ /android/i ? 4096 : 1024,
     );
     $self->add_stream($stream);
     $self->app->with_messages(sub {
