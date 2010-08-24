@@ -45,6 +45,11 @@ has 'writer' => (
   required => 1,
 );
 
+has min_bytes => (
+  is => 'ro',
+  default => 1024,
+);
+
 has callback => (
   is  => 'rw',
   isa => 'CodeRef',
@@ -134,6 +139,7 @@ sub to_string {
   }, {utf8 => 1});
 
   $output .= "\n--" . $self->seperator . "\n";
+  $output .= " " x ($self->min_bytes - length $output);
 
   return $output
 }

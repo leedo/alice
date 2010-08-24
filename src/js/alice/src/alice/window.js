@@ -57,7 +57,7 @@ Alice.Window = Class.create({
     }
 
     // only keep 50 messages per tab to avoid memory limits
-    else if (Prototype.Browser.MobileSafari) {
+    else if (this.application.isMobile) {
       this.messageLimit = 50;
       this.messages.select("li").reverse().slice(50).invoke("remove");
     }
@@ -169,7 +169,7 @@ Alice.Window = Class.create({
     this.tabOverflowButton.selected = true;
     this.markRead();
     this.scrollToBottom(true);
-    if (!Prototype.Browser.MobileSafari) this.input.focus();
+    if (!this.application.isMobile) this.input.focus();
     if (Prototype.Browser.Gecko) {
       this.resizeMessagearea();
       this.scrollToBottom();
@@ -311,11 +311,6 @@ Alice.Window = Class.create({
   },
   
   scrollToBottom: function(force) {
-    if (Prototype.Browser.MobileSafari) {
-      //this.mobileScrollToBottom(force);
-      //return;
-    }
-
     var bottom, height;
 
     if (!force) {
@@ -332,26 +327,6 @@ Alice.Window = Class.create({
     }
   },
 
-  mobileScrollToBottom: function(force) {
-    setTimeout(function() {
-      var ul = this.messages.down("ul");
-      var container_height = this.messages.getHeight();
-      var inner_height = ul.getHeight();
-
-      var offset = inner_height - container_height;
-      if (offset > 0) {
-        // force is used for initial scrolling, we only want
-        // to smooth scroll any new lines
-        if (!force) {
-	        ul.style.webkitTransitionProperty = '-webkit-transform';
-	        ul.style.webkitTransitionTimingFunction = 'cubic-bezier(0,0,0.25,1)';
-	        ul.style.webkitTransitionDuration = '0.2s';
-        }
-        ul.style.webkitTransform = "translateY(-"+(offset + 6)+"px)";
-      }
-    }.bind(this), 0);
-  },
-  
   getNicknames: function() {
     return this.nicks;
   }

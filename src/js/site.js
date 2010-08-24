@@ -31,6 +31,13 @@ if (window == window.parent) {
     console.log = function () {
       if (options.debug == "true" && console) {
         orig_console_log.apply(console, arguments);
+        var win = alice.activeWindow();
+        if (!win) return;
+        for (var i=0; i < arguments.length; i++) {
+          win.addMessage({
+            html: '<li class="message monospace"><div class="left">console</div><div class="msg">'+arguments[i].toString()+'</div></li>'
+          });
+        }
       }
     };
 
@@ -94,7 +101,7 @@ if (window == window.parent) {
     };
     
     window.onfocus = function () {
-      if (!Prototype.Browser.MobileSafari)
+      if (!alice.isMobile)
         window.document.body.removeClassName("blurred");
 
       if (alice.activeWindow())
@@ -106,7 +113,7 @@ if (window == window.parent) {
     
     window.status = " ";  
     window.onblur = function () {
-      if (!Prototype.Browser.MobileSafari)
+      if (!alice.isMobile)
         window.document.body.addClassName("blurred");
       alice.isFocused = false
     };

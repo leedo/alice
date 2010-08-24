@@ -89,7 +89,7 @@ Alice.Connection = Class.create({
       }
     }
     catch (e) {
-      console.log(e);
+      console.log(e.toString());
     }
 
     // reconnect if lag is over 5 seconds... not a good way to do this.

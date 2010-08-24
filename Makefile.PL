@@ -48,9 +48,6 @@ clean_assets:
 	rm $(BUILD)/*.js
 
 assets: stylesheets javascript
-	yuicompressor $(SITE_CSS) -o $(SITE_CSS)
-	yuicompressor $(SITE_JS) -o $(SITE_JS)
-	yuicompressor $(BUILD)/site.js -o $(BUILD)/site.js
 		
 stylesheets:
 	cp $(ALICE_CSS) $(SITE_CSS)
