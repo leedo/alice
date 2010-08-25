@@ -10981,6 +10981,7 @@ Alice.Window = Class.create({
 
     li.select("span.timestamp").each(function(elem) {
       elem.innerHTML = Alice.epochToLocal(elem.innerHTML.strip());
+      elem.style.opacity = 1;
     });
 
     this.element.redraw();
@@ -11637,8 +11638,10 @@ if (window == window.parent) {
     });
 
     $$('span.timestamp').each(function(elem) {
-      if (elem.innerHTML)
+      if (elem.innerHTML) {
         elem.innerHTML = Alice.epochToLocal(elem.innerHTML.strip());
+        elem.style.opacity = 1;
+      }
     });
 
 
