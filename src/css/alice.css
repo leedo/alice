@@ -349,7 +349,7 @@ tr.topic a {
 
 div.message_wrap {
   height: 100%;
-  overflow-x: none;
+  overflow-x: hidden;
   overflow-y: auto;
   background: #fff;
 }
