@@ -54,7 +54,6 @@ stylesheets:
   
 javascript: $(JAVASCRIPT_SOURCES)
 	sprocketize $(INCLUDE) $(ALICE_JS) > $(SITE_JS)
-	cp $(JS_SOURCE)/site.js $(BUILD)/site.js
 };
 
 WriteAll;
