@@ -2,7 +2,7 @@ package App::Alice::MessageStore::Redis;
 
 use Any::Moose;
 use AnyEvent::Redis;
-use Storable qw/freeze thaw/;
+use JSON;
 
 my $redis = AnyEvent::Redis->new;
 
@@ -24,7 +24,7 @@ has lrange_size => (
 sub add {
   my ($self, $message) = @_;
   return unless $message;
-  $redis->rpush($self->id, freeze $message);
+  $redis->rpush($self->id, encode_json $message);
   $redis->llen($self->id, sub {
     $redis->lpop($self->id) if $_[0] > $self->buffersize;
   });
@@ -47,7 +47,7 @@ sub with_messages {
       my $msgs = ref $_[0] eq 'ARRAY' ? $_[0] : [];
       $cb->(
         grep {$_}
-        map  {my $msg = eval {thaw $_ }; $@ ? undef : $msg}
+        map  {my $msg = eval {decode_json $_ }; $@ ? undef : $msg}
         @$msgs
       );
       if ($end == $self->buffersize or @$msgs != $self->lrange_size) {
