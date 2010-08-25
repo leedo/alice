@@ -422,6 +422,11 @@ li.event div.left {
   width: 125px;
 }
 
+li.event div.left span.timestamp {
+  opacity: 0;
+  -webkit-transition: opacity 0.1s ease-in-out;
+}
+
 ul.messages li.avatar:not(.consecutive) {
   z-index: 900;
 }
