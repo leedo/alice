@@ -27,10 +27,17 @@ if (window == window.parent) {
       alice.options.images = "hide";
     }
 
-    var orig_console_log = console.log;
-    console.log = function () {
-      if (options.debug == "true" && console) {
-        orig_console_log.apply(console, arguments);
+    var orig_console;
+    if (window.console) {
+     orig_console = window.console;
+    } else {
+      window.console = {};
+    }
+
+    window.console.log = function () {
+      if (options.debug == "true") {
+        if (orig_console && orig_console.log)
+          orig_console.log(arguments);
         var win = alice.activeWindow();
         if (!win) return;
         for (var i=0; i < arguments.length; i++) {
@@ -42,7 +49,6 @@ if (window == window.parent) {
     };
 
     // fix height of non-consecutive avatar messages
-
     $$('ul.messages li.avatar:not(.consecutive) + li:not(.consecutive)').each(function (li) {
       li.previous().setStyle({minHeight:"42px"});
     });
