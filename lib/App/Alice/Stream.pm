@@ -50,12 +50,6 @@ has min_bytes => (
   default => 1024,
 );
 
-has callback => (
-  is  => 'rw',
-  isa => 'CodeRef',
-  default => sub {sub{}}
-);
-
 sub BUILD {
   my $self = shift;
   my $local_time = time;
