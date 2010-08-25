@@ -3,7 +3,6 @@
 //= require <dragdrop>
 //= require <shortcut>
 //= require <sprintf>
-//= require <iscroll>
 //= require <wysihat>
 
 var Alice = { };

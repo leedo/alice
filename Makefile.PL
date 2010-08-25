@@ -36,22 +36,23 @@ INCLUDES := $(foreach sprocket,$(SPROCKETS),$(JS_SOURCE)/$(sprocket)/src)
 INCLUDE := $(foreach dir,$(INCLUDES),-I $(dir))
 JAVASCRIPT_SOURCES := $(foreach dir,$(INCLUDES),$(wildcard $(dir)/*.js))
 
-CAN_COMPRESS := `which yuicompressor`
-
-ALICE_CSS := $(CSS_SOURCE)/alice.css
-SITE_CSS := $(BUILD)/alice.css
+ALICE_SCSS := $(CSS_SOURCE)/alice.scss
 ALICE_JS := $(JS_SOURCE)/alice/src/alice.js
 SITE_JS := $(BUILD)/alice.js
 
-clean_assets:
-	rm $(BUILD)/*.css
-	rm $(BUILD)/*.js
+COLORFILES := $(foreach dir,$(CSS_SOURCE)/color,$(wildcard $(dir)/*.scss))
+CSSFILES := $(addprefix $(BUILD)/alice-,$(notdir $(COLORFILES:.scss=.css)))
 
 assets: stylesheets javascript
-		
-stylesheets:
-	cp $(ALICE_CSS) $(SITE_CSS)
-  
+
+stylesheets: $(CSSFILES)
+
+%.css: %.scss
+	cat $< $(ALICE_SCSS) | sass --scss -s $@
+
+$(BUILD)/alice-%.css: $(CSS_SOURCE)/color/%.scss
+	echo $< > $@
+
 javascript: $(JAVASCRIPT_SOURCES)
 	sprocketize $(INCLUDE) $(ALICE_JS) > $(SITE_JS)
 };
