@@ -13,6 +13,7 @@ input[type="hidden"] {
 body {
   margin: 0;
   padding: 0;
+  color: $default_text;
 }
 
 ul#tabs {
@@ -25,11 +26,11 @@ ul#tabs li:hover {
 
 ul#controls {
   z-index: 30;
-  background: #ddd;
+  background: $tab_background;
 }
 
 body.blurred ul#controls {
-  background: #eee;
+  background: $tab_background_blurred;
 }
 
 ul#controls li {
@@ -57,10 +58,10 @@ select#tab_overflow_overlay option.unread {
 body {
   font-family: "Lucida Grande", Helvetica, sans-serif;
   text-rendering: optimizeLegibility;
-  background: #fff;
+  background: $messagelist_background;
 }
 
-a:link, a:visited, a:hover, a:active { color:#0033cc; }
+a:link, a:visited, a:hover, a:active { color: $links; }
 
 a:hover {
   text-shadow: rgba( 0, 0, 0, .3 ) 0 1px 1px;
@@ -83,13 +84,13 @@ div.window table {
 
 tr.input td {
   height: 20px;
-  background: #efefef;
-  border-bottom: 1px solid #999;
-  border-top: 1px solid #aaa;
+  background: $tab_background_active;
+  border-bottom: 1px solid $tab_border_active;
+  border-top: 1px solid $textentry_border;
 }
 
 body.blurred tr.input td {
-  border-bottom: 1px solid #aaa;
+  border-bottom: 1px solid $tab_border_active;
 }
 
 tr.input form {
@@ -102,7 +103,7 @@ tr.input form {
 
 tr.input div {
   padding: 0 3px;
-  background: #fff;
+  background: $textentry_background;
   margin: 3px 0;
   position: relative;
 }
@@ -223,11 +224,11 @@ div#tab_container {
   left: 0px;
   right: 0px;
   height: 23px;
-  background: #ddd;
+  background: $tab_background;
 }
 
 body.blurred div#tab_container {
-  background: #eee;
+  background: $tab_background_blurred;
 }
 
 ul#tabs {
@@ -242,28 +243,28 @@ ul#tabs {
 }
 
 body.blurred ul#tabs li {
-  background: #eee;
-  color: #777;
+  background: $tab_background_blurred;
+  color: $tab_text_blurred;
 }
 
 ul#tabs li {
   float: left;
   margin: 0;
   margin-left: -1px;
-  color: #333;
-  background: #ddd;
+  color: $tab_text;
+  background: $tab_background;
 }
 
 body.blurred ul#tabs li:first-child div.hit_area {
-  border-left: 1px solid #eee;
+  border-left: 1px solid $tab_background_blurred;
 }
 
 ul#tabs li:first-child div.hit_area {
-  border-left: 1px solid #ddd;
+  border-left: 1px solid $tab_background;
 }
 
 ul#tabs li div.hit_area {
-  border: 1px solid #999;
+  border: 1px solid $tab_border;
   border-bottom: none;
   border-top: none;
   float:left;
@@ -272,19 +273,19 @@ ul#tabs li div.hit_area {
 }
 
 body.blurred ul#tabs li div.hit_area {
-  border: 1px solid #aaa;
+  border: 1px solid $tab_border_blurred;
   border-bottom: none;
   border-top: none;
 }
 body.blurred ul#tabs li.active div.hit_area {
-  border: 1px solid #aaa;
+  border: 1px solid $tab_border_blurred;
   border-top: none;
 }
 
 ul#tabs li.active div.hit_area {
-  border: 1px solid #999;
+  border: 1px solid $tab_border_active;
   border-top: none;
-  background: #efefef;
+  background: $tab_background_active;
   height: 11px;
   padding-top: 3px;
   margin-top: -1px;
@@ -296,11 +297,11 @@ ul#tabs li.active {
 }
 
 ul#tabs li.active:hover div.hit_area {
-  background: #efefef;
+  background: $tab_background_active;
 }
 
 ul#tabs li:hover div.hit_area {
-  background: #ccc;
+  background: $tab_background_hover;
 }
 
 ul#controls {
@@ -324,16 +325,16 @@ ul#controls li {
 }
 
 ul#controls li:hover {
-  background: #ccc;
+  background: $tab_background_hover;
 }
 
 tr.topic td {
   width: 100%;
-  background: #efefef;
+  background: $topic_background;
   font-size: 11px;
   text-align: center;
-  border-top: 1px solid #fff;
-  border-bottom: 1px solid #aaa;
+  border-top: 1px solid $topic_border_top;
+  border-bottom: 1px solid $topic_border_bottom;
   padding: 1px 0;
   height: 1.2em;
 }
@@ -351,7 +352,7 @@ div.message_wrap {
   height: 100%;
   overflow-x: hidden;
   overflow-y: auto;
-  background: #fff;
+  background: $messagelist_background;
 }
 
 ul.messages {
@@ -432,7 +433,7 @@ ul.messages li.avatar:not(.consecutive) {
 }
 
 div.left img {
-  border: 1px solid #fff;
+  border: 1px solid $avatar_border;
   display: block;
   max-width: 32px;
   max-height: 32px;
@@ -476,7 +477,7 @@ div.msg {
   word-wrap: break-word;
   -khtml-line-break: after-white-space;
   -khtml-nbsp-mode: space;
-  border-top: 1px solid #eee;
+  border-top: 1px solid $message_border;
 }
 
 li.event div.msg {
@@ -505,7 +506,7 @@ ul.messages li.monospace {
 }
 
 ul.messages li.message:last-child {
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid $message_border;
 }
 
 ul.messages li.consecutive div.msg {
@@ -543,8 +544,8 @@ li.monospace div.msg span[style*="bold"] {
 
 ul.messages li.event {
   font-size: 11px;
-  background: #d9e7fb;
-  border-bottom: 1px solid #fff;
+  background: $event_background;
+  border-bottom: 1px solid $event_border;
 }
 
 ul.messages li.event.notice {
@@ -557,7 +558,7 @@ ul.messages li.event.notice a {
   text-decoration: none;
 }
 
-ul.messages li.event.notice a:hover{
+ul.messages li.event.notice a:hover {
   text-shadow: none;
 }
 
@@ -628,7 +629,7 @@ div.msg img.audio {
 }
 
 a.nick {
-  color: #000;
+  color: $nicks;
   text-decoration: none;
 }
 
@@ -968,11 +969,6 @@ div#help dd {
   font-weight: normal;
   margin: 0;
   margin-bottom: 10px
-}
-span[style*="color: #fff"][style*="background-color: #000"] {
-  color: #000 !important;
-  background: none !important;
-  font-style: italic !important;
 }
 div.color_picker {
   position: absolute;
