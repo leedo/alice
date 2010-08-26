@@ -168,16 +168,22 @@ Alice.Window = Class.create({
     this.element.addClassName('active');
     this.tabOverflowButton.selected = true;
     this.markRead();
-    this.scrollToBottom(true);
-    if (!this.application.isMobile) this.input.focus();
-    if (Prototype.Browser.Gecko) {
-      this.resizeMessagearea();
-      this.scrollToBottom();
-    }
-    this.element.redraw();
-    this.application.updateChannelSelect();
+
+    // put this in a timeout so the page can redraw before
+    // the scrollToBottom's height calculation... ugh
+    setTimeout(function() {
+      this.scrollToBottom(true);
+      if (!this.application.isMobile) this.input.focus();
+      if (Prototype.Browser.Gecko) {
+        this.resizeMessagearea();
+        this.scrollToBottom();
+      }
+      this.element.redraw();
+    }.bind(this), 1);
+
     window.location.hash = this.hashtag;
     window.location = window.location.toString();
+    this.application.updateChannelSelect();
   },
   
   markRead: function () {

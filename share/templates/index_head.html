@@ -19,13 +19,13 @@
       <ul id="controls">
         <li id="config_button">
           <select class="select_overlay" id="config_overlay">
-            <option>Logs</option>
-            <option>Preferences</option>
-            <option>Connections</option>
-            <option>Help</option>
+            <option value="Logs">Logs</option>
+            <option value="Preferences">Preferences</option>
+            <option value="Connections">Connections</option>
+            <option value="Help">Help</option>
             <? if ($_[0]->auth_enabled) { ?>
             <option disabled>──────</option>
-            <option>Logout</option>
+            <option value="Logout">Logout</option>
             <? } ?>
           </select>
         </li>
