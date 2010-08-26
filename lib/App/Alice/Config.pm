@@ -29,6 +29,12 @@ has avatars => (
   default => "show",
 );
 
+has style => (
+  is      => 'rw',
+  isa     => 'Str',
+  default => 'default',
+);
+
 has alerts => (
   is      => 'rw',
   isa     => 'Str',

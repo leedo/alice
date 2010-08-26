@@ -46,8 +46,9 @@ CSSFILES := $(addprefix $(BUILD)/alice-,$(notdir $(COLORFILES:.scss=.css)))
 assets: stylesheets javascript
 
 stylesheets: $(CSSFILES)
-  cat $(CSS_SOURCE)/colors/dark.scss $(ALICE_SCSS) | sass --scss -s > $(BUILD)/alice-dark.css
-  cat $(CSS_SOURCE)/colors/default.scss $(ALICE_SCSS) | sass --scss -s > $(BUILD)/alice-default.css
+	cat $(CSS_SOURCE)/colors/dark.scss $(ALICE_SCSS) | sass --scss -s > $(BUILD)/alice-dark.css
+	cat $(CSS_SOURCE)/colors/default.scss $(ALICE_SCSS) | sass --scss -s > $(BUILD)/alice-default.css
+	cp $(CSS_SOURCE)/*.css $(BUILD)/
 
 %.css: %.scss
 	cat $< $(ALICE_SCSS) | sass --scss -s $@

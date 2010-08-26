@@ -1,3 +1,5 @@
+$font_family: "Lucida Grande", Helvetica, sans-serif;
+$font_family_monospace: Monaco, monospace;
 $default_text: #fff;
 $nicks: #fff;
 $links: #efefef;
@@ -8,8 +10,8 @@ $message_nick_column_background: #000;
 $message_self_background: #333;
 $message_self_nick_column_background: #000;
 
-$nick_column_border: #444;
-$message_border: #444;
+$nick_column_border: #000;
+$message_border: #000;
 $message_highlight: #eb2222;
 
 $timehint_color: #ccc;
@@ -24,7 +26,7 @@ $textentry_toolbar_toggle_color: #fff;
 $textentry_toolbar_toggle_active_background: rgba(255,255,255,0.6);
 $textentry_toolbar_toggle_active_color: #000;
 
-$avatar_border: #444;
+$avatar_border: #000;
 
 $topic_background: #444;
 $topic_border_top: #000;
