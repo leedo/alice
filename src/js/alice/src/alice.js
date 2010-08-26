@@ -48,20 +48,21 @@ if (window == window.parent) {
     var orig_console;
     if (window.console) {
      orig_console = window.console;
+     window.console = {};
     } else {
       window.console = {};
     }
 
     window.console.log = function () {
       if (options.debug == "true") {
-        if (orig_console && orig_console.log)
-          orig_console.log(arguments);
         var win = alice.activeWindow();
-        if (!win) return;
         for (var i=0; i < arguments.length; i++) {
-          win.addMessage({
-            html: '<li class="message monospace"><div class="left">console</div><div class="msg">'+arguments[i].toString()+'</div></li>'
-          });
+          if (orig_console && orig_console.log)
+            orig_console.log(arguments[i]);
+          if (win)
+            win.addMessage({
+              html: '<li class="message monospace"><div class="left">console</div><div class="msg">'+arguments[i].toString()+'</div></li>'
+            });
         }
       }
     };
