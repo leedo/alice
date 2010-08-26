@@ -62,7 +62,7 @@ a:link, a:visited, a:hover, a:active {
   color: #efefef; }
 
 a:hover {
-  text-shadow: rgba(0, 0, 0, 0.3) 0 1px 1px; }
+  text-shadow: rgba(255, 255, 255, 0.8) 0 1px 1px; }
 
 div.window {
   position: fixed;
@@ -296,11 +296,11 @@ ul#controls li:hover {
 
 tr.topic td {
   width: 100%;
-  background: #444444;
+  background: #333333;
   font-size: 11px;
   text-align: center;
   border-top: 1px solid black;
-  border-bottom: 1px solid #999999;
+  border-bottom: 1px solid #444444;
   padding: 1px 0;
   height: 1.2em; }
 
