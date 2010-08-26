@@ -10013,6 +10013,9 @@ Alice.Application = Class.create({
     if (win.active) this.focusLast();
     if (window.fluid)
       window.fluid.removeDockMenuItem(win.title);
+    if (win.id == this.previousFocus.id) {
+      this.previousFocus = 0;
+    }
     this.window_map.unset(win.id);
     this.connection.closeWindow(win);
     win = null;
@@ -10058,7 +10061,7 @@ Alice.Application = Class.create({
     if (this.previousFocus && this.previousFocus.id != this.activeWindow().id)
       this.previousFocus.focus();
     else
-      this.nextWindow();
+      this.previousWindow();
   },
 
   previousWindow: function() {
@@ -10075,7 +10078,7 @@ Alice.Application = Class.create({
   },
 
   closeWindow: function(windowId) {
-    var win= this.getWindow(windowId);
+    var win = this.getWindow(windowId);
     if (win) win.close();
   },
 
