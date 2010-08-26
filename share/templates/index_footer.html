@@ -2,6 +2,7 @@
         <script type="text/javascript">
           document.observe("dom:loaded", function () {
             alice.connection.msgid = <?= $_[0]->msgid ?>;
+            var orig_hash = window.location.hash;
             <? for my $window (@windows) { ?>
               alice.openWindow(
                 '<?= $window->id ?>',
@@ -10,7 +11,7 @@
                 '<?= $window->hashtag ?>'
               );
             <? } ?>
-            alice.focusHash();
+            alice.focusHash(orig_hash);
           });
         </script>
       </div>
