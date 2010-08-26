@@ -1,6 +1,4 @@
 ? my ($app, @windows) = @_;
-
-        <script type="text/javascript" src="<?= $app->static_url("alice.js") ?>?images=<?= $_[0]->config->images || 'show' ?>&amp;debug=<?= $app->config->show_debug ? 'true' : 'false' ?>&amp;mtime=1272819991"></script>
         <script type="text/javascript">
           document.observe("dom:loaded", function () {
             alice.connection.msgid = <?= $_[0]->msgid ?>;

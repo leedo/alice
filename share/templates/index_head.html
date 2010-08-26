@@ -4,6 +4,7 @@
 <html>
   <head>
     <title><?= $titlewin->title ?></title>
+    <script type="text/javascript" src="<?= $app->static_url("alice.js") ?>?images=<?= $_[0]->config->images || 'show' ?>&amp;debug=<?= $app->config->show_debug ? 'true' : 'false' ?>&amp;mtime=1272819991"></script>
     <link rel="shortcut icon" href="<?= $app->static_url("favicon.ico") ?>">
     <link type="text/css" rel="stylesheet" href="<?= $app->static_url("alice-default.css") ?>" />
     <link rel="apple-touch-icon" href="<?= $app->static_url("image/alice.png") ?>" />
@@ -13,6 +14,7 @@
     <meta name="format-detection" content="telephone=no">
   </head>
   <body>
+    <img style="position:absolute;x:-100px;y:-100px" src="<?= $app->static_url("image/sprites.png") ?>" />
     <div id="container">
       <ul id="controls">
         <li id="config_button">
