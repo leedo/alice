@@ -3,6 +3,7 @@ $font_family_monospace: Monaco, monospace;
 $default_text: #fff;
 $nicks: #fff;
 $links: #efefef;
+$link_hover_shadow: rgba( 255, 255, 255, 0.8 ) 0 1px 1px;
 
 $message_background: #222;
 $message_nick_column_background: #000;
@@ -28,9 +29,9 @@ $textentry_toolbar_toggle_active_color: #000;
 
 $avatar_border: #000;
 
-$topic_background: #444;
+$topic_background: #333;
 $topic_border_top: #000;
-$topic_border_bottom: #999;
+$topic_border_bottom: #444;
 
 $event_border: #333;
 $event_background: #666;
