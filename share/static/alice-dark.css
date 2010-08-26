@@ -44,6 +44,15 @@ select.select_overlay {
 select#tab_overflow_overlay option.unread {
   font-weight: bold; }
 
+li#tab_overflow_button {
+  background: url(image/sprites.png) 3px -174px no-repeat; }
+
+li#tab_overflow_button.unread {
+  background: url(image/sprites.png) 3px -194px no-repeat; }
+
+li#config_button {
+  background: url(image/sprites.png) 4px -216px no-repeat; }
+
 body {
   font-family: "Lucida Grande", Helvetica, sans-serif;
   text-rendering: optimizeLegibility;
@@ -119,7 +128,7 @@ tr.input div.editor_toolbar {
   -webkit-border-radius: 3px 0 0 3px;
   -moz-border-radius: 3px 0 0 3px;
   border-radius: 3px 0 0 3px;
-  background: url(image/formatting.png) top left no-repeat black;
+  background: url(image/sprites.png) 0px -240px no-repeat black;
   z-index: 902;
   opacity: 0.2;
   -webkit-transition-property: right;
@@ -283,7 +292,7 @@ ul#controls li {
   cursor: pointer; }
 
 ul#controls li:hover {
-  background: #333333; }
+  background-color: #333333; }
 
 tr.topic td {
   width: 100%;
@@ -547,28 +556,28 @@ div.tab_button {
   margin-right: 6px; }
 
 li.channel_tab div.tab_button {
-  background: url(image/roomTab.png); }
+  background: url(image/sprites.png) 0px -80px no-repeat; }
 
 li.privmsg_tab div.tab_button {
-  background: url(image/privateChatTab.png); }
+  background: url(image/sprites.png) 0px -120px no-repeat; }
 
 li.info_tab div.tab_button {
-  background: url(image/terminal.png); }
+  background: url(image/sprites.png) 0px 0px no-repeat; }
 
 ul#tabs li.active div.tab_button:hover {
-  background: url(image/aquaTabClose.png) no-repeat center; }
+  background: url(image/sprites.png) 1px -260px no-repeat; }
 
 ul#tabs li.unread.channel_tab div.tab_button {
-  background: url(image/roomTabNewMessage.png); }
+  background: url(image/sprites.png) 0px -20px no-repeat; }
 
 ul#tabs li.unread.privmsg_tab div.tab_button {
-  background: url(image/privateChatTabNewMessage.png); }
+  background: url(image/sprites.png) 0 -100px no-repeat; }
 
 ul#tabs li.highlight.channel_tab div.tab_button {
-  background: url(image/roomTabNewHighlightMessage.png); }
+  background: url(image/sprites.png) 0 -40px no-repeat; }
 
 ul#tabs li.disabled.channel_tab div.tab_button {
-  background: url(image/roomTabDisabled.png); }
+  background: url(image/sprites.png) 0 -60px no-repeat; }
 
 div#config {
   position: absolute;

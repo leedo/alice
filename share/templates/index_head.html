@@ -16,7 +16,6 @@
     <div id="container">
       <ul id="controls">
         <li id="config_button">
-          <img src="<?= $app->static_url("image/config.png") ?>" />
           <select class="select_overlay" id="config_overlay">
             <option>Logs</option>
             <option>Preferences</option>
@@ -29,7 +28,6 @@
           </select>
         </li>
         <li id="tab_overflow_button">
-          <img src="<?= $app->static_url("image/overflow.png") ?>" />
           <select class="select_overlay" id="tab_overflow_overlay">
             <? for my $window (@windows) { ?>
               <?= $_mt->render_file('select.html', $_[0], $window); ?>
