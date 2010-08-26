@@ -2,21 +2,37 @@ $default_text: #fff;
 $nicks: #fff;
 $links: #efefef;
 
-$messagelist_background: #222;
+$message_background: #222;
+$message_nick_column_background: #000;
+
+$message_self_background: #333;
+$message_self_nick_column_background: #000;
+
+$nick_column_border: #444;
 $message_border: #444;
+$message_highlight: #eb2222;
+
+$timehint_color: #ccc;
+$timehint_shadow_color: rgba(0,0,0,1);
 
 $textentry_border: #444;
 $textentry_background: #000;
+$textentry_toolbar_background: rgba(255,255,255,0.6);
+$textentry_toolbar_button_color: #222;
+$textentry_toolbar_button_hover_color: #000;
+$textentry_toolbar_toggle_color: #fff;
+$textentry_toolbar_toggle_active_background: rgba(255,255,255,0.6);
+$textentry_toolbar_toggle_active_color: #000;
 
 $avatar_border: #444;
 
 $topic_background: #444;
-$topic_border_top: #ccc;
-$topic_border_bottom: #333;
+$topic_border_top: #000;
+$topic_border_bottom: #999;
 
 $event_border: #333;
-$event_background: #d9e7fb;
-$event_text: #777;
+$event_background: #666;
+$event_text: #ccc;
 
 $tab_background: #444;
 $tab_background_active: #333;
@@ -27,5 +43,3 @@ $tab_border_active: #000;
 $tab_border_blurred: #000;
 $tab_text: #fff;;
 $tab_text_blurred: #ccc;
-
-

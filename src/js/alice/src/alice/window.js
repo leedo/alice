@@ -246,10 +246,11 @@ Alice.Window = Class.create({
     //this.messages.down('ul').insert(Alice.uncacheGravatar(message.html));
     var li = this.messages.down('ul.messages > li:last-child');
     
-    if (!message.consecutive) {
-      var prev = li.previous();
-      if (prev && prev.hasClassName("avatar") && !prev.hasClassName("consecutive"))
-        prev.setStyle({minHeight:"42px"});
+    if (message.consecutive) {
+      var prev = li.previous(); 
+      if (prev && prev.hasClassName("avatar") && !prev.hasClassName("consecutive")) {
+        prev.down('div.msg').setStyle({minHeight: '0px'});
+      }
     }
     
     if (message.event == "say") {

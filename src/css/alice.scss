@@ -70,7 +70,7 @@ li#config_button {
 body {
   font-family: "Lucida Grande", Helvetica, sans-serif;
   text-rendering: optimizeLegibility;
-  background: $messagelist_background;
+  background: $message_background;
 }
 
 a:link, a:visited, a:hover, a:active { color: $links; }
@@ -162,7 +162,7 @@ tr.input div.editor_toolbar button {
   visibility: hidden;
   display: block;
   float: left;
-  color: #eee;
+  color: $textentry_toolbar_button_color;
   line-height: 10px;
   font-size: 11px;
   margin: 0;
@@ -174,7 +174,7 @@ tr.input div.editor_toolbar button {
 }
 
 tr.input div.editor_toolbar button:hover {
-  color: #fff;
+  color: $textentry_toolbar_button_hover_color;
 }
 
 tr.input div.editor_toolbar button.selected {
@@ -196,7 +196,7 @@ tr.input div.editor_toolbar.visible:hover {
 }
 
 tr.input div.editor_toolbar.visible {
-  background-color: rgba(0,0,0,0.6);
+  background-color: $textentry_toolbar_background;
   background-image: none;
   right: -4px;
   -webkit-transition-property: right;
@@ -364,7 +364,7 @@ div.message_wrap {
   height: 100%;
   overflow-x: hidden;
   overflow-y: auto;
-  background: $messagelist_background;
+  background: $message_background;
 }
 
 ul.messages {
@@ -372,33 +372,37 @@ ul.messages {
   margin: 0;
   padding: 0;
   overflow: hidden;
-  background: url(image/background.png) top left repeat-y;
   margin: 3px 0;
 }
 
-ul.messages li {
+ul.messages > li {
   font-size: 13px;
   display: block;
   position: relative;
+  background-color: $message_nick_column_background;
 }
 
-ul.messages li:not(.consecutive) {
+ul.messages > li:not(.consecutive) {
   clear: both;
 }
 
 ul.messages li.highlight {
-  border-right: 5px solid #eb2222;
+  border-right: 5px solid $message_highlight;
 }
 
 .info ul.messages li.highlight,
 ul.messages li.self {
-  background: url(image/background-self.png) top left repeat-y #fffbd0;
+  background: $message_self_nick_column_background;
   border-right: none;
 }
 
 .info ul.messages li.highlight div.msg,
 ul.messages li.self div.msg {
-  background: none;
+  background: $message_self_background;
+}
+
+ul.messages li div.msg {
+  background: $message_background;
 }
 
 ul.messages li.consecutive div.left {
@@ -415,6 +419,11 @@ div.left {
   padding-bottom: 0;
   text-overflow: ellipsis;
   position: relative;
+}
+
+li.event a,
+li.event {
+  color: $event_text;
 }
 
 li.event div.left {
@@ -472,15 +481,15 @@ div.timehint {
   right: 0px;
   top: 1px;
   padding: 6px 4px 2px 4px ;
-  color: #555;
+  color: $timehint_color;
   opacity: 0;
-  text-shadow: rgba(255,255,255,1) 0 0 3px;
-  background: #fff;
+  text-shadow: $timehint_shadow_color 0 0 3px;
+  background: $message_background;
 }
 
 .info ul.messages li.highlight div.timehint,
 li.self div.timehint {
-  background: #fffbd0;
+  background: $message_self_background;
 }
 
 div.msg {
@@ -490,6 +499,7 @@ div.msg {
   -khtml-line-break: after-white-space;
   -khtml-nbsp-mode: space;
   border-top: 1px solid $message_border;
+  border-left: 1px solid $nick_column_border;
 }
 
 li.event div.msg {
@@ -509,8 +519,8 @@ ul.messages li:first-child div.msg {
 }
 
 /* so the last avatar doesn't hang off the edge */
-ul.messages li.avatar:not(.consecutive):last-child {
-  min-height: 42px;
+ul.messages li.avatar:not(.consecutive) div.msg {
+  min-height: 35px;
 }
 
 ul.messages li.monospace {
@@ -1028,15 +1038,15 @@ div.color_picker div.toggle span#bg {
   -webkit-border-radius: 10px;
   -moz-border-radius: 10px;
   border-radius: 10px;
-  color: #000;
+  color: $textentry_toolbar_toggle_color;
   text-align: center;
   padding: 2px 5px;
 }
 
 div.color_picker div.toggle span#fg.active,
 div.color_picker div.toggle span#bg.active {
-  background: rgba(0,0,0,0.6);
-  color: #fff;
+  background: $textentry_toolbar_toggle_active_background;
+  color: $textentry_toolbar_toggle_active_color;
 }
 
 @media screen and (max-device-width: 480px) {
