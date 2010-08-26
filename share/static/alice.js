@@ -10091,13 +10091,11 @@ Alice.Application = Class.create({
   },
 
   highlightChannelSelect: function() {
-    var img = $('tab_overflow_button').down('img');
-    img.src = img.src.replace('overflow.png','overflow-active.png');
+    $('tab_overflow_button').addClassName('unread');
   },
 
   unHighlightChannelSelect: function() {
-    var img = $('tab_overflow_button').down('img');
-    img.src = img.src.replace('overflow-active.png','overflow.png');
+    $('tab_overflow_button').removeClassName('unread');
   },
 
   updateChannelSelect: function() {
