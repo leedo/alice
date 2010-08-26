@@ -138,7 +138,7 @@ tr.input div.editor_toolbar button {
   visibility: hidden;
   display: block;
   float: left;
-  color: #eee;
+  color: #222222;
   line-height: 10px;
   font-size: 11px;
   margin: 0;
@@ -149,7 +149,7 @@ tr.input div.editor_toolbar button {
   border: none; }
 
 tr.input div.editor_toolbar button:hover {
-  color: #fff; }
+  color: black; }
 
 tr.input div.editor_toolbar button.selected {
   color: yellow; }
@@ -172,7 +172,7 @@ tr.input div.editor_toolbar.visible:hover {
   cursor: inherit; }
 
 tr.input div.editor_toolbar.visible {
-  background-color: rgba(0, 0, 0, 0.6);
+  background-color: rgba(255, 255, 255, 0.6);
   background-image: none;
   right: -4px;
   -webkit-transition-property: right;
@@ -299,8 +299,8 @@ tr.topic td {
   background: #444444;
   font-size: 11px;
   text-align: center;
-  border-top: 1px solid #cccccc;
-  border-bottom: 1px solid #333333;
+  border-top: 1px solid black;
+  border-bottom: 1px solid #999999;
   padding: 1px 0;
   height: 1.2em; }
 
@@ -322,15 +322,15 @@ ul.messages {
   margin: 0;
   padding: 0;
   overflow: hidden;
-  background: url(image/background.png) top left repeat-y;
   margin: 3px 0; }
 
-ul.messages li {
+ul.messages > li {
   font-size: 13px;
   display: block;
-  position: relative; }
+  position: relative;
+  background-color: black; }
 
-ul.messages li:not(.consecutive) {
+ul.messages > li:not(.consecutive) {
   clear: both; }
 
 ul.messages li.highlight {
@@ -338,12 +338,15 @@ ul.messages li.highlight {
 
 .info ul.messages li.highlight,
 ul.messages li.self {
-  background: url(image/background-self.png) top left repeat-y #fffbd0;
+  background: black;
   border-right: none; }
 
 .info ul.messages li.highlight div.msg,
 ul.messages li.self div.msg {
-  background: none; }
+  background: #333333; }
+
+ul.messages li div.msg {
+  background: #222222; }
 
 ul.messages li.consecutive div.left {
   display: none; }
@@ -358,6 +361,10 @@ div.left {
   padding-bottom: 0;
   text-overflow: ellipsis;
   position: relative; }
+
+li.event a,
+li.event {
+  color: #cccccc; }
 
 li.event div.left {
   padding-top: 5px; }
@@ -406,14 +413,14 @@ div.timehint {
   right: 0px;
   top: 1px;
   padding: 6px 4px 2px 4px;
-  color: #555;
+  color: #cccccc;
   opacity: 0;
-  text-shadow: white 0 0 3px;
-  background: #fff; }
+  text-shadow: black 0 0 3px;
+  background: #222222; }
 
 .info ul.messages li.highlight div.timehint,
 li.self div.timehint {
-  background: #fffbd0; }
+  background: #333333; }
 
 div.msg {
   margin-left: 132px;
@@ -421,7 +428,8 @@ div.msg {
   word-wrap: break-word;
   -khtml-line-break: after-white-space;
   -khtml-nbsp-mode: space;
-  border-top: 1px solid #444444; }
+  border-top: 1px solid #444444;
+  border-left: 1px solid #444444; }
 
 li.event div.msg {
   padding: 5px; }
@@ -436,8 +444,8 @@ ul.messages li:first-child div.msg {
   border-top: 1px solid transparent; }
 
 /* so the last avatar doesn't hang off the edge */
-ul.messages li.avatar:not(.consecutive):last-child {
-  min-height: 42px; }
+ul.messages li.avatar:not(.consecutive) div.msg {
+  min-height: 35px; }
 
 ul.messages li.monospace {
   min-height: 0px; }
@@ -473,7 +481,7 @@ li.monospace div.msg span[style*="bold"] {
 
 ul.messages li.event {
   font-size: 11px;
-  background: #d9e7fb;
+  background: #666666;
   border-bottom: 1px solid #333333; }
 
 ul.messages li.event.notice {
@@ -877,14 +885,14 @@ div.color_picker div.toggle span#bg {
   -webkit-border-radius: 10px;
   -moz-border-radius: 10px;
   border-radius: 10px;
-  color: #000;
+  color: white;
   text-align: center;
   padding: 2px 5px; }
 
 div.color_picker div.toggle span#fg.active,
 div.color_picker div.toggle span#bg.active {
-  background: rgba(0, 0, 0, 0.6);
-  color: #fff; }
+  background: rgba(255, 255, 255, 0.6);
+  color: black; }
 
 @media screen and (max-device-width: 480px) {
   div.left {
