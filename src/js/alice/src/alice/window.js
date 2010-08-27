@@ -305,9 +305,9 @@ Alice.Window = Class.create({
     
     // fix timestamps
     li.select("span.timestamp").each(function(elem) {
-      elem.innerHTML = Alice.epochToLocal(elem.innerHTML.strip());
+      elem.innerHTML = Alice.epochToLocal(elem.innerHTML.strip(), this.application.options.timeformat);
       elem.style.opacity = 1;
-    });
+    }.bind(this));
 
     this.element.redraw();
   },

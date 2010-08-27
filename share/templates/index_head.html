@@ -4,7 +4,7 @@
 <html>
   <head>
     <title><?= $titlewin->title ?></title>
-    <script type="text/javascript" src="<?= $app->static_url("alice.js") ?>?images=<?= $_[0]->config->images || 'show' ?>&amp;debug=<?= $app->config->show_debug ? 'true' : 'false' ?>&amp;mtime=1272819991"></script>
+    <script type="text/javascript" src="<?= $app->static_url("alice.js") ?>?images=<?= $_[0]->config->images || 'show' ?>&amp;debug=<?= $app->config->show_debug ? 'true' : 'false' ?>&amp;timeformat=<?= $app->config->timeformat ?>&amp;mtime=1272819991"></script>
     <link rel="shortcut icon" href="<?= $app->static_url("favicon.ico") ?>">
     <link type="text/css" rel="stylesheet" href="<?= $app->static_url("alice-".$app->config->style.".css") ?>" />
     <link rel="apple-touch-icon" href="<?= $app->static_url("image/alice.png") ?>" />

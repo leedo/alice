@@ -9749,12 +9749,24 @@ Object.extend(Alice, {
     );
   },
 
-  epochToLocal: function(epoch) {
+  epochToLocal: function(epoch, format) {
     var date = new Date(parseInt(epoch) * 1000);
-    if (date) {
-      return sprintf("%02d:%02d", date.getHours(), date.getMinutes());
+    if (!date) return epoch;
+
+    var hours = date.getHours();
+
+    if (format == "12") {
+      var ap;
+      if (hours > 12) {
+        hours -= 12;
+        ap = "p";
+      } else {
+        ap = "a"
+      }
+      return sprintf("%d:%02d%s", hours, date.getMinutes(), ap);
     }
-    return epoch;
+
+    return sprintf("%02d:%02d", hours, date.getMinutes());
   },
 
   stripNick: function(html) {
@@ -10636,9 +10648,9 @@ Alice.Window = Class.create({
     if (messages.length > this.messageLimit) messages.first().remove();
 
     li.select("span.timestamp").each(function(elem) {
-      elem.innerHTML = Alice.epochToLocal(elem.innerHTML.strip());
+      elem.innerHTML = Alice.epochToLocal(elem.innerHTML.strip(), this.application.options.timeformat);
       elem.style.opacity = 1;
-    });
+    }.bind(this));
 
     this.element.redraw();
   },
@@ -11248,7 +11260,8 @@ if (window == window.parent) {
 
     var options = {
       images: 'show',
-      avatars: 'show'
+      avatars: 'show',
+      timeformat: '12'
     };
 
     var js = /alice\.js\?(.*)?$/;
@@ -11294,7 +11307,7 @@ if (window == window.parent) {
 
     $$('span.timestamp').each(function(elem) {
       if (elem.innerHTML) {
-        elem.innerHTML = Alice.epochToLocal(elem.innerHTML.strip());
+        elem.innerHTML = Alice.epochToLocal(elem.innerHTML.strip(), alice.options.timeformat);
         elem.style.opacity = 1;
       }
     });

@@ -28,7 +28,9 @@
 			      $A($("highlights").options).each(function(option) {
               options.highlights.push(option.value);
             });
-            options.style = $('style').value;
+            ["style", "timeformat"].each(function(pref) {
+              options[pref] = $(pref).value;
+            });
 			      window.opener.alice.options = options;
             new Ajax.Request('/save', {
               method: 'get',
@@ -54,9 +56,17 @@
             <a style="font-size:10px" href="javascript:void(0)" onclick="window.webkitNotifications.requestPermission()">Grant permission</a>
           </div>
           <div class="field clear" style="width: 150px">
+            <label for="style">Style</label>
             <select name="style" id="style">
               <option value="default"<? if ($app->config->style eq "default") {?> selected<? } ?>>Default</optoin>
               <option value="dark"<? if ($app->config->style eq "dark") {?> selected<? } ?>>Dark</optoin>
+            </select>
+          </div>
+          <div class="field clear" style="width: 150px">
+            <label for="timeformat">Time Format</label>
+            <select name="timeformat" id="timeformat">
+              <option value="12"<? if ($app->config->timeformat eq "12") {?> selected<? } ?>>12 Hour</option>
+              <option value="24"<? if ($app->config->timeformat eq "24") {?> selected<? } ?>>24 Hour</option>
             </select>
           </div>
           <div class="field clear" style="width:150px">
