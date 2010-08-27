@@ -9,7 +9,7 @@ $message_background: #222;
 $message_nick_column_background: #111;
 
 $message_self_background: #333;
-$message_self_nick_column_background: #000;
+$message_self_nick_column_background: #111;
 
 $nick_column_border: #000;
 $message_border: #111;
@@ -29,20 +29,20 @@ $textentry_toolbar_toggle_active_color: #000;
 
 $avatar_border: #000;
 
-$topic_background: #333;
+$topic_background: #3a3a3a;
 $topic_border_top: 1px solid #666;
-$topic_border_bottom: 2px solid #000;
+$topic_border_bottom: 1px solid #000;
 
-$event_border: #333;
-$event_background: #666;
+$event_border: #111;
+$event_background: #333;
 $event_text: #ccc;
 
 $tab_background: #444;
 $tab_background_active: #333;
-$tab_background_blurred: #222;
+$tab_background_blurred: #333;
 $tab_background_hover: #3a3a3a;
 $tab_border: #222;
 $tab_border_active: #222;
-$tab_border_blurred: #000;
+$tab_border_blurred: #111;
 $tab_text: #fff;;
 $tab_text_blurred: #ccc;
