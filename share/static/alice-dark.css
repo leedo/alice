@@ -23,7 +23,7 @@ ul#controls {
   background: #444444; }
 
 body.blurred ul#controls {
-  background: #222222; }
+  background: #333333; }
 
 ul#controls li {
   position: relative; }
@@ -84,7 +84,7 @@ tr.input td {
   border-top: 1px solid #444444; }
 
 body.blurred tr.input td {
-  border-bottom: 1px solid black; }
+  border-bottom: 1px solid #111111; }
 
 tr.input form {
   display: block;
@@ -209,7 +209,7 @@ div#tab_container {
   background: #444444; }
 
 body.blurred div#tab_container {
-  background: #222222; }
+  background: #333333; }
 
 ul#tabs {
   list-style: none;
@@ -222,7 +222,7 @@ ul#tabs {
   padding-left: 3px; }
 
 body.blurred ul#tabs li {
-  background: #222222;
+  background: #333333;
   color: #cccccc; }
 
 ul#tabs li {
@@ -233,7 +233,7 @@ ul#tabs li {
   background: #444444; }
 
 body.blurred ul#tabs li:first-child div.hit_area {
-  border-left: 1px solid #222222; }
+  border-left: 1px solid #333333; }
 
 ul#tabs li:first-child div.hit_area {
   border-left: 1px solid #444444; }
@@ -247,12 +247,12 @@ ul#tabs li div.hit_area {
   padding: 2px 10px 8px 4px; }
 
 body.blurred ul#tabs li div.hit_area {
-  border: 1px solid black;
+  border: 1px solid #111111;
   border-bottom: none;
   border-top: none; }
 
 body.blurred ul#tabs li.active div.hit_area {
-  border: 1px solid black;
+  border: 1px solid #111111;
   border-top: none; }
 
 ul#tabs li.active div.hit_area {
@@ -296,11 +296,11 @@ ul#controls li:hover {
 
 tr.topic td {
   width: 100%;
-  background: #333333;
+  background: #3a3a3a;
   font-size: 11px;
   text-align: center;
   border-top: 1px solid #666666;
-  border-bottom: 2px solid black;
+  border-bottom: 1px solid black;
   padding: 1px 0;
   height: 1.2em; }
 
@@ -338,7 +338,7 @@ ul.messages li.highlight {
 
 .info ul.messages li.highlight,
 ul.messages li.self {
-  background: black;
+  background: #111111;
   border-right: none; }
 
 .info ul.messages li.highlight div.msg,
@@ -481,8 +481,8 @@ li.monospace div.msg span[style*="bold"] {
 
 ul.messages li.event {
   font-size: 11px;
-  background: #666666;
-  border-bottom: 1px solid #333333; }
+  background: #333333;
+  border-bottom: 1px solid #111111; }
 
 ul.messages li.event.notice {
   background: #eb2222;
