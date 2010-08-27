@@ -59,7 +59,7 @@ body {
   background: #222222; }
 
 a:link, a:visited, a:hover, a:active {
-  color: #efefef; }
+  color: white; }
 
 a:hover {
   text-shadow: rgba(255, 255, 255, 0.8) 0 1px 1px; }
@@ -80,7 +80,7 @@ div.window table {
 tr.input td {
   height: 20px;
   background: #333333;
-  border-bottom: 1px solid black;
+  border-bottom: 1px solid #222222;
   border-top: 1px solid #444444; }
 
 body.blurred tr.input td {
@@ -239,7 +239,7 @@ ul#tabs li:first-child div.hit_area {
   border-left: 1px solid #444444; }
 
 ul#tabs li div.hit_area {
-  border: 1px solid black;
+  border: 1px solid #222222;
   border-bottom: none;
   border-top: none;
   float: left;
@@ -256,7 +256,7 @@ body.blurred ul#tabs li.active div.hit_area {
   border-top: none; }
 
 ul#tabs li.active div.hit_area {
-  border: 1px solid black;
+  border: 1px solid #222222;
   border-top: none;
   background: #333333;
   height: 11px;
@@ -271,7 +271,7 @@ ul#tabs li.active:hover div.hit_area {
   background: #333333; }
 
 ul#tabs li:hover div.hit_area {
-  background: #333333; }
+  background: #3a3a3a; }
 
 ul#controls {
   position: fixed;
@@ -292,15 +292,15 @@ ul#controls li {
   cursor: pointer; }
 
 ul#controls li:hover {
-  background-color: #333333; }
+  background-color: #3a3a3a; }
 
 tr.topic td {
   width: 100%;
   background: #333333;
   font-size: 11px;
   text-align: center;
-  border-top: 1px solid black;
-  border-bottom: 1px solid #444444;
+  border-top: 1px solid #666666;
+  border-bottom: 2px solid black;
   padding: 1px 0;
   height: 1.2em; }
 
@@ -328,7 +328,7 @@ ul.messages > li {
   font-size: 13px;
   display: block;
   position: relative;
-  background-color: black; }
+  background-color: #111111; }
 
 ul.messages > li:not(.consecutive) {
   clear: both; }
@@ -428,7 +428,7 @@ div.msg {
   word-wrap: break-word;
   -khtml-line-break: after-white-space;
   -khtml-nbsp-mode: space;
-  border-top: 1px solid black;
+  border-top: 1px solid #111111;
   border-left: 1px solid black; }
 
 li.event div.msg {
@@ -451,7 +451,7 @@ ul.messages li.monospace {
   min-height: 0px; }
 
 ul.messages li.message:last-child {
-  border-bottom: 1px solid black; }
+  border-bottom: 1px solid #111111; }
 
 ul.messages li.consecutive div.msg {
   border-top: none; }
