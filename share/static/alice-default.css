@@ -84,7 +84,7 @@ tr.input td {
   border-top: 1px solid #aaaaaa; }
 
 body.blurred tr.input td {
-  border-bottom: 1px solid #999999; }
+  border-bottom: 1px solid #aaaaaa; }
 
 tr.input form {
   display: block;

@@ -102,7 +102,7 @@ tr.input td {
 }
 
 body.blurred tr.input td {
-  border-bottom: 1px solid $tab_border_active;
+  border-bottom: 1px solid $tab_border_blurred;
 }
 
 tr.input form {
@@ -345,8 +345,8 @@ tr.topic td {
   background: $topic_background;
   font-size: 11px;
   text-align: center;
-  border-top: 1px solid $topic_border_top;
-  border-bottom: 1px solid $topic_border_bottom;
+  border-top: $topic_border_top;
+  border-bottom: $topic_border_bottom;
   padding: 1px 0;
   height: 1.2em;
 }

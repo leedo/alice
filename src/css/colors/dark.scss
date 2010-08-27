@@ -2,17 +2,17 @@ $font_family: "Lucida Grande", Helvetica, sans-serif;
 $font_family_monospace: Monaco, monospace;
 $default_text: #fff;
 $nicks: #fff;
-$links: #efefef;
+$links: #fff;
 $link_hover_shadow: rgba( 255, 255, 255, 0.8 ) 0 1px 1px;
 
 $message_background: #222;
-$message_nick_column_background: #000;
+$message_nick_column_background: #111;
 
 $message_self_background: #333;
 $message_self_nick_column_background: #000;
 
 $nick_column_border: #000;
-$message_border: #000;
+$message_border: #111;
 $message_highlight: #eb2222;
 
 $timehint_color: #ccc;
@@ -30,8 +30,8 @@ $textentry_toolbar_toggle_active_color: #000;
 $avatar_border: #000;
 
 $topic_background: #333;
-$topic_border_top: #000;
-$topic_border_bottom: #444;
+$topic_border_top: 1px solid #666;
+$topic_border_bottom: 2px solid #000;
 
 $event_border: #333;
 $event_background: #666;
@@ -40,9 +40,9 @@ $event_text: #ccc;
 $tab_background: #444;
 $tab_background_active: #333;
 $tab_background_blurred: #222;
-$tab_background_hover: #333;
-$tab_border: #000;
-$tab_border_active: #000;
+$tab_background_hover: #3a3a3a;
+$tab_border: #222;
+$tab_border_active: #222;
 $tab_border_blurred: #000;
 $tab_text: #fff;;
 $tab_text_blurred: #ccc;
