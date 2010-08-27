@@ -51,9 +51,12 @@ div#config span {
 
 div#config select {
   width: 135px;
+}
+
+div#config select[type="multiple"] {
   height: 100px;
   font-size: 0.8em;
-    outline: 0 none;
+  outline: 0 none;
 }
 
 div#config div#server_controls {

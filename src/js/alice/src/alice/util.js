@@ -10,12 +10,24 @@ Object.extend(Alice, {
     ); 
   },
 
-  epochToLocal: function(epoch) {
+  epochToLocal: function(epoch, format) {
     var date = new Date(parseInt(epoch) * 1000);
-    if (date) {
-      return sprintf("%02d:%02d", date.getHours(), date.getMinutes());
+    if (!date) return epoch;
+
+    var hours = date.getHours();
+
+    if (format == "12") {
+      var ap;
+      if (hours > 12) {
+        hours -= 12;
+        ap = "p";
+      } else {
+        ap = "a"
+      }
+      return sprintf("%d:%02d%s", hours, date.getMinutes(), ap);
     }
-    return epoch;
+
+    return sprintf("%02d:%02d", hours, date.getMinutes());
   },
   
   stripNick: function(html) {

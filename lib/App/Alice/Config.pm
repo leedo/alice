@@ -35,6 +35,12 @@ has style => (
   default => 'default',
 );
 
+has timeformat => (
+  is      => 'rw',
+  isa     => 'Str',
+  default => '24',
+);
+
 has alerts => (
   is      => 'rw',
   isa     => 'Str',

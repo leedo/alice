@@ -24,7 +24,8 @@ if (window == window.parent) {
     // read in options from query string
     var options = {
       images: 'show',
-      avatars: 'show'
+      avatars: 'show',
+      timeformat: '12' 
     };
 
     var js = /alice\.js\?(.*)?$/;
@@ -73,7 +74,7 @@ if (window == window.parent) {
     // change timestamps from epoch to local time
     $$('span.timestamp').each(function(elem) {
       if (elem.innerHTML) {
-        elem.innerHTML = Alice.epochToLocal(elem.innerHTML.strip());
+        elem.innerHTML = Alice.epochToLocal(elem.innerHTML.strip(), alice.options.timeformat);
         elem.style.opacity = 1;
       }
     });
