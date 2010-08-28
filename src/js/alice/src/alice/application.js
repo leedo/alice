@@ -55,8 +55,8 @@ Alice.Application = Class.create({
           win.enable();
         }
       }.bind(this));
-      if (this.configWindow) {
-        this.configWindow.connectServer(action.session);
+      if ($('servers')) {
+        Alice.connections.connectServer(action.session);
       }
     },
     disconnect: function (action) {
@@ -66,8 +66,8 @@ Alice.Application = Class.create({
           win.disable();
         }
       }.bind(this));
-      if (this.configWindow) {
-        this.configWindow.disconnectServer(action.session);
+      if ($('servers')) {
+        Alice.connections.disconnectServer(action.session);
       }
     },
     focus: function (action) {
@@ -94,27 +94,17 @@ Alice.Application = Class.create({
   },
 
   toggleConfig: function(e) {
-    if (this.configWindow && !this.configWindow.closed && this.configWindow.focus) {
-      this.configWindow.focus();
-    } else {
-      this.configWindow = window.open(null, "config", "resizable=no,scrollbars=no,status=no,toolbar=no,location=no,width=500,height=480");
-      this.connection.getConfig(function (transport) {
-        this.configWindow.document.write(transport.responseText);
-      }.bind(this));
-    }
+    this.connection.getConfig(function (transport) {
+      $('container').insert(transport.responseText);
+    }.bind(this));
     
     e.stop();
   },
   
   togglePrefs: function(e) {
-    if (this.prefWindow && !this.prefWindow.closed && this.prefWindow.focus) {
-      this.prefWindow.focus();
-    } else {
-      this.prefWindow = window.open(null, "prefs", "resizable=no,scrollbars=no,status=no,toolbar=no,location=no,width=200,height=400");
-      this.connection.getPrefs(function (transport) {
-        this.prefWindow.document.write(transport.responseText);
-      }.bind(this));
-    }
+    this.connection.getPrefs(function (transport) {
+      $('container').insert(transport.responseText);
+    }.bind(this));
     
     e.stop();
   },

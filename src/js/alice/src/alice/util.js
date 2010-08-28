@@ -108,6 +108,160 @@ Object.extend(Alice, {
       this.src = '/static/image/play.png';
       this.onclick = function () { Alice.playAudio(this, audio) };
     };
+  },
+
+  prefs: {
+    addHighlight: function (alias) {
+		  var channel = prompt("Enter a word to highlight.");
+		  if (channel)
+		    $('highlights').insert("<option value=\""+channel+"\">"+channel+"</option>");
+		  return false;
+		},
+
+    removeHighlights: function (alias) {
+		  $A($('highlights').options).each(function (option) {
+		    if (option.selected) option.remove()});
+		  return false;
+		},
+
+    remove: function() {
+      $('prefs').remove();
+    },
+
+    submit: function(form) {
+			var options = {highlights: []};
+
+			["images", "avatars", "alerts"].each(function (pref) {
+			  options[pref] = $(pref).checked ? "show" : "hide";
+			});
+
+			$A($("highlights").options).each(function(option) {
+        options.highlights.push(option.value);
+      });
+
+      ["style", "timeformat"].each(function(pref) {
+        options[pref] = $(pref).value;
+      });
+
+			alice.options = options;
+
+      new Ajax.Request('/save', {
+        method: 'get',
+        parameters: options,
+        onSuccess: function(){Alice.prefs.remove()}
+      });
+
+      return false;
+    }
+  },
+
+  connections: {
+    disconnectServer: function (alias) {
+		  $(alias + "_status").className = "disconnected";
+		  $(alias + "_status").innerHTML = "disconnected";
+		  $(alias + "_connection").innerHTML = "connect";
+		  $(alias + "_connection").onclick = function (e) {
+		    e.stop();
+		    serverConnection(alias, "connect");
+		  };
+		},
+
+    connectServer: function (alias) {
+		  $(alias + "_status").className = "connected";
+		  $(alias + "_status").innerHTML = "connected";
+		  $(alias + "_connection").innerHTML = "disconnect";
+		  $(alias + "_connection").onclick = function (e) {
+		    e.stop();
+		    serverConnection(alias, "disconnect");
+		  };
+		},
+
+    showConnection: function (alias) {
+		  $$("div#servers .active").invoke("removeClassName","active");
+			$("setting_" + alias).addClassName("active");
+			$("menu_" + alias).addClassName("active");
+	  },
+		
+    addChannel: function (alias) {
+			var channel = prompt("Please enter a channel name.");
+			if (channel)
+			  $("channels_" + alias).insert("<option value=\""+channel+"\">"+channel+"</option>");
+			return false;
+	  },
+
+    addCommand: function (alias) {
+			var command = prompt("Please enter a channel name.");
+			if (command)
+			  $("on_connect_" + alias).insert("<option value=\""+command+"\">"+command+"</option>");
+			return false;
+		},
+
+    removeCommands: function (alias) {
+			$A($("on_connect_" + alias).options).each(function (option) {
+			if (option.selected) option.remove()});
+			  return false;
+		},
+
+    removeChannels: function (alias) {
+			$A($("channels_" + alias).options).each(function (option) {
+			if (option.selected) option.remove()});
+			  return false;
+		},
+
+    addServer: function () {
+			var name = prompt("Please enter a name for this server.");
+			if (! name) return;
+			// TODO: test if this server is already being used ...
+			new Ajax.Request("/serverconfig", {
+			  parameters: {name: name},
+			  method: 'get',
+			  onSuccess: function (trans) {
+			    var data = trans.responseText.evalJSON();
+			    $$('#config_data div.setting').invoke('removeClassName',"active");
+			    $$('#servers li').invoke('removeClassName',"active");
+			    $('config_data').insert(data.config);
+			    $('connections').insert(data.listitem);
+			  }
+		  });
+	  },
+
+    removeServer: function () {
+		  var alias = $('connections').down('.active').id.replace(/^menu_/, "");
+			if (alias && confirm("Are you sure you want to remove "+alias+"?")) {
+			  $("menu_"+alias).remove();
+			  $("setting_"+alias).remove();
+			  $("connections").down("li", 1).addClassName("active");
+			  $("config_data").down("div").addClassName("active");
+			}
+	  },
+
+    submit: function(form) {
+      $$('#servers .channelselect').each(function(select) {
+        $A(select.options).each(function(option) {
+          option.selected = true;
+        });
+      });
+
+      new Ajax.Request('/save', {
+        method: 'get',
+        parameters: form.serialize(),
+        onSuccess: function () {$('servers').remove()}
+      });
+
+      return false;
+    },
+
+    serverConnection: function(alias, action) {
+      new Ajax.Request('/say', {
+        method: 'get',
+        parameters: {
+          msg: '/' + action + ' ' + alias,
+          source: alice.activeWindow().id
+        }
+      });
+
+      return false;
+    }
   }
 });
 
