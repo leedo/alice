@@ -125,6 +125,9 @@ Object.extend(Alice, {
 		},
 
     remove: function() {
+      alice.windows().each(function(win) {
+        win.input.disabled = false;
+      });
       $('prefs').remove();
     },
 
@@ -245,10 +248,17 @@ Object.extend(Alice, {
       new Ajax.Request('/save', {
         method: 'get',
         parameters: form.serialize(),
-        onSuccess: function () {$('servers').remove()}
+        onSuccess: function(){Alice.connections.remove()}
       });
 
       return false;
+    },
+
+    remove: function() {
+      alice.windows().each(function(win) {
+        win.input.disabled = false;
+      });
+      $('servers').remove();
     },
 
     serverConnection: function(alias, action) {

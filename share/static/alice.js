@@ -9864,6 +9864,9 @@ Object.extend(Alice, {
 		},
 
     remove: function() {
+      alice.windows().each(function(win) {
+        win.input.disabled = false;
+      });
       $('prefs').remove();
     },
 
@@ -9983,10 +9986,17 @@ Object.extend(Alice, {
       new Ajax.Request('/save', {
         method: 'get',
         parameters: form.serialize(),
-        onSuccess: function () {$('servers').remove()}
+        onSuccess: function(){Alice.connections.remove()}
       });
 
       return false;
+    },
+
+    remove: function() {
+      alice.windows().each(function(win) {
+        win.input.disabled = false;
+      });
+      $('servers').remove();
     },
 
     serverConnection: function(alias, action) {
@@ -10108,6 +10118,7 @@ Alice.Application = Class.create({
 
   toggleConfig: function(e) {
     this.connection.getConfig(function (transport) {
+      alice.activeWindow().input.disabled = true;
       $('container').insert(transport.responseText);
     }.bind(this));
 
@@ -10116,6 +10127,7 @@ Alice.Application = Class.create({
 
   togglePrefs: function(e) {
     this.connection.getPrefs(function (transport) {
+      alice.activeWindow().input.disabled = true;
       $('container').insert(transport.responseText);
     }.bind(this));
 
@@ -10940,6 +10952,7 @@ Alice.Input = Class.create({
     this.window = win;
     this.application = this.window.application;
     this.textarea = $(element);
+    this.disabled = false;
 
     if (this.canContentEditable()) {
       this.editor = WysiHat.Editor.attach(this.textarea);
@@ -11011,6 +11024,8 @@ Alice.Input = Class.create({
   },
 
   focus: function(force) {
+    if (this.disabled) return;
+
     if (!force) {
       if (this.focused) return;
 
