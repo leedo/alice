@@ -40,10 +40,10 @@ ALICE_SCSS := $(CSS_SOURCE)/alice.scss
 ALICE_JS := $(JS_SOURCE)/alice/src/alice.js
 SITE_JS := $(BUILD)/alice.js
 
-COLORFILES := $(foreach dir,$(CSS_SOURCE)/color,$(wildcard $(dir)/*.scss))
+COLORFILES := $(foreach dir,$(CSS_SOURCE)/colors,$(wildcard $(dir)/*.scss))
 CSSFILES := $(addprefix $(BUILD)/alice-,$(notdir $(COLORFILES:.scss=.css)))
 
-$(BUILD)/alice-%.css: $(CSS_SOURCE)/color/%.scss
+$(BUILD)/alice-%.css: $(CSS_SOURCE)/colors/%.scss
 	cat $< $(ALICE_SCSS) | sass --scss -s $@
 
 assets: stylesheets javascript
