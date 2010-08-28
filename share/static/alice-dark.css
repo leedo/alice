@@ -816,7 +816,7 @@ div.color_picker div.toggle span#bg.active {
 div.config {
   position: absolute;
   bottom: 55px;
-  right: 10px;
+  right: 20px;
   background: #efefef;
   padding: 10px 10px;
   z-index: 999;
