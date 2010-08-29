@@ -24,7 +24,6 @@ test_requires 'Test::More' => '0.86';
 test_requires 'Test::TCP' => '0';
 install_share 'share';
 install_script 'bin/alice';
-no_index 'directory' => 'share/sprockets';
 
 postamble q{
 BUILD := share/static
