@@ -937,21 +937,10 @@ div.color_picker div.toggle span#bg.active {
     z-index: 999;
   }
 
-  ul.messages {
-    background: #fff;
-  }
-
   div.msg.monospace, div.msg.announce {
     line-height: 11px;
   }
 
-  ul.messages li {
-    background: #fff;
-  }
-
-  ul.messages li.self {
-    background: #fffbd0;
-  }
 }
 
 div.config {
