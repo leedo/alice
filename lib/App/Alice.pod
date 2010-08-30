@@ -119,7 +119,7 @@ This will clear the current tab's messages from your browser. It
 will also clear the tab's message buffer so when you refresh your
 browser the messages won't re-appear.
 
-=item /msg [-network] $nick [$msg]
+=item /msg [-network] <nick> [<msg>]
 
 Takes a nick as an argument and an optional network flag. If no
 network flag is provided, it will use the network of the current
@@ -128,19 +128,19 @@ text is provided, a blank tab will be opened.
 
 B</query> is an alias for /msg
 
-=item /whois [-force] $nick
+=item /whois [-force] <nick>
 
 Takes a nick as an argument and an optional force flag. This will
 print some information about the supplied user. If the force flag
 is provided, the information will be refreshed from the server.
 
-=item /quote $string
+=item /quote <command>
 
 Sends a string as a raw message to the server.
 
 B</raw> is an alias for /quote
 
-=item /t[opic] [$topic]
+=item /t[opic] [<topic>]
 
 Takes an optional topic string. This will display the topic for the
 current tab.  If a string is supplied, it will attempt to update
@@ -151,30 +151,30 @@ the channel's topic.  Only works in a channel.
 This will print a table of all of the nicks in the current tab.  An
 optional avatars flag can be provided to include avatars.
 
-=item /me $string
+=item /me <action>
 
 Sends a string as an action to the channel.
 
 e.g. * lee hits clint with a large trout
 
-=item /w[indow] $number
+=item /w[indow] <number>
 
 Focus the provided tab number. Also accepts "next" or "prev". The
 space after the w can be ommited (e.g. /w4 to focus window 4.)
 
-=item /connect $network
+=item /connect <network>
 
 Connect to a network. The network must be the name of a server from
 the Connections window. If you are already connected to the network
 it will do nothing.
 
-=item /disconnect $network
+=item /disconnect <network>
 
 Disconnect from a network. The network must be the name of a server
 from the Connections window. This command will also stop any reconnect
 timers for that network.
 
-=item /ignore $nick
+=item /ignore <nick>
 
 Ignore any nick that matches the one provided. B<This applies across
 all networks.>
@@ -183,7 +183,7 @@ all networks.>
 
 List all active ignored nicks.
 
-=item /unignore $nick
+=item /unignore <nick>
 
 Unignore a nick.
 
