@@ -15,7 +15,7 @@ use Digest::MD5 qw/md5_hex/;
 use List::Util qw/first/;
 use Encode;
 
-our $VERSION = '0.18';
+our $VERSION = '0.19';
 
 has condvar => (
   is       => 'rw',

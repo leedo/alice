@@ -9863,6 +9863,19 @@ Object.extend(Alice, {
 		  return false;
 		},
 
+    addNick: function (nick) {
+      var nick = prompt("Enter a nick.");
+      if (nick)
+        $('monospace_nicks').insert("<option value=\""+nick+"\">"+nick+"</option>");
+      return false;
+    },
+
+    removeNicks: function (nick) {
+      $A($('monospace_nicks').options).each(function (option) {
+        if (option.selected) option.remove()});
+      return false;
+    },
+
     remove: function() {
       alice.windows().each(function(win) {
         win.input.disabled = false;
@@ -9871,14 +9884,17 @@ Object.extend(Alice, {
     },
 
     submit: function(form) {
-			var options = {highlights: []};
+      var options = {highlights: [], monospace_nicks: []};
 
-			["images", "avatars", "alerts"].each(function (pref) {
-			  options[pref] = $(pref).checked ? "show" : "hide";
-			});
-
-			$A($("highlights").options).each(function(option) {
+      ["images", "avatars", "alerts"].each(function (pref) {
+        options[pref] = $(pref).checked ? "show" : "hide";
+      });
+      $A($("highlights").options).each(function(option) {
         options.highlights.push(option.value);
+      });
+
+      $A($("monospace_nicks").options).each(function(option) {
+        options.monospace_nicks.push(option.value);
       });
 
       ["style", "timeformat"].each(function(pref) {
