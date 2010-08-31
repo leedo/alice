@@ -378,15 +378,15 @@ sub save_config {
   for my $name (keys %{$req->parameters}) {
     next unless $req->parameters->{$name};
     next if $name eq "has_servers";
-    if ($name =~ /^(.+?)_(.+)/ and exists $new_config->{servers}) {
+    if ($name eq "highlights" or $name eq "monospace_nicks") {
+      $new_config->{$name} = [$req->parameters->get_all($name)];
+    }
+    elsif ($name =~ /^(.+?)_(.+)/ and exists $new_config->{servers}) {
       if ($2 eq "channels" or $2 eq "on_connect") {
         $new_config->{servers}{$1}{$2} = [$req->parameters->get_all($name)];
       } else {
         $new_config->{servers}{$1}{$2} = $req->param($name);
       }
-    }
-    elsif ($name eq "highlights") {
-      $new_config->{$name} = [$req->parameters->get_all($name)];
     }
     else {
       $new_config->{$name} = $req->param($name);

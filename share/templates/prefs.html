@@ -47,6 +47,21 @@
       </div>
     </div>
 
+
+    <div class="field clear" style="width:150px">
+      <label>Monospace Nicks</label>
+      <select name="monospace_nicks" multiple="multiple" id="monospace_nicks">
+        <? for my $nick (@{$app->config->monospace_nicks}) { ?>
+        <option value="<?= $nick ?>"><?= $nick ?></option>
+        <? } ?>
+      </select>
+      <div class="controls">
+        <a href="#" onclick="return Alice.prefs.addNick()">Add</a>
+        <a href="#" onclick="return Alice.prefs.removeNicks()">Remove</a>
+      </div>
+    </div>
+
+
     <div class="buttons">
       <button type="submit">Save</button>
       <button onclick="Alice.prefs.remove(); return false;">Cancel</button>

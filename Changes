@@ -1,3 +1,17 @@
+0.19  Tue 31 Aug 2010
+        - Added a dark theme
+        - Made preferences and connections windows
+          into popup divs instead of real windows
+        - Redis message store improvements
+        - Improved debug output
+        - Workarounds for weird android browser
+          quirks
+        - Much better mobile style
+        - Improved reconnect behavior
+        - Nick tab completion in private messages
+        - Use browser's timezone for timestamps
+        - Faster page loads
+
 0.18  Tue 10 Aug 2010
         - Shortcuts work on Linux and Windows
         - Alt-[0-9] shortcuts added to jump to tab
