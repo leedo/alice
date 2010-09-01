@@ -157,7 +157,10 @@ sub load {
   my $self = shift;
   my $config = {};
   if (-e $self->fullpath) {
-    $config = require $self->fullpath;
+    my $body;
+    open my $fh, "<", $self->fullpath;
+    {local $/; $body = <$fh>};
+    $config = eval $body;
   }
   else {
     say STDERR "No config found, writing a few config to ".$self->fullpath;
