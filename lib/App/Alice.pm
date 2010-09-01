@@ -72,33 +72,6 @@ has commands => (
   }
 );
 
-has notifier => (
-  is      => 'ro',
-  lazy    => 1,
-  default => sub {
-    my $self = shift;
-    my $notifier;
-    eval {
-      if ($^O eq 'darwin') {
-        # 5.10 doesn't seem to put Extras in @INC
-        # need this for Foundation.pm
-        if ($] >= 5.01 and -e "/System/Library/Perl/Extras/5.10.0") {
-          require lib;
-          lib->import("/System/Library/Perl/Extras/5.10.0"); 
-        }
-        require App::Alice::Notifier::Growl;
-        $notifier = App::Alice::Notifier::Growl->new;
-      }
-      elsif ($^O eq 'linux') {
-        require App::Alice::Notifier::LibNotify;
-        $notifier = App::Alice::Notifier::LibNotify->new;
-      }
-    };
-    $self->log(info => "Notifications disabled") unless $notifier;
-    return $notifier;
-  }
-);
-
 has history => (
   is      => 'rw',
   lazy    => 1,
@@ -190,7 +163,7 @@ has 'user' => (
 sub BUILDARGS {
   my ($class, %options) = @_;
   my $self = {standalone => 1};
-  for (qw/standalone commands history notifier template user/) {
+  for (qw/standalone commands history template user/) {
     if (exists $options{$_}) {
       $self->{$_} = $options{$_};
       delete $options{$_};
@@ -211,7 +184,6 @@ sub run {
   $self->info_window;
   $self->template;
   $self->httpd;
-  $self->notifier;
 
   print STDERR "Location: http://".$self->config->http_address.":".$self->config->http_port."/\n"
     if $self->standalone;
@@ -461,13 +433,6 @@ sub broadcast {
                   grep {$_->{highlight}} @messages;
   
   $self->httpd->broadcast(@messages);
-  
-  if ($self->config->alerts and $self->notifier and ! $self->httpd->stream_count) {
-    for my $message (@messages) {
-      next if !$message->{window} or $message->{window}{type} eq "info";
-      $self->notifier->display($message) if $message->{highlight};
-    }
-  }
 }
 
 sub render {
