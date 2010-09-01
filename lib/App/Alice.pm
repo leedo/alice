@@ -5,7 +5,6 @@ use App::Alice::Window;
 use App::Alice::InfoWindow;
 use App::Alice::HTTPD;
 use App::Alice::IRC;
-use App::Alice::Signal;
 use App::Alice::Config;
 use App::Alice::Logger;
 use App::Alice::History;
@@ -226,17 +225,26 @@ sub run {
     for my $sig (qw/INT QUIT/) {
       my $w = AnyEvent->signal(
         signal => $sig,
-        cb     => sub {App::Alice::Signal->new(app => $self, type => $sig)}
+        cb     => sub {$self->init_shutdown},
       );
       push @sigs, $w;
     }
 
     $self->condvar->recv;
+    $self->_init_shutdown;
   }
 }
 
 sub init_shutdown {
+  my $self = shift;
+  $self->standalone ? $self->condvar->send : $self->_init_shutdown;
+}
+
+sub _init_shutdown {
   my ($self, $cb, $msg) = @_;
+
+  $self->condvar(AE::cv) if $self->standalone;
+
   $self->{on_shutdown} = $cb;
   $self->shutting_down(1);
   $self->history(undef);
@@ -244,26 +252,48 @@ sub init_shutdown {
   if ($self->connected_ircs) {
     print STDERR "\nDisconnecting, please wait\n" if $self->standalone;
     $_->init_shutdown($msg) for $self->connected_ircs;
+
+    $self->{shutdown_timer} = AnyEvent->timer(
+      after => 3,
+      cb    => sub{$self->shutdown}
+    );
   }
   else {
     print "\n";
     $self->shutdown;
-    return;
   }
-  $self->{shutdown_timer} = AnyEvent->timer(
-    after => 3,
-    cb    => sub{$self->shutdown}
-  );
+
+  if ($self->standalone) {
+    $self->condvar->recv;
+    $self->_shutdown;
+  }
 }
 
 sub shutdown {
   my $self = shift;
+  $self->standalone ? $self->condvar->send : $self->_shutdown;
+}
+
+sub _shutdown {
+  my $self = shift;
+
   $self->_ircs([]);
   $self->httpd->shutdown;
-  $_->buffer->clear for $self->windows;
+  
+  if ($self->standalone) {
+    my $cv = AE::cv;
+    for ($self->windows) {
+      $cv->begin;
+      $_->buffer->clear(sub {$cv->end});
+    }
+    $cv->recv;
+  }
+  else {
+    $_->buffer->clear(sub{}) for $self->windows;
+  }
+
   delete $self->{shutdown_timer} if $self->{shutdown_timer};
   $self->{on_shutdown}->() if $self->{on_shutdown};
-  $self->condvar->send if $self->condvar;
 }
 
 sub handle_command {

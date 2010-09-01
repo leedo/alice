@@ -22,8 +22,9 @@ sub add {
 }
 
 sub clear {
-  my $self = shift;
+  my ($self, $cb) = @_;
   $self->msgbuffer([]);
+  $cb->();
 }
 
 sub with_messages {
