@@ -412,6 +412,7 @@ ul.messages li.consecutive div.left {
 div.left {
   float: left;
   width: 95px;
+  overflow: hidden;
   font-weight: bold;
   text-align: right;
   padding: 4px 0;
