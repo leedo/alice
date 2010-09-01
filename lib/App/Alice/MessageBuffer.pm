@@ -28,9 +28,9 @@ has previous_nick => (
 );
 
 sub clear {
-  my $self = shift;
+  my ($self, $cb) = @_;
   $self->previous_nick("");
-  $self->store->clear;
+  $self->store->clear($cb);
 }
 
 sub add {

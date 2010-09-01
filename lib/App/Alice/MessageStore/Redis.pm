@@ -31,8 +31,8 @@ sub add {
 }
 
 sub clear {
-  my $self = shift;
-  $redis->del($self->id);
+  my ($self, $cb) = @_;
+  $redis->del($self->id, $cb);
 }
 
 sub with_messages {
