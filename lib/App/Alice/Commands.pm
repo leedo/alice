@@ -39,7 +39,7 @@ sub handle {
     if ($command =~ /$re/) {
       my @args = grep {defined $_} ($5, $4, $3, $2, $1); # up to 5 captures
       if ($handler->{in_channel} and !$window->is_channel) {
-        $app->reply($window, "$command can only be used in a channel");
+        $window->reply("$command can only be used in a channel");
       }
       else {
         $handler->{code}->($self, $app, $window, @args);
