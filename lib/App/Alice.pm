@@ -202,14 +202,14 @@ sub run {
       push @sigs, $w;
     }
 
-    $self->condvar->recv;
-    $self->_init_shutdown;
+    my $args = $self->condvar->recv;
+    $self->_init_shutdown(@$args);
   }
 }
 
 sub init_shutdown {
-  my $self = shift;
-  $self->standalone ? $self->condvar->send : $self->_init_shutdown;
+  my ($self, $cb, $msg) = @_;
+  $self->standalone ? $self->condvar->send([$cb, $msg]) : $self->_init_shutdown($cb, $msg);
 }
 
 sub _init_shutdown {
