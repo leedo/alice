@@ -1,15 +1,22 @@
 {
-  'images' => 'show',
-  'alerts' => 'show',
   'quitmsg' => 'alice.',
   'static_prefix' => '/static/',
   'ignore' => [],
-  'port' => 10001,
-  'auth' => {},
   'highlights' => [],
+  'auth' => {},
   'message_store' => 'Memory',
   'order' => [],
   'debug' => 0,
+  'monospace_nicks' => [
+    'Shaniqua'
+  ],
+  'avatars' => 'show',
+  'address' => '127.0.0.1',
+  'alerts' => 'show',
+  'images' => 'show',
+  'timeformat' => '24',
+  'style' => 'default',
+  'port' => 10867,
   'servers' => {
     'test' => {
       'nick' => 'tester',
@@ -17,10 +24,5 @@
       'port' => 6667,
       'host' => 'not.real.server'
     }
-  },
-  'address' => '127.0.0.1',
-  'avatars' => 'show',
-  'monospace_nicks' => [
-    'Shaniqua'
-  ]
+  }
 }

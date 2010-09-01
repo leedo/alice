@@ -69,7 +69,7 @@ has commands => (
   isa     => 'App::Alice::Commands',
   lazy    => 1,
   default => sub {
-    App::Alice::Commands->new(app => shift);
+    App::Alice::Commands->new(commands_file => $_[0]->config->assetdir."/commands.pl");
   }
 );
 
@@ -268,7 +268,7 @@ sub shutdown {
 
 sub handle_command {
   my ($self, $command, $window) = @_;
-  $self->commands->handle($command, $window);
+  $self->commands->handle($self, $command, $window);
 }
 
 sub reload_commands {

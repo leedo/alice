@@ -7,12 +7,14 @@ use Text::MicroTemplate qw/encoded_string/;
 
 extends 'App::Alice::Window';
 
-has '+is_channel' => (lazy => 0, default => 0);
 has '+title' => (required => 0, default => 'info');
-has '+session' => (default => "");
 has 'topic' => (is => 'ro', isa => 'HashRef', default => sub {{string => ''}});
-has '+type' => (lazy => 0, default => 'info');
 has '+_irc' => (required => 0, isa => 'Any');
+
+sub is_channel {0}
+sub title {"info"}
+sub session {""}
+sub type {"info"}
 
 sub irc {
   my $self = shift;
