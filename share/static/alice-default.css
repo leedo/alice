@@ -809,6 +809,7 @@ div.config {
   position: absolute;
   bottom: 55px;
   right: 20px;
+  min-height: 400px;
   background: #efefef;
   padding: 10px 10px;
   z-index: 999;
