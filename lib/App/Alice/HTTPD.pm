@@ -8,12 +8,9 @@ use Plack::Request;
 use Plack::Builder;
 use Plack::Middleware::Static;
 use Plack::Session::Store::File;
-
 use IRC::Formatting::HTML qw/html_to_irc/;
-
 use App::Alice::Stream;
 use App::Alice::Commands;
-
 use JSON;
 use Encode;
 use utf8;
@@ -29,29 +26,24 @@ has 'app' => (
 has 'httpd' => (is  => 'rw');
 has 'ping_timer' => (is  => 'rw');
 
-has 'config' => (
-  is => 'ro',
-  isa => 'App::Alice::Config',
-  lazy => 1,
-  default => sub {shift->app->config},
-);
+sub config {$_[0]->app->config}
 
 my $url_handlers = [
-  [ qr{^/$}               => \&send_index ],
-  [ qr{^/say/?$}          => \&handle_message ],
-  [ qr{^/stream/?$}       => \&setup_stream ],
-  [ qr{^/config/?$}       => \&send_config ],
-  [ qr{^/prefs/?$}        => \&send_prefs ],
-  [ qr{^/serverconfig/?$} => \&server_config ],
-  [ qr{^/save/?$}         => \&save_config ],
-  [ qr{^/tabs/?$}         => \&tab_order ],
-  [ qr{^/login/?$}        => \&login ],
-  [ qr{^/logout/?$}       => \&logout ],
-  [ qr{^/logs/?$}         => \&send_logs ],
-  [ qr{^/search/?$}       => \&send_search ],
-  [ qr{^/range/?$}        => \&send_range ],
-  [ qr{^/view/?$}         => \&send_index ],
-  [ qr{^/get}             => \&image_proxy ],
+  [ ""             => "send_index" ],
+  [ "say"          => "handle_message" ],
+  [ "stream"       => "setup_stream" ],
+  [ "config"       => "send_config" ],
+  [ "prefs"        => "send_prefs" ],
+  [ "serverconfig" => "server_config" ],
+  [ "save"         => "save_config" ],
+  [ "tabs"         => "tab_order" ],
+  [ "login"        => "login" ],
+  [ "logout"       => "logout" ],
+  [ "logs"         => "send_logs" ],
+  [ "search"       => "send_search" ],
+  [ "range"        => "send_range" ],
+  [ "view"         => "send_index" ],
+  [ "get"          => "image_proxy" ],
 ];
 
 sub url_handlers { return $url_handlers }
@@ -101,9 +93,10 @@ sub dispatch {
     }
   }
   for my $handler (@{$self->url_handlers}) {
-    my $re = $handler->[0];
-    if ($req->path_info =~ /$re/) {
-      return $handler->[1]->($self, $req);
+    my $path = $handler->[0];
+    if ($req->path_info =~ /^\/$path\/?$/) {
+      my $method = $handler->[1];
+      return $self->$method($req);
     }
   }
   return $self->not_found($req);
@@ -247,7 +240,7 @@ sub handle_message {
   if ($window) {
     for (split /\n/, $msg) {
       try {
-        $self->app->handle_command($_, $window) if length $_
+        $self->app->handle_command($_, $window) if length $_;
       } catch {
         $self->app->log(info => $_);
       }
@@ -280,18 +273,18 @@ sub send_windows {
   my ($self, $writer, $cb, @windows) = @_;
   if (!@windows) {
     $cb->();
+    return;
   }
-  else {
-    my $window = pop @windows;
-    $writer->write(encode_utf8 $self->app->render('window_head', $window));
-    $window->buffer->with_messages(sub {
-      my @messages = @_;
-      $writer->write(encode_utf8 $_->{html}) for @messages;
-    }, 0, sub {
-      $writer->write(encode_utf8 $self->app->render('window_footer', $window));
-      $self->send_windows($writer, $cb, @windows);
-    });
-  }    
+
+  my $window = pop @windows;
+  $writer->write(encode_utf8 $self->app->render('window_head', $window));
+  $window->buffer->with_messages(sub {
+    my @messages = @_;
+    $writer->write(encode_utf8 $_->{html}) for @messages;
+  }, 0, sub {
+    $writer->write(encode_utf8 $self->app->render('window_footer', $window));
+    $self->send_windows($writer, $cb, @windows);
+  });
 }
 
 sub send_logs {

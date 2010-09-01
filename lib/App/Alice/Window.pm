@@ -9,26 +9,6 @@ use Any::Moose;
 
 my $url_regex = qr/\b(https?:\/\/(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'".,<>?«»“”‘’]))/i;
 
-has type => (
-  is      => 'ro',
-  isa     => 'Str',
-  lazy    => 1,
-  default => sub {return shift->title =~ /^[#&]/ ? "channel" : "privmsg"}
-);
-
-has is_channel => (
-  is      => 'ro',
-  isa     => 'Bool',
-  lazy    => 1,
-  default => sub {return shift->type eq "channel"}
-);
-
-has assetdir => (
-  is       => 'ro',
-  isa      => 'Str',
-  required => 1,
-);
-
 has buffer => (
   is      => 'rw',
   isa     => 'App::Alice::MessageBuffer',
@@ -48,16 +28,6 @@ has title => (
   required => 1,
 );
 
-has sort_name => (
-  is       => 'ro',
-  lazy     => 1,
-  default  => sub {
-    my $name = $_[0]->title;
-    $name =~ s/^#//;
-    $name;
-  }
-);
-
 has topic => (
   is      => 'rw',
   isa     => 'HashRef[Str|Undef]',
@@ -75,13 +45,6 @@ has id => (
   default => sub {
     return $_[0]->app->_build_window_id($_[0]->title, $_[0]->session);
   },
-);
-
-has session => (
-  is      => 'ro',
-  isa     => 'Str',
-  lazy    => 1,
-  default => sub {return shift->irc->alias}
 );
 
 has _irc => (
@@ -109,7 +72,19 @@ sub BUILDARGS {
   return $args;
 }
 
-sub irc { $_[0]->_irc }
+sub sort_name {
+  my $name = $_[0]->title;
+  $name =~ s/^#//;
+  $name;
+}
+
+sub type {
+  return $_[0]->title =~ /^[#&]/ ? "channel" : "privmsg";
+}
+
+sub is_channel {$_[0]->type eq "channel"}
+sub irc {$_[0]->_irc}
+sub session {$_[0]->_irc->alias}
 
 sub serialized {
   my ($self) = @_;
@@ -296,6 +271,16 @@ sub hashtag {
     return "/" . $self->title;
   }
   return "/" . $self->session . "/" . $self->title;
+}
+
+sub reply {
+  my ($self, $message) = @_;
+  $self->app->broadcast($self->format_announcement($message));
+}
+
+sub show {
+  my ($self, $message) = @_;
+  $self->app->broadcast($self->format_message($self->nick, $message));
 }
 
 __PACKAGE__->meta->make_immutable;
