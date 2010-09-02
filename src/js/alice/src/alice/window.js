@@ -253,6 +253,9 @@ Alice.Window = Class.create({
       if (prev && prev.hasClassName("avatar") && !prev.hasClassName("consecutive")) {
         prev.down('div.msg').setStyle({minHeight: '0px'});
       }
+      if (prev && prev.hasClassName("monospace")) {
+        prev.down('div.msg').setStyle({paddingBottom: '0px'});
+      }
     }
     
     if (message.event == "say") {

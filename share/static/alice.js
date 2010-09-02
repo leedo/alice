@@ -10769,6 +10769,9 @@ Alice.Window = Class.create({
       if (prev && prev.hasClassName("avatar") && !prev.hasClassName("consecutive")) {
         prev.down('div.msg').setStyle({minHeight: '0px'});
       }
+      if (prev && prev.hasClassName("monospace")) {
+        prev.down('div.msg').setStyle({paddingBottom: '0px'});
+      }
     }
 
     if (message.event == "say") {
@@ -11480,6 +11483,10 @@ if (window == window.parent) {
 
     $$('ul.messages li.avatar:not(.consecutive) + li.consecutive').each(function (li) {
       li.previous().down('div.msg').setStyle({minHeight:'0px'});
+    });
+
+    $$('ul.messages li.monospace + li.monospace.consecutive').each(function(li) {
+      li.previous().down('div.msg').setStyle({paddingBottom:'0px'});
     });
 
     $$('span.timestamp').each(function(elem) {
