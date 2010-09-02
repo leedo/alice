@@ -962,6 +962,11 @@ div.config {
   border-radius: 5px;
 }
 
+div.config#servers {
+  min-width: 400px;
+  min-height: 400px;
+}
+
 div.config div.buttons {
   clear: both;
 }
