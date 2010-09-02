@@ -88,7 +88,12 @@ sub dispatch {
   if ($self->app->auth_enabled) {
     unless ($req->path eq "/login" or $self->is_logged_in($req)) {
       my $res = $req->new_response;
-      $res->redirect("/login");
+      if ($req->path eq "/") {
+        $res->redirect("/login");
+      } else {
+        $res->status(401);
+        $res->body("unauthorized");
+      }
       return $res->finalize;
     }
   }
@@ -133,6 +138,7 @@ sub login {
 
 sub logout {
   my ($self, $req) = @_;
+  $_->close for $self->streams;
   my $res = $req->new_response;
   if (!$self->app->auth_enabled) {
     $res->redirect("/");
