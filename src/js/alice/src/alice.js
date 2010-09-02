@@ -71,6 +71,10 @@ if (window == window.parent) {
       li.previous().down('div.msg').setStyle({minHeight:'0px'});
     });
 
+    $$('ul.messages li.monospace + li.monospace.consecutive').each(function(li) {
+      li.previous().down('div.msg').setStyle({paddingBottom:'0px'});
+    });
+
     // change timestamps from epoch to local time
     $$('span.timestamp').each(function(elem) {
       if (elem.innerHTML) {

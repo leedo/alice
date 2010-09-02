@@ -509,7 +509,7 @@ li.event div.msg {
 }
 
 li.monospace div.msg {
-  padding: 6px 5px;
+  padding: 8px 5px;
 }
 
 li.event + li.message div.msg {
@@ -523,6 +523,9 @@ ul.messages li:first-child div.msg {
 /* so the last avatar doesn't hang off the edge */
 ul.messages li.avatar:not(.consecutive) div.msg {
   min-height: 35px;
+}
+ul.messages li.monospace.avatar:not(.consecutive) div.msg {
+  min-height: 24px;
 }
 
 ul.messages li.monospace {
@@ -551,7 +554,7 @@ div.msg img {
 }
 
 ul.messages li.monospace + li.monospace.consecutive {
-  margin-top: -5px;
+  padding-top: 0px;
 }
 
 ul.messages li.monospace div.msg {
