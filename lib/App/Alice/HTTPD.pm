@@ -255,18 +255,31 @@ sub handle_message {
 
 sub send_index {
   my ($self, $req) = @_;
+  my $options = $self->merged_options($req);
   return sub {
     my $respond = shift;
     my $writer = $respond->([200, ["Content-type" => "text/html; charset=utf-8"]]);
     my @windows = $self->app->sorted_windows;
     @windows > 1 ? $windows[1]->{active} = 1 : $windows[0]->{active} = 1;
-    $writer->write(encode_utf8 $self->app->render('index_head', @windows));
+    $writer->write(encode_utf8 $self->app->render('index_head', $options, @windows));
     $self->send_windows($writer, sub {
       $writer->write(encode_utf8 $self->app->render('index_footer', @windows));
       $writer->close;
       delete $_->{active} for @windows;
     }, @windows);
   }
+}
+
+sub merged_options {
+  my ($self, $req) = @_;
+  my $config = $self->app->config;
+  my $params = $req->parameters;
+  my %options = (
+   images => $params->{images} || ($config->images ? 'show' : 'hide'),
+   debug  => $params->{debug}  || ($config->show_debug ? 'true' : 'false'),
+   timeformat => $params->{timeformat} || $config->timeformat,
+  );
+  join "&", map {"$_=$options{$_}"} keys %options;
 }
 
 sub send_windows {
