@@ -174,6 +174,6 @@ Alice.Connection = Class.create({
   
   sendPing: function() {
     new Ajax.Request('/ping');
-    on401: this.gotoLogin,
+    on401: this.gotoLogin
   }
 });
