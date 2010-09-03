@@ -420,6 +420,9 @@ div.left {
   padding-bottom: 0;
   text-overflow: ellipsis;
   position: relative;
+  word-wrap: break-word;
+  -khtml-line-break: after-white-space;
+  -khtml-nbsp-mode: space;
 }
 
 li.event a,
