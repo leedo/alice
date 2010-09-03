@@ -132,66 +132,44 @@ Alice.Application = Class.create
     this.getWindow(id).focus() unless id == active.id
 
   focusLast: ->
-    if @previousFocus and @previousFocus.id != @activeWindow().id
+    if @previousFocus and @previousFocus.id is !@activeWindow().id
       @previousFocus.focus()
     else
       @previousWindow()
-  ###
-  previousWindow: function() {
-    var active = this.activeWindow();
 
-    var previousTab = this.activeWindow().tab.previous();
-    if (!previousTab)
-      previousTab = $$('ul#tabs li').last();
-    if (!previousTab) return;
+  previousWindow: ->
+    active = @activeWindow()
+    previousTab = @activeWindow().tab.previous();
+    previousTab = $$('ul#tabs li').last() unless previousTab
+    return unless previousTab
+    id = previousTab.id.replace '_tab',''
+    @getWindow(id).focus() unless id is active.id
 
-    var id = previousTab.id.replace('_tab','');
-    if (id != active.id)
-      this.getWindow(id).focus();
-  },
+  closeWindow: (windowId) -> win.close() if win = @getWindow windowId
   
-  closeWindow: function(windowId) {
-    var win = this.getWindow(windowId);
-    if (win) win.close();
-  },
+  insertWindow: (windowId, html) ->
+    if !$ windowId
+      $('windows').insert html['window']
+      $('tabs').insert html.tab
+      $('tab_overflow_overlay').insert html.select
+      $(windowId+"_tab_overflow_button").selected = false
+      this.activeWindow().tabOverflowButton.selected = true
+      this.makeSortable()
+
+  highlightChannelSelect: -> $('tab_overflow_button').addClassName 'unread'
   
-  insertWindow: function(windowId, html) {
-    if (!$(windowId)) {
-      $('windows').insert(html['window']);
-      $('tabs').insert(html.tab);
-      $('tab_overflow_overlay').insert(html.select);
-      $(windowId+"_tab_overflow_button").selected = false;
-      this.activeWindow().tabOverflowButton.selected = true;
-      this.makeSortable();
-    }
-  },
+  unHighlightChannelSelect: -> $('tab_overflow_button').removeClassName 'unread'
   
-  highlightChannelSelect: function() {
-    $('tab_overflow_button').addClassName('unread');
-  },
+  updateChannelSelect: ->
+    windows = @windows()
+    for i in windows
+      win = windows[i]
+      if (win.tab.hasClassName 'unread' or win.tab.hasClassName 'highlight') and win.isTabWrapped()
+        return @highlightChannelSelect()
+    @unHighlightChannelSelect()
   
-  unHighlightChannelSelect: function() {
-    $('tab_overflow_button').removeClassName('unread');
-  },
-  
-  updateChannelSelect: function() {
-    var windows = this.windows();
-    for (var i=0; i < windows.length; i++) {
-      var win = windows[i];
-      if ((win.tab.hasClassName('unread') || win.tab.hasClassName('highlight')) && win.isTabWrapped()) {
-        this.highlightChannelSelect();
-        return;
-      }
-    }
-    this.unHighlightChannelSelect();
-  },
-  
-  handleAction: function(action) {
-    if (this.actionHandlers[action.event]) {
-      this.actionHandlers[action.event].call(this,action);
-    }
-  },
-  
+  handleAction: (action) -> @actionHandlers[action.event].call @, action if @actionHandlers[action.event]
+###
   displayMessage: function(message) {
     var win = this.getWindow(message['window'].id);
     if (win) {

@@ -215,64 +215,65 @@
       }
     },
     focusLast: function() {
-      return this.previousFocus && this.previousFocus.id !== this.activeWindow().id ? this.previousFocus.focus() : this.previousWindow();
-    }
-    /*
+      return this.previousFocus && this.previousFocus.id === !this.activeWindow().id ? this.previousFocus.focus() : this.previousWindow();
+    },
     previousWindow: function() {
-      var active = this.activeWindow();
-
-      var previousTab = this.activeWindow().tab.previous();
-      if (!previousTab)
+      var active, id, previousTab;
+      active = this.activeWindow();
+      previousTab = this.activeWindow().tab.previous();
+      if (!(previousTab)) {
         previousTab = $$('ul#tabs li').last();
-      if (!previousTab) return;
-
-      var id = previousTab.id.replace('_tab','');
-      if (id != active.id)
-        this.getWindow(id).focus();
+      }
+      if (!(previousTab)) {
+        return null;
+      }
+      id = previousTab.id.replace('_tab', '');
+      if (id !== active.id) {
+        return this.getWindow(id).focus();
+      }
     },
-
     closeWindow: function(windowId) {
-      var win = this.getWindow(windowId);
-      if (win) win.close();
+      var win;
+      if (win = this.getWindow(windowId)) {
+        return win.close();
+      }
     },
-
     insertWindow: function(windowId, html) {
       if (!$(windowId)) {
         $('windows').insert(html['window']);
         $('tabs').insert(html.tab);
         $('tab_overflow_overlay').insert(html.select);
-        $(windowId+"_tab_overflow_button").selected = false;
+        $(windowId + "_tab_overflow_button").selected = false;
         this.activeWindow().tabOverflowButton.selected = true;
-        this.makeSortable();
+        return this.makeSortable();
       }
     },
-
     highlightChannelSelect: function() {
-      $('tab_overflow_button').addClassName('unread');
+      return $('tab_overflow_button').addClassName('unread');
     },
-
     unHighlightChannelSelect: function() {
-      $('tab_overflow_button').removeClassName('unread');
+      return $('tab_overflow_button').removeClassName('unread');
     },
-
     updateChannelSelect: function() {
-      var windows = this.windows();
-      for (var i=0; i < windows.length; i++) {
-        var win = windows[i];
-        if ((win.tab.hasClassName('unread') || win.tab.hasClassName('highlight')) && win.isTabWrapped()) {
-          this.highlightChannelSelect();
-          return;
+      var _a, _b, _c, i, win, windows;
+      windows = this.windows();
+      _b = windows;
+      for (_a = 0, _c = _b.length; _a < _c; _a++) {
+        i = _b[_a];
+        win = windows[i];
+        if ((win.tab.hasClassName('unread' || win.tab.hasClassName('highlight'))) && win.isTabWrapped()) {
+          return this.highlightChannelSelect();
         }
       }
-      this.unHighlightChannelSelect();
+      return this.unHighlightChannelSelect();
     },
-
     handleAction: function(action) {
       if (this.actionHandlers[action.event]) {
-        this.actionHandlers[action.event].call(this,action);
+        return this.actionHandlers[action.event].call(this, action);
       }
-    },
-
+    }
+  });
+  /*
     displayMessage: function(message) {
       var win = this.getWindow(message['window'].id);
       if (win) {
@@ -326,7 +327,6 @@
       if (!window.fluid) return;
       window.fluid.dockBadge = "";
     }
-    });
-    */
   });
+  */
 })();
