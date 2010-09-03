@@ -7,13 +7,16 @@ class Alice.Window
     @hashtag = hashtag
     @id = @element.identify()
     @active = active
-    @tab = $ @id+"_tab"
+
     @input = new Alice.Input @, @id+"_msg"
+
+    @tab = $ @id+"_tab"
     @tabButton = $ @id+"_tab_button"
     @tabOverflowButton = $ @id+"_tab_overflow_button"
     @form = $ @id+"_form"
-
     @topic = $ @id+"_topic"
+    @messages = @element.down ".message_wrap"
+    @submit = $ @id+"_submit"
 
     if @topic
       orig_height = @topic.getStyle "height"
@@ -23,8 +26,6 @@ class Alice.Window
        else
          @topic.setStyle {height: orig_height}
 
-    @messages = @element.down ".message_wrap"
-    @submit = $ @id+"_submit"
     @nicksVisible = false
     @visibleNick = ""
     @visibleNickTimeout = ""
@@ -41,7 +42,7 @@ class Alice.Window
         @focus()
         @focusing = true
 
-    @tab.ovserve "click", (e) => @focusing = false
+    @tab.observe "click", (e) => @focusing = false
 
     @tabButton.observe "click", (e) => @close() if (@active and not @focusing)
     @messages.observe "mouseover", => @showNick()
@@ -53,7 +54,7 @@ class Alice.Window
       @messageLimit = 50
       @messages.select("li").reverse().slice(50).invoke "remove"
 
-    scrollToBottom(true) if @active
+    @scrollToBottom(true) if @active
     @makeTopicClickable()
 
     setTimeout =>
@@ -213,3 +214,59 @@ class Alice.Window
     if message.event == "say"
       msg = li.down "div.msg"
       msg.innerHTML = @application.applyFilters msg.innerHTML
+
+      if @nicksVisible
+        if nick = li.down "span.nickhint"
+          nick.style.webkitTransition = "none 0 linear"
+          nick.style.opacity = 1
+        if time = li.down "div.timehint"
+          time.style.webkitTransition = "none 0 linear"
+          nick.style.opacity = 1
+
+      if message.consecutive and avatar = li.previous ".avatar:not(.consecutive)"
+        avatar.down(".timehint").innerHTML = message.timestamp
+
+    else if message.event == "topic"
+      displayTopic message.body.escapeHTML()
+
+    if !@application.isFocused and message.highlight and message.window.title != "info"
+      message.body = li.down(".msg").innerHTML.stripTags();
+      Alice.growlNotify(message)
+      @application.addMissed()
+
+    if message.nicks and message.nicks.length
+      @nicks = message.nicks
+
+    if @element.hasClassName "active"
+      @scrollToBottom()
+    else if @title != "info"
+      if message.event == "say"
+        @tab.addClassName "unread"
+        @tabOverflowButton.addClassName "unread"
+        @application.highlightChannelSelect if @isTabWrapped()
+      if message.highlight
+        @tab.addClassName "highlight"
+
+    listitems = @messages.down("ul").childElements()
+    listitems.first().remove() if listitems.length > @messageLimit
+
+    # fix timestamps
+    for elem in li.select("span.timestamp")
+      elem.innerHTML = Alice.epochToLocal elem.innerHTML.strip(), @application.options.timeformat
+      elem.style.opacity = 1
+
+    @element.redraw()
+
+  scrollToBottom: (force) ->
+    bottom, height
+
+    if !force and lastmsg = @messages.down "ul.messages > li:last-child"
+      msgheight = lastmsg.offsetHeight
+      bottom = @messages.scrollTop + @messages.offsetHeight
+      height = @messages.scrollHeight
+
+    if force or bottom + msgheight + 100 >= height
+      @messages.scrollTop = @messages.scrollHeight
+      @element.redraw()
+
+  getNickNames: -> @nicks
