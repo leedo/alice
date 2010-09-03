@@ -56,5 +56,4 @@ App-Alice
 README.md
 \.modulebuildrc
 bin/client
-src
 INSTALL.md
