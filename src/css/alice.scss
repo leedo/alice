@@ -816,6 +816,7 @@ div#help div#topics {
   left: 20px;
   right: 20px;
   overflow-y: auto;
+  overflow-x: hidden;
 }
 
 div#help h1 {
@@ -826,7 +827,7 @@ div#help h1 {
 }
 
 div#help dl {
-  width: 48%;
+  width: 47%;
   font-size: 12px;
   margin-top: 0;
   padding-top: 10px;
