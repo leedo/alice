@@ -7,7 +7,7 @@ use Twiggy::Server;
 use Plack::Request;
 use Plack::Builder;
 use Plack::Middleware::Static;
-use Plack::Session::Store::File;
+use Plack::Middleware::Session::Cookie;
 use IRC::Formatting::HTML qw/html_to_irc/;
 use App::Alice::Stream;
 use App::Alice::Commands;
@@ -68,11 +68,9 @@ sub BUILD {
   $httpd->register_service(
     builder {
       if ($self->app->auth_enabled) {
-        mkdir $self->config->path."/sessions"
-          unless -d $self->config->path."/sessions";
-        enable "Session",
-          store => Plack::Session::Store::File->new(dir => $self->config->path),
-          expires => "24h";
+        enable "Session::Cookie",
+          secret => "aliceee",
+          expires => 60 * 60 * 24,
       }
       enable "Static", path => qr{^/static/}, root => $self->config->assetdir;
       sub {$self->dispatch(shift)}
