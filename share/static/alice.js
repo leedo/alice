@@ -10368,6 +10368,10 @@ Alice.Connection = Class.create({
     this.reconnecting = false;
   },
 
+  gotoLogin: function() {
+    window.location = "/login";
+  },
+
   closeConnection: function() {
     this.aborting = true;
     if (this.request && this.request.transport)
@@ -10389,7 +10393,7 @@ Alice.Connection = Class.create({
     this.request = new Ajax.Request('/stream', {
       method: 'get',
       parameters: {msgid: this.msgid, t: now.getTime() / 1000},
-      on401: function(){window.location = "/login"},
+      on401: this.gotoLogin,
       onException: this.handleException.bind(this),
       onInteractive: this.handleUpdate.bind(this),
       onComplete: this.handleComplete.bind(this)
@@ -10462,6 +10466,7 @@ Alice.Connection = Class.create({
     new Ajax.Request('/say', {
       method: 'post',
       parameters: {source: windowId, msg: "/create " + title},
+      on401: this.gotoLogin,
       onSuccess: function (transport) {
         this.handleUpdate(transport);
         if (message) {
@@ -10476,6 +10481,7 @@ Alice.Connection = Class.create({
   closeWindow: function(win) {
     new Ajax.Request('/say', {
       method: 'post',
+      on401: this.gotoLogin,
       parameters: {source: win.id, msg: "/close"}
     });
   },
@@ -10483,6 +10489,7 @@ Alice.Connection = Class.create({
   getConfig: function(callback) {
     new Ajax.Request('/config', {
       method: 'get',
+      on401: this.gotoLogin,
       onSuccess: callback
     });
   },
@@ -10490,6 +10497,7 @@ Alice.Connection = Class.create({
   getPrefs: function(callback) {
     new Ajax.Request('/prefs', {
       method: 'get',
+      on401: this.gotoLogin,
       onSuccess: callback
     });
   },
@@ -10497,6 +10505,7 @@ Alice.Connection = Class.create({
   getLog: function(callback) {
     new Ajax.Request('/logs', {
       method: 'get',
+      on401: this.gotoLogin,
       onSuccess: callback
     });
   },
@@ -10505,6 +10514,7 @@ Alice.Connection = Class.create({
     new Ajax.Request('/say', {
       method: 'post',
       parameters: form.serialize(),
+      on401: this.gotoLogin,
       onException: function (request, exception) {
         alert("There was an error sending a message.");
       }
@@ -10514,12 +10524,14 @@ Alice.Connection = Class.create({
   sendTabOrder: function (windows) {
     new Ajax.Request('/tabs', {
       method: 'post',
+      on401: this.gotoLogin,
       parameters: {tabs: windows}
     });
   },
 
   sendPing: function() {
     new Ajax.Request('/ping');
+    on401: this.gotoLogin,
   }
 });
 Alice.Window = Class.create({
