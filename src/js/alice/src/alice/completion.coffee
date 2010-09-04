@@ -1,3 +1,5 @@
+Alice.Completion.PATTERN = /[A-Za-z0-9\[\\\]^_{|}-]/
+
 class Alice.Completion
   constructor: (candidates) ->
     return unless range = @getRange()
@@ -43,21 +45,25 @@ class Alice.Completion
     @matchIndex = 0 if ++@matchIndex == @matches.length
 
     match = @matches[@matchIndex]
-    match += @leftOffset == 0 ? ": " : " "
+    match += if @leftOffset == 0 then ": " else " "
     @restore(match, @leftOffset + match.length)
 
   restore: (stem, index) ->
-    @element.data = @stemLeft + (stem || @stem) + @stemRight
-    @setCursorToIndex(Object.isUndefined(index) ? @index : index)
+    @element.data = @stemLeft + (stem ? @stem) + @stemRight
+    @setCursorToIndex index ? @index
 
   setCursorToIndex: (index) ->
     range = @getRange()
-    range.setStart(@element, index)
-    range.setEnd(@element, index)
+    range.setStart @element, index
+    range.setEnd @element, index
     @setRange(range)
 
   findStem: ->
-    left = [], right = [], chr, index, length = @value.length
+    left = []
+    right = []
+    chr
+    index
+    length = @value.length
 
     for index in [@index - 1 .. 0]
       chr = @value.charAt index
@@ -75,9 +81,9 @@ class Alice.Completion
     @leftOffset = @index - left.length
 
   matchAgainst: (candidates) ->
-    candidates.grep(new RegexP("^" + RegExp.escape(this.stem), "i")).sortBy( (candidate) ->
+    candidates.grep(new RegExp("^" + RegExp.escape(this.stem), "i")).sortBy( (candidate) ->
       candidate.toLowerCase()
+    )
 
 
 
-Alice.Completion.PATTERN = /[A-Za-z0-9\[\\\]^_{|}-]/;
