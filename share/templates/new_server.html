@@ -1,60 +1,85 @@
 ? my ($app, $alias) = @_;
-<div class="setting active" id="setting_<?= $alias ?>">
-  <div class="field" style="width:138px">
-    <label>Name</label>
-    <span><?= $alias ?></span>
-    <input type="hidden" name="<?= $alias ?>_name" value="<?= $alias ?>" />
-  </div>
-  <div class="field" style="width:138px">
-    <label>Auto-connect?</label>
-    <input type="checkbox" checked="checked" name="<?= $alias ?>_autoconnect" />
-  </div>
-  <div class="field clear">
-    <label>Server address</label>
-    <input type="text" name="<?= $alias ?>_host" value="" size="15"/>
-  </div>
-  <div class="field">
-    <label>Port</label>
-    <input type="text" name="<?= $alias ?>_port" value="6667" size="6" style="float:left"/>
-    <div style="float:left">
-    <input type="checkbox" name="<?= $alias ?>_ssl" style="display:inline;margin-right:0px"/>
-    <span style="font-size:0.7em">SSL</span>
-    </div>
-  </div
-  <div class="field clear">
-    <label>Nick</label>
-    <input type="text" name="<?= $alias ?>_nick" value="" size="15" />
-  </div>
-  <div class="field">
-    <label>Ircname</label>
-    <input type="text" name="<?= $alias ?>_ircname" value="" size="15" />
-  </div>
-  <div class="field clear">
-    <label>Username</label>
-    <input type="text" name="<?= $alias ?>_username" value="" size="15" />
-  </div>
-  <div class="field">
-    <label>Password</label>
-    <input type="text" name="<?= $alias ?>_password" value="" size="15" />
-  </div>
-  <div class="field clear">
-    <label>Channels
-      <span style="font-size:0.8em">(e.g. <span style="font-family:monospace;font-size:1em">#alice</span>)</span>
-    </label>
-    <select name="<?= $alias ?>_channels" multiple="multiple" id="channels_<?= $alias ?>" class="channelselect">
-    </select>
-    <div class="controls">
-      <a href="#" onclick="return addChannel('<?= $alias ?>')">New</a>
-      <a href="#" onclick="return removeChannels('<?= $alias ?>')">Remove</a>
-    </div>
-  </div>
-  <div class="field">
-    <label>Commands</label>
-    <select name="<?= $alias ?>_on_connect" multiple="multiple" id="on_connect_<?= $alias ?>" class="channelselect">
-    </select>
-    <div class="controls">
-      <a href="#" onclick="return _.addCommand(<?= $alias ?>)">New</a>
-      <a href="#" onclick="return _.removeCommands(<?= $alias ?>)">Remove</a>
-    </div>
-  </div>
-</div>
+    <div class="setting active" id="setting_<?= $alias ?>">
+
+      <div class="field" style="width:138px">
+        <label>Name</label>
+        <span><?= $alias ?></span>
+        <input type="hidden" name="<?= $alias ?>_name" value="<?= $alias ?>" />
+      </div>
+
+      <div class="field" style="width:150px;margin-right:0">
+        <label>Status</label>
+        <? my $status = "unsaved" ?>
+        <span class="<?= $status ?>" id="<?= $alias ?>_status"><?= $status ?></span>
+      </div>
+
+      <div class="field clear" style="width:138px">
+        <label>Auto-connect?</label>
+        <input type="checkbox" checked="checked" name="<?= $alias ?>_autoconnect" />
+      </div>
+
+      <div class="field">
+        <? my $action = "connect" ?>
+        <button disabled="disabled" id="<?= $alias ?>_connection">
+          <?= $action ?>
+        </button>
+      </div>
+
+      <div class="field clear">
+        <label>Server address</label>
+        <input type="text" name="<?= $alias ?>_host" value="" size="15"/>
+      </div>
+
+      <div class="field">
+        <label>Port</label>
+        <input type="text" name="<?= $alias ?>_port" value="6667" size="6" style="float:left"/>
+        <div style="float:left">
+          <input type="checkbox" name="<?= $alias ?>_ssl" />
+          <span style="font-size:0.7em">SSL</span>
+        </div>
+      </div>
+
+      <div class="field clear">
+        <label>Nick</label>
+        <input type="text" name="<?= $alias ?>_nick" value="" size="15" />
+      </div>
+
+      <div class="field">
+        <label>Name or Avatar URL</label>
+        <input type="text" name="<?= $alias ?>_ircname" value="" size="15" />
+      </div>
+
+      <div class="field clear">
+        <label>Username</label>
+        <input type="text" name="<?= $alias ?>_username" value="" size="15" />
+      </div>
+
+      <div class="field">
+        <label>Password</label>
+        <input type="text" name="<?= $alias ?>_password" value="" size="15" />
+      </div>
+
+      <div class="field clear">
+        <label>Channels
+          <span style="font-size:0.8em">(e.g. <span style="font-family:monospace;font-size:1em">#alice</span>)</span>
+        </label>
+        <select name="<?= $alias ?>_channels" multiple="multiple" id="channels_<?= $alias ?>" class="channelselect">
+        </select>
+        <div class="controls">
+          <a href="#" onclick="return Alice.connections.addChannel('<?= $alias ?>')">Add</a>
+          <a href="#" onclick="return Alice.connections.removeChannels('<?= $alias ?>')">Remove</a>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Commands</label>
+        <select name="<?= $alias ?>_on_connect" multiple="multiple" id="on_connect_<?= $alias ?>" class="channelselect">
+        </select>
+        <div class="controls">
+          <a href="#" onclick="return Alice.connections.addCommand('<?= $alias ?>')">Add</a>
+          <a href="#" onclick="return Alice.connections.removeCommands('<?= $alias ?>')">Remove</a>
+        </div>
+      </div>
+
+    </div> 
+

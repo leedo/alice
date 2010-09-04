@@ -954,25 +954,38 @@ div.color_picker div.toggle span#bg.active {
 
 div.config {
   position: absolute;
-  bottom: 55px;
+  bottom: 65px;
   right: 20px;
-  min-height: 400px;
-  background: #efefef;
-  padding: 10px 10px;
+  background: $tab_background_active;
+  padding-bottom: 29px;
   z-index: 999;
-  border: 10px solid rgba(0,0,0,0.5);
-  -webkit-border-radius: 10px;
-  -moz-border-radius: 5px;
-  border-radius: 5px;
+  -webkit-box-shadow: 0 0 10px #000;
+  -moz-box-shadow: 0 0 10px #000;
+  box-shadow: 0 0 10px #000;
+  border: 10px solid $tab_border_active;
+}
+
+div.config#prefs {
+  padding: 10px;
+  padding-bottom: 29px;
 }
 
 div.config#servers {
-  min-width: 400px;
-  min-height: 400px;
+  min-width: 380px;
+  min-height: 350px;
 }
 
 div.config div.buttons {
   clear: both;
+  position: absolute;
+  bottom: 0px;
+  left: 0px;
+  right: 0px;
+  padding: 2px 10px;
+  height: 24px;
+  background: $tab_text_blurred;
+  border: 1px solid $tab_background_hover;
+  border-top: none;
 }
 
 div.config div.buttons button {
@@ -1011,36 +1024,50 @@ div.config span {
 div.config select {
   width: 135px;
   font-size: 0.8em;
-    outline: 0 none;
+  outline: 0 none;
 }
 
-div.config[multiple] {
-  height: 100px;
+div.config select[multiple] {
+  height: 70px;
+  background: $textentry_background;
+  border: 1px solid $textentry_border;
+  padding: 2px;
 }
 
-div.config div#server_controls {
+div.config li#server_controls {
   position: absolute;
-  bottom: 18px;
-  left: 6px;
+  bottom: 0px;
+  left: 0px;
+  right: 0px;
+  padding: 10px;
+  background: $tab_background_active;
 }
 
-div.config div.controls {
+div.config .controls {
   clear: both;
-  font-size: 0.7em;
+  font-size: 0.7em !important;
 }
 
-div.config div.controls a {
+div.config .controls a {
   text-decoration: none;
   margin: 0 5px 0 0;
 }
 
-div.config div.controls a:hover {
+div.config .controls a:hover {
   text-shadow: none;
   text-decoration: underline;
 }
 
 div.config label {
-  color: #666;
+  color: $tab_text_blurred;
+  font-size: 0.8em;
+}
+
+div.config input[type="text"] {
+  background: $textentry_background;
+  color: $default_text;
+  border: 1px solid $textentry_border;
+  padding: 2px;
 }
 
 div.config input[type="checkbox"] {
@@ -1051,57 +1078,49 @@ div.config input[type="checkbox"] {
 div.config ul#connections {
   list-style: none;
   position: absolute;
-  top: 5px;
-  bottom: 32px;
-  left: 5px;
+  top: 0px;
+  bottom: 29px;
+  left: 0px;
   margin: 0;
   padding: 0px;
   width: 150px;
-  background: #fff;
-  border-right: 1px solid #ccc;
-  border-bottom: 1px solid #ccc;
+  background: $tab_background_hover;
+  border-right: 1px solid $tab_border;
 }
 
 div.config ul#connections li.header {
-  background: #efefef;
   text-transform: uppercase;
-  color: #777;
+  color: $tab_text_blurred;
   letter-spacing: 1px;
   font-size: 0.7em;
   cursor: default;
 }
 
 div.config ul#connections li.header:hover {
-  background: #efefef;
+  background: $tab_background_hover;
 }
 
 div.config ul#connections li {
   padding: 5px 8px;
-  font-size: 0.9em;
   cursor: pointer;
-    border: 1px solid #fff;
-    border-bottom: none;
+  border-left: 1px solid $tab_background_hover;
+  font-size: 0.8em;
 }
 
 div.config ul#connections li:hover {
-  background: #ffffcc;
+  background: $tab_background_blurred;
 }
 
 div.config ul#connections li.disconnected.active,
 div.config ul#connections li.connected.active {
-  background: #3875d7;
-  color: #fff;
+  color: $tab_background_blurred;
+  background: $tab_text_blurred;
 }
 
 div.config ul#connections li.disconnected {
-  color: #999;
+  color: $tab_text_blurred;
 }
 
 div.config ul#connections li.connected {
-  color: #222;
+  color: $tab_text;
 }
-
-body.config {
-  background: #efefef;
-}
-
