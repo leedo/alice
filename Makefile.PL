@@ -50,6 +50,8 @@ assets: stylesheets javascript
 stylesheets: $(CSSFILES)
 
 javascript: $(JAVASCRIPT_SOURCES)
+	coffee --compile --no-wrap $(JS_SOURCE)/alice/src/alice.coffee
+	coffee --compile --no-wrap $(JS_SOURCE)/alice/src/alice/*.coffee
 	sprocketize $(INCLUDE) $(ALICE_JS) > $(SITE_JS)
 };
 
