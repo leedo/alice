@@ -20,11 +20,11 @@ class Alice.Window
 
     if @topic
       orig_height = @topic.getStyle "height"
-     @topic.observe "click", =>
-       if @topic.getStyle "height" == orig_height
-         @topic.setStyle {height: "auto"}
-       else
-         @topic.setStyle {height: orig_height}
+      @topic.observe "click", =>
+        if @topic.getStyle "height" == orig_height
+          @topic.setStyle {height: "auto"}
+        else
+          @topic.setStyle {height: orig_height}
 
     @nicksVisible = false
     @visibleNick = ""
@@ -45,7 +45,7 @@ class Alice.Window
     @tab.observe "click", (e) => @focusing = false
 
     @tabButton.observe "click", (e) => @close() if (@active and not @focusing)
-    @messages.observe "mouseover", => @showNick()
+    @messages.observe "mouseover", (e) => @showNick(e)
 
     if Prototype.Browser.Gecko
       @resizeMessageArea()
@@ -60,7 +60,7 @@ class Alice.Window
     setTimeout =>
       for msg in @messages.select("li.message div.msg")
         msg.innerHTML = @application.applyFilters msg.innerHTML
-      , 1000
+    , 1000
 
   isTabWrapped: ->
     @tab.offsetTop > 0
@@ -80,7 +80,7 @@ class Alice.Window
 
       @visibleNick = li
 
-      nick, time
+      nick = time = ""
       if li.hasClassName "consecutive"
         stem = li.previous "li:not(.consecutive)"
         return unless stem
@@ -175,9 +175,7 @@ class Alice.Window
   makeTopicClickable: ->
     return unless @topic
 
-    @topic.innerHTML = topic.innerHTML.replace(
-      /(https?:\/\/[^\s]+)/ig,
-      '<a href="$1" target="_blank" rel="noreferrer">$1</a>')
+    @topic.innerHTML = @topic.innerHTML.replace(/(https?:\/\/[^\s]+)/ig, '<a href="$1" target="_blank" rel="noreferrer">$1</a>')
 
   resizeMessageArea: ->
     top = @messages.up().cumulativeOffset().top
@@ -258,7 +256,7 @@ class Alice.Window
     @element.redraw()
 
   scrollToBottom: (force) ->
-    bottom, height
+    bottom = height = ""
 
     if !force and lastmsg = @messages.down "ul.messages > li:last-child"
       msgheight = lastmsg.offsetHeight
