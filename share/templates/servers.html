@@ -13,11 +13,12 @@
     <?= $alias ?>
     </li>
     <? } ?>
+
+    <li class="controls" id="server_controls">
+      <a href="#" onclick="return Alice.connections.addServer()">New</a>
+      <a href="#" onclick="return Alice.connections.removeServer()">Remove</a>
+    </li>
   </ul>
-  <div class="controls" id="server_controls">
-    <a href="#" onclick="return Alice.connections.addServer()">Add</a>
-    <a href="#" onclick="return Alice.connections.removeServer()">Remove</a>
-  </div>
 
   <form id="config_data" onsubmit="return Alice.connections.submit(this)">
     <input type="hidden" name="has_servers" value="1" />
