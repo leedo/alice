@@ -200,6 +200,19 @@ Alice.Application = Class.create({
       this.getWindow(id).focus();
     }
   },
+
+  nextUnreadWindow: function() {
+    var active = this.activeWindow();
+    var tabs = active.tab.nextSiblings().concat(active.tab.previousSiblings());
+    var unread = tabs.find(function(tab) {return tab.hasClassName("unread")});
+
+    if (unread) {
+      var id = unread.id.replace("_tab","");
+      if (id) {
+        this.getWindow(id).focus();
+      }
+    }
+  },
   
   focusLast: function() {
     if (this.previousFocus && this.previousFocus.id != this.activeWindow().id)

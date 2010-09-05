@@ -10240,6 +10240,19 @@ Alice.Application = Class.create({
     }
   },
 
+  nextUnreadWindow: function() {
+    var active = this.activeWindow();
+    var tabs = active.tab.nextSiblings().concat(active.tab.previousSiblings());
+    var unread = tabs.find(function(tab) {return tab.hasClassName("unread")});
+
+    if (unread) {
+      var id = unread.id.replace("_tab","");
+      if (id) {
+        this.getWindow(id).focus();
+      }
+    }
+  },
+
   focusLast: function() {
     if (this.previousFocus && this.previousFocus.id != this.activeWindow().id)
       this.previousFocus.focus();
@@ -11245,6 +11258,7 @@ Alice.Keyboard = Class.create({
     this.shortcut("Cmd+Shift+J");
     this.shortcut("Cmd+Shift+K");
     this.shortcut("Cmd+Shift+H");
+    this.shortcut("Cmd+U");
     this.shortcut("Enter");
     this.shortcut("Esc");
     this.shortcut("Tab");
@@ -11292,6 +11306,10 @@ Alice.Keyboard = Class.create({
   onCmdK: function() {
     this.activeWindow.messages.down("ul").update("");
     this.activeWindow.lastNick = "";
+  },
+
+  onCmdU: function() {
+    this.application.nextUnreadWindow();
   },
 
   onCmdShiftM: function() {
