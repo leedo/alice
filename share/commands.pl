@@ -150,17 +150,15 @@ my $commands = [
   },
   {
     name => 'whois',
-    re => qr{^/whois(?:\s+(-f(?:orce)?))?\s+(\S+)},
-    eg => "/WHOIS [-force] <nick>",
-    desc => "Shows info about the specified nick. Use -force option to refresh",
+    re => qr{^/whois\s+$SRVOPT(\S+)},
+    eg => "/WHOIS [-<server>] <nick>",
+    desc => "Shows info about the specified nick",
     code => sub  {
-      my ($self, $app, $window, $nick, $force) = @_;
-      if (!$force and $window->irc->includes_nick($nick)) {
-        $window->reply($window->irc->whois_table($nick));
-      }
-      else {
-        $window->irc->add_whois_cb($nick => sub {
-          $window->reply($window->irc->whois_table($nick));
+      my ($self, $app, $window, $nick, $network) = @_;
+      my $irc = $network ? $app->get_irc($network) : $window->irc;
+      if ($irc) {
+        $irc->add_whois_cb($nick => sub {
+          $window->reply($irc->whois_table($nick));
         });
       }
     },

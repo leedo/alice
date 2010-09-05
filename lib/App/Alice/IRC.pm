@@ -85,7 +85,7 @@ has whois_cbs => (
 sub add_whois_cb {
   my ($self, $nick, $cb) = @_;
   $self->whois_cbs->{$nick} = $cb;
-  $self->send_srv(WHO => $nick);
+  $self->send_srv(WHOIS => $nick);
 }
 
 sub BUILD {
@@ -107,6 +107,10 @@ sub BUILD {
     disconnect     => sub{$self->disconnected(@_)},
     irc_001        => sub{$self->log_message($_[1])},
     irc_352        => sub{$self->irc_352(@_)}, # WHO info
+    irc_311        => sub{$self->irc_311(@_)}, # WHOIS info
+    irc_312        => sub{$self->irc_312(@_)}, # WHOIS server
+    irc_319        => sub{$self->irc_319(@_)}, # WHOIS channels
+    irc_318        => sub{$self->irc_318(@_)}, # WHOIS complete
     irc_366        => sub{$self->irc_366(@_)}, # end of NAMES
     irc_372        => sub{$self->log_message(mono => 1, $_[1])}, # MOTD info
     irc_377        => sub{$self->log_message(mono => 1, $_[1])}, # MOTD info
@@ -534,19 +538,87 @@ sub nick_windows {
   return;
 }
 
+sub irc_319 {
+  my ($self, $cl, $msg) = @_;
+
+  # ignore the first param if it is our own nick, some servers include it
+  shift @{$msg->{params}} if $msg->{params}[0] eq $self->nick;
+
+  my ($nick, $channels) = @{$msg->{params}};
+  return unless $channels;
+  utf8::decode($_) for ($nick, $channels);
+
+  my $info = $self->get_nick_info($nick) || {nick => $nick, channels => {}};
+
+  for (split " ", $channels) {
+    $info->{channels}{$_} = "" unless $info->{channels}{$_};
+  }
+
+  $self->set_nick_info($nick, $info);
+}
+
+sub irc_311 {
+  my ($self, $cl, $msg) = @_;
+
+  # ignore the first param if it is our own nick, some servers include it
+  shift @{$msg->{params}} if $msg->{params}[0] eq $self->nick;
+
+  # hector adds an extra nick param or something
+  shift @{$msg->{params}} if scalar @{$msg->{params}} > 5;
+
+  my ($nick, $user, $address, undef, $real) = @{$msg->{params}};
+  utf8::decode($_) for ($nick, $user, $address, $real);
+
+  my $info = $self->get_nick_info($nick) || {nick => $nick};
+  $info->{user} = $user;
+  $info->{real} = $real;
+  $info->{IP} = $address;
+
+  $self->set_nick_info($nick, $info);
+}
+
+sub irc_312 {
+  my ($self, $cl, $msg) = @_;
+
+  # ignore the first param if it is our own nick, some servers include it
+  shift @{$msg->{params}} if $msg->{params}[0] eq $self->nick;
+
+  my ($nick, $server) = @{$msg->{params}};
+  utf8::decode($_) for ($nick, $server);
+
+  my $info = $self->get_nick_info($nick) || {nick => $nick};
+  $info->{server} = $server;
+
+  $self->set_nick_info($nick, $info);
+}
+
+sub irc_318 {
+  my ($self, $cl, $msg) = @_;
+
+  # ignore the first param if it is our own nick, some servers include it
+  shift @{$msg->{params}} if $msg->{params}[0] eq $self->nick;
+
+  my $nick = $msg->{params}[0];
+  utf8::decode($nick);
+
+  if ($self->whois_cbs->{$nick}) {
+    $self->whois_cbs->{$nick}->();
+    delete $self->whois_cbs->{$nick};
+  }
+}
+
 sub irc_352 {
   my ($self, $cl, $msg) = @_;
   
   # ignore the first param if it is our own nick, some servers include it
   shift @{$msg->{params}} if $msg->{params}[0] eq $self->nick;
-  my ($channel, $user, $ip, $server, $nick, $flags, @real) = @{$msg->{params}};
-  my $real = join " ", @real;
-  return unless $nick;
-  $real =~ s/^\d // if $real;
+
+  my ($channel, $user, $ip, $server, $nick, $flags, undef, $real) = @{$msg->{params}};
   utf8::decode($_) for ($channel, $user, $nick, $real);
+
   my $info = {
     IP       => $ip     || "",
-    user     => $user || "",
+    user     => $user   || "",
     server   => $server || "",
     real     => $real   || "",
     channels => {$channel => $flags},
@@ -568,11 +640,6 @@ sub irc_352 {
   }
   
   $self->set_nick_info($nick, $info);
-
-  if ($self->whois_cbs->{$nick}) {
-    $self->whois_cbs->{$nick}->();
-    delete $self->whois_cbs->{$nick};
-  }
 }
 
 sub irc_366 {
@@ -588,6 +655,11 @@ sub irc_401 {
   utf8::decode($msg->{params}[1]);
   if (my $window = $self->find_window($msg->{params}[1])) {
     $self->broadcast($window->format_announcement("No such nick."));
+  }
+  
+  if ($self->whois_cbs->{$msg->{params}[1]}) {
+    $self->whois_cbs->{$msg->{params}[1]}->();
+    delete $self->whois_cbs->{$msg->{params}[1]};
   }
 }
 
@@ -632,9 +704,16 @@ sub whois_table {
   my ($self, $nick) = @_;
   my $info = $self->get_nick_info($nick);
   return "No info for user \"$nick\"" if !$info;
-  return "real: $info->{real}\nuser: $info->{user}\n" .
-         "host: $info->{IP}\nserver: $info->{server}\nchannels: " .
-         join " ", keys %{$info->{channels}};
+
+  my $lines = join "\n",
+              map {"$_: $info->{$_}"}
+              grep {$info->{$_}} qw/nick real user IP server/;
+
+  if (my @channels = keys %{$info->{channels}}) {
+    $lines .= "\nchannels: " . join " ", @channels;
+  }
+
+  return $lines;
 }
 
 sub update_realname {
