@@ -6,6 +6,7 @@ my $commands = [
     re => qr{^([^/].*)}s,
     code => sub {
       my ($self, $app, $window, $msg) = @_;
+
       if ($window->type eq "info") {
         $window->reply("You can't talk here!");
         return;
@@ -14,6 +15,7 @@ my $commands = [
         $window->reply("You are not connected to ".$window->irc->alias.".");
         return;
       }
+
       $app->store(nick => $window->nick, channel => $window->title, body => $msg);
       $window->show($msg);
       $window->irc->send_srv(PRIVMSG => $window->title, $msg);
@@ -28,19 +30,25 @@ my $commands = [
       my $self = shift;
       my $app = shift;
       my $window = shift;
+
       my ($msg, $nick, $network);
+
       if (@_ == 3) {
         ($msg, $nick, $network) = @_;
       }
       elsif (@_ == 2) {
         ($msg, $nick) = @_;
       }
+
       $msg =~ s/^\s+//;
-      my $irc = $window->irc;
-      if ($network and $app->has_irc($network)) {
-        $irc = $app->get_irc($network);
+
+      my $irc = $network ? $app->get_irc($network) : $window->irc;
+
+      unless ($irc and $irc->is_connected) {
+        $window->reply("Not a connected server name");
+        return;
       }
-      return unless $irc;
+
       my $new_window = $app->find_or_create_window($nick, $irc);
       my @msgs = ($new_window->join_action);
       if ($msg) {
@@ -57,12 +65,13 @@ my $commands = [
     desc => "Changes your nick.",
     code => sub {
       my ($self, $app, $window, $nick, $network) = @_;
-      my $irc;
-      if ($network and $app->has_irc($network)) {
-        $irc = $app->get_irc($network);
-      } else {
-        $irc = $window->irc;
+      my $irc = $network ? $app->get_irc($network) : $window->irc;
+      
+      if ($irc or $irc->is_connected) {
+        $window->reply("Not a connected server name");
+        return;
       }
+
       $irc->log(info => "now known as $nick");
       $irc->send_srv(NICK => $nick);
     },
@@ -85,17 +94,22 @@ my $commands = [
     desc => "Joins the specified channel.",
     code => sub  {
       my ($self, $app, $window, $channel, $network) = @_;
-      my $irc;
-      if ($network and $app->has_irc($network)) {
-        $irc = $app->get_irc($network);
-      } else {
-        $irc = $window->irc;
+      my $irc = $network ? $app->get_irc($network) : $window->irc;
+
+      unless ($irc and $irc->is_connected) {
+        $window->reply("Not a connected server name");
+        return;
       }
+
       my @params = split /\s+/, $channel;
-      if ($irc and $irc->cl->is_channel_name($params[0])) {
-        $irc->log(info => "joining $params[0]");
-        $irc->send_srv(JOIN => @params);
+
+      unless ($irc->cl->is_channel_name($params[0])) {
+        $window->reply("Invalid channel name: $params[0]");
+        return;
       }
+
+      $irc->log(info => "joining $params[0]");
+      $irc->send_srv(JOIN => @params);
     },
   },
   {
@@ -156,11 +170,15 @@ my $commands = [
     code => sub  {
       my ($self, $app, $window, $nick, $network) = @_;
       my $irc = $network ? $app->get_irc($network) : $window->irc;
-      if ($irc) {
-        $irc->add_whois_cb($nick => sub {
-          $window->reply($irc->whois_table($nick));
-        });
+
+      unless ($irc and $irc->is_connected) {
+        $window->reply("Not a connected server name");
+        return;
       }
+
+      $irc->add_whois_cb($nick => sub {
+        $window->reply($irc->whois_table($nick));
+      });
     },
   },
   {
@@ -177,11 +195,18 @@ my $commands = [
   {
     name => 'quote',
     re => qr{^/(?:quote|raw)\s+(.+)},
-    eg => "/QUOTE <data>",
+    eg => "/QUOTE\s+$SRVOPT<data>",
     desc => "Sends the server raw data without parsing.",
     code => sub  {
-      my ($self, $app, $window, $command) = @_;
-      $window->irc->send_raw($command);
+      my ($self, $app, $window, $command, $network) = @_;
+      my $irc = $network ? $app->get_irc($network) : $window->irc;
+
+      if ($irc or $irc->is_connected) {
+        $window->reply("Not a connected server name");
+        return;
+      }
+
+      $irc->send_raw($command);
     },
   },
   {
