@@ -165,7 +165,7 @@ my $commands = [
   {
     name => 'whois',
     re => qr{^/whois\s+$SRVOPT(\S+)},
-    eg => "/WHOIS [-<server>] <nick>",
+    eg => "/WHOIS [-<server name>] <nick>",
     desc => "Shows info about the specified nick",
     code => sub  {
       my ($self, $app, $window, $nick, $network) = @_;
@@ -194,8 +194,8 @@ my $commands = [
   },
   {
     name => 'quote',
-    re => qr{^/(?:quote|raw)\s+(.+)},
-    eg => "/QUOTE\s+$SRVOPT<data>",
+    re => qr{^/(?:quote|raw)\s+$SRVOPT(.+)},
+    eg => "/QUOTE [-<server name>] <data>",
     desc => "Sends the server raw data without parsing.",
     code => sub  {
       my ($self, $app, $window, $command, $network) = @_;
