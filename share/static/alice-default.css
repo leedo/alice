@@ -362,8 +362,8 @@ div.left {
   padding-bottom: 0;
   text-overflow: ellipsis;
   position: relative;
-  word-wrap: break-word;
-  -khtml-line-break: after-white-space;
+  text-wrap: none;
+  white-space: nowrap;
   -khtml-nbsp-mode: space; }
 
 li.event a,
@@ -815,23 +815,29 @@ div.color_picker div.toggle span#bg.active {
 
 div.config {
   position: absolute;
-  bottom: 65px;
-  right: 20px;
+  top: 50%;
+  left: 50%;
   background: #efefef;
   padding-bottom: 29px;
   z-index: 999;
   -webkit-box-shadow: 0 0 10px #000;
   -moz-box-shadow: 0 0 10px #000;
   box-shadow: 0 0 10px #000;
-  border: 10px solid #999999; }
+  border: 5px solid #999999; }
 
 div.config#prefs {
   padding: 10px;
-  padding-bottom: 29px; }
+  padding-bottom: 29px;
+  width: 326px;
+  height: 224px;
+  margin-left: -163px;
+  margin-top: -112px; }
 
 div.config#servers {
-  min-width: 380px;
-  min-height: 350px; }
+  width: 460px;
+  height: 380px;
+  margin-left: -250px;
+  margin-top: -230px; }
 
 div.config div.buttons {
   clear: both;
