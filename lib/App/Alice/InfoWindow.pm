@@ -19,8 +19,6 @@ sub type {"info"}
 sub irc {
   my $self = shift;
   return ($self->app->connected_ircs)[0] if $self->app->connected_ircs == 1;
-  $self->app->broadcast(
-    $self->format_announcement("No server specified! /command -server args"));
   return undef;
 }
 
