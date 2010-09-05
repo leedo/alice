@@ -880,6 +880,7 @@ div.config select[multiple] {
   height: 70px;
   background: black;
   border: 1px solid #444444;
+  color: white;
   padding: 2px; }
 
 div.config li#server_controls {
