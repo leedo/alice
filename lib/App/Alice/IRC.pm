@@ -611,7 +611,9 @@ sub irc_352 {
   # ignore the first param if it is our own nick, some servers include it
   shift @{$msg->{params}} if $msg->{params}[0] eq $self->nick;
 
-  my ($channel, $user, $ip, $server, $nick, $flags, undef, $real) = @{$msg->{params}};
+  my ($channel, $user, $ip, $server, $nick, $flags, @real) = @{$msg->{params}};
+  my $real = join "", @real;
+  $real =~ s/^[0-9*] //;
   utf8::decode($_) for ($channel, $user, $nick, $real);
 
   my $info = {
