@@ -177,7 +177,8 @@ my $commands = [
       }
 
       $irc->add_whois_cb($nick => sub {
-        $window->reply($irc->whois_table($nick));
+        my $info = shift;
+        $window->reply($irc->whois_table($nick, $info));
       });
     },
   },
