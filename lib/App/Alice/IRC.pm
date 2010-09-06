@@ -62,21 +62,21 @@ has [qw/is_connected disabled removed/] => (
 
 has _nicks => (
   is        => 'rw',
-  isa       => 'ArrayRef[HashRef|Undef]',
+  isa       => 'ArrayRef[ArrayRef]',
   default   => sub {[]},
 );
 
 sub nicks {@{$_[0]->_nicks}}
-sub all_nicks {[map {$_->{nick}} @{$_[0]->_nicks}]}
+sub all_nicks {[map {$_->[0]} @{$_[0]->_nicks}]}
 sub add_nick {push @{$_[0]->_nicks}, $_[1]}
-sub remove_nick {$_[0]->_nicks([grep {$_->{nick} ne $_[1]} $_[0]->nicks])}
-sub get_nick_info {first {$_->{nick} eq $_[1]} $_[0]->nicks}
-sub includes_nick {any {$_->{nick} eq $_[1]} $_[0]->nicks}
+sub remove_nick {$_[0]->_nicks([grep {$_->[0] ne $_[1]} $_[0]->nicks])}
+sub get_nick_info {first {$_->[0] eq $_[1]} $_[0]->nicks}
+sub includes_nick {any {$_->[0] eq $_[1]} $_[0]->nicks}
 sub all_nick_info {$_[0]->nicks}
-sub set_nick_info {$_[0]->remove_nick($_[1]); $_[0]->add_nick($_[2]);}
 sub clear_nicks {$_[0]->_nicks([])}
+sub set_nick_info {$_[0]->remove_nick($_[1]); $_[0]->add_nick($_[2]);}
 
-has whois_cbs => (
+has whois => (
   is        => 'rw',
   isa       => 'HashRef[CodeRef]',
   default   => sub {{}},
@@ -84,7 +84,7 @@ has whois_cbs => (
 
 sub add_whois_cb {
   my ($self, $nick, $cb) = @_;
-  $self->whois_cbs->{$nick} = $cb;
+  $self->whois->{$nick} = {info => {}, cb => $cb};
   $self->send_srv(WHOIS => $nick);
 }
 
@@ -95,7 +95,7 @@ sub BUILD {
   $self->cl->reg_cb(
     registered     => sub{$self->registered($_)},
     channel_add    => sub{$self->channel_add(@_)},
-    channel_remove => sub{$self->channel_remove(@_)},
+    channel_remove => sub{$self->multiple_left(@_)},
     channel_topic  => sub{$self->channel_topic(@_)},
     join           => sub{$self->_join(@_)},
     part           => sub{$self->part(@_)},
@@ -436,15 +436,39 @@ sub nick_change {
   );
 }
 
+sub add_nick_channel {
+  my ($self, $nick, $channel) = @_;
+
+  if (my $info = $self->get_nick_info($nick)) {
+    $info->[2] = [uniq @{$info->[2]}, $channel];
+  }
+  else {
+    $self->add_nick([$nick, "", [$channel]]);
+  }
+}
+
+sub remove_nick_channel {
+  my ($self, $nick, $channel) = @_;
+
+  if (my $info = $self->get_nick_info($nick)) {
+    $info->[2] = [ grep {$_ ne $channel} @{$info->[2]} ];
+    $self->remove_nick($nick) unless @{$info->[2]};
+  }
+}
+
+sub remove_channel {
+  my ($self, $channel) = @_;
+  for my $info ($self->all_nick_info) {
+    $_->[2] = [ grep {$_ ne $channel} @{$_->[2]} ]
+  }
+}
+
 sub _join {
   my ($self, $cl, $nick, $channel, $is_self) = @_;
   utf8::decode($_) for ($nick, $channel);
-  if (!$self->includes_nick($nick)) {
-    $self->add_nick({nick => $nick, real => "", channels => {$channel => ''}}); 
-  }
-  else {
-    $self->get_nick_info($nick)->{channels}{$channel} = '';
-  }
+
+  $self->add_nick_channel($nick, $channel);
+
   if ($is_self) {
 
     # self->window uses find_or_create, so we don't create
@@ -466,31 +490,25 @@ sub _join {
 sub channel_add {
   my ($self, $cl, $msg, $channel, @nicks) = @_;
   utf8::decode($_) for (@nicks, $channel);
-  if (my $window = $self->find_window($channel)) {
-    for (@nicks) {
-      if (!$self->includes_nick($_)) {
-        $self->add_nick({nick => $_, real => "", channels => {$channel => ''}}); 
-      }
-      else {
-        $self->get_nick_info($_)->{channels}{$channel} = '';
-      }
-    } 
-  }
+
+  return unless $self->find_window($channel);
+
+  $self->add_nick_channel($_, $channel) for @nicks;
 }
 
 sub part {
   my ($self, $cl, $nick, $channel, $is_self, $msg) = @_;
   utf8::decode($_) for ($channel, $nick, $msg);
+
   if ($is_self and my $window = $self->find_window($channel)) {
     $self->log(debug => "leaving $channel");
     $self->app->close_window($window);
-    for ($self->all_nick_info) {
-      delete $_->{channels}{$channel} if exists $_->{channels}{$channel};
-    }
+
+    $self->remove_channel($channel);
   }
 }
 
-sub channel_remove {
+sub multiple_left {
   my ($self, $cl, $msg, $channel, @nicks) = @_;
   utf8::decode($_) for ($channel, @nicks);
   
@@ -499,11 +517,7 @@ sub channel_remove {
   if (my $window = $self->find_window($channel)) {
     my $body;
     if ($msg->{command} and $msg->{command} eq "PART") {
-      for (@nicks) {
-        next unless $self->includes_nick($_);
-        delete $self->get_nick_info($_)->{channels}{$channel};
-        $self->remove_nick($_) unless $self->nick_channels($_);
-      }
+      $self->remove_nick_channel($_, $channel) for @nicks;
     }
     else {
       $self->remove_nicks(@nicks);
@@ -525,21 +539,30 @@ sub channel_topic {
 
 sub channel_nicks {
   my ($self, $channel) = @_;
-  return [ map {$_->{nick}} grep {exists $_->{channels}{$channel}} $self->all_nick_info ];
+  return [
+    map {$_->[0]}
+    grep {any {$_ eq $channel} $_->[2]}
+    $self->all_nick_info
+  ];
 }
 
 sub nick_channels {
   my ($self, $nick) = @_;
-  my $info = $self->get_nick_info($nick);
-  return keys %{$info->{channels}} if $info->{channels};
+  if (my $info = $self->get_nick_info($nick)) {
+    return $info->[2];
+  }
+  return [];
 }
 
 sub nick_windows {
   my ($self, $nick) = @_;
   if ($self->nick_channels($nick)) {
-    return grep {$_} map {$self->find_window($_)} $self->nick_channels($nick);
+    return
+      grep {$_}
+      map {$self->find_window($_)}
+      $self->nick_channels($nick);
   }
-  return;
+  return ();
 }
 
 sub irc_319 {
@@ -549,16 +572,11 @@ sub irc_319 {
   shift @{$msg->{params}} if $msg->{params}[0] eq $self->nick;
 
   my ($nick, $channels) = @{$msg->{params}};
-  return unless $channels;
   utf8::decode($_) for ($nick, $channels);
 
-  my $info = $self->get_nick_info($nick) || {nick => $nick, channels => {}};
+  return unless $self->whois->{$nick};
 
-  for (split " ", $channels) {
-    $info->{channels}{$_} = "" unless $info->{channels}{$_};
-  }
-
-  $self->set_nick_info($nick, $info);
+  $self->whois->{$nick}{info}{channels} = [split " ", $channels];
 }
 
 sub irc_311 {
@@ -573,12 +591,11 @@ sub irc_311 {
   my ($nick, $user, $address, undef, $real) = @{$msg->{params}};
   utf8::decode($_) for ($nick, $user, $address, $real);
 
-  my $info = $self->get_nick_info($nick) || {nick => $nick};
-  $info->{user} = $user;
-  $info->{real} = $real;
-  $info->{IP} = $address;
+  return unless $self->whois->{$nick};
 
-  $self->set_nick_info($nick, $info);
+  $self->whois->{$nick}{info}{user} = $user;
+  $self->whois->{$nick}{info}{real} = $real;
+  $self->whois->{$nick}{info}{IP} = $address;
 }
 
 sub irc_312 {
@@ -590,10 +607,9 @@ sub irc_312 {
   my ($nick, $server) = @{$msg->{params}};
   utf8::decode($_) for ($nick, $server);
 
-  my $info = $self->get_nick_info($nick) || {nick => $nick};
-  $info->{server} = $server;
+  return unless $self->whois->{$nick};
 
-  $self->set_nick_info($nick, $info);
+  $self->whois->{$nick}{server} = $server;
 }
 
 sub irc_318 {
@@ -605,9 +621,9 @@ sub irc_318 {
   my $nick = $msg->{params}[0];
   utf8::decode($nick);
 
-  if ($self->whois_cbs->{$nick}) {
-    $self->whois_cbs->{$nick}->();
-    delete $self->whois_cbs->{$nick};
+  if ($self->whois->{$nick}) {
+    $self->whois->{$nick}{cb}->($self->whois->{$nick}{info});
+    delete $self->whois->{$nick};
   }
 }
 
@@ -617,33 +633,25 @@ sub irc_352 {
   # ignore the first param if it is our own nick, some servers include it
   shift @{$msg->{params}} if $msg->{params}[0] eq $self->nick;
 
-  my ($channel, $user, $ip, $server, $nick, $flags, @real) = @{$msg->{params}};
+  my ($channel, undef, undef, undef, $nick, undef, @real) = @{$msg->{params}};
   my $real = join "", @real;
   $real =~ s/^[0-9*] //;
-  utf8::decode($_) for ($channel, $user, $nick, $real);
+  utf8::decode($_) for ($channel, $nick, $real);
 
-  my $info = {
-    IP       => $ip     || "",
-    user     => $user   || "",
-    server   => $server || "",
-    real     => $real   || "",
-    channels => {$channel => $flags},
-    nick     => $nick,
-  };
+  my $info = [$nick, $real, [$channel]];
   
   if ($self->includes_nick($nick)) {
     my $prev_info = $self->get_nick_info($nick);
-    $info->{channels} = {
-      %{$prev_info->{channels}},
-      %{$info->{channels}},
-    };
+    $info->[2] = [ uniq @{$prev_info->[2]}, $channel ];
 
-    if ($info->{real} ne $prev_info->{real}) {
+    if ($real ne $prev_info->[1]) {
       for (grep {$_->previous_nick eq $nick} $self->windows) {
         $_->reset_previous_nick;
       }
     }
   }
+
+  $info->[4] = $self->realname_avatar($real);
   
   $self->set_nick_info($nick, $info);
 }
@@ -663,19 +671,17 @@ sub irc_401 {
     $self->broadcast($window->format_announcement("No such nick."));
   }
   
-  if ($self->whois_cbs->{$msg->{params}[1]}) {
-    $self->whois_cbs->{$msg->{params}[1]}->();
-    delete $self->whois_cbs->{$msg->{params}[1]};
+  if ($self->whois->{$msg->{params}[1]}) {
+    $self->whois->{$msg->{params}[1]}->();
+    delete $self->whois->{$msg->{params}[1]};
   }
 }
 
 sub rename_nick {
   my ($self, $nick, $new_nick) = @_;
-  return unless $self->includes_nick($nick);
-  my $info = $self->get_nick_info($nick);
-  $info->{nick} = $new_nick;
-  $self->set_nick_info($new_nick, $info);
-  $self->remove_nick($nick);
+  if (my $info = $self->get_nick_info($nick)) {
+    $info->[0] = $new_nick;
+  }
 }
 
 sub remove_nicks {
@@ -687,33 +693,38 @@ sub remove_nicks {
 
 sub nick_avatar {
   my ($self, $nick) = @_;
-  my $info = $self->get_nick_info($nick);
-  if ($info and $info->{real}) {
-    if ($info->{real} =~ /([^<\s]+@[^\s>]+\.[^\s>]+)/) {
-      my $email = $1;
-      return "http://www.gravatar.com/avatar/"
-           . md5_hex($email) . "?s=32&amp;r=x";
-    }
-    elsif ($info->{real} =~ /(https?:\/\/\S+(?:jpe?g|png|gif))/) {
-      return $1;
-    }
-    else {
-      return undef;
-    }
+  if (my $info = $self->get_nick_info($nick)) {
+    return $info->[4];
   }
 }
 
+sub realname_avatar {
+  my ($self, $realname) = @_;
+
+  if ($realname =~ /([^<\s]+@[^\s>]+\.[^\s>]+)/) {
+    my $email = $1;
+    return "http://www.gravatar.com/avatar/"
+           . md5_hex($email) . "?s=32&amp;r=x";
+  }
+  elsif ($realname =~ /(https?:\/\/\S+(?:jpe?g|png|gif))/) {
+    return $1;
+  }
+
+  return ();
+}
+
 sub whois_table {
-  my ($self, $nick) = @_;
-  my $info = $self->get_nick_info($nick);
+  my ($self, $nick, $info) = @_;
   return "No info for user \"$nick\"" if !$info;
 
-  my $lines = join "\n",
-              map {"$_: $info->{$_}"}
-              grep {$info->{$_}} qw/nick real user IP server/;
+  my $lines = "nick: $nick\n";
 
-  if (my @channels = keys %{$info->{channels}}) {
-    $lines .= "\nchannels: " . join " ", @channels;
+  $lines .= join "\n",
+            map {"$_: $info->{$_}"}
+            grep {$info->{$_}} qw/real user IP server/;
+
+  if ($info->{channels}) {
+    $lines .= "\nchannels: " . join " ", @{$info->{channels}};
   }
 
   return $lines;
@@ -723,9 +734,12 @@ sub update_realname {
   my ($self, $realname) = @_;
   my $nick = $self->nick_cached;
   $self->send_srv(REALNAME => $realname);
+
   if (my $info = $self->get_nick_info($nick)) { 
-    $info->{real} = $realname;
+    $info->[1] = $realname;
+    $info->[4] = $self->realname_avatar($realname);
   }
+
   for (grep {$_->previous_nick eq $nick} $self->windows) {
     $_->reset_previous_nick;
   }

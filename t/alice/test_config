@@ -16,7 +16,7 @@
   'images' => 'show',
   'timeformat' => '24',
   'style' => 'default',
-  'port' => 10867,
+  'port' => 10984,
   'servers' => {
     'test' => {
       'nick' => 'tester',

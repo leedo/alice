@@ -37,11 +37,11 @@ ok $app->find_window("#test2", $irc), "on_connect join command";
 # nicks
 is $irc->nick, "tester", "nick set";
 ok $irc->includes_nick("test"), "existing nick in channel";
-ok exists $irc->get_nick_info("test")->{channels}{'#test'}, "existing nick info set";
+is_deeply $irc->get_nick_info("test")->[2], ['#test'], "existing nick info set";
 
 $cl->send_cl(":nick!user\@host JOIN #test");
 ok $irc->includes_nick("nick"), "nick added after join";
-ok exists $irc->get_nick_info("nick")->{channels}{'#test'}, "new nick info set";
+is_deeply $irc->get_nick_info("nick")->[2], ['#test'], "new nick info set";
 
 $cl->send_cl(":nick!user\@host NICK nick2");
 ok $irc->includes_nick("nick2"), "nick change";

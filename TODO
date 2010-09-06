@@ -10,3 +10,5 @@
 - Document javascript API so adding filters is easy
 - Some perl-side plugin system, need to add hooks
 - More tests
+
+- transition from AE::IRC::Client to AE::IRC::Connection
