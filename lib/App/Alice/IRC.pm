@@ -110,12 +110,18 @@ sub BUILD {
     irc_311        => sub{$self->irc_311(@_)}, # WHOIS info
     irc_312        => sub{$self->irc_312(@_)}, # WHOIS server
     irc_319        => sub{$self->irc_319(@_)}, # WHOIS channels
-    irc_318        => sub{$self->irc_318(@_)}, # WHOIS complete
+    irc_318        => sub{$self->irc_318(@_)}, # end of WHOIS
     irc_366        => sub{$self->irc_366(@_)}, # end of NAMES
     irc_372        => sub{$self->log_message(mono => 1, $_[1])}, # MOTD info
     irc_377        => sub{$self->log_message(mono => 1, $_[1])}, # MOTD info
     irc_378        => sub{$self->log_message(mono => 1, $_[1])}, # MOTD info
-    irc_401        => sub{$self->irc_401(@_)},
+    irc_401        => sub{$self->irc_401(@_)}, # not a nick
+    irc_471        => sub{$self->log_message($_[1])}, # JOIN fail
+    irc_473        => sub{$self->log_message($_[1])}, # JOIN fail
+    irc_474        => sub{$self->log_message($_[1])}, # JOIN fail
+    irc_475        => sub{$self->log_message($_[1])}, # JOIN fail
+    irc_477        => sub{$self->log_message($_[1])}, # JOIN fail
+    irc_485        => sub{$self->log_message($_[1])}, # JOIN fail
     irc_432        => sub{$self->nick; $self->log_message($_[1])}, # Bad nick
     irc_433        => sub{$self->nick; $self->log_message($_[1])}, # Bad nick
     irc_464        => sub{$self->disconnect("bad USER/PASS")},
