@@ -82,9 +82,9 @@ has whois => (
   default   => sub {{}},
 );
 
-sub add_whois_cb {
+sub add_whois {
   my ($self, $nick, $cb) = @_;
-  $self->whois->{$nick} = {info => {}, cb => $cb};
+  $self->whois->{$nick} = {info => "", cb => $cb};
   $self->send_srv(WHOIS => $nick);
 }
 
@@ -576,7 +576,7 @@ sub irc_319 {
 
   return unless $self->whois->{$nick};
 
-  $self->whois->{$nick}{info}{channels} = [split " ", $channels];
+  $self->whois->{$nick}{info} .= "\nchannels: $channels";
 }
 
 sub irc_311 {
@@ -593,9 +593,9 @@ sub irc_311 {
 
   return unless $self->whois->{$nick};
 
-  $self->whois->{$nick}{info}{user} = $user;
-  $self->whois->{$nick}{info}{real} = $real;
-  $self->whois->{$nick}{info}{IP} = $address;
+  $self->whois->{$nick}{info} .= "\nuser: $user"
+                              .  "\nreal: $real"
+                              .  "\nIP: $address";
 }
 
 sub irc_312 {
@@ -609,7 +609,7 @@ sub irc_312 {
 
   return unless $self->whois->{$nick};
 
-  $self->whois->{$nick}{server} = $server;
+  $self->whois->{$nick}{info} .= "\nserver: $server";
 }
 
 sub irc_318 {
@@ -672,7 +672,7 @@ sub irc_401 {
   }
   
   if ($self->whois->{$msg->{params}[1]}) {
-    $self->whois->{$msg->{params}[1]}->();
+    $self->whois->{$msg->{params}[1]}{cb}->();
     delete $self->whois->{$msg->{params}[1]};
   }
 }
@@ -711,23 +711,6 @@ sub realname_avatar {
   }
 
   return ();
-}
-
-sub whois_table {
-  my ($self, $nick, $info) = @_;
-  return "No info for user \"$nick\"" if !$info;
-
-  my $lines = "nick: $nick\n";
-
-  $lines .= join "\n",
-            map {"$_: $info->{$_}"}
-            grep {$info->{$_}} qw/real user IP server/;
-
-  if ($info->{channels}) {
-    $lines .= "\nchannels: " . join " ", @{$info->{channels}};
-  }
-
-  return $lines;
 }
 
 sub update_realname {
