@@ -3,7 +3,7 @@ package App::Alice::IRC;
 use AnyEvent;
 use AnyEvent::IRC::Client;
 use List::Util qw/min first/;
-use List::MoreUtils qw/uniq/;
+use List::MoreUtils qw/uniq none any/;
 use Digest::MD5 qw/md5_hex/;
 use Any::Moose;
 use utf8;
@@ -71,7 +71,7 @@ sub all_nicks {[map {$_->{nick}} @{$_[0]->_nicks}]}
 sub add_nick {push @{$_[0]->_nicks}, $_[1]}
 sub remove_nick {$_[0]->_nicks([grep {$_->{nick} ne $_[1]} $_[0]->nicks])}
 sub get_nick_info {first {$_->{nick} eq $_[1]} $_[0]->nicks}
-sub includes_nick {$_[0]->get_nick_info($_[1])}
+sub includes_nick {any {$_->{nick} eq $_[1]} $_[0]->nicks}
 sub all_nick_info {$_[0]->nicks}
 sub set_nick_info {$_[0]->remove_nick($_[1]); $_[0]->add_nick($_[2]);}
 sub clear_nicks {$_[0]->_nicks([])}
@@ -680,12 +680,9 @@ sub rename_nick {
 
 sub remove_nicks {
   my ($self, @nicks) = @_;
-  $self->_nicks(
-    grep {
-      my $nick = $_;
-      first {$nick eq $_} @nicks ? 0 : 1;
-    } $self->nicks
-  );
+  $self->_nicks([
+    grep {my $n = $_->{nick}; none {$n eq $_} @nicks} $self->nicks
+  ]);
 }
 
 sub nick_avatar {
