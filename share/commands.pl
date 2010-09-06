@@ -176,9 +176,14 @@ my $commands = [
         return;
       }
 
-      $irc->add_whois_cb($nick => sub {
+      $irc->add_whois($nick => sub {
         my $info = shift;
-        $window->reply($irc->whois_table($nick, $info));
+        if ($info) {
+          $window->reply("nick: $nick".$info);
+        }
+        else {
+          $window->reply("No such nick: $nick\n");
+        }
       });
     },
   },
