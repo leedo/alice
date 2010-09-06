@@ -297,7 +297,7 @@ sub registered {
   my @log;
 
   $self->cl->enable_ping (300, sub {
-    $self->disconnect("ping timeout");
+    $self->disconnected("ping timeout");
   });
   
   for (@{$self->config->{on_connect}}) {
