@@ -541,7 +541,7 @@ sub channel_nicks {
   my ($self, $channel) = @_;
   return [
     map {$_->[0]}
-    grep {any {$_ eq $channel} $_->[2]}
+    grep {any {$_ eq $channel} @{$_->[2]}}
     $self->all_nick_info
   ];
 }
