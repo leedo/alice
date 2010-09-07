@@ -9,6 +9,9 @@ use Any::Moose;
 use utf8;
 use Encode;
 
+my $email_re = qr/([^<\s]+@[^\s>]+\.[^\s>]+)/;
+my $image_re = qr/(https?:\/\/\S+(?:jpe?g|png|gif))/i;
+
 has 'cl' => (
   is      => 'rw',
   default => sub {AnyEvent::IRC::Client->new},
@@ -640,8 +643,7 @@ sub irc_352 {
 
   my $info = [$nick, $real, [$channel]];
   
-  if ($self->includes_nick($nick)) {
-    my $prev_info = $self->get_nick_info($nick);
+  if (my $prev_info = $self->get_nick_info($nick)) {
     $info->[2] = [ uniq @{$prev_info->[2]}, $channel ];
 
     if ($real ne $prev_info->[1]) {
@@ -687,7 +689,7 @@ sub rename_nick {
 sub remove_nicks {
   my ($self, @nicks) = @_;
   $self->_nicks([
-    grep {my $n = $_->{nick}; none {$n eq $_} @nicks} $self->nicks
+    grep {my $n = $_->[0]; none {$n eq $_} @nicks} $self->nicks
   ]);
 }
 
@@ -701,12 +703,12 @@ sub nick_avatar {
 sub realname_avatar {
   my ($self, $realname) = @_;
 
-  if ($realname =~ /([^<\s]+@[^\s>]+\.[^\s>]+)/) {
+  if ($realname =~ $email_re) {
     my $email = $1;
     return "http://www.gravatar.com/avatar/"
            . md5_hex($email) . "?s=32&amp;r=x";
   }
-  elsif ($realname =~ /(https?:\/\/\S+(?:jpe?g|png|gif))/) {
+  elsif ($realname =~ $image_re) {
     return $1;
   }
 
