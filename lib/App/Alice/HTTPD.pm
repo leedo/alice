@@ -281,7 +281,7 @@ sub merged_options {
   my $config = $self->app->config;
   my $params = $req->parameters;
   my %options = (
-   images => $params->{images} || ($config->images ? 'show' : 'hide'),
+   images => $params->{images} || $config->images,
    debug  => $params->{debug}  || ($config->show_debug ? 'true' : 'false'),
    timeformat => $params->{timeformat} || $config->timeformat,
   );
