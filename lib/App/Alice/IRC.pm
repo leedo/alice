@@ -552,9 +552,9 @@ sub channel_nicks {
 sub nick_channels {
   my ($self, $nick) = @_;
   if (my $info = $self->get_nick_info($nick)) {
-    return $info->[2];
+    return @{$info->[2]};
   }
-  return [];
+  return ();
 }
 
 sub nick_windows {
