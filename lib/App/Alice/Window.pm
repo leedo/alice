@@ -107,7 +107,7 @@ sub all_nicks {
   my $self = shift;
 
   return $self->is_channel ?
-         $self->irc->channel_nicks($self->title)
+         [ $self->irc->channel_nicks($self->title) ]
        : [ $self->title, $self->nick ];
 }
 

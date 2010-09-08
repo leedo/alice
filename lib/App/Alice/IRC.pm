@@ -542,11 +542,10 @@ sub channel_topic {
 
 sub channel_nicks {
   my ($self, $channel) = @_;
-  return [
+  return
     map {$_->[0]}
     grep {any {$_ eq $channel} @{$_->[2]}}
-    $self->all_nick_info
-  ];
+    $self->all_nick_info;
 }
 
 sub nick_channels {
@@ -559,11 +558,11 @@ sub nick_channels {
 
 sub nick_windows {
   my ($self, $nick) = @_;
-  if ($self->nick_channels($nick)) {
+  if (my @channels = $self->nick_channels($nick)) {
     return
       grep {$_}
       map {$self->find_window($_)}
-      $self->nick_channels($nick);
+      @channels
   }
   return ();
 }
