@@ -78,27 +78,18 @@ has history => (
   default => sub {
     my $self = shift;
     my $config = $self->config->path."/log.db";
-    if (-e $config) {
-      if ((stat($config))[9] < 1272757679) {
-        print STDERR "Log schema is out of date, updating\n";
-        copy($self->config->assetdir."/log.db", $config);
-      }
-    }
-    else {
-      copy($self->config->assetdir."/log.db", $config);
-    }
-    App::Alice::History->new(
-      dbfile => $self->config->path ."/log.db"
-    );
+    copy($self->config->assetdir."/log.db", $config) unless -e $config;
+    App::Alice::History->new(dbfile => $config);
   },
 );
 
 sub store {
   my $self = shift;
-  my %fields = @_;
-  $fields{user} = $self->user;
-  $fields{time} = time;
-  $self->history->store(%fields);
+  $self->history->store(
+    @_,
+    user => $self->user,
+    time => time,
+  );
 }
 
 has logger => (
@@ -129,7 +120,7 @@ has 'template' => (
     my $self = shift;
     Text::MicroTemplate::File->new(
       include_path => $self->config->assetdir . '/templates',
-      cache        => 1,
+      cache        => 2,
     );
   },
 );
