@@ -67,7 +67,7 @@ my $commands = [
       my ($self, $app, $window, $nick, $network) = @_;
       my $irc = $network ? $app->get_irc($network) : $window->irc;
       
-      if ($irc or $irc->is_connected) {
+      unless ($irc or $irc->is_connected) {
         $window->reply("Not a connected server name");
         return;
       }
