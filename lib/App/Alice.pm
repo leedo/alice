@@ -12,7 +12,7 @@ use Any::Moose;
 use File::Copy;
 use Digest::MD5 qw/md5_hex/;
 use List::Util qw/first/;
-use List::MoreUtils qw/any/;
+use List::MoreUtils qw/any none/;
 use Encode;
 
 our $VERSION = '0.19';
@@ -112,6 +112,18 @@ sub has_window {$_[0]->get_window($_[1])}
 sub get_window {first {$_->id eq $_[1]} $_[0]->windows}
 sub remove_window {$_[0]->_windows([grep {$_->id ne $_[1]} $_[0]->windows])}
 sub window_ids {map {$_->id} $_[0]->windows}
+
+sub remove_windows {
+  my ($self, @windows) = @_;
+  return unless @windows;
+
+  my @ids = map {$_->id} @windows;
+
+  $self->_windows([
+    grep {my $id = $_->id; none {$id eq $_} @ids} $self->windows
+  ]);
+
+}
 
 has 'template' => (
   is => 'ro',

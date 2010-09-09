@@ -22,10 +22,10 @@
     <?= $msg->{nick} ?> is now known as <a href="javascript:alice.connection.requestWindow('<?= $msg->{body} ?>','<?= $msg->{window}->{id} ?>')" class="nick"><?= $msg->{body} ?></a>.
 
 ? } elsif ($msg->{event} eq "disconnect") {
-    You have been disconnected
-      <?if ($msg->{body}) { ?>
-        (<?= $msg->{body} ?>)
-      <? } ?>
+      You have been disconnected from <?= $msg->{body} ?>
+
+? } elsif ($msg->{event} eq "reconnect") {
+      You have reconnected to <?= $msg->{body} ?>
 ? }
 
   </div>
