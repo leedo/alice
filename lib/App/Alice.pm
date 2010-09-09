@@ -12,6 +12,7 @@ use Any::Moose;
 use File::Copy;
 use Digest::MD5 qw/md5_hex/;
 use List::Util qw/first/;
+use List::MoreUtils qw/any/;
 use Encode;
 
 our $VERSION = '0.19';
@@ -269,18 +270,6 @@ sub reload_commands {
   $self->commands->reload_handlers;
 }
 
-sub merge_config {
-  my ($self, $new_config) = @_;
-  for my $newserver (values %$new_config) {
-    if (! exists $self->config->servers->{$newserver->{name}}) {
-      $self->add_irc_server($newserver->{name}, $newserver);
-    }
-    for my $key (keys %$newserver) {
-      $self->config->servers->{$newserver->{name}}{$key} = $newserver->{$key};
-    }
-  }
-}
-
 sub tab_order {
   my ($self, $window_ids) = @_;
   my $order = [];
@@ -340,12 +329,12 @@ sub _build_window_id {
 sub find_or_create_window {
   my ($self, $title, $connection) = @_;
   return $self->info_window if $title eq "info";
+
   if (my $window = $self->find_window($title, $connection)) {
     return $window;
   }
-  else {
-    $self->create_window($title, $connection);
-  }
+
+  $self->create_window($title, $connection);
 }
 
 sub sorted_windows {
@@ -433,27 +422,18 @@ sub render {
 
 sub is_highlight {
   my ($self, $own_nick, $body) = @_;
-  for ((@{$self->config->highlights}, $own_nick)) {
-    my $highlight = quotemeta($_);
-    return 1 if $body =~ /\b$highlight\b/i;
-  }
-  return 0;
+  any {my $h = quotemeta($_); $body =~ /\b$h\b/i }
+      (@{$self->config->highlights}, $own_nick);
 }
 
 sub is_monospace_nick {
   my ($self, $nick) = @_;
-  for (@{$self->config->monospace_nicks}) {
-    return 1 if $_ eq $nick;
-  }
-  return 0;
+  any {$_ eq $nick} @{$self->config->monospace_nicks};
 }
 
 sub is_ignore {
   my ($self, $nick) = @_;
-  for ($self->config->ignores) {
-    return 1 if $nick eq $_;
-  }
-  return 0;
+  any {$_ eq $nick} $self->config->ignores;
 }
 
 sub add_ignore {
