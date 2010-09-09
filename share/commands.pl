@@ -179,7 +179,7 @@ my $commands = [
       $irc->add_whois($nick => sub {
         my $info = shift;
         if ($info) {
-          $window->reply("nick: $nick".$info);
+          $window->reply($info);
         }
         else {
           $window->reply("No such nick: $nick\n");
