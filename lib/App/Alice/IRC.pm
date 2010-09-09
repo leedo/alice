@@ -270,6 +270,10 @@ sub connected {
     session => $self->alias,
     windows => [map {$_->serialized} $self->windows],
   });
+
+  $self->broadcast(map {
+    $_->format_event("reconnect", $self->nick, $self->config->{host}),
+  } $self->windows);
 }
 
 sub reconnect {
@@ -334,7 +338,7 @@ sub disconnected {
   $self->log(info => "disconnected: $reason");
   
   $self->broadcast(map {
-    $_->format_event("disconnect", $self->nick, $reason),
+    $_->format_event("disconnect", $self->nick, $self->config->{host})
   } $self->windows);
   
   $self->broadcast({
@@ -362,15 +366,16 @@ sub disconnected {
 
 sub disconnect {
   my ($self, $msg) = @_;
+  $msg ||= $self->app->config->quitmsg;
 
   $self->disabled(1);
-  if (!$self->app->shutting_down) {
-    $self->app->remove_window($_) for $self->windows; 
-  }
 
-  $msg ||= $self->app->config->quitmsg;
+  #$self->app->remove_windows($self->windows)
+  #  unless $self->app->shutting_down;
+
   $self->log(debug => "disconnecting: $msg") if $msg;
   $self->send_srv(QUIT => $msg);
+
   $self->{disconnect_timer} = AnyEvent->timer(
     after => 1,
     cb => sub {
@@ -389,11 +394,14 @@ sub remove {
 sub publicmsg {
   my ($self, $cl, $channel, $msg) = @_;
   utf8::decode($channel);
+
   if (my $window = $self->find_window($channel)) {
     my $nick = (split '!', $msg->{prefix})[0];
-    return if $self->app->is_ignore($nick);
     my $text = $msg->{params}[1];
     utf8::decode($_) for ($text, $nick);
+
+    return if $self->app->is_ignore($nick);
+
     $self->app->store(nick => $nick, channel => $channel, body => $text);
     $self->broadcast($window->format_message($nick, $text)); 
   }
@@ -403,11 +411,15 @@ sub privatemsg {
   my ($self, $cl, $nick, $msg) = @_;
   my $text = $msg->{params}[1];
   utf8::decode($_) for ($nick, $text);
+
   if ($msg->{command} eq "PRIVMSG") {
     my $from = (split /!/, $msg->{prefix})[0];
     utf8::decode($from);
+
     return if $self->app->is_ignore($from);
+
     my $window = $self->window($from);
+
     $self->app->store(nick => $from, channel => $from, body => $text);
     $self->broadcast($window->format_message($from, $text)); 
     $self->send_srv(WHO => $from) unless $self->includes_nick($from);
@@ -687,6 +699,8 @@ sub rename_nick {
 
 sub remove_nicks {
   my ($self, @nicks) = @_;
+  return unless @nicks;
+
   $self->_nicks([
     grep {my $n = $_->[0]; none {$n eq $_} @nicks} $self->nicks
   ]);
