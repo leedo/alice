@@ -167,8 +167,8 @@ Alice.Window = Class.create({
     this.element.addClassName('active');
     this.tabOverflowButton.selected = true;
     this.markRead();
-
     this.scrollToBottom(true);
+
     if (!this.application.isMobile) this.input.focus();
 
     if (this.application.isJankyScroll) {
@@ -177,10 +177,13 @@ Alice.Window = Class.create({
     }
 
     this.element.redraw();
+    this.setWindowHash();
+    this.application.updateChannelSelect();
+  },
 
+  setWindowHash() {
     window.location.hash = this.hashtag;
     window.location = window.location.toString();
-    this.application.updateChannelSelect();
   },
   
   markRead: function () {
