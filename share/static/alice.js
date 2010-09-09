@@ -10243,7 +10243,7 @@ Alice.Application = Class.create({
 
   nextUnreadWindow: function() {
     var active = this.activeWindow();
-    var tabs = active.tab.nextSiblings().concat(active.tab.previousSiblings());
+    var tabs = active.tab.nextSiblings().concat(active.tab.previousSiblings().reverse());
     var unread = tabs.find(function(tab) {return tab.hasClassName("unread")});
 
     if (unread) {
