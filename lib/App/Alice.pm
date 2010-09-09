@@ -321,12 +321,12 @@ sub alert {
 
 sub create_window {
   my ($self, $title, $connection) = @_;
-  my $id = $self->_build_window_id($title, $connection->alias);
   my $window = App::Alice::Window->new(
     title    => $title,
     irc      => $connection,
     assetdir => $self->config->assetdir,
     app      => $self,
+    id       => $self->_build_window_id($title, $connection->alias), 
   );
   $self->add_window($window);
   return $window;

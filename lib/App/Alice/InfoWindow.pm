@@ -10,20 +10,17 @@ extends 'App::Alice::Window';
 has '+title' => (required => 0, default => 'info');
 has 'topic' => (is => 'ro', isa => 'HashRef', default => sub {{string => ''}});
 has '+_irc' => (required => 0, isa => 'Any');
+has '+id' => (required => 0, default => 'info');
 
 sub is_channel {0}
-sub title {"info"}
 sub session {""}
 sub type {"info"}
+sub all_nicks {[]}
 
 sub irc {
   my $self = shift;
   return ($self->app->connected_ircs)[0] if $self->app->connected_ircs == 1;
   return undef;
-}
-
-sub all_nicks {
-  return [];
 }
 
 sub format_message {
@@ -42,7 +39,7 @@ sub format_message {
     monospaced => $options{mono} ? 1 : 0,
     consecutive => $from eq $self->buffer->previous_nick ? 1 : 0,
   };
-  $message->{html} = $self->app->render("message", $message);
+  $message->{html} = $self->render("message", $message);
   $self->buffer->add($message);
   return $message;
 }

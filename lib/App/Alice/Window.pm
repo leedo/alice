@@ -39,12 +39,8 @@ has topic => (
 );
 
 has id => (
-  is      => 'ro',
-  isa     => 'Str',
-  lazy    => 1,
-  default => sub {
-    return $_[0]->app->_build_window_id($_[0]->title, $_[0]->session);
-  },
+  is       => 'ro',
+  required => 1,
 );
 
 has _irc => (
@@ -98,6 +94,8 @@ sub serialized {
   };
 }
 
+sub render {shift->app->render(@_)}
+
 sub nick {
   my $self = shift;
   decode_utf8($self->irc->nick) unless utf8::is_utf8($self->irc->nick);
@@ -113,16 +111,17 @@ sub all_nicks {
 
 sub join_action {
   my $self = shift;
-  my $action = {
+  return {
     type      => "action",
     event     => "join",
     nicks     => $self->all_nicks,
     window    => $self->serialized,
+    html => {
+      window  => $self->render("window", $self),
+      tab     => $self->render("tab", $self),
+      select  => $self->render("select", $self),
+    },
   };
-  $action->{html}{window} = $self->app->render("window", $self);
-  $action->{html}{tab} = $self->app->render("tab", $self);
-  $action->{html}{select} = $self->app->render("select", $self);
-  return $action;
 }
 
 sub nicks_action {
@@ -157,7 +156,7 @@ sub format_event {
     nicks     => $self->all_nicks,
   };
   $message->{html} = make_links_clickable(
-    $self->app->render("event", $message)
+    $self->render("event", $message)
   );
   $self->buffer->add($message);
   return $message;
@@ -189,7 +188,7 @@ sub format_message {
   unless ($message->{self}) {
     $message->{highlight} = $self->app->is_highlight($own_nick, $body);
   }
-  $message->{html} = $self->app->render("message", $message);
+  $message->{html} = $self->render("message", $message);
   $self->buffer->add($message);
   return $message;
 }
@@ -204,7 +203,7 @@ sub format_announcement {
     window  => $self->serialized,
     message => $msg,
   };
-  $message->{html} = $self->app->render('announcement', $message);
+  $message->{html} = $self->render('announcement', $message);
   $message->{message} = "$message->{message}";
   $self->reset_previous_nick;
   return $message;
@@ -223,7 +222,7 @@ sub close_action {
 sub nick_table {
   my ($self, $avatars) = @_;
   if ($avatars) {
-    return encoded_string($self->app->render("avatargrid", $self));
+    return encoded_string($self->render("avatargrid", $self));
   }
   return _format_nick_table($self->all_nicks);
 }
