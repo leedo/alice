@@ -10726,7 +10726,7 @@ Alice.Window = Class.create({
     this.application.updateChannelSelect();
   },
 
-  setWindowHash() {
+  setWindowHash: function () {
     window.location.hash = this.hashtag;
     window.location = window.location.toString();
   },
