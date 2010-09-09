@@ -9,6 +9,7 @@ Alice.Application = Class.create({
 
     this.isPhone = window.navigator.platform.match(/(android|iphone)/i) ? 1 : 0;
     this.isMobile = this.isPhone || Prototype.Browser.MobileSafari;
+    this.isJankyScroll = Prototype.Browser.Gecko || Prototype.Browser.IE;
 
     // Keep this as a timeout so the page doesn't show "loading..."
     window.onload = function () {

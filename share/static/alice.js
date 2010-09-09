@@ -10050,6 +10050,7 @@ Alice.Application = Class.create({
 
     this.isPhone = window.navigator.platform.match(/(android|iphone)/i) ? 1 : 0;
     this.isMobile = this.isPhone || Prototype.Browser.MobileSafari;
+    this.isJankyScroll = Prototype.Browser.Gecko || Prototype.Browser.IE;
 
     window.onload = function () {
       setTimeout(this.connection.connect.bind(this.connection), 1000);
@@ -10596,7 +10597,7 @@ Alice.Window = Class.create({
 
     this.messages.observe("mouseover", this.showNick.bind(this));
 
-    if (Prototype.Browser.Gecko) {
+    if (this.application.isJankyScroll) {
       this.resizeMessagearea();
       this.scrollToBottom();
     }
@@ -10714,10 +10715,12 @@ Alice.Window = Class.create({
 
     this.scrollToBottom(true);
     if (!this.application.isMobile) this.input.focus();
-    if (Prototype.Browser.Gecko) {
+
+    if (this.application.isJankyScroll) {
       this.resizeMessagearea();
       this.scrollToBottom();
     }
+
     this.element.redraw();
 
     window.location.hash = this.hashtag;

@@ -50,8 +50,7 @@ Alice.Window = Class.create({
 
     this.messages.observe("mouseover", this.showNick.bind(this));
 
-    // manually resize message area in ff, ew
-    if (Prototype.Browser.Gecko) {
+    if (this.application.isJankyScroll) {
       this.resizeMessagearea();
       this.scrollToBottom();
     }
@@ -171,10 +170,12 @@ Alice.Window = Class.create({
 
     this.scrollToBottom(true);
     if (!this.application.isMobile) this.input.focus();
-    if (Prototype.Browser.Gecko) {
+
+    if (this.application.isJankyScroll) {
       this.resizeMessagearea();
       this.scrollToBottom();
     }
+
     this.element.redraw();
 
     window.location.hash = this.hashtag;
