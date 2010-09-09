@@ -10823,7 +10823,8 @@ Alice.Window = Class.create({
 
       if (message.consecutive) {
         var avatar = li.previous(".avatar:not(.consecutive)");
-        if (avatar) avatar.down(".timehint").innerHTML = message.timestamp;
+        if (avatar && avatar.down(".timehint"))
+          avatar.down(".timehint").innerHTML = message.timestamp;
       }
     }
     else if (message.event == "topic") {
