@@ -432,6 +432,7 @@ sub privatemsg {
 
 sub ctcp_action {
   my ($self, $cl, $nick, $channel, $msg, $type) = @_;
+  return unless $msg;
   utf8::decode($_) for ($nick, $msg, $channel);
   return if $self->app->is_ignore($nick);
   if (my $window = $self->find_window($channel)) {
