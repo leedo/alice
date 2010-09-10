@@ -49,5 +49,16 @@ sub handle {
   }
 }
 
+sub determine_irc {
+  my ($self, $window, $network) = @_;
+
+  my $irc = $network ? $app->get_irc($network) : $window->irc;
+
+  unless ($irc and $irc->is_connected) {
+    $window->reply("not a connected server name");
+    return;
+  }
+}
+
 __PACKAGE__->meta->make_immutable;
 1;
