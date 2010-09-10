@@ -10,7 +10,11 @@ extends 'App::Alice::Window';
 has '+title' => (required => 0, default => 'info');
 has 'topic' => (is => 'ro', isa => 'HashRef', default => sub {{string => ''}});
 has '+_irc' => (required => 0, isa => 'Any');
-has '+id' => (required => 0, default => 'info');
+
+#
+# DO NOT override the 'id' property, it is built in App/Alice.pm
+# using the user-id, which is important for multiuser systems.
+#
 
 sub is_channel {0}
 sub session {""}
