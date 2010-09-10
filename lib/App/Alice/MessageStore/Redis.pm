@@ -32,7 +32,14 @@ sub add {
 
 sub clear {
   my ($self, $cb) = @_;
-  $redis->del($self->id, $cb);
+
+  my $wrapped = sub {
+    $cb->() if $cb;
+    undef $redis->{on_error};
+  };
+
+  $redis->{on_error} = $wrapped;
+  $redis->del($self->id, $wrapped);
 }
 
 sub with_messages {
@@ -42,8 +49,15 @@ sub with_messages {
   my $end = $start + $self->lrange_size - 1;
   $end = $self->buffersize if $end > $self->buffersize;
 
+  $redis->{on_error} = sub {
+    $cb->() if $cb;
+    $complete_cb->() if $complete_cb;
+    undef $redis->{on_error};
+  };
+
   $redis->lrange(
     $self->id, $start, $end, sub {
+      undef $redis->{on_error};
       my $msgs = ref $_[0] eq 'ARRAY' ? $_[0] : [];
       $cb->(
         grep {$_}
