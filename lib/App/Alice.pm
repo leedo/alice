@@ -85,12 +85,15 @@ has history => (
 );
 
 sub store {
-  my $self = shift;
-  $self->history->store(
-    @_,
-    user => $self->user,
-    time => time,
-  );
+  my ($self, @args) = @_;
+  my $idle_w; $idle_w = AE::idle sub {
+    $self->history->store(
+      @args,
+      user => $self->user,
+      time => time,
+    );
+    undef $idle_w;
+  };
 }
 
 has logger => (
