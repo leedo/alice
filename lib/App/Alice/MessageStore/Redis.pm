@@ -34,7 +34,7 @@ sub clear {
   my ($self, $cb) = @_;
 
   my $wrapped = sub {
-    $cb->() if $cb;
+    $cb->();
     undef $redis->{on_error};
   };
 
@@ -50,7 +50,7 @@ sub with_messages {
   $end = $self->buffersize if $end > $self->buffersize;
 
   $redis->{on_error} = sub {
-    $cb->() if $cb;
+    $cb->();
     $complete_cb->() if $complete_cb;
     undef $redis->{on_error};
   };
