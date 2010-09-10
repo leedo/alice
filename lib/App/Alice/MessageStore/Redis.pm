@@ -5,6 +5,7 @@ use AnyEvent::Redis;
 use JSON;
 
 my $redis = AnyEvent::Redis->new;
+my $idle_w;
 
 has id => (
   is => 'ro',
@@ -21,13 +22,25 @@ has lrange_size => (
   default => 15
 );
 
+has queue => (
+  is => 'rw',
+  default => sub {[]},
+);
+
 sub add {
   my ($self, $message) = @_;
   return unless $message;
-  $redis->rpush($self->id, encode_json $message);
-  $redis->llen($self->id, sub {
-    $redis->lpop($self->id) if $_[0] > $self->buffersize;
-  });
+
+  unshift @{$self->queue}, $message;
+
+  if (!$idle_w) {
+    $idle_w = AE::idle sub {
+      $redis->rpush($self->id, encode_json $_) for @{$self->queue};
+      $redis->ltrim($self->id, $self->buffersize);
+      $self->queue([]);
+      undef $idle_w;
+    };
+  }
 }
 
 sub clear {

@@ -160,10 +160,7 @@ sub format_event {
     $self->render("event", $message)
   );
 
-  my $idle_w; $idle_w = AE::idle sub {
-    $self->buffer->add($message);
-    undef $idle_w;
-  };
+  $self->buffer->add($message);
   return $message;
 }
 
@@ -195,11 +192,7 @@ sub format_message {
   }
   $message->{html} = $self->render("message", $message);
 
-  my $idle_w; $idle_w = AE::idle sub {
-    $self->buffer->add($message);
-    undef $idle_w;
-  };
-
+  $self->buffer->add($message);
   return $message;
 }
 
