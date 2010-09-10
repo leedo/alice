@@ -36,7 +36,7 @@ sub add {
   if (!$idle_w) {
     $idle_w = AE::idle sub {
       $redis->rpush($self->id, encode_json $_) for @{$self->queue};
-      $redis->ltrim($self->id, $self->buffersize);
+      $redis->ltrim($self->id, 0, $self->buffersize);
       $self->queue([]);
       undef $idle_w;
     };
