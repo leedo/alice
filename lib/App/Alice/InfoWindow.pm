@@ -37,14 +37,19 @@ sub format_message {
     window => $self->serialized,
     html   => encoded_string($html),
     self   => $options{self} ? 1 : 0,
-    hightlight => $options{highlight} ? 1 : 0,
-    msgid  => $self->app->next_msgid,
-    timestamp => time,
-    monospaced => $options{mono} ? 1 : 0,
+    hightlight  => $options{highlight} ? 1 : 0,
+    msgid       => $self->app->next_msgid,
+    timestamp   => time,
+    monospaced  => $options{mono} ? 1 : 0,
     consecutive => $from eq $self->buffer->previous_nick ? 1 : 0,
   };
+
   $message->{html} = $self->render("message", $message);
-  $self->buffer->add($message);
+
+  my $idle_w; $idle_w = AE::idle sub {
+    $self->buffer->add($message);
+    undef $idle_w;
+  };
   return $message;
 }
 
@@ -57,18 +62,24 @@ sub copy_message {
     window => $self->serialized,
     html   => $msg->{html},
     self   => $msg->{self},
-    highlight => $msg->{highlight},
-    msgid  => $self->app->next_msgid,
-    timestamp => $msg->{timestamp},
-    monospaced => $msg->{monospaced},
+    highlight   => $msg->{highlight},
+    msgid       => $self->app->next_msgid,
+    timestamp   => $msg->{timestamp},
+    monospaced  => $msg->{monospaced},
     consecutive => $msg->{nick} eq $self->buffer->previous_nick ? 1 : 0,
   };
+
+  # a gross way to remove consecutive class from messages
   if ($msg->{consecutive} and !$copy->{consecutive}) {
     $copy->{html} =~ s/(<li class="[^"]*)consecutive/$1/;
   } elsif (!$msg->{consecutive} and $copy->{consecutive}) {
     $copy->{html} =~ s/(<li class=")/$1consecutive /;
   }
-  $self->buffer->add($copy);
+
+  my $idle_w; $idle_w = AE::idle sub {
+    $self->buffer->add($copy);
+    undef $idle_w;
+  };
   return $copy;
 }
 
