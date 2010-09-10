@@ -10050,6 +10050,7 @@ Alice.Application = Class.create({
 
     this.isPhone = window.navigator.platform.match(/(android|iphone)/i) ? 1 : 0;
     this.isMobile = this.isPhone || Prototype.Browser.MobileSafari;
+    this.isJankyScroll = Prototype.Browser.Gecko || Prototype.Browser.IE;
 
     window.onload = function () {
       setTimeout(this.connection.connect.bind(this.connection), 1000);
@@ -10242,7 +10243,7 @@ Alice.Application = Class.create({
 
   nextUnreadWindow: function() {
     var active = this.activeWindow();
-    var tabs = active.tab.nextSiblings().concat(active.tab.previousSiblings());
+    var tabs = active.tab.nextSiblings().concat(active.tab.previousSiblings().reverse());
     var unread = tabs.find(function(tab) {return tab.hasClassName("unread")});
 
     if (unread) {
@@ -10596,7 +10597,7 @@ Alice.Window = Class.create({
 
     this.messages.observe("mouseover", this.showNick.bind(this));
 
-    if (Prototype.Browser.Gecko) {
+    if (this.application.isJankyScroll) {
       this.resizeMessagearea();
       this.scrollToBottom();
     }
@@ -10711,18 +10712,23 @@ Alice.Window = Class.create({
     this.element.addClassName('active');
     this.tabOverflowButton.selected = true;
     this.markRead();
-
     this.scrollToBottom(true);
+
     if (!this.application.isMobile) this.input.focus();
-    if (Prototype.Browser.Gecko) {
+
+    if (this.application.isJankyScroll) {
       this.resizeMessagearea();
       this.scrollToBottom();
     }
-    this.element.redraw();
 
+    this.element.redraw();
+    this.setWindowHash();
+    this.application.updateChannelSelect();
+  },
+
+  setWindowHash: function () {
     window.location.hash = this.hashtag;
     window.location = window.location.toString();
-    this.application.updateChannelSelect();
   },
 
   markRead: function () {
@@ -10817,7 +10823,8 @@ Alice.Window = Class.create({
 
       if (message.consecutive) {
         var avatar = li.previous(".avatar:not(.consecutive)");
-        if (avatar) avatar.down(".timehint").innerHTML = message.timestamp;
+        if (avatar && avatar.down(".timehint"))
+          avatar.down(".timehint").innerHTML = message.timestamp;
       }
     }
     else if (message.event == "topic") {
