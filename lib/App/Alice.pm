@@ -12,6 +12,7 @@ use Any::Moose;
 use File::Copy;
 use Digest::MD5 qw/md5_hex/;
 use List::Util qw/first/;
+use List::MoreUtils qw/any none/;
 use Encode;
 
 our $VERSION = '0.19';
@@ -78,27 +79,18 @@ has history => (
   default => sub {
     my $self = shift;
     my $config = $self->config->path."/log.db";
-    if (-e $config) {
-      if ((stat($config))[9] < 1272757679) {
-        print STDERR "Log schema is out of date, updating\n";
-        copy($self->config->assetdir."/log.db", $config);
-      }
-    }
-    else {
-      copy($self->config->assetdir."/log.db", $config);
-    }
-    App::Alice::History->new(
-      dbfile => $self->config->path ."/log.db"
-    );
+    copy($self->config->assetdir."/log.db", $config) unless -e $config;
+    App::Alice::History->new(dbfile => $config);
   },
 );
 
 sub store {
   my $self = shift;
-  my %fields = @_;
-  $fields{user} = $self->user;
-  $fields{time} = time;
-  $self->history->store(%fields);
+  $self->history->store(
+    @_,
+    user => $self->user,
+    time => time,
+  );
 }
 
 has logger => (
@@ -121,6 +113,18 @@ sub get_window {first {$_->id eq $_[1]} $_[0]->windows}
 sub remove_window {$_[0]->_windows([grep {$_->id ne $_[1]} $_[0]->windows])}
 sub window_ids {map {$_->id} $_[0]->windows}
 
+sub remove_windows {
+  my ($self, @windows) = @_;
+  return unless @windows;
+
+  my @ids = map {$_->id} @windows;
+
+  $self->_windows([
+    grep {my $id = $_->id; none {$id eq $_} @ids} $self->windows
+  ]);
+
+}
+
 has 'template' => (
   is => 'ro',
   isa => 'Text::MicroTemplate::File',
@@ -129,7 +133,7 @@ has 'template' => (
     my $self = shift;
     Text::MicroTemplate::File->new(
       include_path => $self->config->assetdir . '/templates',
-      cache        => 1,
+      cache        => 2,
     );
   },
 );
@@ -278,18 +282,6 @@ sub reload_commands {
   $self->commands->reload_handlers;
 }
 
-sub merge_config {
-  my ($self, $new_config) = @_;
-  for my $newserver (values %$new_config) {
-    if (! exists $self->config->servers->{$newserver->{name}}) {
-      $self->add_irc_server($newserver->{name}, $newserver);
-    }
-    for my $key (keys %$newserver) {
-      $self->config->servers->{$newserver->{name}}{$key} = $newserver->{$key};
-    }
-  }
-}
-
 sub tab_order {
   my ($self, $window_ids) = @_;
   my $order = [];
@@ -330,12 +322,12 @@ sub alert {
 
 sub create_window {
   my ($self, $title, $connection) = @_;
-  my $id = $self->_build_window_id($title, $connection->alias);
   my $window = App::Alice::Window->new(
     title    => $title,
     irc      => $connection,
     assetdir => $self->config->assetdir,
     app      => $self,
+    id       => $self->_build_window_id($title, $connection->alias), 
   );
   $self->add_window($window);
   return $window;
@@ -349,12 +341,12 @@ sub _build_window_id {
 sub find_or_create_window {
   my ($self, $title, $connection) = @_;
   return $self->info_window if $title eq "info";
+
   if (my $window = $self->find_window($title, $connection)) {
     return $window;
   }
-  else {
-    $self->create_window($title, $connection);
-  }
+
+  $self->create_window($title, $connection);
 }
 
 sub sorted_windows {
@@ -442,27 +434,18 @@ sub render {
 
 sub is_highlight {
   my ($self, $own_nick, $body) = @_;
-  for ((@{$self->config->highlights}, $own_nick)) {
-    my $highlight = quotemeta($_);
-    return 1 if $body =~ /\b$highlight\b/i;
-  }
-  return 0;
+  any {my $h = quotemeta($_); $body =~ /\b$h\b/i }
+      (@{$self->config->highlights}, $own_nick);
 }
 
 sub is_monospace_nick {
   my ($self, $nick) = @_;
-  for (@{$self->config->monospace_nicks}) {
-    return 1 if $_ eq $nick;
-  }
-  return 0;
+  any {$_ eq $nick} @{$self->config->monospace_nicks};
 }
 
 sub is_ignore {
   my ($self, $nick) = @_;
-  for ($self->config->ignores) {
-    return 1 if $nick eq $_;
-  }
-  return 0;
+  any {$_ eq $nick} $self->config->ignores;
 }
 
 sub add_ignore {

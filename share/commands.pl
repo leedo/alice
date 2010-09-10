@@ -67,7 +67,7 @@ my $commands = [
       my ($self, $app, $window, $nick, $network) = @_;
       my $irc = $network ? $app->get_irc($network) : $window->irc;
       
-      if ($irc or $irc->is_connected) {
+      unless ($irc or $irc->is_connected) {
         $window->reply("Not a connected server name");
         return;
       }
@@ -179,7 +179,7 @@ my $commands = [
       $irc->add_whois($nick => sub {
         my $info = shift;
         if ($info) {
-          $window->reply("nick: $nick".$info);
+          $window->reply($info);
         }
         else {
           $window->reply("No such nick: $nick\n");

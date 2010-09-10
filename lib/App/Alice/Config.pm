@@ -17,13 +17,7 @@ has assetdir => (
   }
 );
 
-has images => (
-  is      => 'rw',
-  isa     => 'Str',
-  default => "show",
-);
-
-has avatars => (
+has [qw/images avatars alerts/] => (
   is      => 'rw',
   isa     => 'Str',
   default => "show",
@@ -39,12 +33,6 @@ has timeformat => (
   is      => 'rw',
   isa     => 'Str',
   default => '24',
-);
-
-has alerts => (
-  is      => 'rw',
-  isa     => 'Str',
-  default => 'show',
 );
 
 has quitmsg => (
@@ -77,7 +65,7 @@ has auth => (
   default => sub {{}},
 );
 
-has highlights => (
+has [qw/ignore highlights order monospace_nicks/]=> (
   is      => 'rw',
   isa     => 'ArrayRef[Str]',
   default => sub {[]},
@@ -87,18 +75,6 @@ has servers => (
   is      => 'rw',
   isa     => 'HashRef[HashRef]',
   default => sub {{}},
-);
-
-has order => (
-  is      => 'rw',
-  isa     => 'ArrayRef[Str]',
-  default => sub {[]},
-);
-
-has monospace_nicks => (
-  is      => 'rw',
-  isa     => 'ArrayRef[Str]',
-  default => sub {['Shaniqua']},
 );
 
 has path => (
@@ -124,12 +100,6 @@ has commandline => (
   is      => 'ro',
   isa     => 'HashRef',
   default => sub {{}},
-);
-
-has ignore => (
-  is      => 'rw',
-  isa     => 'ArrayRef',
-  default => sub {[]},
 );
 
 has message_store => (
