@@ -29,9 +29,9 @@ has 'ping_timer' => (is  => 'rw');
 sub config {$_[0]->app->config}
 
 my $url_handlers = [
-  [ ""             => "send_index" ],
   [ "say"          => "handle_message" ],
   [ "stream"       => "setup_stream" ],
+  [ ""             => "send_index" ],
   [ "config"       => "send_config" ],
   [ "prefs"        => "send_prefs" ],
   [ "serverconfig" => "server_config" ],
@@ -122,8 +122,8 @@ sub login {
     $res->redirect("/");
     return $res->finalize;
   }
-  elsif (my $user = $req->param("username")
-     and my $pass = $req->param("password")) {
+  elsif (my $user = $req->parameters->{username}
+     and my $pass = $req->parameters->{password}) {
     if ($self->app->authenticate($user, $pass)) {
       $req->env->{"psgix.session"}->{is_logged_in} = 1;
       $res->redirect("/");
@@ -208,13 +208,13 @@ sub broadcast {
 sub setup_stream {
   my ($self, $req) = @_;
   $self->app->log(info => "opening new stream");
-  my $min = $req->param('msgid') || 0;
+  my $min = $req->parameters->{msgid} || 0;
   return sub {
     my $respond = shift;
     my $stream = App::Alice::Stream->new(
       queue      => [ map({$_->join_action} $self->app->windows) ],
       writer     => $respond,
-      start_time => $req->param('t'),
+      start_time => $req->parameters->{t},
       # android requires 4K updates to trigger loading event
       min_bytes  => $req->user_agent =~ /android/i ? 4096 : 0,
     );
@@ -279,9 +279,9 @@ sub merged_options {
   my $config = $self->app->config;
   my $params = $req->parameters;
   my %options = (
-   images => $params->{images} || $config->images,
-   debug  => $params->{debug}  || ($config->show_debug ? 'true' : 'false'),
-   timeformat => $params->{timeformat} || $config->timeformat,
+   images => $req->parameters->{images} || $config->images,
+   debug  => $req->parameters->{debug}  || ($config->show_debug ? 'true' : 'false'),
+   timeformat => $req->parameters->{timeformat} || $config->timeformat,
   );
   join "&", map {"$_=$options{$_}"} keys %options;
 }
@@ -332,7 +332,7 @@ sub send_range {
   return sub {
     my $respond = shift;
     $self->app->history->range(
-      $self->app->user, $req->param('channel'), $req->param('id'), sub {
+      $self->app->user, $req->parameters->{channel}, $req->parameters->{id}, sub {
         my ($before, $after) = @_;
         $before = $self->app->render('range', $before, 'before');
         $after = $self->app->render('range', $after, 'after');
@@ -366,7 +366,7 @@ sub server_config {
   my ($self, $req) = @_;
   $self->app->log(info => "serving blank server config");
   
-  my $name = $req->param('name');
+  my $name = $req->parameters->{name};
   $name =~ s/\s+//g;
   my $config = $self->app->render('new_server', $name);
   my $listitem = $self->app->render('server_listitem', $name);
@@ -395,11 +395,11 @@ sub save_config {
       if ($2 eq "channels" or $2 eq "on_connect") {
         $new_config->{servers}{$1}{$2} = [$req->parameters->get_all($name)];
       } else {
-        $new_config->{servers}{$1}{$2} = $req->param($name);
+        $new_config->{servers}{$1}{$2} = $req->parameters->{$name};
       }
     }
     else {
-      $new_config->{$name} = $req->param($name);
+      $new_config->{$name} = $req->parameters->{$name};
     }
   }
   $self->app->reload_config($new_config);

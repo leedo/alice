@@ -467,10 +467,16 @@ sub ignores {
 
 sub auth_enabled {
   my $self = shift;
-  return ($self->config->auth
-      and ref $self->config->auth eq 'HASH'
-      and $self->config->auth->{user}
-      and $self->config->auth->{pass});
+
+  # cache it
+  if (!defined $self->{_auth_enabled}) {
+    $self->{_auth_enabled} = $self->config->auth
+              and ref $self->config->auth eq 'HASH'
+              and $self->config->auth->{user}
+              and $self->config->auth->{pass};
+  }
+
+  return $self->{_auth_enabled};
 }
 
 sub authenticate {
