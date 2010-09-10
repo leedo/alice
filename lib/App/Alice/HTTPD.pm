@@ -55,6 +55,8 @@ has 'streams' => (
   default => sub {[]},
 );
 
+my $ok = [200, ["Content-Type", "text/plain", "Content-Length", 2], 'ok'];
+
 sub add_stream {push @{shift->streams}, @_}
 sub no_streams {@{$_[0]->streams} == 0}
 sub stream_count {scalar @{$_[0]->streams}}
@@ -237,26 +239,22 @@ sub purge_disconnects {
 
 sub handle_message {
   my ($self, $req) = @_;
-  my $msg  = $req->param('msg');
-  my $is_html = $req->param('html');
+  my $msg  = $req->parameters->{msg};
   utf8::decode($msg) unless utf8::is_utf8($msg);
-  $msg = html_to_irc($msg) if $is_html;
-  my $source = $req->param('source');
-  my $window = $self->app->get_window($source);
-  if ($window) {
+  $msg = html_to_irc($msg) if $req->parameters->{html};
+  my $source = $req->parameters->{source};
+  
+  if (my $window = $self->app->get_window($source)) {
     for (split /\n/, $msg) {
-      try {
+      eval {
         $self->app->handle_command($_, $window) if length $_;
-      } catch {
-        $self->app->log(info => $_);
+      };
+      if ($@) {
+        $self->app->log(info => $@);
       }
     }
   }
-  my $res = $req->new_response(200);
-  $res->content_type('text/plain');
-  $res->content_length(2);
-  $res->body('ok');
-  return $res->finalize;
+  return $ok;
 }
 
 sub send_index {
@@ -410,11 +408,7 @@ sub save_config {
     $self->app->format_info("config", "saved")
   );
 
-  my $res = $req->new_response(200);
-  $res->content_type('text/plain');
-  $res->content_length(2);
-  $res->body('ok');
-  return $res->finalize;
+  return $ok;
 }
 
 sub tab_order  {
@@ -422,11 +416,7 @@ sub tab_order  {
   $self->app->log(debug => "updating tab order");
   
   $self->app->tab_order([grep {defined $_} $req->parameters->get_all('tabs')]);
-  my $res = $req->new_response(200);
-  $res->content_type('text/plain');
-  $res->content_length(2);
-  $res->body('ok');
-  return $res->finalize;
+  return $ok;
 }
 
 sub not_found  {
