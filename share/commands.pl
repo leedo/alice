@@ -29,7 +29,7 @@ my $commands = [
     code => sub  {
       my ($self, $app, $window, $msg, $nick, $network) = @_;
 
-      if (my $irc = $self->determine_irc($window, $network)) {
+      if (my $irc = $self->determine_irc($app, $window, $network)) {
         my $new_window = $app->find_or_create_window($nick, $irc);
         my @msgs = ($new_window->join_action);
 
@@ -50,7 +50,7 @@ my $commands = [
     code => sub {
       my ($self, $app, $window, $nick, $network) = @_;
 
-      if (my $irc = $self->determine_irc($window, $network)) {
+      if (my $irc = $self->determine_irc($app, $window, $network)) {
         $irc->log(info => "now known as $nick");
         $irc->send_srv(NICK => $nick);
       }
@@ -74,7 +74,7 @@ my $commands = [
     desc => "Joins the specified channel.",
     code => sub  {
       my ($self, $app, $window, $channel, $network) = @_;
-      if (my $irc = $self->determine_irc($window, $network)) {
+      if (my $irc = $self->determine_irc($app, $window, $network)) {
         my @params = split /\s+/, $channel;
 
         unless ($irc->cl->is_channel_name($params[0])) {
@@ -145,7 +145,7 @@ my $commands = [
     code => sub  {
       my ($self, $app, $window, $nick, $network) = @_;
 
-      if (my $irc = $self->determine_irc($window, $network)) {
+      if (my $irc = $self->determine_irc($app, $window, $network)) {
         $irc->add_whois($nick => sub {
           $window->reply($_[0] ? $_[0] : "No such nick: $nick\n");
         });
@@ -171,7 +171,7 @@ my $commands = [
     code => sub  {
       my ($self, $app, $window, $command, $network) = @_;
 
-      if (my $irc = $self->determine_irc($window, $network)) {
+      if (my $irc = $self->determine_irc($app, $window, $network)) {
         $irc->send_raw($command);
       }
     },
@@ -187,8 +187,8 @@ my $commands = [
       if ($irc and $irc->is_connected) {
         $irc->disconnect;
       }
-      elsif (!$irc) 
-        $window->reply("That isn't one of your irc networks!");
+      elsif (!$irc) {
+        $window->reply("$network isn't one of your irc networks!");
       }
       elsif ($irc->reconnect_timer) {
         $irc->cancel_reconnect;
@@ -211,7 +211,7 @@ my $commands = [
         $irc->connect;
       }
       elsif (!$irc) {
-        $window->reply("That isn't one of your irc networks!");
+        $window->reply("$network isn't one of your irc networks!");
       }
       else {
         $window->reply("Already connected");
