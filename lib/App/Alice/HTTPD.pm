@@ -296,8 +296,7 @@ sub send_windows {
   my $window = pop @windows;
   $writer->write(encode_utf8 $self->app->render('window_head', $window));
   $window->buffer->with_messages(sub {
-    my @messages = @_;
-    $writer->write(encode_utf8 $_->{html}) for @messages;
+    $writer->write(encode_utf8 $_->{html}) for @_;
   }, 0, sub {
     $writer->write(encode_utf8 $self->app->render('window_footer', $window));
     $self->send_windows($writer, $cb, @windows);
