@@ -145,6 +145,7 @@ has 'info_window' => (
   default => sub {
     my $self = shift;
     my $info = App::Alice::InfoWindow->new(
+      id       => $self->_build_window_id("info", "info"),
       assetdir => $self->config->assetdir,
       app      => $self,
     );
