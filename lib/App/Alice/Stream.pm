@@ -64,8 +64,8 @@ sub BUILD {
 
 sub _send {
   my $self = shift;
-  try   { $self->send }
-  catch { $self->close };
+  eval { $self->send };
+  $self->close if $@;
 }
 
 sub send {
@@ -83,9 +83,9 @@ sub send {
 
 sub close {
   my $self = shift;
-  try {$self->writer->write($self->to_string)};
   $self->flush;
   $self->writer->close;
+  $self->writer(undef);
   $self->timer(undef);
   $self->closed(1);
 }
