@@ -132,8 +132,8 @@ sub to_string {
     time  => time - $self->offset,
   }, {utf8 => 1});
 
-  $output .= "\n--" . $self->seperator . "\n";
-  $output .= " " x ($self->min_bytes - length $output);
+  $output .= "\n--" . $self->seperator . "\n"
+          .  " " x ($self->min_bytes - length $output);
 
   return $output
 }
