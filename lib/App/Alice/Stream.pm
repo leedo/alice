@@ -84,7 +84,7 @@ sub send {
 sub close {
   my $self = shift;
   $self->flush;
-  $self->writer->close;
+  $self->writer->close if $self->writer;
   $self->writer(undef);
   $self->timer(undef);
   $self->closed(1);
