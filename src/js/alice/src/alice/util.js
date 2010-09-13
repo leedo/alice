@@ -209,7 +209,7 @@ Object.extend(Alice, {
 	  },
 
     addCommand: function (alias) {
-			var command = prompt("Please enter a channel name.");
+			var command = prompt("Please enter a command.");
 			if (command)
 			  $("on_connect_" + alias).insert("<option value=\""+command+"\">"+command+"</option>");
 			return false;
