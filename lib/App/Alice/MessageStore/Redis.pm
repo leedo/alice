@@ -27,17 +27,26 @@ has queue => (
   default => sub {[]},
 );
 
+has prefix => (
+  is => 'rw',
+  default => "alice:window",
+);
+
 sub add {
   my ($self, $message) = @_;
   return unless $message;
 
-  unshift @{$self->queue}, $message;
+  unshift @{$self->{queue}}, $message;
 
   if (!$idle_w) {
     $idle_w = AE::idle sub {
-      $redis->rpush($self->id, encode_json $_) for @{$self->queue};
-      $redis->ltrim($self->id, 0, $self->buffersize);
-      $self->queue([]);
+      my $id = "$self->{prefix}:$self->{id}";
+      $redis->multi;
+      while ( my $msg = pop @{$self->{queue}}) {
+        $redis->rpush($id, encode_json $msg);
+      }
+      $redis->ltrim($id, 0, $self->{buffersize});
+      $redis->exec;
       undef $idle_w;
     };
   }
@@ -52,15 +61,15 @@ sub clear {
   };
 
   $redis->{on_error} = $wrapped;
-  $redis->del($self->id, $wrapped);
+  $redis->del("$self->{prefix}:$self->{id}", $wrapped);
 }
 
 sub with_messages {
   my ($self, $cb, $start, $complete_cb) = @_;
 
   $start ||= 0;
-  my $end = $start + $self->lrange_size - 1;
-  $end = $self->buffersize if $end > $self->buffersize;
+  my $end = $start + $self->{lrange_size} - 1;
+  $end = $self->{buffersize} if $end > $self->{buffersize};
 
   $redis->{on_error} = sub {
     $cb->();
@@ -69,7 +78,7 @@ sub with_messages {
   };
 
   $redis->lrange(
-    $self->id, $start, $end, sub {
+    "$self->{prefix}:$self->{id}", $start, $end, sub {
       undef $redis->{on_error};
       my $msgs = ref $_[0] eq 'ARRAY' ? $_[0] : [];
       $cb->(
@@ -77,7 +86,7 @@ sub with_messages {
         map  {my $msg = eval {decode_json $_ }; $@ ? undef : $msg}
         @$msgs
       );
-      if ($end == $self->buffersize or @$msgs != $self->lrange_size) {
+      if ($end == $self->{buffersize} or @$msgs != $self->{lrange_size}) {
         $complete_cb->() if $complete_cb;
       } else {
         $self->with_messages($cb, $end + 1, $complete_cb);
