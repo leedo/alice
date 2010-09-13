@@ -35,8 +35,8 @@ sub clear {
 
 sub add {
   my ($self, $message) = @_;
-  $message->{event} ne "say" ? $self->previous_nick("")
-    : $self->previous_nick($message->{nick});
+  $message->{event} eq "say" ? $self->previous_nick($message->{nick})
+                             : $self->previous_nick("");
   $self->store->add($message);
 }
 

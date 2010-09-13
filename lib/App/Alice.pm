@@ -30,7 +30,7 @@ has config => (
 has msgid => (
   is        => 'rw',
   isa       => 'Int',
-  default   => 1,
+  default   => 0,
 );
 
 sub next_msgid {$_[0]->msgid($_[0]->msgid + 1)}
@@ -85,12 +85,15 @@ has history => (
 );
 
 sub store {
-  my $self = shift;
-  $self->history->store(
-    @_,
-    user => $self->user,
-    time => time,
-  );
+  my ($self, @args) = @_;
+  my $idle_w; $idle_w = AE::idle sub {
+    $self->history->store(
+      @args,
+      user => $self->user,
+      time => time,
+    );
+    undef $idle_w;
+  };
 }
 
 has logger => (
@@ -145,6 +148,7 @@ has 'info_window' => (
   default => sub {
     my $self = shift;
     my $info = App::Alice::InfoWindow->new(
+      id       => $self->_build_window_id("info", "info"),
       assetdir => $self->config->assetdir,
       app      => $self,
     );
@@ -467,10 +471,16 @@ sub ignores {
 
 sub auth_enabled {
   my $self = shift;
-  return ($self->config->auth
-      and ref $self->config->auth eq 'HASH'
-      and $self->config->auth->{user}
-      and $self->config->auth->{pass});
+
+  # cache it
+  if (!defined $self->{_auth_enabled}) {
+    $self->{_auth_enabled} = ($self->config->auth
+              and ref $self->config->auth eq 'HASH'
+              and $self->config->auth->{user}
+              and $self->config->auth->{pass});
+  }
+
+  return $self->{_auth_enabled};
 }
 
 sub authenticate {

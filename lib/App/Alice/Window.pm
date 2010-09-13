@@ -6,6 +6,7 @@ use App::Alice::MessageBuffer;
 use Text::MicroTemplate qw/encoded_string/;
 use IRC::Formatting::HTML qw/irc_to_html/;
 use Any::Moose;
+use AnyEvent;
 
 my $url_regex = qr/\b(https?:\/\/(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'".,<>?«»“”‘’]))/i;
 
@@ -158,6 +159,7 @@ sub format_event {
   $message->{html} = make_links_clickable(
     $self->render("event", $message)
   );
+
   $self->buffer->add($message);
   return $message;
 }
@@ -189,6 +191,7 @@ sub format_message {
     $message->{highlight} = $self->app->is_highlight($own_nick, $body);
   }
   $message->{html} = $self->render("message", $message);
+
   $self->buffer->add($message);
   return $message;
 }
