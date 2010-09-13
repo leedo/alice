@@ -49,5 +49,22 @@ sub handle {
   }
 }
 
+sub determine_irc {
+  my ($self, $app, $window, $network) = @_;
+
+  my $irc = $network ? $app->get_irc($network) : $window->irc;
+
+  if (!$irc) {
+    $window->reply("$network is not one of your irc networks");
+    return ();
+  }
+  elsif (!$irc->is_connected) {
+    $window->reply("$network is not connected");
+    return ();
+  }
+  
+  return $irc;
+}
+
 __PACKAGE__->meta->make_immutable;
 1;

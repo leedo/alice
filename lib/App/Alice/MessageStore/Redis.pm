@@ -5,6 +5,7 @@ use AnyEvent::Redis;
 use JSON;
 
 my $redis = AnyEvent::Redis->new;
+my $idle_w;
 
 has id => (
   is => 'ro',
@@ -21,36 +22,71 @@ has lrange_size => (
   default => 15
 );
 
+has queue => (
+  is => 'rw',
+  default => sub {[]},
+);
+
+has prefix => (
+  is => 'rw',
+  default => "alice:window",
+);
+
 sub add {
   my ($self, $message) = @_;
   return unless $message;
-  $redis->rpush($self->id, encode_json $message);
-  $redis->llen($self->id, sub {
-    $redis->lpop($self->id) if $_[0] > $self->buffersize;
-  });
+
+  unshift @{$self->{queue}}, $message;
+
+  if (!$idle_w) {
+    $idle_w = AE::idle sub {
+      my $id = "$self->{prefix}:$self->{id}";
+      $redis->multi;
+      while ( my $msg = pop @{$self->{queue}}) {
+        $redis->rpush($id, encode_json $msg);
+      }
+      $redis->ltrim($id, 0, $self->{buffersize});
+      $redis->exec;
+      undef $idle_w;
+    };
+  }
 }
 
 sub clear {
   my ($self, $cb) = @_;
-  $redis->del($self->id, $cb);
+
+  my $wrapped = sub {
+    $cb->();
+    undef $redis->{on_error};
+  };
+
+  $redis->{on_error} = $wrapped;
+  $redis->del("$self->{prefix}:$self->{id}", $wrapped);
 }
 
 sub with_messages {
   my ($self, $cb, $start, $complete_cb) = @_;
 
   $start ||= 0;
-  my $end = $start + $self->lrange_size - 1;
-  $end = $self->buffersize if $end > $self->buffersize;
+  my $end = $start + $self->{lrange_size} - 1;
+  $end = $self->{buffersize} if $end > $self->{buffersize};
+
+  $redis->{on_error} = sub {
+    $cb->();
+    $complete_cb->() if $complete_cb;
+    undef $redis->{on_error};
+  };
 
   $redis->lrange(
-    $self->id, $start, $end, sub {
+    "$self->{prefix}:$self->{id}", $start, $end, sub {
+      undef $redis->{on_error};
       my $msgs = ref $_[0] eq 'ARRAY' ? $_[0] : [];
       $cb->(
         grep {$_}
         map  {my $msg = eval {decode_json $_ }; $@ ? undef : $msg}
         @$msgs
       );
-      if ($end == $self->buffersize or @$msgs != $self->lrange_size) {
+      if ($end == $self->{buffersize} or @$msgs != $self->{lrange_size}) {
         $complete_cb->() if $complete_cb;
       } else {
         $self->with_messages($cb, $end + 1, $complete_cb);
