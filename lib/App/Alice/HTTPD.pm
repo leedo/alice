@@ -55,7 +55,7 @@ has 'streams' => (
   default => sub {[]},
 );
 
-my $ok = [200, ["Content-Type", "text/plain", "Content-Length", 2], 'ok'];
+my $ok = [200, ["Content-Type", "text/plain", "Content-Length", 2], ['ok']];
 
 sub add_stream {push @{shift->streams}, @_}
 sub no_streams {@{$_[0]->streams} == 0}
