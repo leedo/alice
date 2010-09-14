@@ -54,9 +54,13 @@ sub determine_irc {
 
   my $irc = $network ? $app->get_irc($network) : $window->irc;
 
-  if (!$irc) {
+  if (!$irc and $network) {
     $window->reply("$network is not one of your irc networks");
     return ();
+  }
+  elsif (!$irc) {
+    $window->reply("Network is ambiguous, specify a network name");
+    return();
   }
   elsif (!$irc->is_connected) {
     $window->reply("$network is not connected");
