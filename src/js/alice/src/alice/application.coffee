@@ -8,6 +8,7 @@ Alice.Application = Class.create
     @keyboard = new Alice.Keyboard @
     @isPhone = (if window.navigator.platform.match(/(android|iphone)/i) then 1 else 0)
     @isMobile = @isPhone or Prototype.Browser.MobileSafari
+    @isJankyScroll = Prototype.Browser.Gecko || Prototype.Browser.IE
 
     # Keep this as a timeout so the page doesn't show "loading..."
     window.onload = => setTimeout @connection.connect.bind(@connection), 1000
@@ -131,6 +132,14 @@ Alice.Application = Class.create
     id = nextTab.id.replace '_tab',''
     this.getWindow(id).focus() unless id == active.id
 
+  nextUnreadWindow: ->
+    active = @activeWindow()
+    tabs = active.tab.nextSiblings().concat active.tab.previousSiblings().reverse()
+    unread = tabs.find (tab)-> tab.hasClassName "unread"
+    if unread
+      id = unread.id.replace "_tab", ""
+      this.getWindow(id).focus() if id
+
   focusLast: ->
     if @previousFocus and @previousFocus.id is !@activeWindow().id
       @previousFocus.focus()
@@ -169,59 +178,44 @@ Alice.Application = Class.create
     @unHighlightChannelSelect()
   
   handleAction: (action) -> @actionHandlers[action.event].call @, action if @actionHandlers[action.event]
-###
-  displayMessage: function(message) {
-    var win = this.getWindow(message['window'].id);
-    if (win) {
+
+  displayMessage: (message) ->
+    win = @getWindow message['window'].id
+    if win
       win.addMessage(message);
-    } else {
-      this.connection.requestWindow(
-        message['window'].title, message['window'].id, message
-      );
-    }
-  },
+    else
+      @connection.requestWindow message['window'].title, message['window'].id, message
   
-  focusHash: function(hash) {
-    if (!hash) hash = window.location.hash;
-    if (hash) {
-      hash = decodeURIComponent(hash);
-      hash = hash.replace(/^#/, "");
-      var windows = this.windows();
-      for (var i = 0; i < windows.length; i++) {
-        var win = windows[i];
-        if (win.hashtag == hash) {
-          if (win && !win.active) win.focus();
-          return;
-        }
-      }
-    }
-  },
-  
-  makeSortable: function() {
-    Sortable.create('tabs', {
-      overlap: 'horizontal',
-      constraint: 'horizontal',
-      format: /(.+)/,
-      onUpdate: function (res) {
-        var tabs = res.childElements();
-        var order = tabs.collect(function(t){
-          var m = t.id.match(/([^_]+)_tab/);
-          if (m) return m[1]
-        });
-        if (order.length) this.connection.sendTabOrder(order);
-      }.bind(this)
-    });
-  },
+  focusHash: (hash) ->
+    hash = window.location.hash if not hash 
+    if hash
+      hash = decodeURIComponent hash
+      hash = hash.replace /^#/, ""
+      windows = @windows()
+      for win in windows
+        if win.hashtag == hash
+          win.focus() if win and not win.active
+          return
 
-  addMissed: function() {
-    if (!window.fluid) return;
-    window.fluid.dockBadge ? window.fluid.dockBadge++ :
-                             window.fluid.dockBadge = 1;
-  },
+  makeSortable: ->
+    Sortable.create 'tabs',
+      overlap: 'horizontal'
+      constraint: 'horizontal'
+      format: /(.+)/
+      onUpdate: (res) =>
+        vtabs = res.childElements()
+        order = tabs.collect (t)->
+          m = t.id.match /([^_]+)_tab/
+          return m[1] if m 
+        this.connection.sendTabOrder order if order.length
 
-  clearMissed: function() {
-    if (!window.fluid) return;
-    window.fluid.dockBadge = "";
-  }
-});
-###
+  addMissed: ->
+    unless window.fluid
+      if window.fluid.dockBadge
+        window.fluid.dockBadge++
+      else
+        window.fluid.dockBadge = 1
+
+  clearMissed: ->
+    unless window.fluid
+      window.fluid.dockBadge = ""

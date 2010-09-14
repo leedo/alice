@@ -1,332 +1,343 @@
-(function() {
-  var __bind = function(func, context) {
+var __bind = function(func, context) {
     return function(){ return func.apply(context, arguments); };
   }, __hasProp = Object.prototype.hasOwnProperty;
-  Alice.Application = Class.create({
-    initialize: function() {
-      this.isFocused = true;
-      this.window_map = new Hash();
-      this.previousFocus = 0;
-      this.connection = new Alice.Connection(this);
-      this.filters = [];
-      this.keyboard = new Alice.Keyboard(this);
-      this.isPhone = (window.navigator.platform.match(/(android|iphone)/i) ? 1 : 0);
-      this.isMobile = this.isPhone || Prototype.Browser.MobileSafari;
-      window.onload = __bind(function() {
-        return setTimeout(this.connection.connect.bind(this.connection), 1000);
-      }, this);
-      return this.makeSortable();
+Alice.Application = Class.create({
+  initialize: function() {
+    this.isFocused = true;
+    this.window_map = new Hash();
+    this.previousFocus = 0;
+    this.connection = new Alice.Connection(this);
+    this.filters = [];
+    this.keyboard = new Alice.Keyboard(this);
+    this.isPhone = (window.navigator.platform.match(/(android|iphone)/i) ? 1 : 0);
+    this.isMobile = this.isPhone || Prototype.Browser.MobileSafari;
+    this.isJankyScroll = Prototype.Browser.Gecko || Prototype.Browser.IE;
+    window.onload = __bind(function() {
+      return setTimeout(this.connection.connect.bind(this.connection), 1000);
+    }, this);
+    return this.makeSortable();
+  },
+  actionHandlers: {
+    join: function(action) {
+      var win;
+      win = this.getWindow(action['window'].id);
+      if (!win) {
+        this.insertWindow(action['window'].id, action.html);
+        win = new Alice.Window(this, action['window'].id, action['window'].title, false, action['window'].hashtag);
+        this.addWindow(win);
+      } else {
+        win.enable();
+      }
+      return (win.nicks = action.nicks);
     },
-    actionHandlers: {
-      join: function(action) {
-        var win;
-        win = this.getWindow(action['window'].id);
-        if (!win) {
-          this.insertWindow(action['window'].id, action.html);
-          win = new Alice.Window(this, action['window'].id, action['window'].title, false, action['window'].hashtag);
-          this.addWindow(win);
-        } else {
-          win.enable();
-        }
+    part: function(action) {
+      return this.closeWindow(action['window'].id);
+    },
+    nicks: function(action) {
+      var win;
+      if (win = this.getWindow(action['window'].id)) {
         return (win.nicks = action.nicks);
-      },
-      part: function(action) {
-        return this.closeWindow(action['window'].id);
-      },
-      nicks: function(action) {
-        var win;
-        if (win = this.getWindow(action['window'].id)) {
-          return (win.nicks = action.nicks);
+      }
+    },
+    alert: function(action) {
+      return this.activeWindow().showAlert(action['body']);
+    },
+    clear: function(action) {
+      var win;
+      win = this.getWindow(action['window'].id);
+      if (win) {
+        win.messages.down("ul").update("");
+        return (win.lastNick = "");
+      }
+    },
+    connect: function(action) {
+      var _a, _b, _c, _d, win, win_info;
+      if ((function() {
+        _b = []; _c = action.windows;
+        for (win_info in _c) {
+          if (!__hasProp.call(_c, win_info)) continue;
+          _a = _c[win_info];
+          _b.push(typeof (_d = (win = this.getWindow(win_info.id))) !== "undefined" && _d !== null);
         }
-      },
-      alert: function(action) {
-        return this.activeWindow().showAlert(action['body']);
-      },
-      clear: function(action) {
-        var win;
-        win = this.getWindow(action['window'].id);
+        return _b;
+      }).call(this)) {
+        win.enable();
+      }
+      if ($('servers')) {
+        return Alice.connections.connectServer(action.session);
+      }
+    },
+    disconnect: function(action) {
+      var _a, _b, win, win_info;
+      _b = action.windows;
+      for (win_info in _b) {
+        if (!__hasProp.call(_b, win_info)) continue;
+        _a = _b[win_info];
+        win = this.getWindow(win_info.id);
         if (win) {
-          win.messages.down("ul").update("");
-          return (win.lastNick = "");
+          win.disable();
         }
-      },
-      connect: function(action) {
-        var _a, _b, _c, _d, win, win_info;
-        if ((function() {
-          _b = []; _c = action.windows;
-          for (win_info in _c) {
-            if (!__hasProp.call(_c, win_info)) continue;
-            _a = _c[win_info];
-            _b.push(typeof (_d = (win = this.getWindow(win_info.id))) !== "undefined" && _d !== null);
+      }
+      if ($('servers')) {
+        return Alice.connections.disconnectServer(action.session);
+      }
+    },
+    focus: function(action) {
+      var tab, window_id;
+      if (!action.window_number) {
+        return null;
+      }
+      if (action.window_number === "next") {
+        return this.nextWindow();
+      } else if (action.window_number.match(/^prev/)) {
+        return this.previousWindow();
+      } else if (action.window_number.match(/^\d+$/)) {
+        tab = $('tabs').down('li', action.window_number);
+        if (tab) {
+          window_id = tab.id.replace('_tab', '');
+          return this.getWindow(window_id).focus();
+        }
+      }
+    }
+  },
+  toggleHelp: function() {
+    var help;
+    help = $('help');
+    return help.visible() ? help.hide() : help.show();
+  },
+  toggleConfig: function(e) {
+    this.connection.getConfig(__bind(function(transport) {
+      alice.activeWindow().input.disabled = true;
+      return $('container').insert(transport.responseText);
+    }, this));
+    return e.stop();
+  },
+  togglePrefs: function(e) {
+    this.connection.getPrefs(__bind(function(transport) {
+      alice.activeWindow().input.disabled = true;
+      return $('container').insert(transport.responseText);
+    }, this));
+    return e.stop();
+  },
+  toggleLogs: function(e) {
+    if (this.logWindow && !this.logWindow.closed && this.logWindow.focus) {
+      this.logWindow.focus();
+    } else {
+      this.logWindow = window.open(null, "logs", "resizable=no,scrollbars=no,statusbar=no, toolbar=no,location=no,width=500,height=480");
+      this.connection.getLog(__bind(function(transport) {
+        return this.logWindow.document.write(transport.responseText);
+      }, this));
+    }
+    return e.stop();
+  },
+  windows: function() {
+    return this.window_map.values();
+  },
+  nth_window: function(n) {
+    var m, tab;
+    if (tab = $('tabs').down('li', n)) {
+      m = tab.id.match(/([^_]+)_tab/);
+      if (m) {
+        return this.window_map.get(m[1]);
+      }
+    }
+  },
+  openWindow: function(element, title, active, hashtag) {
+    var win;
+    win = new Alice.Window(this, element, title, active, hashtag);
+    this.addWindow(win);
+    if (active) {
+      win.focus();
+    }
+    return win;
+  },
+  addWindow: function(win) {
+    this.window_map.set(win.id, win);
+    return window.fluid.addDockMenuItem(win.title, function() {
+      if (window.fluid) {
+        return win.focus();
+      }
+    });
+  },
+  removeWindow: function(win) {
+    if (win.active) {
+      this.focusLast();
+    }
+    if (window.fluid) {
+      window.fluid.removeDockMenuItem(win.title);
+    }
+    if (win.id === this.previousFocus.id) {
+      this.previousFocus = 0;
+    }
+    this.window_map.unset(win.id);
+    this.connection.closeWindow(win);
+    return (win = null);
+  },
+  getWindow: function(windowId) {
+    return this.window_map.get(windowId);
+  },
+  activeWindow: function() {
+    var _a, _b, _c, _w, i, windows;
+    windows = this.windows();
+    _b = windows;
+    for (_a = 0, _c = _b.length; _a < _c; _a++) {
+      i = _b[_a];
+      _w = windows[i];
+      if (_w.active) {
+        return _w;
+      }
+    }
+    if (windows[0]) {
+      return windows[0];
+    }
+  },
+  addFilters: function(list) {
+    return (this.filters = this.filters.concat(list));
+  },
+  applyFilters: function(content) {
+    return this.filters.inject(content, function(value, filter) {
+      return filter(value);
+    });
+  },
+  nextWindow: function() {
+    var active, id, nextTab;
+    active = this.activeWindow();
+    nextTab = active.tab.next();
+    if (!(nextTab)) {
+      nextTab = $$('ul#tabs li').first();
+    }
+    if (!(nextTab)) {
+      return null;
+    }
+    id = nextTab.id.replace('_tab', '');
+    if (id !== active.id) {
+      return this.getWindow(id).focus();
+    }
+  },
+  nextUnreadWindow: function() {
+    var active, id, tabs, unread;
+    active = this.activeWindow();
+    tabs = active.tab.nextSiblings().concat(active.tab.previousSiblings().reverse());
+    unread = tabs.find(function(tab) {
+      return tab.hasClassName("unread");
+    });
+    if (unread) {
+      id = unread.id.replace("_tab", "");
+      if (id) {
+        return this.getWindow(id).focus();
+      }
+    }
+  },
+  focusLast: function() {
+    return this.previousFocus && this.previousFocus.id === !this.activeWindow().id ? this.previousFocus.focus() : this.previousWindow();
+  },
+  previousWindow: function() {
+    var active, id, previousTab;
+    active = this.activeWindow();
+    previousTab = this.activeWindow().tab.previous();
+    if (!(previousTab)) {
+      previousTab = $$('ul#tabs li').last();
+    }
+    if (!(previousTab)) {
+      return null;
+    }
+    id = previousTab.id.replace('_tab', '');
+    if (id !== active.id) {
+      return this.getWindow(id).focus();
+    }
+  },
+  closeWindow: function(windowId) {
+    var win;
+    if (win = this.getWindow(windowId)) {
+      return win.close();
+    }
+  },
+  insertWindow: function(windowId, html) {
+    if (!$(windowId)) {
+      $('windows').insert(html['window']);
+      $('tabs').insert(html.tab);
+      $('tab_overflow_overlay').insert(html.select);
+      $(windowId + "_tab_overflow_button").selected = false;
+      this.activeWindow().tabOverflowButton.selected = true;
+      return this.makeSortable();
+    }
+  },
+  highlightChannelSelect: function() {
+    return $('tab_overflow_button').addClassName('unread');
+  },
+  unHighlightChannelSelect: function() {
+    return $('tab_overflow_button').removeClassName('unread');
+  },
+  updateChannelSelect: function() {
+    var _a, _b, _c, i, win, windows;
+    windows = this.windows();
+    _b = windows;
+    for (_a = 0, _c = _b.length; _a < _c; _a++) {
+      i = _b[_a];
+      win = windows[i];
+      if ((win.tab.hasClassName('unread' || win.tab.hasClassName('highlight'))) && win.isTabWrapped()) {
+        return this.highlightChannelSelect();
+      }
+    }
+    return this.unHighlightChannelSelect();
+  },
+  handleAction: function(action) {
+    if (this.actionHandlers[action.event]) {
+      return this.actionHandlers[action.event].call(this, action);
+    }
+  },
+  displayMessage: function(message) {
+    var win;
+    win = this.getWindow(message['window'].id);
+    return win ? win.addMessage(message) : this.connection.requestWindow(message['window'].title, message['window'].id, message);
+  },
+  focusHash: function(hash) {
+    var _a, _b, _c, _d, win, windows;
+    if (!hash) {
+      hash = window.location.hash;
+    }
+    if (hash) {
+      hash = decodeURIComponent(hash);
+      hash = hash.replace(/^#/, "");
+      windows = this.windows();
+      _a = []; _c = windows;
+      for (_b = 0, _d = _c.length; _b < _d; _b++) {
+        win = _c[_b];
+        if (win.hashtag === hash) {
+          if (win && !win.active) {
+            win.focus();
           }
-          return _b;
-        }).call(this)) {
-          win.enable();
-        }
-        if ($('servers')) {
-          return Alice.connections.connectServer(action.session);
-        }
-      },
-      disconnect: function(action) {
-        var _a, _b, win, win_info;
-        _b = action.windows;
-        for (win_info in _b) {
-          if (!__hasProp.call(_b, win_info)) continue;
-          _a = _b[win_info];
-          win = this.getWindow(win_info.id);
-          if (win) {
-            win.disable();
-          }
-        }
-        if ($('servers')) {
-          return Alice.connections.disconnectServer(action.session);
-        }
-      },
-      focus: function(action) {
-        var tab, window_id;
-        if (!action.window_number) {
           return null;
         }
-        if (action.window_number === "next") {
-          return this.nextWindow();
-        } else if (action.window_number.match(/^prev/)) {
-          return this.previousWindow();
-        } else if (action.window_number.match(/^\d+$/)) {
-          tab = $('tabs').down('li', action.window_number);
-          if (tab) {
-            window_id = tab.id.replace('_tab', '');
-            return this.getWindow(window_id).focus();
-          }
-        }
       }
-    },
-    toggleHelp: function() {
-      var help;
-      help = $('help');
-      return help.visible() ? help.hide() : help.show();
-    },
-    toggleConfig: function(e) {
-      this.connection.getConfig(__bind(function(transport) {
-        alice.activeWindow().input.disabled = true;
-        return $('container').insert(transport.responseText);
-      }, this));
-      return e.stop();
-    },
-    togglePrefs: function(e) {
-      this.connection.getPrefs(__bind(function(transport) {
-        alice.activeWindow().input.disabled = true;
-        return $('container').insert(transport.responseText);
-      }, this));
-      return e.stop();
-    },
-    toggleLogs: function(e) {
-      if (this.logWindow && !this.logWindow.closed && this.logWindow.focus) {
-        this.logWindow.focus();
-      } else {
-        this.logWindow = window.open(null, "logs", "resizable=no,scrollbars=no,statusbar=no, toolbar=no,location=no,width=500,height=480");
-        this.connection.getLog(__bind(function(transport) {
-          return this.logWindow.document.write(transport.responseText);
-        }, this));
-      }
-      return e.stop();
-    },
-    windows: function() {
-      return this.window_map.values();
-    },
-    nth_window: function(n) {
-      var m, tab;
-      if (tab = $('tabs').down('li', n)) {
-        m = tab.id.match(/([^_]+)_tab/);
-        if (m) {
-          return this.window_map.get(m[1]);
-        }
-      }
-    },
-    openWindow: function(element, title, active, hashtag) {
-      var win;
-      win = new Alice.Window(this, element, title, active, hashtag);
-      this.addWindow(win);
-      if (active) {
-        win.focus();
-      }
-      return win;
-    },
-    addWindow: function(win) {
-      this.window_map.set(win.id, win);
-      return window.fluid.addDockMenuItem(win.title, function() {
-        if (window.fluid) {
-          return win.focus();
-        }
-      });
-    },
-    removeWindow: function(win) {
-      if (win.active) {
-        this.focusLast();
-      }
-      if (window.fluid) {
-        window.fluid.removeDockMenuItem(win.title);
-      }
-      if (win.id === this.previousFocus.id) {
-        this.previousFocus = 0;
-      }
-      this.window_map.unset(win.id);
-      this.connection.closeWindow(win);
-      return (win = null);
-    },
-    getWindow: function(windowId) {
-      return this.window_map.get(windowId);
-    },
-    activeWindow: function() {
-      var _a, _b, _c, _w, i, windows;
-      windows = this.windows();
-      _b = windows;
-      for (_a = 0, _c = _b.length; _a < _c; _a++) {
-        i = _b[_a];
-        _w = windows[i];
-        if (_w.active) {
-          return _w;
-        }
-      }
-      if (windows[0]) {
-        return windows[0];
-      }
-    },
-    addFilters: function(list) {
-      return (this.filters = this.filters.concat(list));
-    },
-    applyFilters: function(content) {
-      return this.filters.inject(content, function(value, filter) {
-        return filter(value);
-      });
-    },
-    nextWindow: function() {
-      var active, id, nextTab;
-      active = this.activeWindow();
-      nextTab = active.tab.next();
-      if (!(nextTab)) {
-        nextTab = $$('ul#tabs li').first();
-      }
-      if (!(nextTab)) {
-        return null;
-      }
-      id = nextTab.id.replace('_tab', '');
-      if (id !== active.id) {
-        return this.getWindow(id).focus();
-      }
-    },
-    focusLast: function() {
-      return this.previousFocus && this.previousFocus.id === !this.activeWindow().id ? this.previousFocus.focus() : this.previousWindow();
-    },
-    previousWindow: function() {
-      var active, id, previousTab;
-      active = this.activeWindow();
-      previousTab = this.activeWindow().tab.previous();
-      if (!(previousTab)) {
-        previousTab = $$('ul#tabs li').last();
-      }
-      if (!(previousTab)) {
-        return null;
-      }
-      id = previousTab.id.replace('_tab', '');
-      if (id !== active.id) {
-        return this.getWindow(id).focus();
-      }
-    },
-    closeWindow: function(windowId) {
-      var win;
-      if (win = this.getWindow(windowId)) {
-        return win.close();
-      }
-    },
-    insertWindow: function(windowId, html) {
-      if (!$(windowId)) {
-        $('windows').insert(html['window']);
-        $('tabs').insert(html.tab);
-        $('tab_overflow_overlay').insert(html.select);
-        $(windowId + "_tab_overflow_button").selected = false;
-        this.activeWindow().tabOverflowButton.selected = true;
-        return this.makeSortable();
-      }
-    },
-    highlightChannelSelect: function() {
-      return $('tab_overflow_button').addClassName('unread');
-    },
-    unHighlightChannelSelect: function() {
-      return $('tab_overflow_button').removeClassName('unread');
-    },
-    updateChannelSelect: function() {
-      var _a, _b, _c, i, win, windows;
-      windows = this.windows();
-      _b = windows;
-      for (_a = 0, _c = _b.length; _a < _c; _a++) {
-        i = _b[_a];
-        win = windows[i];
-        if ((win.tab.hasClassName('unread' || win.tab.hasClassName('highlight'))) && win.isTabWrapped()) {
-          return this.highlightChannelSelect();
-        }
-      }
-      return this.unHighlightChannelSelect();
-    },
-    handleAction: function(action) {
-      if (this.actionHandlers[action.event]) {
-        return this.actionHandlers[action.event].call(this, action);
-      }
+      return _a;
     }
-  });
-  /*
-    displayMessage: function(message) {
-      var win = this.getWindow(message['window'].id);
-      if (win) {
-        win.addMessage(message);
-      } else {
-        this.connection.requestWindow(
-          message['window'].title, message['window'].id, message
-        );
-      }
-    },
-
-    focusHash: function(hash) {
-      if (!hash) hash = window.location.hash;
-      if (hash) {
-        hash = decodeURIComponent(hash);
-        hash = hash.replace(/^#/, "");
-        var windows = this.windows();
-        for (var i = 0; i < windows.length; i++) {
-          var win = windows[i];
-          if (win.hashtag == hash) {
-            if (win && !win.active) win.focus();
-            return;
+  },
+  makeSortable: function() {
+    return Sortable.create('tabs', {
+      overlap: 'horizontal',
+      constraint: 'horizontal',
+      format: /(.+)/,
+      onUpdate: __bind(function(res) {
+        var order, vtabs;
+        vtabs = res.childElements();
+        order = tabs.collect(function(t) {
+          var m;
+          m = t.id.match(/([^_]+)_tab/);
+          if (m) {
+            return m[1];
           }
+        });
+        if (order.length) {
+          return this.connection.sendTabOrder(order);
         }
-      }
-    },
-
-    makeSortable: function() {
-      Sortable.create('tabs', {
-        overlap: 'horizontal',
-        constraint: 'horizontal',
-        format: /(.+)/,
-        onUpdate: function (res) {
-          var tabs = res.childElements();
-          var order = tabs.collect(function(t){
-            var m = t.id.match(/([^_]+)_tab/);
-            if (m) return m[1]
-          });
-          if (order.length) this.connection.sendTabOrder(order);
-        }.bind(this)
-      });
-    },
-
-    addMissed: function() {
-      if (!window.fluid) return;
-      window.fluid.dockBadge ? window.fluid.dockBadge++ :
-                               window.fluid.dockBadge = 1;
-    },
-
-    clearMissed: function() {
-      if (!window.fluid) return;
-      window.fluid.dockBadge = "";
-    }
-  });
-  */
-})();
+      }, this)
+    });
+  },
+  addMissed: function() {
+    return !(window.fluid) ? (window.fluid.dockBadge ? window.fluid.dockBadge++ : (window.fluid.dockBadge = 1)) : null;
+  },
+  clearMissed: function() {
+    return !(window.fluid) ? (window.fluid.dockBadge = "") : null;
+  }
+});
