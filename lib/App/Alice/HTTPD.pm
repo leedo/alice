@@ -224,23 +224,36 @@ sub send_index {
   my ($self, $req) = @_;
   my $options = $self->merged_options($req);
   my $app = $self->app;
+
   return sub {
     my $respond = shift;
-    my $app = $app;
     my $writer = $respond->([200, ["Content-type" => "text/html; charset=utf-8"]]);
     my @windows = $app->sorted_windows;
     @windows > 1 ? $windows[1]->{active} = 1 : $windows[0]->{active} = 1;
-    $writer->write(encode_utf8 $app->render('index_head', $options, @windows));
-    for my $window (@windows) {
-      $writer->write(encode_utf8 $app->render('window_head', $window));
-      for my $msg (@{$window->buffer->messages}) {
-        $writer->write(encode_utf8 $msg->{html});
+
+    my @queue;
+    my $idle_w; $idle_w = AE::idle sub {
+      if (my $cb = shift @queue) {
+        my $content = encode_utf8 $cb->();
+        $writer->write($content);
+      } else {
+        $writer->close;
+        undef $idle_w;
       }
-      $writer->write(encode_utf8 $app->render('window_footer', $window));
+    };
+
+    push @queue, sub {$app->render('index_head', $options, @windows)};
+    for my $window (@windows) {
+      push @queue, sub {$app->render('window_head', $window)};
+      for my $msg (@{$window->buffer->messages}) {
+        push @queue, sub {$msg->{html}};
+      }
+      push @queue, sub {$app->render('window_footer', $window)};
     }
-    $writer->write(encode_utf8 $app->render('index_footer', @windows));
-    $writer->close;
-    delete $_->{active} for @windows;
+    push @queue, sub {
+      delete $_->{active} for @windows;
+      $app->render('index_footer', @windows);
+    };
   }
 }
 
