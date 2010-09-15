@@ -50,6 +50,11 @@ my $ok = [200, ["Content-Type", "text/plain", "Content-Length", 2], ['ok']];
 
 sub BUILD {
   my $self = shift;
+  $self->build_httpd;
+}
+
+sub build_httpd {
+  my $self = shift;
   my $httpd = Twiggy::Server->new(
     host => $self->config->http_address,
     port => $self->config->http_port,
@@ -111,7 +116,11 @@ sub login {
   elsif (my $user = $req->parameters->{username}
      and my $pass = $req->parameters->{password}) {
     if ($self->authenticate($user, $pass)) {
-      $req->env->{"psgix.session"}->{is_logged_in} = 1;
+      $req->env->{"psgix.session"} = {
+        is_logged_in => 1,
+        username     => $self->app->config->auth->{user},
+        userid       => $self->app->user,
+      };
       $res->redirect("/");
       return $res->finalize;
     }
@@ -127,6 +136,7 @@ sub login {
 sub logout {
   my ($self, $req) = @_;
   $_->close for $self->app->streams;
+  $self->app->purge_disconnects;
   my $res = $req->new_response;
   if (!$self->auth_enabled) {
     $res->redirect("/");
