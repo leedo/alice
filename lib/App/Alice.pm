@@ -369,7 +369,7 @@ sub close_window {
   my ($self, $window) = @_;
   $self->broadcast($window->close_action);
   $self->log(debug => "sending a request to close a tab: " . $window->title)
-    if $self->httpd->stream_count;
+    if $self->stream_count;
   $self->remove_window($window->id) if $window->type ne "info";
 }
 
