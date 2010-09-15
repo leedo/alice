@@ -56,7 +56,7 @@ sub BUILD {
   );
   $httpd->register_service(
     builder {
-      if ($self->app->auth_enabled) {
+      if ($self->auth_enabled) {
         mkdir $self->config->path."/sessions"
           unless -d $self->config->path."/sessions";
         enable "Session",
@@ -73,7 +73,7 @@ sub BUILD {
 sub dispatch {
   my ($self, $env) = @_;
   my $req = Plack::Request->new($env);
-  if ($self->app->auth_enabled) {
+  if ($self->auth_enabled) {
     unless ($req->path eq "/login" or $self->is_logged_in($req)) {
       my $res = $req->new_response;
       if ($req->path eq "/") {
@@ -104,13 +104,13 @@ sub is_logged_in {
 sub login {
   my ($self, $req) = @_;
   my $res = $req->new_response;
-  if (!$self->app->auth_enabled or $self->is_logged_in($req)) {
+  if (!$self->auth_enabled or $self->is_logged_in($req)) {
     $res->redirect("/");
     return $res->finalize;
   }
   elsif (my $user = $req->parameters->{username}
      and my $pass = $req->parameters->{password}) {
-    if ($self->app->authenticate($user, $pass)) {
+    if ($self->authenticate($user, $pass)) {
       $req->env->{"psgix.session"}->{is_logged_in} = 1;
       $res->redirect("/");
       return $res->finalize;
@@ -128,7 +128,7 @@ sub logout {
   my ($self, $req) = @_;
   $_->close for $self->app->streams;
   my $res = $req->new_response;
-  if (!$self->app->auth_enabled) {
+  if (!$self->auth_enabled) {
     $res->redirect("/");
   } else {
     $req->env->{"psgix.session"}{is_logged_in} = 0;
@@ -161,19 +161,20 @@ sub image_proxy {
 
 sub setup_stream {
   my ($self, $req) = @_;
-  $self->app->log(info => "opening new stream");
+  my $app = $self->app;
+  $app->log(info => "opening new stream");
   my $min = $req->parameters->{msgid} || 0;
   return sub {
     my $respond = shift;
     my $stream = App::Alice::Stream->new(
-      queue      => [ map({$_->join_action} $self->app->windows) ],
+      queue      => [ map({$_->join_action} $app->windows) ],
       writer     => $respond,
       start_time => $req->parameters->{t},
       # android requires 4K updates to trigger loading event
       min_bytes  => $req->user_agent =~ /android/i ? 4096 : 0,
     );
-    $self->app->add_stream($stream);
-    $self->app->with_messages(sub {
+    $app->add_stream($stream);
+    $app->with_messages(sub {
       return unless @_;
       $stream->enqueue(
         map  {$_->{buffered} = 1; $_}
@@ -208,14 +209,15 @@ sub handle_message {
 sub send_index {
   my ($self, $req) = @_;
   my $options = $self->merged_options($req);
+  my $app = $self->app;
   return sub {
     my $respond = shift;
     my $writer = $respond->([200, ["Content-type" => "text/html; charset=utf-8"]]);
-    my @windows = $self->app->sorted_windows;
+    my @windows = $app->sorted_windows;
     @windows > 1 ? $windows[1]->{active} = 1 : $windows[0]->{active} = 1;
-    $writer->write(encode_utf8 $self->app->render('index_head', $options, @windows));
+    $writer->write(encode_utf8 $app->render('index_head', $options, @windows));
     $self->send_windows($writer, sub {
-      $writer->write(encode_utf8 $self->app->render('index_footer', @windows));
+      $writer->write(encode_utf8 $app->render('index_footer', @windows));
       $writer->close;
       delete $_->{active} for @windows;
     }, @windows);
@@ -261,12 +263,13 @@ sub send_logs {
 
 sub send_search {
   my ($self, $req) = @_;
+  my $app = $self->app;
   return sub {
     my $respond = shift;
-    $self->app->history->search(
-      user => $self->app->user, %{$req->parameters}, sub {
+    $app->history->search(
+      user => $app->user, %{$req->parameters}, sub {
       my $rows = shift;
-      my $content = $self->app->render('results', $rows);
+      my $content = $app->render('results', $rows);
       my $res = $req->new_response(200);
       $res->body(encode_utf8 $content);
       $respond->($res->finalize);
@@ -276,13 +279,14 @@ sub send_search {
 
 sub send_range {
   my ($self, $req) = @_;
+  my $app = $self->app;
   return sub {
     my $respond = shift;
-    $self->app->history->range(
-      $self->app->user, $req->parameters->{channel}, $req->parameters->{id}, sub {
+    $app->history->range(
+      $app->user, $req->parameters->{channel}, $req->parameters->{id}, sub {
         my ($before, $after) = @_;
-        $before = $self->app->render('range', $before, 'before');
-        $after = $self->app->render('range', $after, 'after');
+        $before = $app->render('range', $before, 'before');
+        $after = $app->render('range', $after, 'after');
         my $res = $req->new_response(200);
         $res->body(to_json [$before, $after]);
         $respond->($res->finalize);
@@ -371,6 +375,31 @@ sub not_found  {
   $self->app->log(debug => "sending 404 " . $req->path_info);
   my $res = $req->new_response(404);
   return $res->finalize;
+}
+
+sub auth_enabled {
+  my $self = shift;
+
+  # cache it
+  if (!defined $self->{_auth_enabled}) {
+    $self->{_auth_enabled} = ($self->config->auth
+              and ref $self->config->auth eq 'HASH'
+              and $self->config->auth->{user}
+              and $self->config->auth->{pass});
+  }
+
+  return $self->{_auth_enabled};
+}
+
+sub authenticate {
+  my ($self, $user, $pass) = @_;
+  $user ||= "";
+  $pass ||= "";
+  if ($self->auth_enabled) {
+    return ($self->config->auth->{user} eq $user
+       and $self->config->auth->{pass} eq $pass);
+  }
+  return 1;
 }
 
 __PACKAGE__->meta->make_immutable;
