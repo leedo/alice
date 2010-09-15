@@ -15,7 +15,6 @@ use JSON;
 use Encode;
 use utf8;
 use Any::Moose;
-use Try::Tiny;
 
 has 'app' => (
   is  => 'ro',
@@ -24,7 +23,6 @@ has 'app' => (
 );
 
 has 'httpd' => (is  => 'rw');
-has 'ping_timer' => (is  => 'rw');
 
 sub config {$_[0]->app->config}
 
@@ -48,18 +46,7 @@ my $url_handlers = [
 
 sub url_handlers { return $url_handlers }
 
-has 'streams' => (
-  is => 'rw',
-  auto_deref => 1,
-  isa => 'ArrayRef[App::Alice::Stream]',
-  default => sub {[]},
-);
-
 my $ok = [200, ["Content-Type", "text/plain", "Content-Length", 2], ['ok']];
-
-sub add_stream {push @{shift->streams}, @_}
-sub no_streams {@{$_[0]->streams} == 0}
-sub stream_count {scalar @{$_[0]->streams}}
 
 sub BUILD {
   my $self = shift;
@@ -81,7 +68,6 @@ sub BUILD {
     }
   );
   $self->httpd($httpd);
-  $self->ping;
 }
 
 sub dispatch {
@@ -140,7 +126,7 @@ sub login {
 
 sub logout {
   my ($self, $req) = @_;
-  $_->close for $self->streams;
+  $_->close for $self->app->streams;
   my $res = $req->new_response;
   if (!$self->app->auth_enabled) {
     $res->redirect("/");
@@ -152,25 +138,8 @@ sub logout {
   return $res->finalize;
 }
 
-sub ping {
-  my $self = shift;
-  $self->ping_timer(AnyEvent->timer(
-    after    => 5,
-    interval => 10,
-    cb       => sub {
-      $self->broadcast({
-        type => "action",
-        event => "ping",
-      });
-    }
-  ));
-}
-
 sub shutdown {
   my $self = shift;
-  $_->close for $self->streams;
-  $self->streams([]);
-  $self->ping_timer(undef);
   $self->httpd(undef);
 }
 
@@ -190,21 +159,6 @@ sub image_proxy {
   }
 }
 
-sub broadcast {
-  my ($self, @data) = @_;
-  return if $self->no_streams or !@data;
-  my $purge = 0;
-  for my $stream ($self->streams) {
-    try {
-      $stream->send(@data);
-    } catch {
-      $stream->close;
-      $purge = 1;
-    };
-  }
-  $self->purge_disconnects if $purge;
-};
-
 sub setup_stream {
   my ($self, $req) = @_;
   $self->app->log(info => "opening new stream");
@@ -218,7 +172,7 @@ sub setup_stream {
       # android requires 4K updates to trigger loading event
       min_bytes  => $req->user_agent =~ /android/i ? 4096 : 0,
     );
-    $self->add_stream($stream);
+    $self->app->add_stream($stream);
     $self->app->with_messages(sub {
       return unless @_;
       $stream->enqueue(
@@ -229,12 +183,6 @@ sub setup_stream {
       $stream->send;
     });
   }
-}
-
-sub purge_disconnects {
-  my ($self) = @_;
-  $self->app->log(debug => "removing broken streams");
-  $self->streams([grep {!$_->closed} $self->streams]);
 }
 
 sub handle_message {

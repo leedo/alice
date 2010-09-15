@@ -13,6 +13,7 @@ use File::Copy;
 use Digest::MD5 qw/md5_hex/;
 use List::Util qw/first/;
 use List::MoreUtils qw/any none/;
+use Try::Tiny;
 use Encode;
 
 our $VERSION = '0.19';
@@ -64,6 +65,17 @@ has httpd => (
   },
 );
 
+has streams => (
+  is      => 'rw',
+  isa     => 'ArrayRef[App::Alice::Stream]',
+  auto_deref => 1,
+  default => sub {[]},
+);
+
+sub add_stream {push @{shift->streams}, @_}
+sub no_streams {@{$_[0]->streams} == 0}
+sub stream_count {scalar @{$_[0]->streams}}
+
 has commands => (
   is      => 'ro',
   isa     => 'App::Alice::Commands',
@@ -83,6 +95,8 @@ has history => (
     App::Alice::History->new(dbfile => $config);
   },
 );
+
+has 'ping_timer' => (is  => 'rw');
 
 sub store {
   my ($self, @args) = @_;
@@ -192,6 +206,7 @@ sub run {
   $self->info_window;
   $self->template;
   $self->httpd;
+  $self->ping;
 
   print STDERR "Location: http://".$self->config->http_address.":".$self->config->http_port."/\n"
     if $self->standalone;
@@ -258,6 +273,8 @@ sub _shutdown {
   my $self = shift;
 
   $self->_ircs([]);
+  $_->close for $self->streams;
+  $self->streams([]);
   $self->httpd->shutdown;
   
   if ($self->standalone) {
@@ -423,12 +440,30 @@ sub format_info {
 
 sub broadcast {
   my ($self, @messages) = @_;
+
+  return if $self->no_streams or !@messages;
   
   # add any highlighted messages to the log window
   push @messages, map {$self->info_window->copy_message($_)}
                   grep {$_->{highlight}} @messages;
-  
-  $self->httpd->broadcast(@messages);
+
+  my $purge = 0;
+  for my $stream ($self->streams) {
+    try {
+      $stream->send(@messages);
+    } catch {
+      warn $_;
+      $stream->close;
+      $purge = 1;
+    };
+  }
+  $self->purge_disconnects if $purge;
+}
+
+sub purge_disconnects {
+  my ($self) = @_;
+  $self->log(debug => "removing broken streams");
+  $self->streams([grep {!$_->closed} $self->streams]);
 }
 
 sub render {
@@ -497,6 +532,20 @@ sub authenticate {
 sub static_url {
   my ($self, $file) = @_;
   return $self->config->static_prefix . $file;
+}
+
+sub ping {
+  my $self = shift;
+  $self->ping_timer(AnyEvent->timer(
+    after    => 5,
+    interval => 10,
+    cb       => sub {
+      $self->broadcast({
+        type => "action",
+        event => "ping",
+      });
+    }
+  ));
 }
 
 __PACKAGE__->meta->make_immutable;
