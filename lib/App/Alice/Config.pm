@@ -102,12 +102,6 @@ has commandline => (
   default => sub {{}},
 );
 
-has message_store => (
-  is      => 'rw',
-  isa     => 'Str',
-  default => 'Memory'
-);
-
 has static_prefix => (
   is      => 'rw',
   isa     => 'Str',

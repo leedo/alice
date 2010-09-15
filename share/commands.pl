@@ -115,7 +115,7 @@ my $commands = [
     desc => "Clears lines from current window.",
     code => sub {
       my ($self, $app, $window) = @_;
-      $window->buffer->clear(sub {});
+      $window->buffer->clear;
       $app->broadcast($window->clear_action);
     },
   },
