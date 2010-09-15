@@ -178,7 +178,7 @@ my $commands = [
   },
   {
     name => 'disconnect',
-    re => qr{^/disconnect\s+(\S+)},
+    re => qr{^/disconnect(?:\s+(\S+))},
     eg => "/DISCONNECT <server name>",
     desc => "Disconnects from the specified server.",
     code => sub  {
@@ -196,19 +196,19 @@ my $commands = [
           $window->reply("Already disconnected");
         }
       }
-      elsif (!$irc) {
+      else {
         $window->reply("$network isn't one of your irc networks!");
       }
     },
   },
   {
     name => 'connect',
-    re => qr{^/connect\s+(\S+)},
+    re => qr{^/connect(?:\s+(\S+))},
     eg => "/CONNECT <server name>",
     desc => "Connects to the specified server.",
     code => sub {
       my ($self, $app, $window, $network) = @_;
-      my $irc  = $app->get_irc($network);
+      my $irc = $app->get_irc($network);
       if ($irc) {
         if ($irc->is_connected) {
           $window->reply("Already connected");
@@ -222,7 +222,7 @@ my $commands = [
           $irc->connect;
         }
       }
-      else (!$irc) {
+      else {
         $window->reply("$network isn't one of your irc networks!");
       }
     },
