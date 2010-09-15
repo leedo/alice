@@ -185,7 +185,7 @@ has 'user' => (
 sub BUILDARGS {
   my ($class, %options) = @_;
   my $self = {standalone => 1};
-  for (qw/standalone commands history template user/) {
+  for (qw/standalone commands history template user httpd/) {
     if (exists $options{$_}) {
       $self->{$_} = $options{$_};
       delete $options{$_};
