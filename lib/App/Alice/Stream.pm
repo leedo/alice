@@ -65,6 +65,7 @@ sub BUILD {
 sub _send {
   my $self = shift;
   eval { $self->send };
+  warn $@ if $@;
   $self->close if $@;
 }
 
