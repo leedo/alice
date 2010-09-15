@@ -15,11 +15,7 @@ has buffer => (
   isa     => 'App::Alice::MessageBuffer',
   lazy    => 1,
   default => sub {
-    my $self = shift;
-    App::Alice::MessageBuffer->new(
-      store_class => $self->app->config->message_store,
-      id          => $self->id,
-    );
+    App::Alice::MessageBuffer->new;
   },
 );
 

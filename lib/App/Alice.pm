@@ -277,18 +277,6 @@ sub _shutdown {
   $self->streams([]);
   $self->httpd->shutdown;
   
-  if ($self->standalone) {
-    my $cv = AE::cv;
-    for ($self->windows) {
-      $cv->begin;
-      $_->buffer->clear(sub {$cv->end});
-    }
-    $cv->recv;
-  }
-  else {
-    $_->buffer->clear(sub{}) for $self->windows;
-  }
-
   delete $self->{shutdown_timer} if $self->{shutdown_timer};
   $self->{on_shutdown}->() if $self->{on_shutdown};
 }
@@ -315,11 +303,6 @@ sub tab_order {
   }
   $self->config->order($order);
   $self->config->write;
-}
-
-sub with_messages {
-  my ($self, $cb) = @_;
-  $_->buffer->with_messages($cb) for $self->windows;
 }
 
 sub find_window {
@@ -452,7 +435,6 @@ sub broadcast {
     try {
       $stream->send(@messages);
     } catch {
-      warn $_;
       $stream->close;
       $purge = 1;
     };

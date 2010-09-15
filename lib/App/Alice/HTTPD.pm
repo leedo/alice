@@ -176,6 +176,8 @@ sub setup_stream {
   my $min = $req->parameters->{msgid} || 0;
   return sub {
     my $respond = shift;
+    my $app = $app;
+
     my $stream = App::Alice::Stream->new(
       queue      => [ map({$_->join_action} $app->windows) ],
       writer     => $respond,
@@ -183,16 +185,18 @@ sub setup_stream {
       # android requires 4K updates to trigger loading event
       min_bytes  => $req->user_agent =~ /android/i ? 4096 : 0,
     );
+
     $app->add_stream($stream);
-    $app->with_messages(sub {
-      return unless @_;
-      $stream->enqueue(
+
+    for my $window ($app->windows) {
+      my @msgs = @{$window->buffer->messages};
+      next unless @msgs;
+      $stream->send(
         map  {$_->{buffered} = 1; $_}
         grep {$_->{msgid} > $min}
-        @_
+        @msgs
       );
-      $stream->send;
-    });
+    }
   }
 }
 
@@ -226,12 +230,17 @@ sub send_index {
     my $writer = $respond->([200, ["Content-type" => "text/html; charset=utf-8"]]);
     my @windows = $app->sorted_windows;
     @windows > 1 ? $windows[1]->{active} = 1 : $windows[0]->{active} = 1;
-    $writer->write(encode_utf8 $self->render('index_head', $options, @windows));
-    $self->send_windows($writer, sub {
-      $writer->write(encode_utf8 $self->render('index_footer', @windows));
-      $writer->close;
-      delete $_->{active} for @windows;
-    }, @windows);
+    $writer->write(encode_utf8 $app->render('index_head', $options, @windows));
+    for my $window (@windows) {
+      $writer->write(encode_utf8 $app->render('window_head', $window));
+      for my $msg (@{$window->buffer->messages}) {
+        $writer->write(encode_utf8 $msg->{html});
+      }
+      $writer->write(encode_utf8 $app->render('window_footer', $window));
+    }
+    $writer->write(encode_utf8 $app->render('index_footer', @windows));
+    $writer->close;
+    delete $_->{active} for @windows;
   }
 }
 
@@ -245,23 +254,6 @@ sub merged_options {
    timeformat => $req->parameters->{timeformat} || $config->timeformat,
   );
   join "&", map {"$_=$options{$_}"} keys %options;
-}
-
-sub send_windows {
-  my ($self, $writer, $cb, @windows) = @_;
-  if (!@windows) {
-    $cb->();
-    return;
-  }
-
-  my $window = pop @windows;
-  $writer->write(encode_utf8 $self->render('window_head', $window));
-  $window->buffer->with_messages(sub {
-    $writer->write(encode_utf8 $_->{html}) for @_;
-  }, 0, sub {
-    $writer->write(encode_utf8 $self->render('window_footer', $window));
-    $self->send_windows($writer, $cb, @windows);
-  });
 }
 
 sub send_logs {
