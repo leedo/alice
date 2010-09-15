@@ -184,18 +184,20 @@ my $commands = [
     code => sub  {
       my ($self, $app, $window, $network) = @_;
       my $irc = $app->get_irc($network);
-      if ($irc and $irc->is_connected) {
-        $irc->disconnect;
+      if ($irc) {
+        if ($irc->is_connected) {
+          $irc->disconnect;
+        }
+        elsif ($irc->reconnect_timer) {
+          $irc->cancel_reconnect;
+          $irc->log(info => "Canceled reconnect timer");
+        }
+        else {
+          $window->reply("Already disconnected");
+        }
       }
       elsif (!$irc) {
         $window->reply("$network isn't one of your irc networks!");
-      }
-      elsif ($irc->reconnect_timer) {
-        $irc->cancel_reconnect;
-        $irc->log(info => "canceled reconnect");
-      }
-      else {
-        $window->reply("Already disconnected");
       }
     },
   },
@@ -207,14 +209,21 @@ my $commands = [
     code => sub {
       my ($self, $app, $window, $network) = @_;
       my $irc  = $app->get_irc($network);
-      if ($irc and !$irc->is_connected) {
-        $irc->connect;
+      if ($irc) {
+        if ($irc->is_connected) {
+          $window->reply("Already connected");
+        }
+        elsif ($irc->reconnect_timer) {
+          $irc->cancel_reconnect;
+          $irc->log(info => "Canceled reconnect timer");
+          $irc->connect;
+        }
+        else {
+          $irc->connect;
+        }
       }
-      elsif (!$irc) {
+      else (!$irc) {
         $window->reply("$network isn't one of your irc networks!");
-      }
-      else {
-        $window->reply("Already connected");
       }
     },
   },
