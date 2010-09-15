@@ -232,6 +232,18 @@ sub send_index {
     @windows > 1 ? $windows[1]->{active} = 1 : $windows[0]->{active} = 1;
 
     my @queue;
+    
+    push @queue, sub {$app->render('index_head', $options, @windows)};
+    for my $window (@windows) {
+      push @queue, sub {$app->render('window_head', $window)};
+      push @queue, map {my $msg = $_; sub {$msg->{html}}} @{$window->buffer->messages};
+      push @queue, sub {$app->render('window_footer', $window)};
+    }
+    push @queue, sub {
+      delete $_->{active} for @windows;
+      $app->render('index_footer', @windows);
+    };
+
     my $idle_w; $idle_w = AE::idle sub {
       if (my $cb = shift @queue) {
         my $content = encode_utf8 $cb->();
@@ -240,19 +252,6 @@ sub send_index {
         $writer->close;
         undef $idle_w;
       }
-    };
-
-    push @queue, sub {$app->render('index_head', $options, @windows)};
-    for my $window (@windows) {
-      push @queue, sub {$app->render('window_head', $window)};
-      for my $msg (@{$window->buffer->messages}) {
-        push @queue, sub {$msg->{html}};
-      }
-      push @queue, sub {$app->render('window_footer', $window)};
-    }
-    push @queue, sub {
-      delete $_->{active} for @windows;
-      $app->render('index_footer', @windows);
     };
   }
 }
