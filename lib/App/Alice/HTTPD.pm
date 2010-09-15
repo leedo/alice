@@ -115,10 +115,10 @@ sub login {
       $res->redirect("/");
       return $res->finalize;
     }
-    $res->body($self->app->render("login", "bad username or password"));
+    $res->body($self->render("login", "bad username or password"));
   }
   else {
-    $res->body($self->app->render("login"));
+    $res->body($self->render("login"));
   }
   $res->status(200);
   return $res->finalize;
@@ -212,12 +212,13 @@ sub send_index {
   my $app = $self->app;
   return sub {
     my $respond = shift;
+    my $app = $app;
     my $writer = $respond->([200, ["Content-type" => "text/html; charset=utf-8"]]);
     my @windows = $app->sorted_windows;
     @windows > 1 ? $windows[1]->{active} = 1 : $windows[0]->{active} = 1;
-    $writer->write(encode_utf8 $app->render('index_head', $options, @windows));
+    $writer->write(encode_utf8 $self->render('index_head', $options, @windows));
     $self->send_windows($writer, sub {
-      $writer->write(encode_utf8 $app->render('index_footer', @windows));
+      $writer->write(encode_utf8 $self->render('index_footer', @windows));
       $writer->close;
       delete $_->{active} for @windows;
     }, @windows);
@@ -244,18 +245,18 @@ sub send_windows {
   }
 
   my $window = pop @windows;
-  $writer->write(encode_utf8 $self->app->render('window_head', $window));
+  $writer->write(encode_utf8 $self->render('window_head', $window));
   $window->buffer->with_messages(sub {
     $writer->write(encode_utf8 $_->{html}) for @_;
   }, 0, sub {
-    $writer->write(encode_utf8 $self->app->render('window_footer', $window));
+    $writer->write(encode_utf8 $self->render('window_footer', $window));
     $self->send_windows($writer, $cb, @windows);
   });
 }
 
 sub send_logs {
   my ($self, $req) = @_;
-  my $output = $self->app->render('logs');
+  my $output = $self->render('logs');
   my $res = $req->new_response(200);
   $res->body(encode_utf8 $output);
   return $res->finalize;
@@ -269,7 +270,7 @@ sub send_search {
     $app->history->search(
       user => $app->user, %{$req->parameters}, sub {
       my $rows = shift;
-      my $content = $app->render('results', $rows);
+      my $content = $self->render('results', $rows);
       my $res = $req->new_response(200);
       $res->body(encode_utf8 $content);
       $respond->($res->finalize);
@@ -285,8 +286,8 @@ sub send_range {
     $app->history->range(
       $app->user, $req->parameters->{channel}, $req->parameters->{id}, sub {
         my ($before, $after) = @_;
-        $before = $app->render('range', $before, 'before');
-        $after = $app->render('range', $after, 'after');
+        $before = $self->render('range', $before, 'before');
+        $after = $self->render('range', $after, 'after');
         my $res = $req->new_response(200);
         $res->body(to_json [$before, $after]);
         $respond->($res->finalize);
@@ -298,7 +299,7 @@ sub send_range {
 sub send_config {
   my ($self, $req) = @_;
   $self->app->log(info => "serving config");
-  my $output = $self->app->render('servers');
+  my $output = $self->render('servers');
   my $res = $req->new_response(200);
   $res->body($output);
   return $res->finalize;
@@ -307,7 +308,7 @@ sub send_config {
 sub send_prefs {
   my ($self, $req) = @_;
   $self->app->log(info => "serving prefs");
-  my $output = $self->app->render('prefs');
+  my $output = $self->render('prefs');
   my $res = $req->new_response(200);
   $res->body($output);
   return $res->finalize;
@@ -319,8 +320,8 @@ sub server_config {
   
   my $name = $req->parameters->{name};
   $name =~ s/\s+//g;
-  my $config = $self->app->render('new_server', $name);
-  my $listitem = $self->app->render('server_listitem', $name);
+  my $config = $self->render('new_server', $name);
+  my $listitem = $self->render('server_listitem', $name);
   
   my $res = $req->new_response(200);
   $res->body(to_json({config => $config, listitem => $listitem}));
@@ -379,27 +380,17 @@ sub not_found  {
 
 sub auth_enabled {
   my $self = shift;
-
-  # cache it
-  if (!defined $self->{_auth_enabled}) {
-    $self->{_auth_enabled} = ($self->config->auth
-              and ref $self->config->auth eq 'HASH'
-              and $self->config->auth->{user}
-              and $self->config->auth->{pass});
-  }
-
-  return $self->{_auth_enabled};
+  $self->app->auth_enabled;
 }
 
 sub authenticate {
-  my ($self, $user, $pass) = @_;
-  $user ||= "";
-  $pass ||= "";
-  if ($self->auth_enabled) {
-    return ($self->config->auth->{user} eq $user
-       and $self->config->auth->{pass} eq $pass);
-  }
-  return 1;
+  my $self = shift;
+  $self->app->authenticate(@_);
+}
+
+sub render {
+  my $self = shift;
+  return $self->app->render(@_);
 }
 
 __PACKAGE__->meta->make_immutable;

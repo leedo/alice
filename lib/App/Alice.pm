@@ -523,5 +523,30 @@ sub ping {
   ));
 }
 
+sub auth_enabled {
+  my $self = shift;
+
+  # cache it
+  if (!defined $self->{_auth_enabled}) {
+    $self->{_auth_enabled} = ($self->config->auth
+              and ref $self->config->auth eq 'HASH'
+              and $self->config->auth->{user}
+              and $self->config->auth->{pass});
+  }
+
+  return $self->{_auth_enabled};
+}
+
+sub authenticate {
+  my ($self, $user, $pass) = @_;
+  $user ||= "";
+  $pass ||= "";
+  if ($self->auth_enabled) {
+    return ($self->config->auth->{user} eq $user
+       and $self->config->auth->{pass} eq $pass);
+  }
+  return 1;
+}
+
 __PACKAGE__->meta->make_immutable;
 1;
