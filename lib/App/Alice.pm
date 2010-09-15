@@ -504,31 +504,6 @@ sub ignores {
   return $self->config->ignores;
 }
 
-sub auth_enabled {
-  my $self = shift;
-
-  # cache it
-  if (!defined $self->{_auth_enabled}) {
-    $self->{_auth_enabled} = ($self->config->auth
-              and ref $self->config->auth eq 'HASH'
-              and $self->config->auth->{user}
-              and $self->config->auth->{pass});
-  }
-
-  return $self->{_auth_enabled};
-}
-
-sub authenticate {
-  my ($self, $user, $pass) = @_;
-  $user ||= "";
-  $pass ||= "";
-  if ($self->auth_enabled) {
-    return ($self->config->auth->{user} eq $user
-       and $self->config->auth->{pass} eq $pass);
-  }
-  return 1;
-}
-
 sub static_url {
   my ($self, $file) = @_;
   return $self->config->static_prefix . $file;
