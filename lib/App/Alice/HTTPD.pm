@@ -23,7 +23,7 @@ has 'app' => (
 );
 
 has 'httpd' => (
-  is  => 'rw'
+  is  => 'rw',
   lazy => 1,
   builder => "_build_httpd",
 );
