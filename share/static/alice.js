@@ -10139,7 +10139,7 @@ Alice.Application = Class.create({
       $('container').insert(transport.responseText);
     }.bind(this));
 
-    e.stop();
+    if (e) e.stop();
   },
 
   togglePrefs: function(e) {
@@ -10148,7 +10148,7 @@ Alice.Application = Class.create({
       $('container').insert(transport.responseText);
     }.bind(this));
 
-    e.stop();
+    if (e) e.stop();
   },
 
   toggleLogs: function(e) {
@@ -10161,7 +10161,7 @@ Alice.Application = Class.create({
       }.bind(this));
     }
 
-    e.stop();
+    if (e) e.stop();
   },
 
   windows: function () {
