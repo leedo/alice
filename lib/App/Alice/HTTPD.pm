@@ -22,7 +22,11 @@ has 'app' => (
   required => 1,
 );
 
-has 'httpd' => (is  => 'rw');
+has 'httpd' => (
+  is  => 'rw'
+  lazy => 1,
+  builder => "_build_httpd",
+);
 
 sub config {$_[0]->app->config}
 
@@ -46,14 +50,14 @@ my $url_handlers = [
 
 sub url_handlers { return $url_handlers }
 
-my $ok = [200, ["Content-Type", "text/plain", "Content-Length", 2], ['ok']];
+my $ok = sub{ [200, ["Content-Type", "text/plain", "Content-Length", 2], ['ok']] };
 
 sub BUILD {
   my $self = shift;
-  $self->build_httpd;
+  $self->httpd;
 }
 
-sub build_httpd {
+sub _build_httpd {
   my $self = shift;
   my $httpd = Twiggy::Server->new(
     host => $self->config->http_address,
@@ -217,7 +221,7 @@ sub handle_message {
       }
     }
   }
-  return $ok;
+  return $ok->();
 }
 
 sub send_index {
@@ -240,8 +244,9 @@ sub send_index {
       push @queue, sub {$app->render('window_footer', $window)};
     }
     push @queue, sub {
+      my $html = $app->render('index_footer', @windows);
       delete $_->{active} for @windows;
-      $app->render('index_footer', @windows);
+      return $html;
     };
 
     my $idle_w; $idle_w = AE::idle sub {
@@ -374,7 +379,7 @@ sub save_config {
     $self->app->format_info("config", "saved")
   );
 
-  return $ok;
+  return $ok->();
 }
 
 sub tab_order  {
@@ -382,7 +387,7 @@ sub tab_order  {
   $self->app->log(debug => "updating tab order");
   
   $self->app->tab_order([grep {defined $_} $req->parameters->get_all('tabs')]);
-  return $ok;
+  return $ok->();
 }
 
 sub not_found  {
