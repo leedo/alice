@@ -70,7 +70,7 @@ sub add {
     $add_w = AE::idle sub {
       my ($k,$v);
       while (($k, $v) = each %$add_queue) {
-        my ($stored, $success) = $mmap->get_and_set($k, sub {
+        $mmap->get_and_set($k, sub {
           my ($key, $json) = @_;
           my $msgs = ($json ? decode_json $json : []);
           push @$msgs, @$v;
