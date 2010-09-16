@@ -75,15 +75,18 @@ sub add {
           my $msgs = ($json ? decode_json $json : []);
           push @$msgs, @$v;
 
+          # may be better to keep a running count of the size
+          # and only remove items if (past size + new size)
+          # is larger than $buffersize
+
           my $size = 0;
           my $idx = my $length = scalar @$msgs - 1;
-          while (my $id = $idx) {
+          while ($idx > 0) {
             $size += length $msgs->[$idx]->{html}; 
             last if $size > $buffersize;
             $idx--;
           }
-          $json = encode_json [@{$msgs}[$idx .. $length]];
-          return $json;
+          return encode_json [@{$msgs}[$idx .. $length]];
         });
 
         delete $add_queue->{$k};
