@@ -10368,7 +10368,23 @@ Alice.Application = Class.create({
   clearMissed: function() {
     if (!window.fluid) return;
     window.fluid.dockBadge = "";
-  }
+  },
+
+  log: function () {
+    var win = this.activeWindow();
+    for (var i=0; i < arguments.length; i++) {
+      if (this.options.debug == "true") {
+        if (window.console && window.console.log) {
+          console.log(arguments[i]);
+        }
+        if (win) {
+          win.addMessage({
+            html: '<li class="message monospace"><div class="left">console</div><div class="msg">'+arguments[i].toString()+'</div></li>'
+          });
+        }
+      }
+    }
+  },
 });
 Alice.Connection = Class.create({
   initialize: function(application) {
@@ -10403,7 +10419,7 @@ Alice.Connection = Class.create({
     this.len = 0;
     this.reconnect_count++;
     var now = new Date();
-    console.log("opening new connection starting at message " + this.msgid);
+    this.application.log("opening new connection starting at message " + this.msgid);
     this.request = new Ajax.Request('/stream', {
       method: 'get',
       parameters: {msgid: this.msgid, t: now.getTime() / 1000},
@@ -10421,13 +10437,13 @@ Alice.Connection = Class.create({
   },
 
   handleException: function(request, exception) {
-    console.log("encountered an error with stream.");
+    this.application.log("encountered an error with stream.");
     if (!this.aborting)
       setTimeout(this.connect.bind(this), 2000);
   },
 
   handleComplete: function(transport) {
-    console.log("connection was closed cleanly.");
+    this.application.log("connection was closed cleanly.");
     if (!this.aborting)
       setTimeout(this.connect.bind(this), 2000);
   },
@@ -10466,12 +10482,12 @@ Alice.Connection = Class.create({
       }
     }
     catch (e) {
-      console.log(e.toString());
+      this.application.log(e.toString());
     }
 
     var lag = time / 1000 -  data.time;
     if (lag > 5) {
-      console.log("lag is " + Math.round(lag) + "s, reconnecting.");
+      this.application.log("lag is " + Math.round(lag) + "s, reconnecting.");
       this.connect();
     }
   },
@@ -11130,7 +11146,7 @@ Alice.Input = Class.create({
   },
 
   newLine: function() {
-    console.log("newLine");
+    this.application.log("newLine");
   },
 
   send: function() {
@@ -11498,26 +11514,6 @@ if (window == window.parent) {
     if (navigator.platform.match(/iphone/i)) {
       alice.options.images = "hide";
     }
-
-    var orig_console;
-    if (window.console) {
-     orig_console = window.console;
-     window.console = {};
-    } else {
-      window.console = {};
-    }
-
-    window.console.log = function () {
-      var win = alice.activeWindow();
-      for (var i=0; i < arguments.length; i++) {
-        if (orig_console && orig_console.log)
-          orig_console.log(arguments[i]);
-        if (win && options.debug == "true")
-          win.addMessage({
-            html: '<li class="message monospace"><div class="left">console</div><div class="msg">'+arguments[i].toString()+'</div></li>'
-          });
-      }
-    };
 
     $$('ul.messages li.avatar:not(.consecutive) + li.consecutive').each(function (li) {
       li.previous().down('div.msg').setStyle({minHeight:'0px'});
