@@ -46,26 +46,6 @@ if (window == window.parent) {
       alice.options.images = "hide";
     }
 
-    var orig_console;
-    if (window.console) {
-     orig_console = window.console;
-     window.console = {};
-    } else {
-      window.console = {};
-    }
-
-    window.console.log = function () {
-      var win = alice.activeWindow();
-      for (var i=0; i < arguments.length; i++) {
-        if (orig_console && orig_console.log)
-          orig_console.log(arguments[i]);
-        if (win && options.debug == "true")
-          win.addMessage({
-            html: '<li class="message monospace"><div class="left">console</div><div class="msg">'+arguments[i].toString()+'</div></li>'
-          });
-      }
-    };
-
     // fix height of non-consecutive avatar messages
     $$('ul.messages li.avatar:not(.consecutive) + li.consecutive').each(function (li) {
       li.previous().down('div.msg').setStyle({minHeight:'0px'});

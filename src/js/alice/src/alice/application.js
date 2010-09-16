@@ -329,5 +329,21 @@ Alice.Application = Class.create({
   clearMissed: function() {
     if (!window.fluid) return;
     window.fluid.dockBadge = "";
-  }
+  },
+
+  log: function () {
+    var win = this.activeWindow();
+    for (var i=0; i < arguments.length; i++) {
+      if (this.options.debug == "true") {
+        if (window.console && window.console.log) {
+          console.log(arguments[i]);
+        }
+        if (win) {
+          win.addMessage({
+            html: '<li class="message monospace"><div class="left">console</div><div class="msg">'+arguments[i].toString()+'</div></li>'
+          });
+        }
+      }
+    }
+  },
 });
