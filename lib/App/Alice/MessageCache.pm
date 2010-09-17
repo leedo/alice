@@ -82,7 +82,8 @@ sub add {
           my $size = 0;
           my $idx = my $length = scalar @$msgs - 1;
           while ($idx > 0) {
-            $size += length $msgs->[$idx]->{html}; 
+            # the metadata adds about 300 bytes
+            $size += length $msgs->[$idx]->{html} + 300; 
             last if $size > $buffersize;
             $idx--;
           }
