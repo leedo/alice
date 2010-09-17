@@ -18,8 +18,8 @@ Object.extend(Alice, {
 
     if (format == "12") {
       var ap;
-      if (hours > 12) {
-        hours -= 12;
+      if (hours >= 12) {
+        if (hours > 12) hours -= 12;
         ap = "p";
       } else {
         ap = "a"
