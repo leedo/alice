@@ -131,7 +131,7 @@ Alice.Input = Class.create({
   },
   
   newLine: function() {
-    console.log("newLine");
+    this.application.log("newLine");
   },
   
   send: function() {

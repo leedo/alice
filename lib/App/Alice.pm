@@ -12,6 +12,8 @@ use Any::Moose;
 use File::Copy;
 use Digest::MD5 qw/md5_hex/;
 use List::Util qw/first/;
+use List::MoreUtils qw/any none/;
+use Try::Tiny;
 use Encode;
 
 our $VERSION = '0.19';
@@ -29,7 +31,7 @@ has config => (
 has msgid => (
   is        => 'rw',
   isa       => 'Int',
-  default   => 1,
+  default   => 0,
 );
 
 sub next_msgid {$_[0]->msgid($_[0]->msgid + 1)}
@@ -63,6 +65,17 @@ has httpd => (
   },
 );
 
+has streams => (
+  is      => 'rw',
+  isa     => 'ArrayRef[App::Alice::Stream]',
+  auto_deref => 1,
+  default => sub {[]},
+);
+
+sub add_stream {push @{shift->streams}, @_}
+sub no_streams {@{$_[0]->streams} == 0}
+sub stream_count {scalar @{$_[0]->streams}}
+
 has commands => (
   is      => 'ro',
   isa     => 'App::Alice::Commands',
@@ -78,27 +91,23 @@ has history => (
   default => sub {
     my $self = shift;
     my $config = $self->config->path."/log.db";
-    if (-e $config) {
-      if ((stat($config))[9] < 1272757679) {
-        print STDERR "Log schema is out of date, updating\n";
-        copy($self->config->assetdir."/log.db", $config);
-      }
-    }
-    else {
-      copy($self->config->assetdir."/log.db", $config);
-    }
-    App::Alice::History->new(
-      dbfile => $self->config->path ."/log.db"
-    );
+    copy($self->config->assetdir."/log.db", $config) unless -e $config;
+    App::Alice::History->new(dbfile => $config);
   },
 );
 
+has 'ping_timer' => (is  => 'rw');
+
 sub store {
-  my $self = shift;
-  my %fields = @_;
-  $fields{user} = $self->user;
-  $fields{time} = time;
-  $self->history->store(%fields);
+  my ($self, @args) = @_;
+  my $idle_w; $idle_w = AE::idle sub {
+    $self->history->store(
+      @args,
+      user => $self->user,
+      time => time,
+    );
+    undef $idle_w;
+  };
 }
 
 has logger => (
@@ -121,6 +130,18 @@ sub get_window {first {$_->id eq $_[1]} $_[0]->windows}
 sub remove_window {$_[0]->_windows([grep {$_->id ne $_[1]} $_[0]->windows])}
 sub window_ids {map {$_->id} $_[0]->windows}
 
+sub remove_windows {
+  my ($self, @windows) = @_;
+  return unless @windows;
+
+  my @ids = map {$_->id} @windows;
+
+  $self->_windows([
+    grep {my $id = $_->id; none {$id eq $_} @ids} $self->windows
+  ]);
+
+}
+
 has 'template' => (
   is => 'ro',
   isa => 'Text::MicroTemplate::File',
@@ -129,7 +150,7 @@ has 'template' => (
     my $self = shift;
     Text::MicroTemplate::File->new(
       include_path => $self->config->assetdir . '/templates',
-      cache        => 1,
+      cache        => 2,
     );
   },
 );
@@ -141,6 +162,7 @@ has 'info_window' => (
   default => sub {
     my $self = shift;
     my $info = App::Alice::InfoWindow->new(
+      id       => $self->_build_window_id("info", "info"),
       assetdir => $self->config->assetdir,
       app      => $self,
     );
@@ -163,7 +185,7 @@ has 'user' => (
 sub BUILDARGS {
   my ($class, %options) = @_;
   my $self = {standalone => 1};
-  for (qw/standalone commands history template user/) {
+  for (qw/standalone commands history template user httpd/) {
     if (exists $options{$_}) {
       $self->{$_} = $options{$_};
       delete $options{$_};
@@ -184,6 +206,7 @@ sub run {
   $self->info_window;
   $self->template;
   $self->httpd;
+  $self->ping;
 
   print STDERR "Location: http://".$self->config->http_address.":".$self->config->http_port."/\n"
     if $self->standalone;
@@ -250,20 +273,10 @@ sub _shutdown {
   my $self = shift;
 
   $self->_ircs([]);
+  $_->close for $self->streams;
+  $self->streams([]);
   $self->httpd->shutdown;
   
-  if ($self->standalone) {
-    my $cv = AE::cv;
-    for ($self->windows) {
-      $cv->begin;
-      $_->buffer->clear(sub {$cv->end});
-    }
-    $cv->recv;
-  }
-  else {
-    $_->buffer->clear(sub{}) for $self->windows;
-  }
-
   delete $self->{shutdown_timer} if $self->{shutdown_timer};
   $self->{on_shutdown}->() if $self->{on_shutdown};
 }
@@ -278,18 +291,6 @@ sub reload_commands {
   $self->commands->reload_handlers;
 }
 
-sub merge_config {
-  my ($self, $new_config) = @_;
-  for my $newserver (values %$new_config) {
-    if (! exists $self->config->servers->{$newserver->{name}}) {
-      $self->add_irc_server($newserver->{name}, $newserver);
-    }
-    for my $key (keys %$newserver) {
-      $self->config->servers->{$newserver->{name}}{$key} = $newserver->{$key};
-    }
-  }
-}
-
 sub tab_order {
   my ($self, $window_ids) = @_;
   my $order = [];
@@ -302,11 +303,6 @@ sub tab_order {
   }
   $self->config->order($order);
   $self->config->write;
-}
-
-sub with_messages {
-  my ($self, $cb) = @_;
-  $_->buffer->with_messages($cb) for $self->windows;
 }
 
 sub find_window {
@@ -330,12 +326,12 @@ sub alert {
 
 sub create_window {
   my ($self, $title, $connection) = @_;
-  my $id = $self->_build_window_id($title, $connection->alias);
   my $window = App::Alice::Window->new(
     title    => $title,
     irc      => $connection,
     assetdir => $self->config->assetdir,
     app      => $self,
+    id       => $self->_build_window_id($title, $connection->alias), 
   );
   $self->add_window($window);
   return $window;
@@ -349,12 +345,12 @@ sub _build_window_id {
 sub find_or_create_window {
   my ($self, $title, $connection) = @_;
   return $self->info_window if $title eq "info";
+
   if (my $window = $self->find_window($title, $connection)) {
     return $window;
   }
-  else {
-    $self->create_window($title, $connection);
-  }
+
+  $self->create_window($title, $connection);
 }
 
 sub sorted_windows {
@@ -373,7 +369,7 @@ sub close_window {
   my ($self, $window) = @_;
   $self->broadcast($window->close_action);
   $self->log(debug => "sending a request to close a tab: " . $window->title)
-    if $self->httpd->stream_count;
+    if $self->stream_count;
   $self->remove_window($window->id) if $window->type ne "info";
 }
 
@@ -427,12 +423,29 @@ sub format_info {
 
 sub broadcast {
   my ($self, @messages) = @_;
+
+  return if $self->no_streams or !@messages;
   
   # add any highlighted messages to the log window
   push @messages, map {$self->info_window->copy_message($_)}
                   grep {$_->{highlight}} @messages;
-  
-  $self->httpd->broadcast(@messages);
+
+  my $purge = 0;
+  for my $stream ($self->streams) {
+    try {
+      $stream->send(@messages);
+    } catch {
+      $stream->close;
+      $purge = 1;
+    };
+  }
+  $self->purge_disconnects if $purge;
+}
+
+sub purge_disconnects {
+  my ($self) = @_;
+  $self->log(debug => "removing broken streams");
+  $self->streams([grep {!$_->closed} $self->streams]);
 }
 
 sub render {
@@ -442,27 +455,18 @@ sub render {
 
 sub is_highlight {
   my ($self, $own_nick, $body) = @_;
-  for ((@{$self->config->highlights}, $own_nick)) {
-    my $highlight = quotemeta($_);
-    return 1 if $body =~ /\b$highlight\b/i;
-  }
-  return 0;
+  any {my $h = quotemeta($_); $body =~ /\b$h\b/i }
+      (@{$self->config->highlights}, $own_nick);
 }
 
 sub is_monospace_nick {
   my ($self, $nick) = @_;
-  for (@{$self->config->monospace_nicks}) {
-    return 1 if $_ eq $nick;
-  }
-  return 0;
+  any {$_ eq $nick} @{$self->config->monospace_nicks};
 }
 
 sub is_ignore {
   my ($self, $nick) = @_;
-  for ($self->config->ignores) {
-    return 1 if $nick eq $_;
-  }
-  return 0;
+  any {$_ eq $nick} $self->config->ignores;
 }
 
 sub add_ignore {
@@ -482,12 +486,37 @@ sub ignores {
   return $self->config->ignores;
 }
 
+sub static_url {
+  my ($self, $file) = @_;
+  return $self->config->static_prefix . $file;
+}
+
+sub ping {
+  my $self = shift;
+  $self->ping_timer(AnyEvent->timer(
+    after    => 5,
+    interval => 10,
+    cb       => sub {
+      $self->broadcast({
+        type => "action",
+        event => "ping",
+      });
+    }
+  ));
+}
+
 sub auth_enabled {
   my $self = shift;
-  return ($self->config->auth
-      and ref $self->config->auth eq 'HASH'
-      and $self->config->auth->{user}
-      and $self->config->auth->{pass});
+
+  # cache it
+  if (!defined $self->{_auth_enabled}) {
+    $self->{_auth_enabled} = ($self->config->auth
+              and ref $self->config->auth eq 'HASH'
+              and $self->config->auth->{user}
+              and $self->config->auth->{pass});
+  }
+
+  return $self->{_auth_enabled};
 }
 
 sub authenticate {
@@ -499,11 +528,6 @@ sub authenticate {
        and $self->config->auth->{pass} eq $pass);
   }
   return 1;
-}
-
-sub static_url {
-  my ($self, $file) = @_;
-  return $self->config->static_prefix . $file;
 }
 
 __PACKAGE__->meta->make_immutable;

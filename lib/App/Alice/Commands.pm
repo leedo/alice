@@ -49,5 +49,26 @@ sub handle {
   }
 }
 
+sub determine_irc {
+  my ($self, $app, $window, $network) = @_;
+
+  my $irc = $network ? $app->get_irc($network) : $window->irc;
+
+  if (!$irc and $network) {
+    $window->reply("$network is not one of your irc networks");
+    return ();
+  }
+  elsif (!$irc) {
+    $window->reply("Network is ambiguous, specify a network name");
+    return();
+  }
+  elsif (!$irc->is_connected) {
+    $window->reply("$network is not connected");
+    return ();
+  }
+  
+  return $irc;
+}
+
 __PACKAGE__->meta->make_immutable;
 1;

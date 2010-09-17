@@ -9,6 +9,7 @@ Alice.Application = Class.create({
 
     this.isPhone = window.navigator.platform.match(/(android|iphone)/i) ? 1 : 0;
     this.isMobile = this.isPhone || Prototype.Browser.MobileSafari;
+    this.isJankyScroll = Prototype.Browser.Gecko || Prototype.Browser.IE;
 
     // Keep this as a timeout so the page doesn't show "loading..."
     window.onload = function () {
@@ -99,7 +100,7 @@ Alice.Application = Class.create({
       $('container').insert(transport.responseText);
     }.bind(this));
     
-    e.stop();
+    if (e) e.stop();
   },
   
   togglePrefs: function(e) {
@@ -108,7 +109,7 @@ Alice.Application = Class.create({
       $('container').insert(transport.responseText);
     }.bind(this));
     
-    e.stop();
+    if (e) e.stop();
   },
 
   toggleLogs: function(e) {
@@ -121,7 +122,7 @@ Alice.Application = Class.create({
       }.bind(this));
     }
 
-    e.stop();
+    if (e) e.stop();
   },
   
   windows: function () {
@@ -203,7 +204,7 @@ Alice.Application = Class.create({
 
   nextUnreadWindow: function() {
     var active = this.activeWindow();
-    var tabs = active.tab.nextSiblings().concat(active.tab.previousSiblings());
+    var tabs = active.tab.nextSiblings().concat(active.tab.previousSiblings().reverse());
     var unread = tabs.find(function(tab) {return tab.hasClassName("unread")});
 
     if (unread) {
@@ -328,5 +329,21 @@ Alice.Application = Class.create({
   clearMissed: function() {
     if (!window.fluid) return;
     window.fluid.dockBadge = "";
-  }
+  },
+
+  log: function () {
+    var win = this.activeWindow();
+    for (var i=0; i < arguments.length; i++) {
+      if (this.options.debug == "true") {
+        if (window.console && window.console.log) {
+          console.log(arguments[i]);
+        }
+        if (win) {
+          win.addMessage({
+            html: '<li class="message monospace"><div class="left">console</div><div class="msg">'+arguments[i].toString()+'</div></li>'
+          });
+        }
+      }
+    }
+  },
 });

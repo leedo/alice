@@ -64,8 +64,9 @@ sub BUILD {
 
 sub _send {
   my $self = shift;
-  try   { $self->send }
-  catch { $self->close };
+  eval { $self->send };
+  warn $@ if $@;
+  $self->close if $@;
 }
 
 sub send {
@@ -83,9 +84,9 @@ sub send {
 
 sub close {
   my $self = shift;
-  try {$self->writer->write($self->to_string)};
   $self->flush;
-  $self->writer->close;
+  try {$self->writer->close} if $self->writer;
+  $self->writer(undef);
   $self->timer(undef);
   $self->closed(1);
 }
@@ -132,8 +133,8 @@ sub to_string {
     time  => time - $self->offset,
   }, {utf8 => 1});
 
-  $output .= "\n--" . $self->seperator . "\n";
-  $output .= " " x ($self->min_bytes - length $output);
+  $output .= "\n--" . $self->seperator . "\n"
+          .  " " x ($self->min_bytes - length $output);
 
   return $output
 }

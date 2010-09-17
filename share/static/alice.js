@@ -9948,7 +9948,7 @@ Object.extend(Alice, {
 	  },
 
     addCommand: function (alias) {
-			var command = prompt("Please enter a channel name.");
+			var command = prompt("Please enter a command.");
 			if (command)
 			  $("on_connect_" + alias).insert("<option value=\""+command+"\">"+command+"</option>");
 			return false;
@@ -10050,6 +10050,7 @@ Alice.Application = Class.create({
 
     this.isPhone = window.navigator.platform.match(/(android|iphone)/i) ? 1 : 0;
     this.isMobile = this.isPhone || Prototype.Browser.MobileSafari;
+    this.isJankyScroll = Prototype.Browser.Gecko || Prototype.Browser.IE;
 
     window.onload = function () {
       setTimeout(this.connection.connect.bind(this.connection), 1000);
@@ -10138,7 +10139,7 @@ Alice.Application = Class.create({
       $('container').insert(transport.responseText);
     }.bind(this));
 
-    e.stop();
+    if (e) e.stop();
   },
 
   togglePrefs: function(e) {
@@ -10147,7 +10148,7 @@ Alice.Application = Class.create({
       $('container').insert(transport.responseText);
     }.bind(this));
 
-    e.stop();
+    if (e) e.stop();
   },
 
   toggleLogs: function(e) {
@@ -10160,7 +10161,7 @@ Alice.Application = Class.create({
       }.bind(this));
     }
 
-    e.stop();
+    if (e) e.stop();
   },
 
   windows: function () {
@@ -10242,7 +10243,7 @@ Alice.Application = Class.create({
 
   nextUnreadWindow: function() {
     var active = this.activeWindow();
-    var tabs = active.tab.nextSiblings().concat(active.tab.previousSiblings());
+    var tabs = active.tab.nextSiblings().concat(active.tab.previousSiblings().reverse());
     var unread = tabs.find(function(tab) {return tab.hasClassName("unread")});
 
     if (unread) {
@@ -10367,7 +10368,23 @@ Alice.Application = Class.create({
   clearMissed: function() {
     if (!window.fluid) return;
     window.fluid.dockBadge = "";
-  }
+  },
+
+  log: function () {
+    var win = this.activeWindow();
+    for (var i=0; i < arguments.length; i++) {
+      if (this.options.debug == "true") {
+        if (window.console && window.console.log) {
+          console.log(arguments[i]);
+        }
+        if (win) {
+          win.addMessage({
+            html: '<li class="message monospace"><div class="left">console</div><div class="msg">'+arguments[i].toString()+'</div></li>'
+          });
+        }
+      }
+    }
+  },
 });
 Alice.Connection = Class.create({
   initialize: function(application) {
@@ -10402,7 +10419,7 @@ Alice.Connection = Class.create({
     this.len = 0;
     this.reconnect_count++;
     var now = new Date();
-    console.log("opening new connection starting at message " + this.msgid);
+    this.application.log("opening new connection starting at message " + this.msgid);
     this.request = new Ajax.Request('/stream', {
       method: 'get',
       parameters: {msgid: this.msgid, t: now.getTime() / 1000},
@@ -10420,13 +10437,13 @@ Alice.Connection = Class.create({
   },
 
   handleException: function(request, exception) {
-    console.log("encountered an error with stream.");
+    this.application.log("encountered an error with stream.");
     if (!this.aborting)
       setTimeout(this.connect.bind(this), 2000);
   },
 
   handleComplete: function(transport) {
-    console.log("connection was closed cleanly.");
+    this.application.log("connection was closed cleanly.");
     if (!this.aborting)
       setTimeout(this.connect.bind(this), 2000);
   },
@@ -10465,12 +10482,12 @@ Alice.Connection = Class.create({
       }
     }
     catch (e) {
-      console.log(e.toString());
+      this.application.log(e.toString());
     }
 
     var lag = time / 1000 -  data.time;
     if (lag > 5) {
-      console.log("lag is " + Math.round(lag) + "s, reconnecting.");
+      this.application.log("lag is " + Math.round(lag) + "s, reconnecting.");
       this.connect();
     }
   },
@@ -10596,7 +10613,7 @@ Alice.Window = Class.create({
 
     this.messages.observe("mouseover", this.showNick.bind(this));
 
-    if (Prototype.Browser.Gecko) {
+    if (this.application.isJankyScroll) {
       this.resizeMessagearea();
       this.scrollToBottom();
     }
@@ -10711,18 +10728,23 @@ Alice.Window = Class.create({
     this.element.addClassName('active');
     this.tabOverflowButton.selected = true;
     this.markRead();
-
     this.scrollToBottom(true);
+
     if (!this.application.isMobile) this.input.focus();
-    if (Prototype.Browser.Gecko) {
+
+    if (this.application.isJankyScroll) {
       this.resizeMessagearea();
       this.scrollToBottom();
     }
-    this.element.redraw();
 
+    this.element.redraw();
+    this.setWindowHash();
+    this.application.updateChannelSelect();
+  },
+
+  setWindowHash: function () {
     window.location.hash = this.hashtag;
     window.location = window.location.toString();
-    this.application.updateChannelSelect();
   },
 
   markRead: function () {
@@ -10817,7 +10839,8 @@ Alice.Window = Class.create({
 
       if (message.consecutive) {
         var avatar = li.previous(".avatar:not(.consecutive)");
-        if (avatar) avatar.down(".timehint").innerHTML = message.timestamp;
+        if (avatar && avatar.down(".timehint"))
+          avatar.down(".timehint").innerHTML = message.timestamp;
       }
     }
     else if (message.event == "topic") {
@@ -11123,7 +11146,7 @@ Alice.Input = Class.create({
   },
 
   newLine: function() {
-    console.log("newLine");
+    this.application.log("newLine");
   },
 
   send: function() {
@@ -11491,26 +11514,6 @@ if (window == window.parent) {
     if (navigator.platform.match(/iphone/i)) {
       alice.options.images = "hide";
     }
-
-    var orig_console;
-    if (window.console) {
-     orig_console = window.console;
-     window.console = {};
-    } else {
-      window.console = {};
-    }
-
-    window.console.log = function () {
-      var win = alice.activeWindow();
-      for (var i=0; i < arguments.length; i++) {
-        if (orig_console && orig_console.log)
-          orig_console.log(arguments[i]);
-        if (win && options.debug == "true")
-          win.addMessage({
-            html: '<li class="message monospace"><div class="left">console</div><div class="msg">'+arguments[i].toString()+'</div></li>'
-          });
-      }
-    };
 
     $$('ul.messages li.avatar:not(.consecutive) + li.consecutive').each(function (li) {
       li.previous().down('div.msg').setStyle({minHeight:'0px'});
