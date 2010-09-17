@@ -174,11 +174,6 @@ Alice.Connection = Class.create({
     });
   },
   
-  sendPing: function() {
-    new Ajax.Request('/ping');
-    on401: this.gotoLogin
-  },
-
   getWindowMessages: function(source, callback) {
     this.windowQueue.push([source, callback]);
 
