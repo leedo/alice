@@ -46,23 +46,6 @@ if (window == window.parent) {
       alice.options.images = "hide";
     }
 
-    // fix height of non-consecutive avatar messages
-    $$('ul.messages li.avatar:not(.consecutive) + li.consecutive').each(function (li) {
-      li.previous().down('div.msg').setStyle({minHeight:'0px'});
-    });
-
-    $$('ul.messages li.monospace + li.monospace.consecutive').each(function(li) {
-      li.previous().down('div.msg').setStyle({paddingBottom:'0px'});
-    });
-
-    // change timestamps from epoch to local time
-    $$('span.timestamp').each(function(elem) {
-      if (elem.innerHTML) {
-        elem.innerHTML = Alice.epochToLocal(elem.innerHTML.strip(), alice.options.timeformat);
-        elem.style.opacity = 1;
-      }
-    });
-
     // connect close botton for help 
 
     $('helpclose').observe("click", function () { $('help').hide(); });

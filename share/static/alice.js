@@ -10396,6 +10396,8 @@ Alice.Connection = Class.create({
     this.msgid = 0;
     this.reconnect_count = 0;
     this.reconnecting = false;
+    this.windowQueue = [];
+    this.windowWatcher = false;
   },
 
   gotoLogin: function() {
@@ -10562,6 +10564,31 @@ Alice.Connection = Class.create({
   sendPing: function() {
     new Ajax.Request('/ping');
     on401: this.gotoLogin
+  },
+
+  getWindowMessages: function(source, callback) {
+    this.windowQueue.push([source, callback]);
+
+    if (!this.windowWatcher) {
+      this.windowWatcher = true;
+      this._getWindowMessages();
+    }
+  },
+
+  _getWindowMessages: function() {
+    var job = this.windowQueue.pop();
+    new Ajax.Request("/messages", {
+      method: "get",
+      parameters: {source: job[0]},
+      onSuccess: function(response) {
+        job[1](response);
+        if (this.windowQueue.length) {
+          this._getWindowMessages();
+        } else {
+          this.windowWatcher = false;
+        }
+      }.bind(this)
+    });
   }
 });
 Alice.Window = Class.create({
@@ -10578,9 +10605,32 @@ Alice.Window = Class.create({
     this.tabButton = $(this.id + "_tab_button");
     this.tabOverflowButton = $(this.id + "_tab_overflow_button");
     this.form = $(this.id + "_form");
-
     this.topic = $(this.id + "_topic");
+    this.messages = this.element.down('.message_wrap');
+    this.submit = $(this.id + "_submit");
+    this.nicksVisible = false;
+    this.visibleNick = "";
+    this.visibleNickTimeout = "";
+    this.nicks = [];
+    this.messageLimit = 250;
 
+    this.setupEvents();
+    this.setupTopic();
+
+    if (!this.active) {
+      this.application.connection.getWindowMessages(
+        this.id,
+        function (response) {
+          this.messages.down("ul").innerHTML = response.responseText;
+          this.setupMessages();
+        }.bind(this)
+      );
+    } else {
+      this.setupMessages();
+    }
+  },
+
+  setupTopic: function() {
     if (this.topic) {
       var orig_height = this.topic.getStyle("height");
       this.topic.observe("click", function(e) {
@@ -10590,16 +10640,11 @@ Alice.Window = Class.create({
           this.topic.setStyle({height: orig_height});
         }
       }.bind(this));
+      this.makeTopicClickable();
     }
+  },
 
-    this.messages = this.element.down('.message_wrap');
-    this.submit = $(this.id + "_submit");
-    this.nicksVisible = false;
-    this.visibleNick = "";
-    this.visibleNickTimeout = "";
-    this.nicks = [];
-    this.messageLimit = 250;
-
+  setupEvents: function() {
     this.submit.observe("click", function (e) {this.input.send(); e.stop()}.bind(this));
 
     this.tab.observe("mousedown", function(e) {
@@ -10612,6 +10657,23 @@ Alice.Window = Class.create({
       if (this.active && !this.focusing) this.close()}.bind(this));
 
     this.messages.observe("mouseover", this.showNick.bind(this));
+  },
+
+  setupMessages: function() {
+    this.messages.select('li.avatar:not(.consecutive) + li.consecutive').each(function (li) {
+      li.previous().down('div.msg').setStyle({minHeight:'0px'});
+    });
+
+    this.messages.select('li.monospace + li.monospace.consecutive').each(function(li) {
+      li.previous().down('div.msg').setStyle({paddingBottom:'0px'});
+    });
+
+    this.messages.select('span.timestamp').each(function(elem) {
+      if (elem.innerHTML) {
+        elem.innerHTML = Alice.epochToLocal(elem.innerHTML.strip(), alice.options.timeformat);
+        elem.style.opacity = 1;
+      }
+    });
 
     if (this.application.isJankyScroll) {
       this.resizeMessagearea();
@@ -10624,15 +10686,12 @@ Alice.Window = Class.create({
     }
 
     if (this.active) this.scrollToBottom(true);
-    this.makeTopicClickable();
 
     setTimeout(function () {
       this.messages.select('li.message div.msg').each(function (msg) {
-        msg.innerHTML = application.applyFilters(msg.innerHTML);
-      });
+        msg.innerHTML = this.application.applyFilters(msg.innerHTML);
+      }.bind(this));
     }.bind(this), 1000);
-
-
   },
 
   isTabWrapped: function() {
@@ -11514,21 +11573,6 @@ if (window == window.parent) {
     if (navigator.platform.match(/iphone/i)) {
       alice.options.images = "hide";
     }
-
-    $$('ul.messages li.avatar:not(.consecutive) + li.consecutive').each(function (li) {
-      li.previous().down('div.msg').setStyle({minHeight:'0px'});
-    });
-
-    $$('ul.messages li.monospace + li.monospace.consecutive').each(function(li) {
-      li.previous().down('div.msg').setStyle({paddingBottom:'0px'});
-    });
-
-    $$('span.timestamp').each(function(elem) {
-      if (elem.innerHTML) {
-        elem.innerHTML = Alice.epochToLocal(elem.innerHTML.strip(), alice.options.timeformat);
-        elem.style.opacity = 1;
-      }
-    });
 
 
     $('helpclose').observe("click", function () { $('help').hide(); });

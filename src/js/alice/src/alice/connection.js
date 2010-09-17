@@ -8,6 +8,8 @@ Alice.Connection = Class.create({
     this.msgid = 0;
     this.reconnect_count = 0;
     this.reconnecting = false;
+    this.windowQueue = [];
+    this.windowWatcher = false;
   },
 
   gotoLogin: function() {
@@ -175,5 +177,30 @@ Alice.Connection = Class.create({
   sendPing: function() {
     new Ajax.Request('/ping');
     on401: this.gotoLogin
+  },
+
+  getWindowMessages: function(source, callback) {
+    this.windowQueue.push([source, callback]);
+
+    if (!this.windowWatcher) {
+      this.windowWatcher = true;
+      this._getWindowMessages();
+    }
+  },
+
+  _getWindowMessages: function() {
+    var job = this.windowQueue.pop();
+    new Ajax.Request("/messages", {
+      method: "get",
+      parameters: {source: job[0]},
+      onSuccess: function(response) {
+        job[1](response);
+        if (this.windowQueue.length) {
+          this._getWindowMessages();
+        } else {
+          this.windowWatcher = false;
+        }
+      }.bind(this)
+    });
   }
 });

@@ -34,6 +34,7 @@ my $url_handlers = [
   [ "say"          => "handle_message" ],
   [ "stream"       => "setup_stream" ],
   [ ""             => "send_index" ],
+  [ "messages"     => "window_messages" ],
   [ "config"       => "send_config" ],
   [ "prefs"        => "send_prefs" ],
   [ "serverconfig" => "server_config" ],
@@ -240,7 +241,9 @@ sub send_index {
     push @queue, sub {$app->render('index_head', $options, @windows)};
     for my $window (@windows) {
       push @queue, sub {$app->render('window_head', $window)};
-      push @queue, map {my $msg = $_; sub {$msg->{html}}} @{$window->buffer->messages};
+      if ($window->{active}) {
+        push @queue, map {my $msg = $_; sub {$msg->{html}}} @{$window->buffer->messages};
+      }
       push @queue, sub {$app->render('window_footer', $window)};
     }
     push @queue, sub {
@@ -259,6 +262,37 @@ sub send_index {
       }
     };
   }
+}
+
+sub window_messages {
+  my ($self, $req) = @_;
+  my $options = $self->merged_options($req);
+  my $app = $self->app;
+
+  return sub {
+    my $respond = shift;
+
+    my $source = $req->parameters->{source};
+    if (my $window = $app->get_window($source)) {
+      my $writer = $respond->([200, ["Content-type" => "text/html; charset=utf-8"]]);
+
+      my @queue = @{$window->buffer->messages};
+
+      my $idle_w; $idle_w = AE::idle sub {
+        if (my $msg = shift @queue) {
+          $writer->write(encode_utf8 $msg->{html});
+        } else {
+          $writer->close;
+          undef $idle_w;
+        }
+      };
+    }
+    else {
+      my $res = $req->new_response(404);
+      $res->body("not found");
+      $respond->($res->finalize);
+    }
+  };
 }
 
 sub merged_options {
