@@ -11,19 +11,20 @@ has '+title' => (required => 0, default => 'info');
 has 'topic' => (is => 'ro', isa => 'HashRef', default => sub {{string => ''}});
 has '+_irc' => (required => 0, isa => 'Any');
 
+#
+# DO NOT override the 'id' property, it is built in App/Alice.pm
+# using the user-id, which is important for multiuser systems.
+#
+
 sub is_channel {0}
-sub title {"info"}
 sub session {""}
 sub type {"info"}
+sub all_nicks {[]}
 
 sub irc {
   my $self = shift;
   return ($self->app->connected_ircs)[0] if $self->app->connected_ircs == 1;
   return undef;
-}
-
-sub all_nicks {
-  return [];
 }
 
 sub format_message {
@@ -36,13 +37,15 @@ sub format_message {
     window => $self->serialized,
     html   => encoded_string($html),
     self   => $options{self} ? 1 : 0,
-    hightlight => $options{highlight} ? 1 : 0,
-    msgid  => $self->app->next_msgid,
-    timestamp => time,
-    monospaced => $options{mono} ? 1 : 0,
+    hightlight  => $options{highlight} ? 1 : 0,
+    msgid       => $self->app->next_msgid,
+    timestamp   => time,
+    monospaced  => $options{mono} ? 1 : 0,
     consecutive => $from eq $self->buffer->previous_nick ? 1 : 0,
   };
-  $message->{html} = $self->app->render("message", $message);
+
+  $message->{html} = $self->render("message", $message);
+
   $self->buffer->add($message);
   return $message;
 }
@@ -56,17 +59,20 @@ sub copy_message {
     window => $self->serialized,
     html   => $msg->{html},
     self   => $msg->{self},
-    highlight => $msg->{highlight},
-    msgid  => $self->app->next_msgid,
-    timestamp => $msg->{timestamp},
-    monospaced => $msg->{monospaced},
+    highlight   => $msg->{highlight},
+    msgid       => $self->app->next_msgid,
+    timestamp   => $msg->{timestamp},
+    monospaced  => $msg->{monospaced},
     consecutive => $msg->{nick} eq $self->buffer->previous_nick ? 1 : 0,
   };
+
+  # a gross way to remove consecutive class from messages
   if ($msg->{consecutive} and !$copy->{consecutive}) {
     $copy->{html} =~ s/(<li class="[^"]*)consecutive/$1/;
   } elsif (!$msg->{consecutive} and $copy->{consecutive}) {
     $copy->{html} =~ s/(<li class=")/$1consecutive /;
   }
+
   $self->buffer->add($copy);
   return $copy;
 }

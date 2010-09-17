@@ -72,9 +72,9 @@ has _nicks => (
 sub nicks {@{$_[0]->_nicks}}
 sub all_nicks {[map {$_->[0]} @{$_[0]->_nicks}]}
 sub add_nick {push @{$_[0]->_nicks}, $_[1]}
-sub remove_nick {$_[0]->_nicks([grep {$_->[0] ne $_[1]} $_[0]->nicks])}
-sub get_nick_info {first {$_->[0] eq $_[1]} $_[0]->nicks}
-sub includes_nick {any {$_->[0] eq $_[1]} $_[0]->nicks}
+sub remove_nick {my $n = lc $_[1]; $_[0]->_nicks([grep {lc $_->[0] ne $n} $_[0]->nicks])}
+sub get_nick_info {my $n = lc $_[1]; first {lc $_->[0] eq $n} $_[0]->nicks}
+sub includes_nick {my $n = lc $_[1]; any {lc $_->[0] eq $n} $_[0]->nicks}
 sub all_nick_info {$_[0]->nicks}
 sub clear_nicks {$_[0]->_nicks([])}
 sub set_nick_info {$_[0]->remove_nick($_[1]); $_[0]->add_nick($_[2]);}
@@ -87,6 +87,7 @@ has whois => (
 
 sub add_whois {
   my ($self, $nick, $cb) = @_;
+  $nick = lc $nick;
   $self->whois->{$nick} = {info => "", cb => $cb};
   $self->send_srv(WHOIS => $nick);
 }
@@ -270,6 +271,10 @@ sub connected {
     session => $self->alias,
     windows => [map {$_->serialized} $self->windows],
   });
+
+  $self->broadcast(map {
+    $_->format_event("reconnect", $self->nick, $self->config->{host}),
+  } $self->windows);
 }
 
 sub reconnect {
@@ -334,7 +339,7 @@ sub disconnected {
   $self->log(info => "disconnected: $reason");
   
   $self->broadcast(map {
-    $_->format_event("disconnect", $self->nick, $reason),
+    $_->format_event("disconnect", $self->nick, $self->config->{host})
   } $self->windows);
   
   $self->broadcast({
@@ -362,15 +367,16 @@ sub disconnected {
 
 sub disconnect {
   my ($self, $msg) = @_;
+  $msg ||= $self->app->config->quitmsg;
 
   $self->disabled(1);
-  if (!$self->app->shutting_down) {
-    $self->app->remove_window($_) for $self->windows; 
-  }
 
-  $msg ||= $self->app->config->quitmsg;
+  #$self->app->remove_windows($self->windows)
+  #  unless $self->app->shutting_down;
+
   $self->log(debug => "disconnecting: $msg") if $msg;
   $self->send_srv(QUIT => $msg);
+
   $self->{disconnect_timer} = AnyEvent->timer(
     after => 1,
     cb => sub {
@@ -389,11 +395,14 @@ sub remove {
 sub publicmsg {
   my ($self, $cl, $channel, $msg) = @_;
   utf8::decode($channel);
+
   if (my $window = $self->find_window($channel)) {
     my $nick = (split '!', $msg->{prefix})[0];
-    return if $self->app->is_ignore($nick);
     my $text = $msg->{params}[1];
     utf8::decode($_) for ($text, $nick);
+
+    return if $self->app->is_ignore($nick);
+
     $self->app->store(nick => $nick, channel => $channel, body => $text);
     $self->broadcast($window->format_message($nick, $text)); 
   }
@@ -403,11 +412,15 @@ sub privatemsg {
   my ($self, $cl, $nick, $msg) = @_;
   my $text = $msg->{params}[1];
   utf8::decode($_) for ($nick, $text);
+
   if ($msg->{command} eq "PRIVMSG") {
     my $from = (split /!/, $msg->{prefix})[0];
     utf8::decode($from);
+
     return if $self->app->is_ignore($from);
+
     my $window = $self->window($from);
+
     $self->app->store(nick => $from, channel => $from, body => $text);
     $self->broadcast($window->format_message($from, $text)); 
     $self->send_srv(WHO => $from) unless $self->includes_nick($from);
@@ -419,6 +432,7 @@ sub privatemsg {
 
 sub ctcp_action {
   my ($self, $cl, $nick, $channel, $msg, $type) = @_;
+  return unless $msg;
   utf8::decode($_) for ($nick, $msg, $channel);
   return if $self->app->is_ignore($nick);
   if (my $window = $self->find_window($channel)) {
@@ -542,28 +556,27 @@ sub channel_topic {
 
 sub channel_nicks {
   my ($self, $channel) = @_;
-  return [
+  return
     map {$_->[0]}
     grep {any {$_ eq $channel} @{$_->[2]}}
-    $self->all_nick_info
-  ];
+    $self->all_nick_info;
 }
 
 sub nick_channels {
   my ($self, $nick) = @_;
   if (my $info = $self->get_nick_info($nick)) {
-    return $info->[2];
+    return @{$info->[2]};
   }
-  return [];
+  return ();
 }
 
 sub nick_windows {
   my ($self, $nick) = @_;
-  if ($self->nick_channels($nick)) {
+  if (my @channels = $self->nick_channels($nick)) {
     return
       grep {$_}
       map {$self->find_window($_)}
-      $self->nick_channels($nick);
+      @channels
   }
   return ();
 }
@@ -577,9 +590,9 @@ sub irc_319 {
   my ($nick, $channels) = @{$msg->{params}};
   utf8::decode($_) for ($nick, $channels);
 
-  return unless $self->whois->{$nick};
-
-  $self->whois->{$nick}{info} .= "\nchannels: $channels";
+  if (my $whois = $self->whois->{lc $nick}) {
+    $whois->{info} .= "\nchannels: $channels";
+  }
 }
 
 sub irc_311 {
@@ -594,11 +607,12 @@ sub irc_311 {
   my ($nick, $user, $address, undef, $real) = @{$msg->{params}};
   utf8::decode($_) for ($nick, $user, $address, $real);
 
-  return unless $self->whois->{$nick};
-
-  $self->whois->{$nick}{info} .= "\nuser: $user"
-                              .  "\nreal: $real"
-                              .  "\nIP: $address";
+  if (my $whois = $self->whois->{lc $nick}) {
+    $whois->{info} .= "nick: $nick"
+                    .  "\nuser: $user"
+                    .  "\nreal: $real"
+                    .  "\nIP: $address";
+  }
 }
 
 sub irc_312 {
@@ -610,9 +624,9 @@ sub irc_312 {
   my ($nick, $server) = @{$msg->{params}};
   utf8::decode($_) for ($nick, $server);
 
-  return unless $self->whois->{$nick};
-
-  $self->whois->{$nick}{info} .= "\nserver: $server";
+  if (my $whois = $self->whois->{lc $nick}) {
+    $whois->{info} .= "\nserver: $server";
+  }
 }
 
 sub irc_318 {
@@ -624,9 +638,9 @@ sub irc_318 {
   my $nick = $msg->{params}[0];
   utf8::decode($nick);
 
-  if ($self->whois->{$nick}) {
-    $self->whois->{$nick}{cb}->($self->whois->{$nick}{info});
-    delete $self->whois->{$nick};
+  if (my $whois = $self->whois->{lc $nick}) {
+    $whois->{cb}->($whois->{info});
+    delete $self->whois->{lc $nick};
   }
 }
 
@@ -688,6 +702,8 @@ sub rename_nick {
 
 sub remove_nicks {
   my ($self, @nicks) = @_;
+  return unless @nicks;
+
   $self->_nicks([
     grep {my $n = $_->[0]; none {$n eq $_} @nicks} $self->nicks
   ]);

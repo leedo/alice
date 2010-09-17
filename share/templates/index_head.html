@@ -23,7 +23,7 @@
             <option value="Preferences">Preferences</option>
             <option value="Connections">Connections</option>
             <option value="Help">Help</option>
-            <? if ($_[0]->auth_enabled) { ?>
+            <? if ($app->auth_enabled) { ?>
             <option disabled>──────</option>
             <option value="Logout">Logout</option>
             <? } ?>

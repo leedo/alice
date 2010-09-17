@@ -16,46 +16,30 @@ my $commands = [
         return;
       }
 
-      $app->store(nick => $window->nick, channel => $window->title, body => $msg);
       $window->show($msg);
       $window->irc->send_srv(PRIVMSG => $window->title, $msg);
+      $app->store(nick => $window->nick, channel => $window->title, body => $msg);
     },
   },
   {
     name => 'msg',
-    re => qr{^/(?:msg|query)\s+$SRVOPT(\S+)(.*)},
+    re => qr{^/(?:msg|query)\s+$SRVOPT(\S+)\s*(.*)},
     eg => "/MSG [-<server name>] <nick> <message>",
     desc => "Sends a message to a nick.",
     code => sub  {
-      my $self = shift;
-      my $app = shift;
-      my $window = shift;
+      my ($self, $app, $window, $msg, $nick, $network) = @_;
 
-      my ($msg, $nick, $network);
+      if (my $irc = $self->determine_irc($app, $window, $network)) {
+        my $new_window = $app->find_or_create_window($nick, $irc);
+        my @msgs = ($new_window->join_action);
 
-      if (@_ == 3) {
-        ($msg, $nick, $network) = @_;
+        if ($msg) {
+          push @msgs, $new_window->format_message($new_window->nick, $msg);
+          $irc->send_srv(PRIVMSG => $nick, $msg) if $msg;
+        }
+
+        $app->broadcast(@msgs);
       }
-      elsif (@_ == 2) {
-        ($msg, $nick) = @_;
-      }
-
-      $msg =~ s/^\s+//;
-
-      my $irc = $network ? $app->get_irc($network) : $window->irc;
-
-      unless ($irc and $irc->is_connected) {
-        $window->reply("Not a connected server name");
-        return;
-      }
-
-      my $new_window = $app->find_or_create_window($nick, $irc);
-      my @msgs = ($new_window->join_action);
-      if ($msg) {
-        push @msgs, $new_window->format_message($new_window->nick, $msg);
-        $irc->send_srv(PRIVMSG => $nick, $msg) if $msg;
-      }
-      $app->broadcast(@msgs);
     },
   },
   {
@@ -65,15 +49,11 @@ my $commands = [
     desc => "Changes your nick.",
     code => sub {
       my ($self, $app, $window, $nick, $network) = @_;
-      my $irc = $network ? $app->get_irc($network) : $window->irc;
-      
-      if ($irc or $irc->is_connected) {
-        $window->reply("Not a connected server name");
-        return;
-      }
 
-      $irc->log(info => "now known as $nick");
-      $irc->send_srv(NICK => $nick);
+      if (my $irc = $self->determine_irc($app, $window, $network)) {
+        $irc->log(info => "now known as $nick");
+        $irc->send_srv(NICK => $nick);
+      }
     },
   },
   {
@@ -94,22 +74,17 @@ my $commands = [
     desc => "Joins the specified channel.",
     code => sub  {
       my ($self, $app, $window, $channel, $network) = @_;
-      my $irc = $network ? $app->get_irc($network) : $window->irc;
+      if (my $irc = $self->determine_irc($app, $window, $network)) {
+        my @params = split /\s+/, $channel;
 
-      unless ($irc and $irc->is_connected) {
-        $window->reply("Not a connected server name");
-        return;
+        unless ($irc->cl->is_channel_name($params[0])) {
+          $window->reply("Invalid channel name: $params[0]");
+          return;
+        }
+
+        $irc->log(info => "joining $params[0]");
+        $irc->send_srv(JOIN => @params);
       }
-
-      my @params = split /\s+/, $channel;
-
-      unless ($irc->cl->is_channel_name($params[0])) {
-        $window->reply("Invalid channel name: $params[0]");
-        return;
-      }
-
-      $irc->log(info => "joining $params[0]");
-      $irc->send_srv(JOIN => @params);
     },
   },
   {
@@ -140,7 +115,7 @@ my $commands = [
     desc => "Clears lines from current window.",
     code => sub {
       my ($self, $app, $window) = @_;
-      $window->buffer->clear(sub {});
+      $window->buffer->clear;
       $app->broadcast($window->clear_action);
     },
   },
@@ -169,22 +144,12 @@ my $commands = [
     desc => "Shows info about the specified nick",
     code => sub  {
       my ($self, $app, $window, $nick, $network) = @_;
-      my $irc = $network ? $app->get_irc($network) : $window->irc;
 
-      unless ($irc and $irc->is_connected) {
-        $window->reply("Not a connected server name");
-        return;
+      if (my $irc = $self->determine_irc($app, $window, $network)) {
+        $irc->add_whois($nick => sub {
+          $window->reply($_[0] ? $_[0] : "No such nick: $nick\n");
+        });
       }
-
-      $irc->add_whois($nick => sub {
-        my $info = shift;
-        if ($info) {
-          $window->reply("nick: $nick".$info);
-        }
-        else {
-          $window->reply("No such nick: $nick\n");
-        }
-      });
     },
   },
   {
@@ -205,46 +170,60 @@ my $commands = [
     desc => "Sends the server raw data without parsing.",
     code => sub  {
       my ($self, $app, $window, $command, $network) = @_;
-      my $irc = $network ? $app->get_irc($network) : $window->irc;
 
-      if ($irc or $irc->is_connected) {
-        $window->reply("Not a connected server name");
-        return;
+      if (my $irc = $self->determine_irc($app, $window, $network)) {
+        $irc->send_raw($command);
       }
-
-      $irc->send_raw($command);
     },
   },
   {
     name => 'disconnect',
-    re => qr{^/disconnect\s+(\S+)},
+    re => qr{^/disconnect(?:\s+(\S+))},
     eg => "/DISCONNECT <server name>",
     desc => "Disconnects from the specified server.",
     code => sub  {
       my ($self, $app, $window, $network) = @_;
       my $irc = $app->get_irc($network);
-      if ($irc and $irc->is_connected) {
-        $irc->disconnect;
-      }
-      elsif ($irc->reconnect_timer) {
-        $irc->cancel_reconnect;
-        $irc->log(info => "canceled reconnect");
+      if ($irc) {
+        if ($irc->is_connected) {
+          $irc->disconnect;
+        }
+        elsif ($irc->reconnect_timer) {
+          $irc->cancel_reconnect;
+          $irc->log(info => "Canceled reconnect timer");
+        }
+        else {
+          $window->reply("Already disconnected");
+        }
       }
       else {
-        $window->reply("already disconnected");
+        $window->reply("$network isn't one of your irc networks!");
       }
     },
   },
   {
     name => 'connect',
-    re => qr{^/connect\s+(\S+)},
+    re => qr{^/connect(?:\s+(\S+))},
     eg => "/CONNECT <server name>",
     desc => "Connects to the specified server.",
     code => sub {
       my ($self, $app, $window, $network) = @_;
-      my $irc  = $app->get_irc($network);
-      if ($irc and !$irc->is_connected) {
-        $irc->connect;
+      my $irc = $app->get_irc($network);
+      if ($irc) {
+        if ($irc->is_connected) {
+          $window->reply("Already connected");
+        }
+        elsif ($irc->reconnect_timer) {
+          $irc->cancel_reconnect;
+          $irc->log(info => "Canceled reconnect timer");
+          $irc->connect;
+        }
+        else {
+          $irc->connect;
+        }
+      }
+      else {
+        $window->reply("$network isn't one of your irc networks!");
       }
     },
   },
@@ -303,7 +282,7 @@ my $commands = [
     code => sub {
       my ($self, $app, $window) = @_;
       $self->reload_handlers;
-      $window->reply("commands reloaded.");
+      $window->reply("Commands reloaded.");
     }
   },
   {

@@ -2,6 +2,7 @@
 !.gitignore
 .modulebuildrc
 Makefile
+Makefile.old
 !Makefile.PL
 blib
 pm_to_blib

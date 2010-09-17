@@ -15,7 +15,6 @@ use JSON;
 use Encode;
 use utf8;
 use Any::Moose;
-use Try::Tiny;
 
 has 'app' => (
   is  => 'ro',
@@ -23,15 +22,18 @@ has 'app' => (
   required => 1,
 );
 
-has 'httpd' => (is  => 'rw');
-has 'ping_timer' => (is  => 'rw');
+has 'httpd' => (
+  is  => 'rw',
+  lazy => 1,
+  builder => "_build_httpd",
+);
 
 sub config {$_[0]->app->config}
 
 my $url_handlers = [
-  [ ""             => "send_index" ],
   [ "say"          => "handle_message" ],
   [ "stream"       => "setup_stream" ],
+  [ ""             => "send_index" ],
   [ "config"       => "send_config" ],
   [ "prefs"        => "send_prefs" ],
   [ "serverconfig" => "server_config" ],
@@ -48,18 +50,14 @@ my $url_handlers = [
 
 sub url_handlers { return $url_handlers }
 
-has 'streams' => (
-  is => 'rw',
-  auto_deref => 1,
-  isa => 'ArrayRef[App::Alice::Stream]',
-  default => sub {[]},
-);
-
-sub add_stream {push @{shift->streams}, @_}
-sub no_streams {@{$_[0]->streams} == 0}
-sub stream_count {scalar @{$_[0]->streams}}
+my $ok = sub{ [200, ["Content-Type", "text/plain", "Content-Length", 2], ['ok']] };
 
 sub BUILD {
+  my $self = shift;
+  $self->httpd;
+}
+
+sub _build_httpd {
   my $self = shift;
   my $httpd = Twiggy::Server->new(
     host => $self->config->http_address,
@@ -67,7 +65,7 @@ sub BUILD {
   );
   $httpd->register_service(
     builder {
-      if ($self->app->auth_enabled) {
+      if ($self->auth_enabled) {
         mkdir $self->config->path."/sessions"
           unless -d $self->config->path."/sessions";
         enable "Session",
@@ -79,13 +77,12 @@ sub BUILD {
     }
   );
   $self->httpd($httpd);
-  $self->ping;
 }
 
 sub dispatch {
   my ($self, $env) = @_;
   my $req = Plack::Request->new($env);
-  if ($self->app->auth_enabled) {
+  if ($self->auth_enabled) {
     unless ($req->path eq "/login" or $self->is_logged_in($req)) {
       my $res = $req->new_response;
       if ($req->path eq "/") {
@@ -116,21 +113,25 @@ sub is_logged_in {
 sub login {
   my ($self, $req) = @_;
   my $res = $req->new_response;
-  if (!$self->app->auth_enabled or $self->is_logged_in($req)) {
+  if (!$self->auth_enabled or $self->is_logged_in($req)) {
     $res->redirect("/");
     return $res->finalize;
   }
-  elsif (my $user = $req->param("username")
-     and my $pass = $req->param("password")) {
-    if ($self->app->authenticate($user, $pass)) {
-      $req->env->{"psgix.session"}->{is_logged_in} = 1;
+  elsif (my $user = $req->parameters->{username}
+     and my $pass = $req->parameters->{password}) {
+    if ($self->authenticate($user, $pass)) {
+      $req->env->{"psgix.session"} = {
+        is_logged_in => 1,
+        username     => $self->app->config->auth->{user},
+        userid       => $self->app->user,
+      };
       $res->redirect("/");
       return $res->finalize;
     }
-    $res->body($self->app->render("login", "bad username or password"));
+    $res->body($self->render("login", "bad username or password"));
   }
   else {
-    $res->body($self->app->render("login"));
+    $res->body($self->render("login"));
   }
   $res->status(200);
   return $res->finalize;
@@ -138,9 +139,10 @@ sub login {
 
 sub logout {
   my ($self, $req) = @_;
-  $_->close for $self->streams;
+  $_->close for $self->app->streams;
+  $self->app->purge_disconnects;
   my $res = $req->new_response;
-  if (!$self->app->auth_enabled) {
+  if (!$self->auth_enabled) {
     $res->redirect("/");
   } else {
     $req->env->{"psgix.session"}{is_logged_in} = 0;
@@ -150,25 +152,8 @@ sub logout {
   return $res->finalize;
 }
 
-sub ping {
-  my $self = shift;
-  $self->ping_timer(AnyEvent->timer(
-    after    => 5,
-    interval => 10,
-    cb       => sub {
-      $self->broadcast({
-        type => "action",
-        event => "ping",
-      });
-    }
-  ));
-}
-
 sub shutdown {
   my $self = shift;
-  $_->close for $self->streams;
-  $self->streams([]);
-  $self->ping_timer(undef);
   $self->httpd(undef);
 }
 
@@ -188,91 +173,91 @@ sub image_proxy {
   }
 }
 
-sub broadcast {
-  my ($self, @data) = @_;
-  return if $self->no_streams or !@data;
-  my $purge = 0;
-  for my $stream ($self->streams) {
-    try {
-      $stream->send(@data);
-    } catch {
-      $stream->close;
-      $purge = 1;
-    };
-  }
-  $self->purge_disconnects if $purge;
-};
-
 sub setup_stream {
   my ($self, $req) = @_;
-  $self->app->log(info => "opening new stream");
-  my $min = $req->param('msgid') || 0;
+  my $app = $self->app;
+  $app->log(info => "opening new stream");
+  my $min = $req->parameters->{msgid} || 0;
   return sub {
     my $respond = shift;
+    my $app = $app;
+
     my $stream = App::Alice::Stream->new(
-      queue      => [ map({$_->join_action} $self->app->windows) ],
+      queue      => [ map({$_->join_action} $app->windows) ],
       writer     => $respond,
-      start_time => $req->param('t'),
+      start_time => $req->parameters->{t},
       # android requires 4K updates to trigger loading event
       min_bytes  => $req->user_agent =~ /android/i ? 4096 : 0,
     );
-    $self->add_stream($stream);
-    $self->app->with_messages(sub {
-      return unless @_;
-      $stream->enqueue(
+
+    $app->add_stream($stream);
+
+    for my $window ($app->windows) {
+      my @msgs = @{$window->buffer->messages};
+      next unless @msgs;
+      $stream->send(
         map  {$_->{buffered} = 1; $_}
         grep {$_->{msgid} > $min}
-        @_
+        @msgs
       );
-      $stream->send;
-    });
+    }
   }
-}
-
-sub purge_disconnects {
-  my ($self) = @_;
-  $self->app->log(debug => "removing broken streams");
-  $self->streams([grep {!$_->closed} $self->streams]);
 }
 
 sub handle_message {
   my ($self, $req) = @_;
-  my $msg  = $req->param('msg');
-  my $is_html = $req->param('html');
+  my $msg  = $req->parameters->{msg};
   utf8::decode($msg) unless utf8::is_utf8($msg);
-  $msg = html_to_irc($msg) if $is_html;
-  my $source = $req->param('source');
-  my $window = $self->app->get_window($source);
-  if ($window) {
+  $msg = html_to_irc($msg) if $req->parameters->{html};
+  my $source = $req->parameters->{source};
+  
+  if (my $window = $self->app->get_window($source)) {
     for (split /\n/, $msg) {
-      try {
+      eval {
         $self->app->handle_command($_, $window) if length $_;
-      } catch {
-        $self->app->log(info => $_);
+      };
+      if ($@) {
+        $self->app->log(info => $@);
       }
     }
   }
-  my $res = $req->new_response(200);
-  $res->content_type('text/plain');
-  $res->content_length(2);
-  $res->body('ok');
-  return $res->finalize;
+  return $ok->();
 }
 
 sub send_index {
   my ($self, $req) = @_;
   my $options = $self->merged_options($req);
+  my $app = $self->app;
+
   return sub {
     my $respond = shift;
     my $writer = $respond->([200, ["Content-type" => "text/html; charset=utf-8"]]);
-    my @windows = $self->app->sorted_windows;
+    my @windows = $app->sorted_windows;
     @windows > 1 ? $windows[1]->{active} = 1 : $windows[0]->{active} = 1;
-    $writer->write(encode_utf8 $self->app->render('index_head', $options, @windows));
-    $self->send_windows($writer, sub {
-      $writer->write(encode_utf8 $self->app->render('index_footer', @windows));
-      $writer->close;
+
+    my @queue;
+    
+    push @queue, sub {$app->render('index_head', $options, @windows)};
+    for my $window (@windows) {
+      push @queue, sub {$app->render('window_head', $window)};
+      push @queue, map {my $msg = $_; sub {$msg->{html}}} @{$window->buffer->messages};
+      push @queue, sub {$app->render('window_footer', $window)};
+    }
+    push @queue, sub {
+      my $html = $app->render('index_footer', @windows);
       delete $_->{active} for @windows;
-    }, @windows);
+      return $html;
+    };
+
+    my $idle_w; $idle_w = AE::idle sub {
+      if (my $cb = shift @queue) {
+        my $content = encode_utf8 $cb->();
+        $writer->write($content);
+      } else {
+        $writer->close;
+        undef $idle_w;
+      }
+    };
   }
 }
 
@@ -281,34 +266,16 @@ sub merged_options {
   my $config = $self->app->config;
   my $params = $req->parameters;
   my %options = (
-   images => $params->{images} || $config->images,
-   debug  => $params->{debug}  || ($config->show_debug ? 'true' : 'false'),
-   timeformat => $params->{timeformat} || $config->timeformat,
+   images => $req->parameters->{images} || $config->images,
+   debug  => $req->parameters->{debug}  || ($config->show_debug ? 'true' : 'false'),
+   timeformat => $req->parameters->{timeformat} || $config->timeformat,
   );
   join "&", map {"$_=$options{$_}"} keys %options;
 }
 
-sub send_windows {
-  my ($self, $writer, $cb, @windows) = @_;
-  if (!@windows) {
-    $cb->();
-    return;
-  }
-
-  my $window = pop @windows;
-  $writer->write(encode_utf8 $self->app->render('window_head', $window));
-  $window->buffer->with_messages(sub {
-    my @messages = @_;
-    $writer->write(encode_utf8 $_->{html}) for @messages;
-  }, 0, sub {
-    $writer->write(encode_utf8 $self->app->render('window_footer', $window));
-    $self->send_windows($writer, $cb, @windows);
-  });
-}
-
 sub send_logs {
   my ($self, $req) = @_;
-  my $output = $self->app->render('logs');
+  my $output = $self->render('logs');
   my $res = $req->new_response(200);
   $res->body(encode_utf8 $output);
   return $res->finalize;
@@ -316,12 +283,13 @@ sub send_logs {
 
 sub send_search {
   my ($self, $req) = @_;
+  my $app = $self->app;
   return sub {
     my $respond = shift;
-    $self->app->history->search(
-      user => $self->app->user, %{$req->parameters}, sub {
+    $app->history->search(
+      user => $app->user, %{$req->parameters}, sub {
       my $rows = shift;
-      my $content = $self->app->render('results', $rows);
+      my $content = $self->render('results', $rows);
       my $res = $req->new_response(200);
       $res->body(encode_utf8 $content);
       $respond->($res->finalize);
@@ -331,13 +299,14 @@ sub send_search {
 
 sub send_range {
   my ($self, $req) = @_;
+  my $app = $self->app;
   return sub {
     my $respond = shift;
-    $self->app->history->range(
-      $self->app->user, $req->param('channel'), $req->param('id'), sub {
+    $app->history->range(
+      $app->user, $req->parameters->{channel}, $req->parameters->{id}, sub {
         my ($before, $after) = @_;
-        $before = $self->app->render('range', $before, 'before');
-        $after = $self->app->render('range', $after, 'after');
+        $before = $self->render('range', $before, 'before');
+        $after = $self->render('range', $after, 'after');
         my $res = $req->new_response(200);
         $res->body(to_json [$before, $after]);
         $respond->($res->finalize);
@@ -349,7 +318,7 @@ sub send_range {
 sub send_config {
   my ($self, $req) = @_;
   $self->app->log(info => "serving config");
-  my $output = $self->app->render('servers');
+  my $output = $self->render('servers');
   my $res = $req->new_response(200);
   $res->body($output);
   return $res->finalize;
@@ -358,7 +327,7 @@ sub send_config {
 sub send_prefs {
   my ($self, $req) = @_;
   $self->app->log(info => "serving prefs");
-  my $output = $self->app->render('prefs');
+  my $output = $self->render('prefs');
   my $res = $req->new_response(200);
   $res->body($output);
   return $res->finalize;
@@ -368,10 +337,10 @@ sub server_config {
   my ($self, $req) = @_;
   $self->app->log(info => "serving blank server config");
   
-  my $name = $req->param('name');
+  my $name = $req->parameters->{name};
   $name =~ s/\s+//g;
-  my $config = $self->app->render('new_server', $name);
-  my $listitem = $self->app->render('server_listitem', $name);
+  my $config = $self->render('new_server', $name);
+  my $listitem = $self->render('server_listitem', $name);
   
   my $res = $req->new_response(200);
   $res->body(to_json({config => $config, listitem => $listitem}));
@@ -397,11 +366,11 @@ sub save_config {
       if ($2 eq "channels" or $2 eq "on_connect") {
         $new_config->{servers}{$1}{$2} = [$req->parameters->get_all($name)];
       } else {
-        $new_config->{servers}{$1}{$2} = $req->param($name);
+        $new_config->{servers}{$1}{$2} = $req->parameters->{$name};
       }
     }
     else {
-      $new_config->{$name} = $req->param($name);
+      $new_config->{$name} = $req->parameters->{$name};
     }
   }
   $self->app->reload_config($new_config);
@@ -410,11 +379,7 @@ sub save_config {
     $self->app->format_info("config", "saved")
   );
 
-  my $res = $req->new_response(200);
-  $res->content_type('text/plain');
-  $res->content_length(2);
-  $res->body('ok');
-  return $res->finalize;
+  return $ok->();
 }
 
 sub tab_order  {
@@ -422,11 +387,7 @@ sub tab_order  {
   $self->app->log(debug => "updating tab order");
   
   $self->app->tab_order([grep {defined $_} $req->parameters->get_all('tabs')]);
-  my $res = $req->new_response(200);
-  $res->content_type('text/plain');
-  $res->content_length(2);
-  $res->body('ok');
-  return $res->finalize;
+  return $ok->();
 }
 
 sub not_found  {
@@ -434,6 +395,21 @@ sub not_found  {
   $self->app->log(debug => "sending 404 " . $req->path_info);
   my $res = $req->new_response(404);
   return $res->finalize;
+}
+
+sub auth_enabled {
+  my $self = shift;
+  $self->app->auth_enabled;
+}
+
+sub authenticate {
+  my $self = shift;
+  $self->app->authenticate(@_);
+}
+
+sub render {
+  my $self = shift;
+  return $self->app->render(@_);
 }
 
 __PACKAGE__->meta->make_immutable;
