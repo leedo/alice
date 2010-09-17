@@ -131,7 +131,7 @@ sub to_string {
   $output .= to_json({
     queue => $self->queue,
     time  => time - $self->offset,
-  }, {utf8 => 1});
+  }, {utf8 => 1, shrink => 1});
 
   $output .= "\n--" . $self->seperator . "\n"
           .  " " x ($self->min_bytes - length $output);

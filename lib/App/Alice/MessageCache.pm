@@ -12,7 +12,6 @@ my $mmap = Cache::FastMmap->new(
   unlink_on_exit => 1,
   page_size => "150k",
   raw_values => 1,
-  compress => 1,
 );
 $mmap->clear;
 
@@ -83,11 +82,11 @@ sub add {
           my $idx = my $length = scalar @$msgs - 1;
           while ($idx > 0) {
             # the metadata adds about 300 bytes
-            $size += length $msgs->[$idx]->{html} + 300; 
+            $size += length($msgs->[$idx]->{html}) + 300; 
             last if $size > $buffersize;
             $idx--;
           }
-          return encode_json [@{$msgs}[$idx .. $length]];
+          return to_json [@{$msgs}[$idx .. $length]], {shrink => 1, utf8 => 1};
         });
 
         delete $add_queue->{$k};
