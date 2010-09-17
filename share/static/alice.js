@@ -9757,8 +9757,8 @@ Object.extend(Alice, {
 
     if (format == "12") {
       var ap;
-      if (hours > 12) {
-        hours -= 12;
+      if (hours >= 12) {
+        if (hours > 12) hours -= 12;
         ap = "p";
       } else {
         ap = "a"
@@ -10840,7 +10840,7 @@ Alice.Window = Class.create({
       if (message.consecutive) {
         var avatar = li.previous(".avatar:not(.consecutive)");
         if (avatar && avatar.down(".timehint"))
-          avatar.down(".timehint").innerHTML = message.timestamp;
+          avatar.down(".timehint").innerHTML = Alice.epochToLocal(message.timestamp, this.application.options.timeformat);
       }
     }
     else if (message.event == "topic") {
