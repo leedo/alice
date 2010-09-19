@@ -9,7 +9,7 @@ use JSON;
 use Cache::File;
 
 my $cache = Cache::File->new(
-  cache_root => "./cache",
+  cache_root => "/tmp/alice-messagecache",
   lock_level => Cache::File::LOCK_NONE(),
 );
 
@@ -19,7 +19,6 @@ $cache->clear;
 # just ignore the metadata since it
 # is a pretty fixed size
 my $buffersize = 1024 * 100;
-my ($add_queue, $add_w);
 
 has id => (
   is => 'ro',
@@ -29,6 +28,15 @@ has id => (
 has previous_nick => (
   is => 'rw',
   default => "",
+);
+
+has add_queue => (
+  is => 'rw',
+  default => sub {[]}
+);
+
+has add_watcher => (
+  is => 'rw',
 );
 
 sub DESTROY {
@@ -52,7 +60,7 @@ sub messages {
   else {
     $limit = $total;
   }
-
+  
   return @{$messages}[$total - $limit .. $total - 1];
 }
 
@@ -71,41 +79,31 @@ sub add {
   $message->{event} eq "say" ? $self->previous_nick($message->{nick})
                              : $self->previous_nick("");
 
-  my $queue = $add_queue->{$self->{id}};
+  push @{$self->add_queue}, $message;
 
-  if (defined $queue) {
-    push @$queue, $message;
-  } else {
-    $add_queue->{$self->{id}} = [$message];
-  }
+  if (!$self->add_watcher) {  
+    my $add_w; $add_w = AE::idle sub {
+      my $json = $cache->get($self->id);
+      my $msgs = ($json ? decode_json $json : []);
+      push @$msgs, @{$self->add_queue};
 
-  if (!$add_w) {  
-    $add_w = AE::idle sub {
-      my ($k,$v);
-      while (($k, $v) = each %$add_queue) {
-        my $json = $cache->get($k);
-        my $msgs = ($json ? decode_json $json : []);
-        push @$msgs, @$v;
+      my $size = 0;
+      my $idx = my $length = scalar @$msgs - 1;
 
-        # may be better to keep a running count of the size
-        # and only remove items if (past size + new size)
-        # is larger than $buffersize
-
-        my $size = 0;
-        my $idx = my $length = scalar @$msgs - 1;
-        while ($idx > 0) {
-          # the metadata adds about 300 bytes
-          $size += length($msgs->[$idx]->{html}) + 300; 
-          last if $size > $buffersize;
-          $idx--;
-        }
-
-        $cache->set($k, to_json [@{$msgs}[$idx .. $length]], {shrink => 1, utf8 => 1});
-
-        delete $add_queue->{$k};
-        undef $add_w if !keys %$add_queue;
+      while ($idx > 0) {
+        # the metadata adds about 300 bytes
+        $size += length($msgs->[$idx]->{html}) + 300; 
+        last if $size > $buffersize;
+        $idx--;
       }
+
+      $cache->set($self->id, to_json [@{$msgs}[$idx .. $length]], {shrink => 1, utf8 => 1});
+
+      undef $add_w;
+      $self->add_queue([]);
+      $self->add_watcher(undef);
     };
+    $self->add_watcher($add_w);
   }
 }
 
