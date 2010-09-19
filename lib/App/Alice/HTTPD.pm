@@ -178,11 +178,12 @@ sub setup_stream {
   my ($self, $req) = @_;
   my $app = $self->app;
   $app->log(info => "opening new stream");
+
   my $min = $req->parameters->{msgid} || 0;
   my $limit = $req->parameters->{limit};
+
   return sub {
     my $respond = shift;
-    my $app = $app;
 
     my $writer = $respond->([200, [@App::Alice::Stream::headers]]);
     my $stream = App::Alice::Stream->new(
@@ -195,15 +196,21 @@ sub setup_stream {
 
     $app->add_stream($stream);
 
-    for my $window ($app->windows) {
-      my @msgs = $window->buffer->messages($limit);
-      next unless @msgs;
-      $stream->send(
-        map  {$_->{buffered} = 1; $_}
-        grep {$_->{msgid} > $min}
-        @msgs
-      );
-    }
+    my @windows = $app->windows;
+    my $idle_w; $idle_w = AE::idle sub {
+      if (my $window = shift @windows) {
+        my @msgs = $window->buffer->messages($limit);
+        return unless @msgs;
+        $stream->send(
+          map  {$_->{buffered} = 1; $_}
+          grep {$_->{msgid} > $min}
+          @msgs
+        );
+      }
+      else {
+        undef $idle_w;
+      }
+    };
   }
 }
 
