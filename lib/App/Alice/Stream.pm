@@ -2,7 +2,6 @@ package App::Alice::Stream;
 
 use JSON;
 use Time::HiRes qw/time/;
-use Try::Tiny;
 use Any::Moose;
 
 use strict;
