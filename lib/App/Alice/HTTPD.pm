@@ -179,6 +179,7 @@ sub setup_stream {
   my $app = $self->app;
   $app->log(info => "opening new stream");
   my $min = $req->parameters->{msgid} || 0;
+  my $limit = $req->parameters->{limit};
   return sub {
     my $respond = shift;
     my $app = $app;
@@ -194,7 +195,7 @@ sub setup_stream {
     $app->add_stream($stream);
 
     for my $window ($app->windows) {
-      my @msgs = @{$window->buffer->messages};
+      my @msgs = $window->buffer->messages($limit);
       next unless @msgs;
       $stream->send(
         map  {$_->{buffered} = 1; $_}
@@ -241,9 +242,6 @@ sub send_index {
     push @queue, sub {$app->render('index_head', $options, @windows)};
     for my $window (@windows) {
       push @queue, sub {$app->render('window_head', $window)};
-      if ($window->{active}) {
-        push @queue, map {my $msg = $_; sub {$msg->{html}}} @{$window->buffer->messages};
-      }
       push @queue, sub {$app->render('window_footer', $window)};
     }
     push @queue, sub {
@@ -266,17 +264,17 @@ sub send_index {
 
 sub window_messages {
   my ($self, $req) = @_;
-  my $options = $self->merged_options($req);
   my $app = $self->app;
 
   return sub {
     my $respond = shift;
 
     my $source = $req->parameters->{source};
+    my $limit = $req->parameters->{limit};
     if (my $window = $app->get_window($source)) {
       my $writer = $respond->([200, ["Content-type" => "text/html; charset=utf-8"]]);
 
-      my @queue = @{$window->buffer->messages};
+      my @queue = $window->buffer->messages($limit);
 
       my $idle_w; $idle_w = AE::idle sub {
         if (my $msg = shift @queue) {

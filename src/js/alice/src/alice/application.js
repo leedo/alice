@@ -6,6 +6,8 @@ Alice.Application = Class.create({
     this.connection = new Alice.Connection(this);
     this.filters = [];
     this.keyboard = new Alice.Keyboard(this);
+    this.isready = false;
+    this.onready = [];
 
     this.isPhone = window.navigator.platform.match(/(android|iphone)/i) ? 1 : 0;
     this.isMobile = this.isPhone || Prototype.Browser.MobileSafari;
@@ -142,9 +144,10 @@ Alice.Application = Class.create({
   openWindow: function(element, title, active, hashtag) {
     var win = new Alice.Window(this, element, title, active, hashtag);
     this.addWindow(win);
-    if (active) {
-      win.focus();
-    }
+    if (active) win.focus();
+    this.onready.push(function() {
+      this.connection.getWindowMessages(win);
+    }.bind(this));
     return win;
   },
   
@@ -329,6 +332,12 @@ Alice.Application = Class.create({
   clearMissed: function() {
     if (!window.fluid) return;
     window.fluid.dockBadge = "";
+  },
+
+  ready: function() {
+    this.onready.each(function(cb){cb();});
+    this.isready = true;
+    this.connection._getWindowMessages();
   },
 
   log: function () {

@@ -7,7 +7,7 @@ has previous_nick => (
   default => "",
 );
 
-has messages => (
+has _messages => (
   is => 'rw',
   isa => 'ArrayRef',
   default => sub {[]}
@@ -21,7 +21,7 @@ has buffersize => (
 sub clear {
   my ($self, $cb) = @_;
   $self->previous_nick("");
-  $self->messages([]);
+  $self->_messages([]);
 }
 
 sub add {
@@ -29,10 +29,27 @@ sub add {
   $message->{event} eq "say" ? $self->previous_nick($message->{nick})
                              : $self->previous_nick("");
 
-  push @{$self->messages}, $message;
-  if (@{$self->messages} > $self->buffersize) {
-    shift @{$self->messages};
+  push @{$self->_messages}, $message;
+  if (@{$self->_messages} > $self->buffersize) {
+    shift @{$self->_messages};
   }
+}
+
+sub messages {
+  my ($self, $limit) = @_;
+
+  my $total = scalar @{$self->_messages};
+  return () unless $total;
+  
+  if ($limit) {
+    $limit = 0 if $limit < 0;
+    $limit = $total if $limit > $total;
+  }
+  else {
+    $limit = $total;
+  }
+
+  return @{$self->_messages}[$total - $limit .. $total - 1];
 }
 
 __PACKAGE__->meta->make_immutable;
