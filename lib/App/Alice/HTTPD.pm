@@ -184,9 +184,10 @@ sub setup_stream {
     my $respond = shift;
     my $app = $app;
 
+    my $writer = $respond->([200, [@App::Alice::Stream::headers]]);
     my $stream = App::Alice::Stream->new(
       queue      => [ map({$_->join_action} $app->windows) ],
-      writer     => $respond,
+      writer     => $writer,
       start_time => $req->parameters->{t},
       # android requires 4K updates to trigger loading event
       min_bytes  => $req->user_agent =~ /android/i ? 4096 : 0,

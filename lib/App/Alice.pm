@@ -68,7 +68,6 @@ has httpd => (
 has streams => (
   is      => 'rw',
   isa     => 'ArrayRef[App::Alice::Stream]',
-  auto_deref => 1,
   default => sub {[]},
 );
 
@@ -273,7 +272,7 @@ sub _shutdown {
   my $self = shift;
 
   $self->_ircs([]);
-  $_->close for $self->streams;
+  $_->close for @{$self->streams};
   $self->streams([]);
   $self->httpd->shutdown;
   
@@ -431,13 +430,12 @@ sub broadcast {
                   grep {$_->{highlight}} @messages;
 
   my $purge = 0;
-  for my $stream ($self->streams) {
-    try {
-      $stream->send(@messages);
-    } catch {
-      $stream->close;
+  for my $stream (@{$self->streams}) {
+    if ($stream->closed) {
       $purge = 1;
-    };
+      next;
+    }
+    $stream->send(@messages);
   }
   $self->purge_disconnects if $purge;
 }
@@ -445,7 +443,7 @@ sub broadcast {
 sub purge_disconnects {
   my ($self) = @_;
   $self->log(debug => "removing broken streams");
-  $self->streams([grep {!$_->closed} $self->streams]);
+  $self->streams([grep {!$_->closed} @{$self->streams}]);
 }
 
 sub render {

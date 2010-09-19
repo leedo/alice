@@ -337,7 +337,7 @@ Alice.Application = Class.create({
   ready: function() {
     this.onready.each(function(cb){cb();});
     this.isready = true;
-    this.connection._getWindowMessages();
+    this.connection.getWindowMessages();
   },
 
   log: function () {
