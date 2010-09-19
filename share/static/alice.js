@@ -10047,6 +10047,8 @@ Alice.Application = Class.create({
     this.connection = new Alice.Connection(this);
     this.filters = [];
     this.keyboard = new Alice.Keyboard(this);
+    this.isready = false;
+    this.onready = [];
 
     this.isPhone = window.navigator.platform.match(/(android|iphone)/i) ? 1 : 0;
     this.isMobile = this.isPhone || Prototype.Browser.MobileSafari;
@@ -10181,9 +10183,10 @@ Alice.Application = Class.create({
   openWindow: function(element, title, active, hashtag) {
     var win = new Alice.Window(this, element, title, active, hashtag);
     this.addWindow(win);
-    if (active) {
-      win.focus();
-    }
+    if (active) win.focus();
+    this.onready.push(function() {
+      this.connection.getWindowMessages(win);
+    }.bind(this));
     return win;
   },
 
@@ -10368,6 +10371,12 @@ Alice.Application = Class.create({
   clearMissed: function() {
     if (!window.fluid) return;
     window.fluid.dockBadge = "";
+  },
+
+  ready: function() {
+    this.onready.each(function(cb){cb();});
+    this.isready = true;
+    this.connection._getWindowMessages();
   },
 
   log: function () {
@@ -10561,27 +10570,25 @@ Alice.Connection = Class.create({
     });
   },
 
-  sendPing: function() {
-    new Ajax.Request('/ping');
-    on401: this.gotoLogin
-  },
+  getWindowMessages: function(win) {
+    win.active ? this.windowQueue.unshift(win) : this.windowQueue.push(win);
 
-  getWindowMessages: function(source, callback) {
-    this.windowQueue.push([source, callback]);
-
-    if (!this.windowWatcher) {
+    if (this.application.isready && !this.windowWatcher) {
       this.windowWatcher = true;
       this._getWindowMessages();
     }
   },
 
   _getWindowMessages: function() {
-    var job = this.windowQueue.pop();
+    var win = this.windowQueue.shift();
+
     new Ajax.Request("/messages", {
       method: "get",
-      parameters: {source: job[0]},
+      parameters: {source: win.id, limit: win.messageLimit},
       onSuccess: function(response) {
-        job[1](response);
+        win.messages.down("ul").replace('<ul class="messages">'+response.responseText+'</ul>');
+        win.setupMessages();
+
         if (this.windowQueue.length) {
           this._getWindowMessages();
         } else {
@@ -10612,22 +10619,10 @@ Alice.Window = Class.create({
     this.visibleNick = "";
     this.visibleNickTimeout = "";
     this.nicks = [];
-    this.messageLimit = 250;
+    this.messageLimit = this.application.isMobile ? 50 : 250;
 
     this.setupEvents();
     this.setupTopic();
-
-    if (!this.active) {
-      this.application.connection.getWindowMessages(
-        this.id,
-        function (response) {
-          this.messages.down("ul").innerHTML = response.responseText;
-          this.setupMessages();
-        }.bind(this)
-      );
-    } else {
-      this.setupMessages();
-    }
   },
 
   setupTopic: function() {
@@ -10678,11 +10673,6 @@ Alice.Window = Class.create({
     if (this.application.isJankyScroll) {
       this.resizeMessagearea();
       this.scrollToBottom();
-    }
-
-    else if (this.application.isMobile) {
-      this.messageLimit = 50;
-      this.messages.select("li").reverse().slice(50).invoke("remove");
     }
 
     if (this.active) this.scrollToBottom(true);

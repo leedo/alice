@@ -37,9 +37,23 @@ sub DESTROY {
 }
 
 sub messages {
-  my $self = shift;
+  my ($self, $limit) = @_;
+
   my $json = $mmap->get($self->{id});
-  return ($json ? decode_json $json : []);
+  my $messages = $json ? decode_json $json : [];
+  my $total = scalar @$messages;
+
+  return () unless $total;
+
+  if ($limit) {
+    $limit = 0 if $limit < 0;
+    $limit = $total if $limit > $total;
+  }
+  else {
+    $limit = $total;
+  }
+
+  return @{$messages}[$total - $limit .. $total - 1];
 }
 
 sub clear {
@@ -95,6 +109,8 @@ sub add {
     };
   }
 }
+
+
 
 __PACKAGE__->meta->make_immutable;
 1;

@@ -174,22 +174,25 @@ Alice.Connection = Class.create({
     });
   },
   
-  getWindowMessages: function(source, callback) {
-    this.windowQueue.push([source, callback]);
+  getWindowMessages: function(win) {
+    win.active ? this.windowQueue.unshift(win) : this.windowQueue.push(win);
 
-    if (!this.windowWatcher) {
+    if (this.application.isready && !this.windowWatcher) {
       this.windowWatcher = true;
       this._getWindowMessages();
     }
   },
 
   _getWindowMessages: function() {
-    var job = this.windowQueue.pop();
+    var win = this.windowQueue.shift();
+
     new Ajax.Request("/messages", {
       method: "get",
-      parameters: {source: job[0]},
+      parameters: {source: win.id, limit: win.messageLimit},
       onSuccess: function(response) {
-        job[1](response);
+        win.messages.down("ul").replace('<ul class="messages">'+response.responseText+'</ul>');
+        win.setupMessages();
+
         if (this.windowQueue.length) {
           this._getWindowMessages();
         } else {

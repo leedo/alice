@@ -19,22 +19,10 @@ Alice.Window = Class.create({
     this.visibleNick = "";
     this.visibleNickTimeout = "";
     this.nicks = [];
-    this.messageLimit = 250;
+    this.messageLimit = this.application.isMobile ? 50 : 250;
     
     this.setupEvents();
     this.setupTopic();
-
-    if (!this.active) {
-      this.application.connection.getWindowMessages(
-        this.id,
-        function (response) {
-          this.messages.down("ul").innerHTML = response.responseText;
-          this.setupMessages();
-        }.bind(this)
-      );
-    } else {
-      this.setupMessages();
-    }
   },
 
   setupTopic: function() {
@@ -90,12 +78,6 @@ Alice.Window = Class.create({
     if (this.application.isJankyScroll) {
       this.resizeMessagearea();
       this.scrollToBottom();
-    }
-
-    // only keep 50 messages per tab to avoid memory limits
-    else if (this.application.isMobile) {
-      this.messageLimit = 50;
-      this.messages.select("li").reverse().slice(50).invoke("remove");
     }
 
     if (this.active) this.scrollToBottom(true);
