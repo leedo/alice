@@ -12,9 +12,20 @@ Alice.Window = Class.create({
     this.tabButton = $(this.id + "_tab_button");
     this.tabOverflowButton = $(this.id + "_tab_overflow_button");
     this.form = $(this.id + "_form");
-
     this.topic = $(this.id + "_topic");
+    this.messages = this.element.down('.message_wrap');
+    this.submit = $(this.id + "_submit");
+    this.nicksVisible = false;
+    this.visibleNick = "";
+    this.visibleNickTimeout = "";
+    this.nicks = [];
+    this.messageLimit = this.application.isMobile ? 50 : 250;
+    
+    this.setupEvents();
+    this.setupTopic();
+  },
 
+  setupTopic: function() {
     // setup topic expanding on click (if it is multiline)
     if (this.topic) {
       var orig_height = this.topic.getStyle("height");
@@ -25,16 +36,11 @@ Alice.Window = Class.create({
           this.topic.setStyle({height: orig_height});
         }
       }.bind(this));
+      this.makeTopicClickable();
     }
+  },
 
-    this.messages = this.element.down('.message_wrap');
-    this.submit = $(this.id + "_submit");
-    this.nicksVisible = false;
-    this.visibleNick = "";
-    this.visibleNickTimeout = "";
-    this.nicks = [];
-    this.messageLimit = 250;
-    
+  setupEvents: function() {
     this.submit.observe("click", function (e) {this.input.send(); e.stop()}.bind(this));
 
     // huge mess of click logic to get the right behavior.
@@ -49,29 +55,39 @@ Alice.Window = Class.create({
       if (this.active && !this.focusing) this.close()}.bind(this));
 
     this.messages.observe("mouseover", this.showNick.bind(this));
+  },
+
+  setupMessages: function() {
+    // fix height of non-consecutive avatar messages
+    this.messages.select('li.avatar:not(.consecutive) + li.consecutive').each(function (li) {
+      li.previous().down('div.msg').setStyle({minHeight:'0px'});
+    });
+
+    this.messages.select('li.monospace + li.monospace.consecutive').each(function(li) {
+      li.previous().down('div.msg').setStyle({paddingBottom:'0px'});
+    });
+
+    // change timestamps from epoch to local time
+    this.messages.select('span.timestamp').each(function(elem) {
+      if (elem.innerHTML) {
+        elem.innerHTML = Alice.epochToLocal(elem.innerHTML.strip(), alice.options.timeformat);
+        elem.style.opacity = 1;
+      }
+    });
 
     if (this.application.isJankyScroll) {
       this.resizeMessagearea();
       this.scrollToBottom();
     }
 
-    // only keep 50 messages per tab to avoid memory limits
-    else if (this.application.isMobile) {
-      this.messageLimit = 50;
-      this.messages.select("li").reverse().slice(50).invoke("remove");
-    }
-
     if (this.active) this.scrollToBottom(true);
-    this.makeTopicClickable();
 
     // wait a second to load images, otherwise the browser will say "loading..."
     setTimeout(function () {
       this.messages.select('li.message div.msg').each(function (msg) {
-        msg.innerHTML = application.applyFilters(msg.innerHTML);
-      });
+        msg.innerHTML = this.application.applyFilters(msg.innerHTML);
+      }.bind(this));
     }.bind(this), 1000);
-
-
   },
   
   isTabWrapped: function() {

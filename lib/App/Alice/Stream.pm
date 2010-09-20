@@ -2,11 +2,13 @@ package App::Alice::Stream;
 
 use JSON;
 use Time::HiRes qw/time/;
-use Try::Tiny;
 use Any::Moose;
 
 use strict;
 use warnings;
+
+my $separator = "xalicex";
+our @headers = ('Content-Type' => "multipart/mixed; boundary=$separator; charset=utf-8");
 
 has queue => (
   is  => 'rw',
@@ -30,12 +32,6 @@ has [qw/delayed started closed/] => (
   default => 0,
 );
 
-has 'seperator' => (
-  is  => 'ro',
-  isa => 'Str',
-  default => 'xalicex',
-);
-
 has 'timer' => (
   is  => 'rw',
 );
@@ -55,23 +51,24 @@ sub BUILD {
   my $local_time = time;
   my $remote_time = $self->start_time || $local_time;
   $self->offset($local_time - $remote_time);
-  my $writer = $self->writer->(
-    [200, ['Content-Type' => 'multipart/mixed; boundary='.$self->seperator.'; charset=utf-8']]
-  );
-  $self->writer($writer);
-  $self->_send;
-}
 
-sub _send {
-  my $self = shift;
-  eval { $self->send };
-  warn $@ if $@;
-  $self->close if $@;
+  # better way to get the AE handle?
+  my $hdl = $self->writer->{handle};
+  my $close = sub {
+    my (undef, $fatal, $msg) = @_;
+    $hdl->destroy;
+    undef $hdl;
+    $self->close;
+  };
+
+  $hdl->on_eof($close);
+  $hdl->on_error($close);
 }
 
 sub send {
   my ($self, @messages) = @_;
-  die "Sending on a closed stream" if $self->closed;
+  return if $self->closed;
+
   $self->enqueue(@messages) if @messages;
   return if $self->delayed or $self->queue_empty;
   if (my $delay = $self->flooded) {
@@ -85,7 +82,7 @@ sub send {
 sub close {
   my $self = shift;
   $self->flush;
-  try {$self->writer->close} if $self->writer;
+  $self->writer->close if $self->writer;
   $self->writer(undef);
   $self->timer(undef);
   $self->closed(1);
@@ -108,7 +105,7 @@ sub delay {
     cb    => sub {
       $self->delayed(0);
       $self->timer(undef);
-      $self->_send;
+      $self->send;
     },
   ));
 }
@@ -124,16 +121,16 @@ sub to_string {
   my $output;
 
   if (! $self->started) {
-    $output .= "--".$self->seperator."\n";
+    $output .= "--$separator\n";
     $self->started(1);
   }
 
   $output .= to_json({
     queue => $self->queue,
     time  => time - $self->offset,
-  }, {utf8 => 1});
+  }, {utf8 => 1, shrink => 1});
 
-  $output .= "\n--" . $self->seperator . "\n"
+  $output .= "\n--$separator\n"
           .  " " x ($self->min_bytes - length $output);
 
   return $output

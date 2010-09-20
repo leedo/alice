@@ -34,6 +34,7 @@ my $url_handlers = [
   [ "say"          => "handle_message" ],
   [ "stream"       => "setup_stream" ],
   [ ""             => "send_index" ],
+  [ "messages"     => "window_messages" ],
   [ "config"       => "send_config" ],
   [ "prefs"        => "send_prefs" ],
   [ "serverconfig" => "server_config" ],
@@ -177,14 +178,17 @@ sub setup_stream {
   my ($self, $req) = @_;
   my $app = $self->app;
   $app->log(info => "opening new stream");
+
   my $min = $req->parameters->{msgid} || 0;
+  my $limit = $req->parameters->{limit};
+
   return sub {
     my $respond = shift;
-    my $app = $app;
 
+    my $writer = $respond->([200, [@App::Alice::Stream::headers]]);
     my $stream = App::Alice::Stream->new(
       queue      => [ map({$_->join_action} $app->windows) ],
-      writer     => $respond,
+      writer     => $writer,
       start_time => $req->parameters->{t},
       # android requires 4K updates to trigger loading event
       min_bytes  => $req->user_agent =~ /android/i ? 4096 : 0,
@@ -192,15 +196,21 @@ sub setup_stream {
 
     $app->add_stream($stream);
 
-    for my $window ($app->windows) {
-      my @msgs = @{$window->buffer->messages};
-      next unless @msgs;
-      $stream->send(
-        map  {$_->{buffered} = 1; $_}
-        grep {$_->{msgid} > $min}
-        @msgs
-      );
-    }
+    my @windows = $app->windows;
+    my $idle_w; $idle_w = AE::idle sub {
+      if (my $window = shift @windows) {
+        my @msgs = $window->buffer->messages($limit);
+        return unless @msgs;
+        $stream->send(
+          map  {$_->{buffered} = 1; $_}
+          grep {$_->{msgid} > $min}
+          @msgs
+        );
+      }
+      else {
+        undef $idle_w;
+      }
+    };
   }
 }
 
@@ -240,7 +250,6 @@ sub send_index {
     push @queue, sub {$app->render('index_head', $options, @windows)};
     for my $window (@windows) {
       push @queue, sub {$app->render('window_head', $window)};
-      push @queue, map {my $msg = $_; sub {$msg->{html}}} @{$window->buffer->messages};
       push @queue, sub {$app->render('window_footer', $window)};
     }
     push @queue, sub {
@@ -259,6 +268,37 @@ sub send_index {
       }
     };
   }
+}
+
+sub window_messages {
+  my ($self, $req) = @_;
+  my $app = $self->app;
+
+  return sub {
+    my $respond = shift;
+
+    my $source = $req->parameters->{source};
+    my $limit = $req->parameters->{limit};
+    if (my $window = $app->get_window($source)) {
+      my $writer = $respond->([200, ["Content-type" => "text/html; charset=utf-8"]]);
+
+      my @queue = $window->buffer->messages($limit);
+
+      my $idle_w; $idle_w = AE::idle sub {
+        if (my $msg = shift @queue) {
+          $writer->write(encode_utf8 $msg->{html});
+        } else {
+          $writer->close;
+          undef $idle_w;
+        }
+      };
+    }
+    else {
+      my $res = $req->new_response(404);
+      $res->body("not found");
+      $respond->($res->finalize);
+    }
+  };
 }
 
 sub merged_options {
