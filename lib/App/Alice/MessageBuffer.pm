@@ -7,21 +7,35 @@ has previous_nick => (
   default => "",
 );
 
-has _messages => (
-  is => 'rw',
-  isa => 'ArrayRef',
-  default => sub {[]}
+has store_class => (
+  is => 'ro',
+  required => 1,
+  default => "Memory",
 );
 
-has buffersize => (
+has id => (
   is => 'ro',
-  default => 100
+  required => 1,
+);
+
+has store => (
+  is => 'ro',
+  lazy => 1, 
+  default => sub {
+    my $self = shift;
+    my $class = "App::Alice::MessageStore::".$self->store_class;
+    my $id = $self->id;
+    my $store = eval "use $class; $class->new(id => '$id');";
+    die $@ if $@;
+    return $store;
+  }
 );
 
 sub clear {
-  my ($self, $cb) = @_;
+  my $self = shift;
   $self->previous_nick("");
-  $self->_messages([]);
+
+  $self->store->clear;
 }
 
 sub add {
@@ -29,27 +43,12 @@ sub add {
   $message->{event} eq "say" ? $self->previous_nick($message->{nick})
                              : $self->previous_nick("");
 
-  push @{$self->_messages}, $message;
-  if (@{$self->_messages} > $self->buffersize) {
-    shift @{$self->_messages};
-  }
+  $self->store->add($message);
 }
 
 sub messages {
   my ($self, $limit) = @_;
-
-  my $total = scalar @{$self->_messages};
-  return () unless $total;
-  
-  if ($limit) {
-    $limit = 0 if $limit < 0;
-    $limit = $total if $limit > $total;
-  }
-  else {
-    $limit = $total;
-  }
-
-  return @{$self->_messages}[$total - $limit .. $total - 1];
+  return $self->store->messages($limit);
 }
 
 __PACKAGE__->meta->make_immutable;

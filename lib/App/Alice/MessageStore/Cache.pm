@@ -1,4 +1,4 @@
-package App::Alice::MessageCache;
+package App::Alice::MessageStore::Cache;
 
 use strict;
 use warnings;
@@ -23,11 +23,6 @@ my $buffersize = 1024 * 100;
 has id => (
   is => 'ro',
   required => 1,
-);
-
-has previous_nick => (
-  is => 'rw',
-  default => "",
 );
 
 has add_queue => (
@@ -66,7 +61,6 @@ sub messages {
 
 sub clear {
   my $self = shift;
-  $self->previous_nick("");
 
   my $clear_w; $clear_w = AE::idle sub {
     $cache->remove($self->{id});
@@ -76,8 +70,6 @@ sub clear {
 
 sub add {
   my ($self, $message) = @_;
-  $message->{event} eq "say" ? $self->previous_nick($message->{nick})
-                             : $self->previous_nick("");
 
   push @{$self->add_queue}, $message;
 
