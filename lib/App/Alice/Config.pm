@@ -108,6 +108,12 @@ has static_prefix => (
   default => '/static/',
 );
 
+has message_store => (
+  is      => 'rw',
+  isa     => 'Str',
+  default => 'Memory',
+);
+
 sub ignores {@{$_[0]->ignore}}
 sub add_ignore {push @{shift->ignore}, @_}
 

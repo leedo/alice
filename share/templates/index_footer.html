@@ -12,6 +12,7 @@
               );
             <? } ?>
             alice.focusHash(orig_hash);
+            alice.ready();
             // required due to browser weirdness with scrolltobottom on initial focus
             setTimeout(function(){alice.activeWindow().scrollToBottom(true)}, 1);
 

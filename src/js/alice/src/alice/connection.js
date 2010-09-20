@@ -8,6 +8,8 @@ Alice.Connection = Class.create({
     this.msgid = 0;
     this.reconnect_count = 0;
     this.reconnecting = false;
+    this.windowQueue = [];
+    this.windowWatcher = false;
   },
 
   gotoLogin: function() {
@@ -88,7 +90,7 @@ Alice.Connection = Class.create({
         else if (queue[i].type == "message") {
           if (queue[i].msgid) this.msgid = queue[i].msgid;
           if (queue[i].timestamp)
-            queue[i].timestamp = Alice.epochToLocal(queue[i].timestamp);
+            queue[i].timestamp = Alice.epochToLocal(queue[i].timestamp, this.application.options.timeformat);
           this.application.displayMessage(queue[i]);
         }
       }
@@ -172,8 +174,32 @@ Alice.Connection = Class.create({
     });
   },
   
-  sendPing: function() {
-    new Ajax.Request('/ping');
-    on401: this.gotoLogin
+  getWindowMessages: function(win) {
+    if (win)
+      win.active ? this.windowQueue.unshift(win) : this.windowQueue.push(win);
+
+    if (this.application.isready && !this.windowWatcher) {
+      this.windowWatcher = true;
+      this._getWindowMessages();
+    }
+  },
+
+  _getWindowMessages: function() {
+    var win = this.windowQueue.shift();
+
+    new Ajax.Request("/messages", {
+      method: "get",
+      parameters: {source: win.id, limit: win.messageLimit},
+      onSuccess: function(response) {
+        win.messages.down("ul").replace('<ul class="messages">'+response.responseText+'</ul>');
+        win.setupMessages();
+
+        if (this.windowQueue.length) {
+          this._getWindowMessages();
+        } else {
+          this.windowWatcher = false;
+        }
+      }.bind(this)
+    });
   }
 });

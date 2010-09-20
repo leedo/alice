@@ -9757,8 +9757,8 @@ Object.extend(Alice, {
 
     if (format == "12") {
       var ap;
-      if (hours > 12) {
-        hours -= 12;
+      if (hours >= 12) {
+        if (hours > 12) hours -= 12;
         ap = "p";
       } else {
         ap = "a"
@@ -10047,6 +10047,8 @@ Alice.Application = Class.create({
     this.connection = new Alice.Connection(this);
     this.filters = [];
     this.keyboard = new Alice.Keyboard(this);
+    this.isready = false;
+    this.onready = [];
 
     this.isPhone = window.navigator.platform.match(/(android|iphone)/i) ? 1 : 0;
     this.isMobile = this.isPhone || Prototype.Browser.MobileSafari;
@@ -10181,9 +10183,10 @@ Alice.Application = Class.create({
   openWindow: function(element, title, active, hashtag) {
     var win = new Alice.Window(this, element, title, active, hashtag);
     this.addWindow(win);
-    if (active) {
-      win.focus();
-    }
+    if (active) win.focus();
+    this.onready.push(function() {
+      this.connection.getWindowMessages(win);
+    }.bind(this));
     return win;
   },
 
@@ -10370,6 +10373,12 @@ Alice.Application = Class.create({
     window.fluid.dockBadge = "";
   },
 
+  ready: function() {
+    this.onready.each(function(cb){cb();});
+    this.isready = true;
+    this.connection.getWindowMessages();
+  },
+
   log: function () {
     var win = this.activeWindow();
     for (var i=0; i < arguments.length; i++) {
@@ -10396,6 +10405,8 @@ Alice.Connection = Class.create({
     this.msgid = 0;
     this.reconnect_count = 0;
     this.reconnecting = false;
+    this.windowQueue = [];
+    this.windowWatcher = false;
   },
 
   gotoLogin: function() {
@@ -10476,7 +10487,7 @@ Alice.Connection = Class.create({
         else if (queue[i].type == "message") {
           if (queue[i].msgid) this.msgid = queue[i].msgid;
           if (queue[i].timestamp)
-            queue[i].timestamp = Alice.epochToLocal(queue[i].timestamp);
+            queue[i].timestamp = Alice.epochToLocal(queue[i].timestamp, this.application.options.timeformat);
           this.application.displayMessage(queue[i]);
         }
       }
@@ -10559,9 +10570,33 @@ Alice.Connection = Class.create({
     });
   },
 
-  sendPing: function() {
-    new Ajax.Request('/ping');
-    on401: this.gotoLogin
+  getWindowMessages: function(win) {
+    if (win)
+      win.active ? this.windowQueue.unshift(win) : this.windowQueue.push(win);
+
+    if (this.application.isready && !this.windowWatcher) {
+      this.windowWatcher = true;
+      this._getWindowMessages();
+    }
+  },
+
+  _getWindowMessages: function() {
+    var win = this.windowQueue.shift();
+
+    new Ajax.Request("/messages", {
+      method: "get",
+      parameters: {source: win.id, limit: win.messageLimit},
+      onSuccess: function(response) {
+        win.messages.down("ul").replace('<ul class="messages">'+response.responseText+'</ul>');
+        win.setupMessages();
+
+        if (this.windowQueue.length) {
+          this._getWindowMessages();
+        } else {
+          this.windowWatcher = false;
+        }
+      }.bind(this)
+    });
   }
 });
 Alice.Window = Class.create({
@@ -10578,9 +10613,20 @@ Alice.Window = Class.create({
     this.tabButton = $(this.id + "_tab_button");
     this.tabOverflowButton = $(this.id + "_tab_overflow_button");
     this.form = $(this.id + "_form");
-
     this.topic = $(this.id + "_topic");
+    this.messages = this.element.down('.message_wrap');
+    this.submit = $(this.id + "_submit");
+    this.nicksVisible = false;
+    this.visibleNick = "";
+    this.visibleNickTimeout = "";
+    this.nicks = [];
+    this.messageLimit = this.application.isMobile ? 50 : 250;
 
+    this.setupEvents();
+    this.setupTopic();
+  },
+
+  setupTopic: function() {
     if (this.topic) {
       var orig_height = this.topic.getStyle("height");
       this.topic.observe("click", function(e) {
@@ -10590,16 +10636,11 @@ Alice.Window = Class.create({
           this.topic.setStyle({height: orig_height});
         }
       }.bind(this));
+      this.makeTopicClickable();
     }
+  },
 
-    this.messages = this.element.down('.message_wrap');
-    this.submit = $(this.id + "_submit");
-    this.nicksVisible = false;
-    this.visibleNick = "";
-    this.visibleNickTimeout = "";
-    this.nicks = [];
-    this.messageLimit = 250;
-
+  setupEvents: function() {
     this.submit.observe("click", function (e) {this.input.send(); e.stop()}.bind(this));
 
     this.tab.observe("mousedown", function(e) {
@@ -10612,27 +10653,36 @@ Alice.Window = Class.create({
       if (this.active && !this.focusing) this.close()}.bind(this));
 
     this.messages.observe("mouseover", this.showNick.bind(this));
+  },
+
+  setupMessages: function() {
+    this.messages.select('li.avatar:not(.consecutive) + li.consecutive').each(function (li) {
+      li.previous().down('div.msg').setStyle({minHeight:'0px'});
+    });
+
+    this.messages.select('li.monospace + li.monospace.consecutive').each(function(li) {
+      li.previous().down('div.msg').setStyle({paddingBottom:'0px'});
+    });
+
+    this.messages.select('span.timestamp').each(function(elem) {
+      if (elem.innerHTML) {
+        elem.innerHTML = Alice.epochToLocal(elem.innerHTML.strip(), alice.options.timeformat);
+        elem.style.opacity = 1;
+      }
+    });
 
     if (this.application.isJankyScroll) {
       this.resizeMessagearea();
       this.scrollToBottom();
     }
 
-    else if (this.application.isMobile) {
-      this.messageLimit = 50;
-      this.messages.select("li").reverse().slice(50).invoke("remove");
-    }
-
     if (this.active) this.scrollToBottom(true);
-    this.makeTopicClickable();
 
     setTimeout(function () {
       this.messages.select('li.message div.msg').each(function (msg) {
-        msg.innerHTML = application.applyFilters(msg.innerHTML);
-      });
+        msg.innerHTML = this.application.applyFilters(msg.innerHTML);
+      }.bind(this));
     }.bind(this), 1000);
-
-
   },
 
   isTabWrapped: function() {
@@ -11514,21 +11564,6 @@ if (window == window.parent) {
     if (navigator.platform.match(/iphone/i)) {
       alice.options.images = "hide";
     }
-
-    $$('ul.messages li.avatar:not(.consecutive) + li.consecutive').each(function (li) {
-      li.previous().down('div.msg').setStyle({minHeight:'0px'});
-    });
-
-    $$('ul.messages li.monospace + li.monospace.consecutive').each(function(li) {
-      li.previous().down('div.msg').setStyle({paddingBottom:'0px'});
-    });
-
-    $$('span.timestamp').each(function(elem) {
-      if (elem.innerHTML) {
-        elem.innerHTML = Alice.epochToLocal(elem.innerHTML.strip(), alice.options.timeformat);
-        elem.style.opacity = 1;
-      }
-    });
 
 
     $('helpclose').observe("click", function () { $('help').hide(); });
