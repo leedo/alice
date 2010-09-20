@@ -90,7 +90,7 @@ Alice.Connection = Class.create({
         else if (queue[i].type == "message") {
           if (queue[i].msgid) this.msgid = queue[i].msgid;
           if (queue[i].timestamp)
-            queue[i].timestamp = Alice.epochToLocal(queue[i].timestamp);
+            queue[i].timestamp = Alice.epochToLocal(queue[i].timestamp, this.application.options.timeformat);
           this.application.displayMessage(queue[i]);
         }
       }

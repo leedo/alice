@@ -10487,7 +10487,7 @@ Alice.Connection = Class.create({
         else if (queue[i].type == "message") {
           if (queue[i].msgid) this.msgid = queue[i].msgid;
           if (queue[i].timestamp)
-            queue[i].timestamp = Alice.epochToLocal(queue[i].timestamp);
+            queue[i].timestamp = Alice.epochToLocal(queue[i].timestamp, this.application.options.timeformat);
           this.application.displayMessage(queue[i]);
         }
       }
@@ -10890,7 +10890,7 @@ Alice.Window = Class.create({
       if (message.consecutive) {
         var avatar = li.previous(".avatar:not(.consecutive)");
         if (avatar && avatar.down(".timehint"))
-          avatar.down(".timehint").innerHTML = Alice.epochToLocal(message.timestamp, this.application.options.timeformat);
+          avatar.down(".timehint").innerHTML = message.timestamp;
       }
     }
     else if (message.event == "topic") {
