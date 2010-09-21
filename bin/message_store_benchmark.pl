@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use lib 'lib';
+use lib '../lib';
 use App::Alice::MessageBuffer;
 use Benchmark qw/:all/;
 use AnyEvent;
