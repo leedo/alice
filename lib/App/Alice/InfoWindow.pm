@@ -29,7 +29,7 @@ sub irc {
 
 sub format_message {
   my ($self, $from, $body, %options) = @_;
-  my $html = irc_to_html($body);
+  my $html = irc_to_html($body, classes => 1);
   my $message = {
     type   => "message",
     event  => "say",
