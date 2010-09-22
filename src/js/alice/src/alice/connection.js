@@ -178,7 +178,7 @@ Alice.Connection = Class.create({
     if (win)
       win.active ? this.windowQueue.unshift(win) : this.windowQueue.push(win);
 
-    if (this.application.isready && !this.windowWatcher) {
+    if (!this.windowWatcher) {
       this.windowWatcher = true;
       this._getWindowMessages();
     }
