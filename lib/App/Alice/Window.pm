@@ -170,7 +170,7 @@ sub format_message {
 
   my $monospace = $self->app->is_monospace_nick($nick);
   # pass the inverse => italic option if this is NOT monospace
-  my $html = irc_to_html($body, ($monospace ? () : (invert => "italic")));
+  my $html = irc_to_html($body, classes => 1, ($monospace ? () : (invert => "italic")));
   make_links_clickable(\$html);
 
   my $own_nick = $self->nick;
