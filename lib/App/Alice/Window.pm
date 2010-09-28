@@ -155,9 +155,10 @@ sub format_event {
     timestamp => time,
     nicks     => $self->all_nicks,
   };
-  $message->{html} = make_links_clickable(
-    $self->render("event", $message)
-  );
+
+  my $html = $self->render("event", $message);
+  make_links_clickable(\$html);
+  $message->{html} = $html;
 
   $self->buffer->add($message);
   return $message;
@@ -169,9 +170,9 @@ sub format_message {
 
   my $monospace = $self->app->is_monospace_nick($nick);
   # pass the inverse => italic option if this is NOT monospace
-  my $html = irc_to_html($body, ($monospace ? () : (invert => "italic")));
+  my $html = irc_to_html($body, classes => 1, ($monospace ? () : (invert => "italic")));
+  make_links_clickable(\$html);
 
-  $html = make_links_clickable($html);
   my $own_nick = $self->nick;
   my $message = {
     type      => "message",
@@ -231,8 +232,7 @@ sub nick_table {
 
 sub make_links_clickable {
   my $html = shift;
-  $html =~ s/$url_regex/<a href="$1" target="_blank" rel="noreferrer">$1<\/a>/gi;
-  return $html;
+  $$html =~ s/$url_regex/<a href="$1" target="_blank" rel="noreferrer">$1<\/a>/gi;
 }
 
 sub _format_nick_table {

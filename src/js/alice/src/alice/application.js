@@ -6,18 +6,11 @@ Alice.Application = Class.create({
     this.connection = new Alice.Connection(this);
     this.filters = [];
     this.keyboard = new Alice.Keyboard(this);
-    this.isready = false;
-    this.onready = [];
 
     this.isPhone = window.navigator.platform.match(/(android|iphone)/i) ? 1 : 0;
     this.isMobile = this.isPhone || Prototype.Browser.MobileSafari;
     this.isJankyScroll = Prototype.Browser.Gecko || Prototype.Browser.IE;
 
-    // Keep this as a timeout so the page doesn't show "loading..."
-    window.onload = function () {
-      setTimeout(this.connection.connect.bind(this.connection), 1000);
-    }.bind(this);
-    
     // setup UI elements in initial state
     this.makeSortable();
   },
@@ -145,9 +138,6 @@ Alice.Application = Class.create({
     var win = new Alice.Window(this, element, title, active, hashtag);
     this.addWindow(win);
     if (active) win.focus();
-    this.onready.push(function() {
-      this.connection.getWindowMessages(win);
-    }.bind(this));
     return win;
   },
   
@@ -335,9 +325,16 @@ Alice.Application = Class.create({
   },
 
   ready: function() {
-    this.onready.each(function(cb){cb();});
-    this.isready = true;
-    this.connection.getWindowMessages();
+    var active_window = this.activeWindow();
+    var other_windows = this.windows().filter(function(win){return win.id != active_window.id});
+    this.connection.getWindowMessages(active_window);
+
+    setTimeout(function() {
+      this.connection.connect();
+      other_windows.each(function(win) {
+        this.connection.getWindowMessages(win);
+      }.bind(this));
+    }.bind(this), 1000);
   },
 
   log: function () {

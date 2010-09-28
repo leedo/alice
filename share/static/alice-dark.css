@@ -964,3 +964,109 @@ div.config ul#connections li.disconnected {
 
 div.config ul#connections li.connected {
   color: white; }
+
+#auto-generated css classes for irc- > html
+.bold {
+  font-weight: bold; }
+
+.ul {
+  text-decoration: underline; }
+
+.italic {
+  font-style: italic; }
+
+.fg-fff {
+  color: #fff; }
+
+.bg-fff {
+  background-color: #fff; }
+
+.fg-000 {
+  color: #000; }
+
+.bg-000 {
+  background-color: #000; }
+
+.fg-008 {
+  color: #008; }
+
+.bg-008 {
+  background-color: #008; }
+
+.fg-080 {
+  color: #080; }
+
+.bg-080 {
+  background-color: #080; }
+
+.fg-f00 {
+  color: #f00; }
+
+.bg-f00 {
+  background-color: #f00; }
+
+.fg-800 {
+  color: #800; }
+
+.bg-800 {
+  background-color: #800; }
+
+.fg-808 {
+  color: #808; }
+
+.bg-808 {
+  background-color: #808; }
+
+.fg-f80 {
+  color: #f80; }
+
+.bg-f80 {
+  background-color: #f80; }
+
+.fg-ff0 {
+  color: #ff0; }
+
+.bg-ff0 {
+  background-color: #ff0; }
+
+.fg-0f0 {
+  color: #0f0; }
+
+.bg-0f0 {
+  background-color: #0f0; }
+
+.fg-088 {
+  color: #088; }
+
+.bg-088 {
+  background-color: #088; }
+
+.fg-0ff {
+  color: #0ff; }
+
+.bg-0ff {
+  background-color: #0ff; }
+
+.fg-00f {
+  color: #00f; }
+
+.bg-00f {
+  background-color: #00f; }
+
+.fg-f0f {
+  color: #f0f; }
+
+.bg-f0f {
+  background-color: #f0f; }
+
+.fg-888 {
+  color: #888; }
+
+.bg-888 {
+  background-color: #888; }
+
+.fg-ccc {
+  color: #ccc; }
+
+.bg-ccc {
+  background-color: #ccc; }
