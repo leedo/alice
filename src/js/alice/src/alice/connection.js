@@ -176,6 +176,7 @@ Alice.Connection = Class.create({
   
   getWindowMessages: function(win, cb) {
     if (!cb) cb = function(){};
+
     if (win)
       win.active ?
         this.windowQueue.unshift([win, cb]) :
