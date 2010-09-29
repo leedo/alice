@@ -174,9 +174,12 @@ Alice.Connection = Class.create({
     });
   },
   
-  getWindowMessages: function(win) {
+  getWindowMessages: function(win, cb) {
+    if (!cb) cb = function(){};
     if (win)
-      win.active ? this.windowQueue.unshift(win) : this.windowQueue.push(win);
+      win.active ?
+        this.windowQueue.unshift([win, cb]) :
+        this.windowQueue.push([win, cb]);
 
     if (!this.windowWatcher) {
       this.windowWatcher = true;
@@ -185,7 +188,9 @@ Alice.Connection = Class.create({
   },
 
   _getWindowMessages: function() {
-    var win = this.windowQueue.shift();
+    var item = this.windowQueue.shift();
+    var win = item[0],
+         cb = item[1];
 
     new Ajax.Request("/messages", {
       method: "get",
@@ -193,6 +198,7 @@ Alice.Connection = Class.create({
       onSuccess: function(response) {
         win.messages.down("ul").replace('<ul class="messages">'+response.responseText+'</ul>');
         win.setupMessages();
+        cb();
 
         if (this.windowQueue.length) {
           this._getWindowMessages();
