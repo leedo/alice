@@ -10367,14 +10367,20 @@ Alice.Application = Class.create({
   ready: function() {
     var active_window = this.activeWindow();
     var other_windows = this.windows().filter(function(win){return win.id != active_window.id});
-    this.connection.getWindowMessages(active_window);
 
-    setTimeout(function() {
-      this.connection.connect();
-      other_windows.each(function(win) {
-        this.connection.getWindowMessages(win);
-      }.bind(this));
-    }.bind(this), 1000);
+    var cb = function() {
+      setTimeout(function() {
+        for (var i=0; i < other_windows.length; i++) {
+          if (i + 1 != other_windows.length) {
+            this.connection.getWindowMessages(other_windows[i]);
+          } else {
+            this.connection.getWindowMessages(other_windows[i], this.connection.connect.bind(this.connection));
+          }
+        }
+      }.bind(this), 1500);
+    }.bind(this);
+
+    this.connection.getWindowMessages(active_window, cb);
   },
 
   log: function () {
@@ -10568,9 +10574,12 @@ Alice.Connection = Class.create({
     });
   },
 
-  getWindowMessages: function(win) {
+  getWindowMessages: function(win, cb) {
+    if (!cb) cb = function(){};
     if (win)
-      win.active ? this.windowQueue.unshift(win) : this.windowQueue.push(win);
+      win.active ?
+        this.windowQueue.unshift([win, cb]) :
+        this.windowQueue.push([win, cb]);
 
     if (!this.windowWatcher) {
       this.windowWatcher = true;
@@ -10579,7 +10588,9 @@ Alice.Connection = Class.create({
   },
 
   _getWindowMessages: function() {
-    var win = this.windowQueue.shift();
+    var item = this.windowQueue.shift();
+    var win = item[0],
+         cb = item[1];
 
     new Ajax.Request("/messages", {
       method: "get",
@@ -10587,6 +10598,7 @@ Alice.Connection = Class.create({
       onSuccess: function(response) {
         win.messages.down("ul").replace('<ul class="messages">'+response.responseText+'</ul>');
         win.setupMessages();
+        cb();
 
         if (this.windowQueue.length) {
           this._getWindowMessages();
