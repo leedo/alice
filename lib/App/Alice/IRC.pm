@@ -249,6 +249,13 @@ sub connect {
 sub connected {
   my ($self, $cl, $err) = @_;
 
+  $cl->{socket}->on_read(sub {
+    my ($hdl) = @_;
+    $hdl->push_read (line => qr{\015?\015?\012}, sub {
+      $cl->_feed_irc_data ($_[1]);
+    });
+  });
+
   if (defined $err) {
     $self->log(info => "connect error: $err");
     $self->reconnect();
