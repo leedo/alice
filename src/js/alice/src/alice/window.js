@@ -87,7 +87,7 @@ Alice.Window = Class.create({
       this.messages.select('li.message div.msg').each(function (msg) {
         msg.innerHTML = this.application.applyFilters(msg.innerHTML);
       }.bind(this));
-    }.bind(this), 1000);
+    }.bind(this), this.application.loadDelay);
   },
   
   isTabWrapped: function() {

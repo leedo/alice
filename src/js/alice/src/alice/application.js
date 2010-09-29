@@ -10,6 +10,7 @@ Alice.Application = Class.create({
     this.isPhone = window.navigator.platform.match(/(android|iphone)/i) ? 1 : 0;
     this.isMobile = this.isPhone || Prototype.Browser.MobileSafari;
     this.isJankyScroll = Prototype.Browser.Gecko || Prototype.Browser.IE;
+    this.loadDelay = this.isMobile ? 3000 : 1000;
 
     // setup UI elements in initial state
     this.makeSortable();
@@ -331,14 +332,18 @@ Alice.Application = Class.create({
     // called after the first window gets and displays its messages
     var cb = function() {
       setTimeout(function() {
-        for (var i=0; i < other_windows.length; i++) {
-          if (i + 1 != other_windows.length) {
-            this.connection.getWindowMessages(other_windows[i]);
-          } else {
-            this.connection.getWindowMessages(other_windows[i], this.connection.connect.bind(this.connection));
-          }
+
+        if (!other_windows.length) {
+          this.connection.connect(); 
+          return;
         }
-      }.bind(this), 1500);
+
+        var last = other_windows.pop();
+        for (var i=0; i < other_windows.length; i++) {
+          this.connection.getWindowMessages(other_windows[i]);
+        }
+        this.connection.getWindowMessages(last, this.connection.connect.bind(this.connection));
+      }.bind(this), this.loadDelay);
     }.bind(this);
 
     this.connection.getWindowMessages(active_window, cb);
