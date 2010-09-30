@@ -249,6 +249,9 @@ sub connect {
 sub connected {
   my ($self, $cl, $err) = @_;
 
+  # kludge to work around broken MOTDs with an extra \015 in the
+  # line ending (e.g. irc.omgwtfhax.net)
+  $self->{orig_on_read} = $cl->{socket}{on_read};
   $cl->{socket}->on_read(sub {
     my ($hdl) = @_;
     $hdl->push_read (line => qr{\015?\015?\012}, sub {
@@ -316,6 +319,10 @@ sub cancel_reconnect {
 sub registered {
   my $self = shift;
   my @log;
+
+  # set the client's on read function back to the default
+  $self->cl->{socket}->on_read($self->{orig_on_read});
+  delete $self->{orig_on_read};
 
   $self->cl->enable_ping (300, sub {
     $self->disconnected("ping timeout");
