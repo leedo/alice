@@ -29,7 +29,7 @@ has 'nick_cached' => (
   lazy     => 1,
   default  => sub {
     my $self = shift;
-    return $self->config->{nick};
+    return $self->config->{nick} || "";
   },
 );
 
