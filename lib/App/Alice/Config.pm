@@ -5,6 +5,10 @@ use Data::Dumper;
 use File::ShareDir qw/dist_dir/;
 use Getopt::Long;
 use Any::Moose;
+use POSIX;
+
+use AnyEvent::AIO;
+use IO::AIO;
 
 has assetdir => (
   is      => 'ro',
@@ -41,7 +45,7 @@ has quitmsg => (
   default => 'alice.',
 );
 
-has debug => (
+has [qw/debug loaded/] => (
   is      => 'rw',
   isa     => 'Bool',
   default => 0,
@@ -114,6 +118,11 @@ has message_store => (
   default => 'Memory',
 );
 
+has callback => (
+  is      => 'rw',
+  isa     => 'CodeRef',
+);
+
 sub ignores {@{$_[0]->ignore}}
 sub add_ignore {push @{shift->ignore}, @_}
 
@@ -126,22 +135,30 @@ sub BUILD {
 sub load {
   my $self = shift;
   my $config = {};
+
+  my $loaded = sub {
+    my ($port, $debug, $address);
+    GetOptions("port=i" => \$port, "debug" => \$debug, "address=s" => \$address);
+    $self->commandline->{port} = $port if $port and $port =~ /\d+/;
+    $self->commandline->{debug} = 1 if $debug;
+    $self->commandline->{address} = $address if $address;
+    $self->merge($config);
+    $self->callback->();
+    delete $self->{callback};
+    $self->loaded(1);
+  };
+
   if (-e $self->fullpath) {
     my $body;
-    open my $fh, "<", $self->fullpath;
-    {local $/; $body = <$fh>};
-    $config = eval $body;
+    aio_load $self->fullpath, $body, sub {
+      $config = eval $body;
+      $loaded->();
+    }
   }
   else {
     say STDERR "No config found, writing a few config to ".$self->fullpath;
-    $self->write;
+    $self->write($loaded);
   }
-  my ($port, $debug, $address) = @_;
-  GetOptions("port=i" => \$port, "debug" => \$debug, "address=s" => \$address);
-  $self->commandline->{port} = $port if $port and $port =~ /\d+/;
-  $self->commandline->{debug} = 1 if $debug;
-  $self->commandline->{address} = $address if $address;
-  $self->merge($config);
 }
 
 sub http_port {
@@ -184,15 +201,24 @@ sub merge {
 }
 
 sub write {
-  my ($self, $data) = @_;
+  my $self = shift;
+  my $callback = pop @_;
+  my $data = shift;
   my $config = $data || $self->serialized;
   mkdir $self->path if !-d $self->path;
-  open my $fh, ">", $self->fullpath;
-  {
-    local $Data::Dumper::Terse = 1;
-    local $Data::Dumper::Indent = 1;
-    print $fh Dumper($config)
-      or warn "Can not write config file: $!\n";
+  aio_open $self->fullpath, POSIX::O_WRONLY, 0644, sub {
+    my $fh = shift;
+    if ($fh) {
+      local $Data::Dumper::Terse = 1;
+      local $Data::Dumper::Indent = 1;
+      $config = Dumper($config);
+      aio_write $fh, 0, length $config, $config, 0, sub {
+        $callback->() if $callback;
+      };
+    }
+    else {
+      warn "Can not write config file: $!\n";
+    }
   }
 }
 
