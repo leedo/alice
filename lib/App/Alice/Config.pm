@@ -45,7 +45,7 @@ has quitmsg => (
   default => 'alice.',
 );
 
-has [qw/debug loaded/] => (
+has debug => (
   is      => 'rw',
   isa     => 'Bool',
   default => 0,
@@ -119,7 +119,7 @@ has message_store => (
 );
 
 has callback => (
-  is      => 'rw',
+  is      => 'ro',
   isa     => 'CodeRef',
 );
 
@@ -137,21 +137,20 @@ sub load {
   my $config = {};
 
   my $loaded = sub {
-    my ($port, $debug, $address);
-    GetOptions("port=i" => \$port, "debug" => \$debug, "address=s" => \$address);
-    $self->commandline->{port} = $port if $port and $port =~ /\d+/;
-    $self->commandline->{debug} = 1 if $debug;
-    $self->commandline->{address} = $address if $address;
+    $self->read_commandline_args;
     $self->merge($config);
     $self->callback->();
     delete $self->{callback};
-    $self->loaded(1);
+    $self->{loaded} = 1;
   };
 
   if (-e $self->fullpath) {
     my $body;
     aio_load $self->fullpath, $body, sub {
       $config = eval $body;
+      if ($@) {
+        warn "error loading config: $@\n";
+      }
       $loaded->();
     }
   }
@@ -159,6 +158,15 @@ sub load {
     say STDERR "No config found, writing a few config to ".$self->fullpath;
     $self->write($loaded);
   }
+}
+
+sub read_commandline_args {
+  my $self = shift;
+  my ($port, $debug, $address);
+  GetOptions("port=i" => \$port, "debug" => \$debug, "address=s" => \$address);
+  $self->commandline->{port} = $port if $port and $port =~ /\d+/;
+  $self->commandline->{debug} = 1 if $debug;
+  $self->commandline->{address} = $address if $address;
 }
 
 sub http_port {
@@ -202,16 +210,14 @@ sub merge {
 
 sub write {
   my $self = shift;
-  my $callback = pop @_;
-  my $data = shift;
-  my $config = $data || $self->serialized;
+  my $callback = pop;
   mkdir $self->path if !-d $self->path;
-  aio_open $self->fullpath, POSIX::O_WRONLY, 0644, sub {
+  aio_open $self->fullpath, POSIX::O_WRONLY | POSIX::O_TRUNC, 0644, sub {
     my $fh = shift;
     if ($fh) {
       local $Data::Dumper::Terse = 1;
       local $Data::Dumper::Indent = 1;
-      $config = Dumper($config);
+      my $config = Dumper $self->serialized;
       aio_write $fh, 0, length $config, $config, 0, sub {
         $callback->() if $callback;
       };
