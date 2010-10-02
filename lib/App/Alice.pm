@@ -205,7 +205,7 @@ sub run {
 
   # wait for config to finish loading
   my $w; $w = AE::idle sub {
-    return unless $self->config->loaded;
+    return unless $self->config->{loaded};
     undef $w;
 
     # initialize lazy stuff
