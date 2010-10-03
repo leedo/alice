@@ -10409,6 +10409,11 @@ Alice.Connection = Class.create({
     this.aborting = false;
   },
 
+  msgid: function() {
+    var ids = this.application.windows().map(function(w){return w.msgid});
+    return Math.max.apply(Math, ids);
+  },
+
   connect: function() {
     if (this.reconnect_count > 3) {
       this.aborting = true;
@@ -10447,7 +10452,7 @@ Alice.Connection = Class.create({
     this.application.log("opening new connection");
     this.request = new Ajax.Request('/stream', {
       method: 'get',
-      parameters: {t: now.getTime() / 1000},
+      parameters: {msgid: this.msgid(), t: now.getTime() / 1000},
       on401: this.gotoLogin,
       onException: this.handleException.bind(this),
       onInteractive: this.handleUpdate.bind(this),
