@@ -442,7 +442,7 @@ sub broadcast {
       $purge = 1;
       next;
     }
-    $stream->send(@messages);
+    $stream->send(\@messages);
   }
   $self->purge_disconnects if $purge;
 }

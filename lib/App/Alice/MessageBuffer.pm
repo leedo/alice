@@ -47,8 +47,8 @@ sub add {
 }
 
 sub messages {
-  my ($self, $limit) = @_;
-  return $self->store->messages($limit);
+  my ($self, $limit, $min, $cb) = @_;
+  return $self->store->messages($limit, $min, $cb);
 }
 
 __PACKAGE__->meta->make_immutable;

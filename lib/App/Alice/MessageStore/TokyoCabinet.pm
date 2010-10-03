@@ -42,22 +42,25 @@ sub clear {
 }
 
 sub messages {
-  my ($self, $limit) = @_;
+  my ($self, $limit, $min, $cb) = @_;
+
   my $json = $hdb->get($self->{id});
+
   my $messages = $json ? decode_json $json : [];
+  $messages = [ grep {$_->{msgid} > $min} @$messages ];
+
   my $total = scalar @$messages;
 
-  return () unless $total;
+  if (!$total) {
+    $cb->([]);
+    return;
+  }
 
-  if ($limit) {
-    $limit = 0 if $limit < 0;
-    $limit = $total if $limit > $total;
-  }
-  else {
-    $limit = $total;
-  }
+  $limit = $total if $limit > $total;
   
-  return @{$messages}[$total - $limit .. $total - 1];
+  $cb->(
+    [ @{$messages}[$total - $limit .. $total - 1] ]
+  );
 }
 
 sub add {
