@@ -5,7 +5,6 @@ Alice.Connection = Class.create({
     this.aborting = false;
     this.request = null;
     this.seperator = "--xalicex\n";
-    this.msgid = 0;
     this.reconnect_count = 0;
     this.reconnecting = false;
     this.windowQueue = [];
@@ -32,16 +31,43 @@ Alice.Connection = Class.create({
     this.closeConnection();
     this.len = 0;
     this.reconnect_count++;
+
+
+    var active_window = this.application.activeWindow();
+    var other_windows = this.application.windows().filter(function(win){return win.id != active_window.id});
+
+    // called after the first window gets and displays its messages
+    var cb = function() {
+      setTimeout(function() {
+
+        if (!other_windows.length) {
+          this._connect(); 
+          return;
+        }
+
+        var last = other_windows.pop();
+        for (var i=0; i < other_windows.length; i++) {
+          this.getWindowMessages(other_windows[i]);
+        }
+        this.getWindowMessages(last, this._connect.bind(this));
+      }.bind(this), this.application.loadDelay);
+    }.bind(this);
+
+    this.getWindowMessages(active_window, cb);
+  },
+
+  _connect: function() {
     var now = new Date();
-    this.application.log("opening new connection starting at message " + this.msgid);
+    this.application.log("opening new connection");
     this.request = new Ajax.Request('/stream', {
       method: 'get',
-      parameters: {msgid: this.msgid, t: now.getTime() / 1000},
+      parameters: {t: now.getTime() / 1000},
       on401: this.gotoLogin,
       onException: this.handleException.bind(this),
       onInteractive: this.handleUpdate.bind(this),
       onComplete: this.handleComplete.bind(this)
     });
+
   },
   
   reconnect: function () {
@@ -88,7 +114,6 @@ Alice.Connection = Class.create({
         if (queue[i].type == "action")
           this.application.handleAction(queue[i]);
         else if (queue[i].type == "message") {
-          if (queue[i].msgid) this.msgid = queue[i].msgid;
           if (queue[i].timestamp)
             queue[i].timestamp = Alice.epochToLocal(queue[i].timestamp, this.application.options.timeformat);
           this.application.displayMessage(queue[i]);
@@ -195,9 +220,9 @@ Alice.Connection = Class.create({
 
     new Ajax.Request("/messages", {
       method: "get",
-      parameters: {source: win.id, limit: win.messageLimit},
+      parameters: {source: win.id, msgid: win.msgid, limit: win.messageLimit},
       onSuccess: function(response) {
-        win.messages.down("ul").replace('<ul class="messages">'+response.responseText+'</ul>');
+        win.messages.down("ul").insert({bottom: response.responseText});
         win.setupMessages();
         cb();
 

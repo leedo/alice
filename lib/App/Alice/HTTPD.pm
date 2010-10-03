@@ -11,6 +11,7 @@ use Plack::Session::Store::File;
 use IRC::Formatting::HTML qw/html_to_irc/;
 use App::Alice::Stream;
 use App::Alice::Commands;
+use List::Util qw/max/;
 use JSON;
 use Encode;
 use utf8;
@@ -195,22 +196,6 @@ sub setup_stream {
     );
 
     $app->add_stream($stream);
-
-    my @windows = $app->windows;
-    my $idle_w; $idle_w = AE::idle sub {
-      if (my $window = shift @windows) {
-        my @msgs = $window->buffer->messages($limit);
-        return unless @msgs;
-        $stream->send(
-          map  {$_->{buffered} = 1; $_}
-          grep {$_->{msgid} > $min}
-          @msgs
-        );
-      }
-      else {
-        undef $idle_w;
-      }
-    };
   }
 }
 
@@ -279,15 +264,20 @@ sub window_messages {
 
     my $source = $req->parameters->{source};
     my $limit = $req->parameters->{limit};
+    my $msgid = $req->parameters->{msgid};
     if (my $window = $app->get_window($source)) {
       my $writer = $respond->([200, ["Content-type" => "text/html; charset=utf-8"]]);
 
-      my @queue = $window->buffer->messages($limit);
+      my @queue = grep {$_->{msgid} > $msgid} $window->buffer->messages($limit);
+      my $max = max map {$_->{msgid}} @queue;
 
       my $idle_w; $idle_w = AE::idle sub {
         if (my $msg = shift @queue) {
           $writer->write(encode_utf8 $msg->{html});
         } else {
+          if (defined $max) {
+            $writer->write('<script type="text/javascript">alice.getWindow("'.$window->id.'").msgid = '.$max.';</script>');
+          }
           $writer->close;
           undef $idle_w;
         }

@@ -326,27 +326,7 @@ Alice.Application = Class.create({
   },
 
   ready: function() {
-    var active_window = this.activeWindow();
-    var other_windows = this.windows().filter(function(win){return win.id != active_window.id});
-
-    // called after the first window gets and displays its messages
-    var cb = function() {
-      setTimeout(function() {
-
-        if (!other_windows.length) {
-          this.connection.connect(); 
-          return;
-        }
-
-        var last = other_windows.pop();
-        for (var i=0; i < other_windows.length; i++) {
-          this.connection.getWindowMessages(other_windows[i]);
-        }
-        this.connection.getWindowMessages(last, this.connection.connect.bind(this.connection));
-      }.bind(this), this.loadDelay);
-    }.bind(this);
-
-    this.connection.getWindowMessages(active_window, cb);
+    this.connection.connect();
   },
 
   log: function () {
