@@ -20,6 +20,7 @@ Alice.Window = Class.create({
     this.visibleNickTimeout = "";
     this.nicks = [];
     this.messageLimit = this.application.isMobile ? 50 : 250;
+    this.msgid = 0;
     
     this.setupEvents();
     this.setupTopic();
@@ -265,6 +266,8 @@ Alice.Window = Class.create({
     if (!message.html) return;
     
     this.messages.down('ul').insert(message.html);
+    if (message.msgid) this.msgid = message.msgid;
+
     //this.messages.down('ul').insert(Alice.uncacheGravatar(message.html));
     var li = this.messages.down('ul.messages > li:last-child');
     
