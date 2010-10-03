@@ -196,6 +196,22 @@ sub setup_stream {
     );
 
     $app->add_stream($stream);
+
+    my @windows = $app->windows;
+    my $idle_w; $idle_w = AE::idle sub {
+      if (my $window = shift @windows) {
+        my @msgs = $window->buffer->messages($limit);
+        return unless @msgs;
+        $stream->send(
+          map  {$_->{buffered} = 1; $_}
+          grep {$_->{msgid} > $min}
+          @msgs
+        );
+      }
+      else {
+        undef $idle_w;
+      }
+    };
   }
 }
 
