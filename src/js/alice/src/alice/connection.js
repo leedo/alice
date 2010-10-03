@@ -228,6 +228,7 @@ Alice.Connection = Class.create({
       parameters: {source: win.id, msgid: win.msgid, limit: win.messageLimit},
       onSuccess: function(response) {
         win.messages.down("ul").insert({bottom: response.responseText});
+        win.trimMessages();
         win.setupMessages();
         cb();
 

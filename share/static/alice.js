@@ -10613,6 +10613,7 @@ Alice.Connection = Class.create({
       parameters: {source: win.id, msgid: win.msgid, limit: win.messageLimit},
       onSuccess: function(response) {
         win.messages.down("ul").insert({bottom: response.responseText});
+        win.trimMessages();
         win.setupMessages();
         cb();
 
@@ -10883,11 +10884,16 @@ Alice.Window = Class.create({
     this.scrollToBottom();
   },
 
+  trimMessages: function() {
+    this.messages.select("li").reverse().slice(this.messageLimit).invoke("remove");
+  },
+
   addMessage: function(message) {
     if (!message.html) return;
 
     this.messages.down('ul').insert(message.html);
     if (message.msgid) this.msgid = message.msgid;
+    this.trimMessages();
 
     var li = this.messages.down('ul.messages > li:last-child');
 
@@ -10947,9 +10953,6 @@ Alice.Window = Class.create({
         this.tab.addClassName("highlight");
       }
     }
-
-    var messages = this.messages.down('ul').childElements();
-    if (messages.length > this.messageLimit) messages.first().remove();
 
     li.select("span.timestamp").each(function(elem) {
       elem.innerHTML = Alice.epochToLocal(elem.innerHTML.strip(), this.application.options.timeformat);
