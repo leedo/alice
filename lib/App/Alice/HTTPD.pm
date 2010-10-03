@@ -279,13 +279,16 @@ sub window_messages {
     my $respond = shift;
 
     my $source = $req->parameters->{source};
-    my $limit = $req->parameters->{limit};
-    my $msgid = $req->parameters->{msgid};
     if (my $window = $app->get_window($source)) {
+      my $limit = $req->parameters->{limit} || 100;
+      my $msgid = $req->parameters->{msgid} || 0;
+
       my $writer = $respond->([200, ["Content-type" => "text/html; charset=utf-8"]]);
 
       my @queue = grep {$_->{msgid} > $msgid} $window->buffer->messages($limit);
       my $max = max map {$_->{msgid}} @queue;
+
+      $self->app->log(debug => "sending $limit messages for window ".$window->title.", starting at $msgid");
 
       my $idle_w; $idle_w = AE::idle sub {
         if (my $msg = shift @queue) {
