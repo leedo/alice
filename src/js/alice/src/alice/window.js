@@ -20,6 +20,7 @@ Alice.Window = Class.create({
     this.visibleNickTimeout = "";
     this.nicks = [];
     this.messageLimit = this.application.isMobile ? 50 : 250;
+    this.msgid = 0;
     
     this.setupEvents();
     this.setupTopic();
@@ -87,7 +88,7 @@ Alice.Window = Class.create({
       this.messages.select('li.message div.msg').each(function (msg) {
         msg.innerHTML = this.application.applyFilters(msg.innerHTML);
       }.bind(this));
-    }.bind(this), 1000);
+    }.bind(this), this.application.loadDelay);
   },
   
   isTabWrapped: function() {
@@ -260,11 +261,18 @@ Alice.Window = Class.create({
     );
     this.scrollToBottom();
   },
+
+  trimMessages: function() {
+    this.messages.select("li").reverse().slice(this.messageLimit).invoke("remove");
+  },
   
   addMessage: function(message) {
     if (!message.html) return;
     
     this.messages.down('ul').insert(message.html);
+    if (message.msgid) this.msgid = message.msgid;
+    this.trimMessages();
+
     //this.messages.down('ul').insert(Alice.uncacheGravatar(message.html));
     var li = this.messages.down('ul.messages > li:last-child');
     
@@ -326,9 +334,6 @@ Alice.Window = Class.create({
       }
     }
 
-    var messages = this.messages.down('ul').childElements();
-    if (messages.length > this.messageLimit) messages.first().remove();
-    
     // fix timestamps
     li.select("span.timestamp").each(function(elem) {
       elem.innerHTML = Alice.epochToLocal(elem.innerHTML.strip(), this.application.options.timeformat);

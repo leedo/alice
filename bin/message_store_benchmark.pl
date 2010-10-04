@@ -10,13 +10,19 @@ use Benchmark qw/:all/;
 use AnyEvent;
 
 my $id = time;
-my @data = (
+my $msgid = 1;
+my $data = sub {
+  (
     event => "say",
     nick => $ENV{USER},
-    html => join "\n", map {$_ => "$_" x 300} (0 .. 10)
-);
+    msgid => $msgid++,
+    html => join "\n", map {$_ => "$_" x 300} (0 .. 10),
+  );
+};
 
-my %stores = map {$_ => App::Alice::MessageBuffer->new(id => $id, store_class => $_)} qw/Memory TokyoCabinet Cache/;
+my %stores = map {$_ => App::Alice::MessageBuffer->new(id => $id, store_class => $_)} qw/Memory TokyoCabinet DBI/;
+$_->clear for values %stores;
+
 my $cv = AE::cv;
 my $t = AE::timer 1, 0, sub {
   print STDERR "timing\n";
@@ -25,7 +31,7 @@ my $t = AE::timer 1, 0, sub {
       map {
         my $store = $stores{$_};
         $_ => sub {
-          $store->add({@data}) for 0 .. 10;
+          $store->add({$data->()}) for 0 .. 10;
         }
       } keys %stores
     }

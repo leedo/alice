@@ -10,6 +10,7 @@ Alice.Application = Class.create({
     this.isPhone = window.navigator.platform.match(/(android|iphone)/i) ? 1 : 0;
     this.isMobile = this.isPhone || Prototype.Browser.MobileSafari;
     this.isJankyScroll = Prototype.Browser.Gecko || Prototype.Browser.IE;
+    this.loadDelay = this.isMobile ? 3000 : 1000;
 
     // setup UI elements in initial state
     this.makeSortable();
@@ -325,16 +326,7 @@ Alice.Application = Class.create({
   },
 
   ready: function() {
-    var active_window = this.activeWindow();
-    var other_windows = this.windows().filter(function(win){return win.id != active_window.id});
-    this.connection.getWindowMessages(active_window);
-
-    setTimeout(function() {
-      this.connection.connect();
-      other_windows.each(function(win) {
-        this.connection.getWindowMessages(win);
-      }.bind(this));
-    }.bind(this), 1000);
+    this.connection.connect();
   },
 
   log: function () {

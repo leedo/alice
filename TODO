@@ -1,14 +1,12 @@
-- Improve connection window styling
-- Make iPhone not suck donkey dick
 - Highlight active colors on color picker
-- Make popups into tabs or something similar
 - Small jump when editing in wysiwyg, something to do with default <br>
 - Autogenerate command POD from commands.pl
   - Separate file is fine for this (App/Alice/Commands.pod)
-- Getting started document
 - Document message buffer API
 - Document javascript API so adding filters is easy
 - Some perl-side plugin system, need to add hooks
 - More tests
 
 - transition from AE::IRC::Client to AE::IRC::Connection
+
+- Make info tab highlights links to the transcript window

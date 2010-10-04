@@ -11,6 +11,7 @@ use Plack::Session::Store::File;
 use IRC::Formatting::HTML qw/html_to_irc/;
 use App::Alice::Stream;
 use App::Alice::Commands;
+use List::Util qw/max/;
 use JSON;
 use Encode;
 use utf8;
@@ -180,7 +181,7 @@ sub setup_stream {
   $app->log(info => "opening new stream");
 
   my $min = $req->parameters->{msgid} || 0;
-  my $limit = $req->parameters->{limit};
+  my $limit = $req->parameters->{limit} || 100;
 
   return sub {
     my $respond = shift;
@@ -196,20 +197,15 @@ sub setup_stream {
 
     $app->add_stream($stream);
 
-    my @windows = $app->windows;
-    my $idle_w; $idle_w = AE::idle sub {
-      if (my $window = shift @windows) {
-        my @msgs = $window->buffer->messages($limit);
-        return unless @msgs;
-        $stream->send(
-          map  {$_->{buffered} = 1; $_}
-          grep {$_->{msgid} > $min}
-          @msgs
-        );
-      }
-      else {
-        undef $idle_w;
-      }
+    for my $window ($app->windows) {
+      $window->buffer->messages($limit, $min, sub {
+        my $msgs = shift;
+        return unless @$msgs;
+        my $idle_w; $idle_w = AE::idle sub {
+          $stream->send($msgs); 
+          undef $idle_w;
+        };
+      });
     };
   }
 }
@@ -278,20 +274,34 @@ sub window_messages {
     my $respond = shift;
 
     my $source = $req->parameters->{source};
-    my $limit = $req->parameters->{limit};
     if (my $window = $app->get_window($source)) {
+      my $limit = $req->parameters->{limit} || 100;
+      my $msgid = $req->parameters->{msgid} || 0;
+
       my $writer = $respond->([200, ["Content-type" => "text/html; charset=utf-8"]]);
 
-      my @queue = $window->buffer->messages($limit);
+      $self->app->log(debug => "sending $limit messages for window ".$window->title.", starting at $msgid");
 
-      my $idle_w; $idle_w = AE::idle sub {
-        if (my $msg = shift @queue) {
-          $writer->write(encode_utf8 $msg->{html});
-        } else {
+      $window->buffer->messages($limit, $msgid, sub {
+        my $rows = shift;
+
+        if (!@$rows) {
           $writer->close;
-          undef $idle_w;
+          return;
         }
-      };
+
+        my $max = $rows->[-1]{msgid};
+
+        my $idle_w; $idle_w = AE::idle sub {
+          if (my $msg = shift @$rows) {
+            $writer->write(encode_utf8 $msg->{html});
+          } else {
+            $writer->write('<script type="text/javascript">alice.getWindow("'.$window->id.'").msgid = '.$max.';</script>');
+            $writer->close;
+            undef $idle_w;
+          }
+        };
+      });
     }
     else {
       my $res = $req->new_response(404);

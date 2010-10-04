@@ -33,20 +33,21 @@ sub add {
 }
 
 sub messages {
-  my ($self, $limit) = @_;
+  my ($self, $limit, $min, $cb) = @_;
 
-  my $total = scalar @{$self->_messages};
-  return () unless $total;
+  my @messages = grep {$_->{msgid} > $min} @{$self->_messages};
+  my $total = scalar @messages;
+
+  if (!$total) {
+    $cb->([]);
+    return;
+  }
   
-  if ($limit) {
-    $limit = 0 if $limit < 0;
-    $limit = $total if $limit > $total;
-  }
-  else {
-    $limit = $total;
-  }
+  $limit = $total if $limit > $total;
 
-  return @{$self->_messages}[$total - $limit .. $total - 1];
+  $cb->(
+   [ @messages[$total - $limit .. $total - 1] ]
+  );
 }
 
 __PACKAGE__->meta->make_immutable;

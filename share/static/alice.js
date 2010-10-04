@@ -10051,6 +10051,7 @@ Alice.Application = Class.create({
     this.isPhone = window.navigator.platform.match(/(android|iphone)/i) ? 1 : 0;
     this.isMobile = this.isPhone || Prototype.Browser.MobileSafari;
     this.isJankyScroll = Prototype.Browser.Gecko || Prototype.Browser.IE;
+    this.loadDelay = this.isMobile ? 3000 : 1000;
 
     this.makeSortable();
   },
@@ -10365,16 +10366,7 @@ Alice.Application = Class.create({
   },
 
   ready: function() {
-    var active_window = this.activeWindow();
-    var other_windows = this.windows().filter(function(win){return win.id != active_window.id});
-    this.connection.getWindowMessages(active_window);
-
-    setTimeout(function() {
-      this.connection.connect();
-      other_windows.each(function(win) {
-        this.connection.getWindowMessages(win);
-      }.bind(this));
-    }.bind(this), 1000);
+    this.connection.connect();
   },
 
   log: function () {
@@ -10400,7 +10392,6 @@ Alice.Connection = Class.create({
     this.aborting = false;
     this.request = null;
     this.seperator = "--xalicex\n";
-    this.msgid = 0;
     this.reconnect_count = 0;
     this.reconnecting = false;
     this.windowQueue = [];
@@ -10418,6 +10409,11 @@ Alice.Connection = Class.create({
     this.aborting = false;
   },
 
+  msgid: function() {
+    var ids = this.application.windows().map(function(w){return w.msgid});
+    return Math.max.apply(Math, ids);
+  },
+
   connect: function() {
     if (this.reconnect_count > 3) {
       this.aborting = true;
@@ -10427,16 +10423,42 @@ Alice.Connection = Class.create({
     this.closeConnection();
     this.len = 0;
     this.reconnect_count++;
+
+
+    var active_window = this.application.activeWindow();
+    var other_windows = this.application.windows().filter(function(win){return win.id != active_window.id});
+
+    var cb = function() {
+      setTimeout(function() {
+
+        if (!other_windows.length) {
+          this._connect();
+          return;
+        }
+
+        var last = other_windows.pop();
+        for (var i=0; i < other_windows.length; i++) {
+          this.getWindowMessages(other_windows[i]);
+        }
+        this.getWindowMessages(last, this._connect.bind(this));
+      }.bind(this), this.application.loadDelay);
+    }.bind(this);
+
+    this.getWindowMessages(active_window, cb);
+  },
+
+  _connect: function() {
     var now = new Date();
-    this.application.log("opening new connection starting at message " + this.msgid);
+    this.application.log("opening new connection");
     this.request = new Ajax.Request('/stream', {
       method: 'get',
-      parameters: {msgid: this.msgid, t: now.getTime() / 1000},
+      parameters: {msgid: this.msgid(), t: now.getTime() / 1000},
       on401: this.gotoLogin,
       onException: this.handleException.bind(this),
       onInteractive: this.handleUpdate.bind(this),
       onComplete: this.handleComplete.bind(this)
     });
+
   },
 
   reconnect: function () {
@@ -10483,7 +10505,6 @@ Alice.Connection = Class.create({
         if (queue[i].type == "action")
           this.application.handleAction(queue[i]);
         else if (queue[i].type == "message") {
-          if (queue[i].msgid) this.msgid = queue[i].msgid;
           if (queue[i].timestamp)
             queue[i].timestamp = Alice.epochToLocal(queue[i].timestamp, this.application.options.timeformat);
           this.application.displayMessage(queue[i]);
@@ -10568,9 +10589,13 @@ Alice.Connection = Class.create({
     });
   },
 
-  getWindowMessages: function(win) {
+  getWindowMessages: function(win, cb) {
+    if (!cb) cb = function(){};
+
     if (win)
-      win.active ? this.windowQueue.unshift(win) : this.windowQueue.push(win);
+      win.active ?
+        this.windowQueue.unshift([win, cb]) :
+        this.windowQueue.push([win, cb]);
 
     if (!this.windowWatcher) {
       this.windowWatcher = true;
@@ -10579,14 +10604,18 @@ Alice.Connection = Class.create({
   },
 
   _getWindowMessages: function() {
-    var win = this.windowQueue.shift();
+    var item = this.windowQueue.shift();
+    var win = item[0],
+         cb = item[1];
 
     new Ajax.Request("/messages", {
       method: "get",
-      parameters: {source: win.id, limit: win.messageLimit},
+      parameters: {source: win.id, msgid: win.msgid, limit: win.messageLimit},
       onSuccess: function(response) {
-        win.messages.down("ul").replace('<ul class="messages">'+response.responseText+'</ul>');
+        win.messages.down("ul").insert({bottom: response.responseText});
+        win.trimMessages();
         win.setupMessages();
+        cb();
 
         if (this.windowQueue.length) {
           this._getWindowMessages();
@@ -10619,6 +10648,7 @@ Alice.Window = Class.create({
     this.visibleNickTimeout = "";
     this.nicks = [];
     this.messageLimit = this.application.isMobile ? 50 : 250;
+    this.msgid = 0;
 
     this.setupEvents();
     this.setupTopic();
@@ -10680,7 +10710,7 @@ Alice.Window = Class.create({
       this.messages.select('li.message div.msg').each(function (msg) {
         msg.innerHTML = this.application.applyFilters(msg.innerHTML);
       }.bind(this));
-    }.bind(this), 1000);
+    }.bind(this), this.application.loadDelay);
   },
 
   isTabWrapped: function() {
@@ -10854,10 +10884,17 @@ Alice.Window = Class.create({
     this.scrollToBottom();
   },
 
+  trimMessages: function() {
+    this.messages.select("li").reverse().slice(this.messageLimit).invoke("remove");
+  },
+
   addMessage: function(message) {
     if (!message.html) return;
 
     this.messages.down('ul').insert(message.html);
+    if (message.msgid) this.msgid = message.msgid;
+    this.trimMessages();
+
     var li = this.messages.down('ul.messages > li:last-child');
 
     if (message.consecutive) {
@@ -10916,9 +10953,6 @@ Alice.Window = Class.create({
         this.tab.addClassName("highlight");
       }
     }
-
-    var messages = this.messages.down('ul').childElements();
-    if (messages.length > this.messageLimit) messages.first().remove();
 
     li.select("span.timestamp").each(function(elem) {
       elem.innerHTML = Alice.epochToLocal(elem.innerHTML.strip(), this.application.options.timeformat);
