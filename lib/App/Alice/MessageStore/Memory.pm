@@ -35,7 +35,8 @@ sub add {
 sub messages {
   my ($self, $limit, $min, $cb) = @_;
 
-  my $total = scalar @{$self->_messages};
+  my @messages = grep {$_->{msgid} > $min} @{$self->_messages};
+  my $total = scalar @messages;
 
   if (!$total) {
     $cb->([]);
@@ -45,7 +46,7 @@ sub messages {
   $limit = $total if $limit > $total;
 
   $cb->(
-   [ @{$self->_messages}[$total - $limit .. $total - 1] ]
+   [ @messages[$total - $limit .. $total - 1] ]
   );
 }
 
