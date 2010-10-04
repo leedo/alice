@@ -6,6 +6,7 @@ use JSON;
 
 our $dsn = ["dbi:SQLite:dbname=share/buffer.db", "", ""];
 our $dbi = AnyEvent::DBI->new(@$dsn);
+$dbi->exec("DELETE FROM window_buffer", sub {});
 
 has id => (
   is => 'ro',
@@ -17,11 +18,6 @@ has del_timer => (
   default => 0
 );
 
-sub BUILD {
-  my $self = shift;
-  $self->clear;
-}
-
 sub clear {
   my $self = shift;
   $dbi->exec("DELETE FROM window_buffer WHERE window_id = ?", $self->{id}, sub {});
@@ -30,8 +26,8 @@ sub clear {
 sub messages {
   my ($self, $limit, $msgid, $cb) = @_;
   $dbi->exec(
-    "SELECT message FROM window_buffer WHERE window_id=? AND msgid > ? ORDER BY msgid ASC LIMIT 0, ?",
-    $self->{id}, $msgid, $limit, sub { $cb->([map {decode_json $_->[0]} @{$_[1]}]) }
+    "SELECT message FROM window_buffer WHERE window_id=? AND msgid > ? ORDER BY msgid DESC LIMIT ?",
+    $self->{id}, $msgid, $limit, sub { $cb->([map {decode_json $_->[0]} reverse @{$_[1]}]) }
   );
 }
 
@@ -54,13 +50,13 @@ sub add {
 sub trim {
   my $self = shift;
   $dbi->exec(
-    "SELECT msgid FROM window_buffer WHERE window_id=? ORDER BY msgid ASC LIMIT 100, 1",
+    "SELECT msgid FROM window_buffer WHERE window_id=? ORDER BY msgid DESC LIMIT 100",
     $self->{id}, sub {
       my $rows = $_[1];
       if (@$rows) {
-        my $minid = $rows->[0][0];
+        my $minid = $rows->[-1][0];
         $dbi->exec(
-          "DELETE FROM window_buffer WHERE window_id=? AND msgid >= ?",
+          "DELETE FROM window_buffer WHERE window_id=? AND msgid < ?",
           $self->{id}, $minid, sub {}
         );
       }

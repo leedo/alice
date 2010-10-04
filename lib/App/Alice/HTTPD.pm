@@ -296,7 +296,6 @@ sub window_messages {
           if (my $msg = shift @$rows) {
             $writer->write(encode_utf8 $msg->{html});
           } else {
-            $writer->write('<script type="text/javascript">alice.getWindow("'.$window->id.'").msgid = '.$max.';</script>');
             $writer->close;
             undef $idle_w;
           }

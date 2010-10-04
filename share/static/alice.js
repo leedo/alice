@@ -10711,6 +10711,11 @@ Alice.Window = Class.create({
         msg.innerHTML = this.application.applyFilters(msg.innerHTML);
       }.bind(this));
     }.bind(this), this.application.loadDelay);
+
+    var last = this.messages.down("li:last-child");
+    if (last && last.id) {
+      this.msgid = last.id;
+    }
   },
 
   isTabWrapped: function() {
