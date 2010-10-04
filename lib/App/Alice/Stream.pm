@@ -66,11 +66,12 @@ sub BUILD {
 }
 
 sub send {
-  my ($self, @messages) = @_;
+  my ($self, $messages) = @_;
   return if $self->closed;
 
-  $self->enqueue(@messages) if @messages;
+  $self->enqueue(@$messages) if $messages and @$messages;
   return if $self->delayed or $self->queue_empty;
+
   if (my $delay = $self->flooded) {
     $self->delay($delay);
     return;

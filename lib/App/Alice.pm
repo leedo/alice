@@ -1,5 +1,6 @@
 package App::Alice;
 
+use AnyEvent;
 use Text::MicroTemplate::File;
 use App::Alice::Window;
 use App::Alice::InfoWindow;
@@ -24,7 +25,7 @@ has condvar => (
 );
 
 has config => (
-  is       => 'ro',
+  is       => 'rw',
   isa      => 'App::Alice::Config',
 );
 
@@ -190,28 +191,37 @@ sub BUILDARGS {
       delete $options{$_};
     }
   }
-  $self->{config} = App::Alice::Config->new(%options);
-  # some options get overwritten by the config
-  # so merge options again
-  $self->{config}->merge(\%options);
+
+  $self->{config} = App::Alice::Config->new(
+    %options,
+    callback => sub {$self->{config}->merge(\%options)}
+  );
+
   return $self;
 }
 
 sub run {
   my $self = shift;
-  # initialize lazy stuff
-  $self->commands;
-  $self->history;
-  $self->info_window;
-  $self->template;
-  $self->httpd;
-  $self->ping;
 
-  print STDERR "Location: http://".$self->config->http_address.":".$self->config->http_port."/\n"
-    if $self->standalone;
+  # wait for config to finish loading
+  my $w; $w = AE::idle sub {
+    return unless $self->config->{loaded};
+    undef $w;
 
-  $self->add_irc_server($_, $self->config->servers->{$_})
-    for keys %{$self->config->servers};
+    # initialize lazy stuff
+    $self->commands;
+    $self->history;
+    $self->info_window;
+    $self->template;
+    $self->httpd;
+    $self->ping;
+
+    print STDERR "Location: http://".$self->config->http_address.":".$self->config->http_port."/\n"
+      if $self->standalone;
+
+    $self->add_irc_server($_, $self->config->servers->{$_})
+      for keys %{$self->config->servers};
+  };
   
   if ($self->standalone) { 
     $self->condvar(AnyEvent->condvar);
@@ -247,10 +257,7 @@ sub _init_shutdown {
     print STDERR "\nDisconnecting, please wait\n" if $self->standalone;
     $_->init_shutdown($msg) for $self->connected_ircs;
 
-    $self->{shutdown_timer} = AnyEvent->timer(
-      after => 3,
-      cb    => sub{$self->shutdown}
-    );
+    $self->{shutdown_timer} = AE::timer 3, 0, sub{$self->shutdown};
   }
   else {
     print "\n";
@@ -435,7 +442,7 @@ sub broadcast {
       $purge = 1;
       next;
     }
-    $stream->send(@messages);
+    $stream->send(\@messages);
   }
   $self->purge_disconnects if $purge;
 }
@@ -491,16 +498,12 @@ sub static_url {
 
 sub ping {
   my $self = shift;
-  $self->ping_timer(AnyEvent->timer(
-    after    => 5,
-    interval => 10,
-    cb       => sub {
-      $self->broadcast({
-        type => "action",
-        event => "ping",
-      });
-    }
-  ));
+  $self->ping_timer(AE::timer 5, 10, sub {
+    $self->broadcast({
+      type => "action",
+      event => "ping",
+    });
+  });
 }
 
 sub auth_enabled {
