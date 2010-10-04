@@ -44,10 +44,7 @@ sub messages {
   }
   
   $limit = $total if $limit > $total;
-
-  $cb->(
-   [ @messages[$total - $limit .. $total - 1] ]
-  );
+  $cb->([ @messages[$total - $limit .. $total - 1] ]);
 }
 
 __PACKAGE__->meta->make_immutable;
