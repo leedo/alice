@@ -19,7 +19,7 @@ Alice.Window = Class.create({
     this.visibleNick = "";
     this.visibleNickTimeout = "";
     this.nicks = [];
-    this.messageLimit = this.application.isMobile ? 50 : 250;
+    this.messageLimit = this.application.isMobile ? 50 : 200;
     this.msgid = 0;
     
     this.setupEvents();
