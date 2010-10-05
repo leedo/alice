@@ -1,5 +1,6 @@
 CREATE TABLE window_buffer (
-  msgid INT NOT NULL PRIMARY KEY,
+  id INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+  msgid INT NOT NULL,
   window_id INT NOT NULL,
-  message TEXT
+  message BLOB
 );
