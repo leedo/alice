@@ -8,14 +8,11 @@ our $dsn = ["dbi:SQLite:dbname=share/buffer.db", "", ""];
 our $dbi = AnyEvent::DBI->new(@$dsn);
 $dbi->exec("DELETE FROM window_buffer", sub {});
 
+my ($insert_t, @insert, $trim_t, %trim);
+
 has id => (
   is => 'ro',
   required => 1,
-);
-
-has del_timer => (
-  is => 'rw',
-  default => 0
 );
 
 sub clear {
@@ -33,31 +30,58 @@ sub messages {
 
 sub add {
   my ($self, $message) = @_;
-  $dbi->exec(
-    "INSERT INTO window_buffer (window_id, msgid, message) VALUES (?, ?, ?)",
-    $self->{id}, $message->{msgid}, encode_json($message), sub {}
-  );
 
-  if (!$self->del_timer) {
-    my $t = AE::timer 60, 0, sub {
-      $self->trim;
-      $self->del_timer(undef);
-    };
-    $self->del_timer($t);
+  # collect inserts for one second
+
+  push @insert, [$self->{id}, $message->{msgid}, encode_json($message)];
+  $trim{$self->{id}} = 1;
+
+  if (!$insert_t) {
+    $insert_t = AE::timer 1, 0, sub {_handle_insert()};
   }
 }
 
-sub trim {
-  my $self = shift;
+sub _handle_insert {
+
+  $dbi->begin_work(sub {
+    my $last;
+    my $done = sub { $dbi->commit(sub{ undef $insert_t }) if $last };
+    while (my $row = shift @insert) {
+      $last = !@insert;
+      $dbi->exec("INSERT INTO window_buffer (window_id, msgid, message) VALUES (?,?,?)", @$row, $done);
+    }
+  });
+
+  if (!$trim_t) {
+    $trim_t = AE::timer 60, 0, sub {_handle_trim()};
+  }
+}
+
+sub _handle_trim {
+  my $next; $next = sub {
+    my $trim = shift;
+    if ($trim and @$trim) {
+      _trim(shift @$trim, sub {$next->($trim)});
+    } else {
+      undef $trim_t;
+    }
+  };
+
+  $next->([keys %trim]);
+  %trim = ();
+}
+
+sub _trim {
+  my ($window_id, $cb) = @_;
   $dbi->exec(
     "SELECT msgid FROM window_buffer WHERE window_id=? ORDER BY msgid DESC LIMIT 100",
-    $self->{id}, sub {
+    $window_id, sub {
       my $rows = $_[1];
       if (@$rows) {
         my $minid = $rows->[-1][0];
         $dbi->exec(
           "DELETE FROM window_buffer WHERE window_id=? AND msgid < ?",
-          $self->{id}, $minid, sub {}
+          $window_id, $minid, $cb
         );
       }
     }
