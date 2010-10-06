@@ -29,14 +29,6 @@ has config => (
   isa      => 'App::Alice::Config',
 );
 
-has msgid => (
-  is        => 'rw',
-  isa       => 'Int',
-  default   => 0,
-);
-
-sub next_msgid {$_[0]->msgid($_[0]->msgid + 1)}
-
 has _ircs => (
   is      => 'rw',
   isa     => 'ArrayRef',

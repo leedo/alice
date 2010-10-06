@@ -151,7 +151,7 @@ sub format_event {
     nick      => $nick,
     window    => $self->serialized,
     body      => $body,
-    msgid     => $self->app->next_msgid,
+    msgid     => $self->buffer->next_msgid,
     timestamp => time,
     nicks     => $self->all_nicks,
   };
@@ -182,7 +182,7 @@ sub format_message {
     window    => $self->serialized,
     html      => encoded_string($html),
     self      => $own_nick eq $nick,
-    msgid     => $self->app->next_msgid,
+    msgid     => $self->buffer->next_msgid,
     timestamp => time,
     monospaced => $monospace,
     consecutive => $nick eq $self->buffer->previous_nick ? 1 : 0,
