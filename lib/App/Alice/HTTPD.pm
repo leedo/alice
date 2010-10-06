@@ -141,7 +141,7 @@ sub login {
 
 sub logout {
   my ($self, $req) = @_;
-  $_->close for $self->app->streams;
+  $_->close for @{$self->app->streams};
   $self->app->purge_disconnects;
   my $res = $req->new_response;
   if (!$self->auth_enabled) {
