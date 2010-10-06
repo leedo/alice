@@ -43,32 +43,34 @@ sub add {
 
 sub _handle_insert {
 
-  $dbi->begin_work(sub {
-    my $last;
-    my $done = sub { $dbi->commit(sub{ undef $insert_t }) if $last };
-    while (my $row = shift @insert) {
-      $last = !@insert;
-      $dbi->exec("INSERT INTO window_buffer (window_id, msgid, message) VALUES (?,?,?)", @$row, $done);
+  my $idle_w; $idle_w = AE::idle sub {
+    if (my $row = shift @insert) {
+      $dbi->exec("INSERT INTO window_buffer (window_id, msgid, message) VALUES (?,?,?)", @$row, sub{});
     }
-  });
-
+    else {
+      undef $idle_w;
+      undef $insert_t;
+    }
+  };
+  
   if (!$trim_t) {
     $trim_t = AE::timer 60, 0, sub {_handle_trim()};
   }
 }
 
 sub _handle_trim {
-  my $next; $next = sub {
-    my $trim = shift;
-    if ($trim and @$trim) {
-      _trim(shift @$trim, sub {$next->($trim)});
-    } else {
+  my @trim = keys %trim;
+  %trim = ();
+
+  my $idle_w; $idle_w = AE::idle sub {
+    if (my $window_id = shift @trim) {
+      _trim($window_id);
+    }
+    else {
+      undef $idle_w;
       undef $trim_t;
     }
   };
-
-  $next->([keys %trim]);
-  %trim = ();
 }
 
 sub _trim {
