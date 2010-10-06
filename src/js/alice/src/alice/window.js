@@ -272,10 +272,10 @@ Alice.Window = Class.create({
   },
   
   addMessage: function(message) {
-    if (!message.html) return;
+    if (!message.html || message.msgid <= this.msgid) return;
     
     this.messages.down('ul').insert(message.html);
-    if (message.msgid) this.msgid = message.msgid;
+    this.msgid = message.msgid;
     this.trimMessages();
 
     //this.messages.down('ul').insert(Alice.uncacheGravatar(message.html));
