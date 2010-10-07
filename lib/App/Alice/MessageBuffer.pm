@@ -2,6 +2,8 @@ package App::Alice::MessageBuffer;
 
 use Any::Moose;
 
+my $msgid = 1;
+
 has previous_nick => (
   is => 'rw',
   default => "",
@@ -31,6 +33,11 @@ has store => (
   }
 );
 
+sub next_msgid {
+  my $self = shift;
+  return $msgid++;
+}
+
 sub clear {
   my $self = shift;
   $self->previous_nick("");
@@ -48,6 +55,13 @@ sub add {
 
 sub messages {
   my ($self, $limit, $min, $cb) = @_;
+
+  $min = 0 unless $min > 0;
+  $min = $msgid if $min > $msgid;
+
+  $limit = $msgid - $min if $min + $limit > $msgid;
+  $limit = 0 if $limit < 0;
+
   return $self->store->messages($limit, $min, $cb);
 }
 

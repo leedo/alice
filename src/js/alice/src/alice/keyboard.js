@@ -11,7 +11,6 @@ Alice.Keyboard = Class.create({
     this.shortcut("Cmd+F");
     this.shortcut("Opt+Up");
     this.shortcut("Opt+Down");
-    this.shortcut("Opt+Enter");
     this.shortcut("Cmd+Shift+M");
     this.shortcut("Cmd+Shift+J");
     this.shortcut("Cmd+Shift+K");
@@ -101,10 +100,6 @@ Alice.Keyboard = Class.create({
   
   onOptDown: function() {
     this.activeWindow.input.nextCommand();
-  },
-  
-  onOptEnter: function() {
-    this.activeWindow.input.newLine();
   },
   
   onEnter: function() {
