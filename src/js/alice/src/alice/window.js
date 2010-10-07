@@ -70,8 +70,9 @@ Alice.Window = Class.create({
 
     // change timestamps from epoch to local time
     this.messages.select('span.timestamp').each(function(elem) {
-      if (elem.innerHTML) {
-        elem.innerHTML = Alice.epochToLocal(elem.innerHTML.strip(), alice.options.timeformat);
+      var inner = elem.innerHTML;
+      if (inner.match(/^\d+$/)) {
+        elem.innerHTML = Alice.epochToLocal(inner, alice.options.timeformat);
         elem.style.opacity = 1;
       }
     });
@@ -92,6 +93,7 @@ Alice.Window = Class.create({
 
     var last = this.messages.down("li:last-child");
     if (last && last.id) {
+      this.application.log("setting "+this.title+" msgid to "+last.id);
       this.msgid = last.id;
     }
   },
@@ -275,7 +277,7 @@ Alice.Window = Class.create({
     if (!message.html || message.msgid <= this.msgid) return;
     
     this.messages.down('ul').insert(message.html);
-    this.msgid = message.msgid;
+    if (message.msgid) this.msgid = message.msgid;
     this.trimMessages();
 
     //this.messages.down('ul').insert(Alice.uncacheGravatar(message.html));
