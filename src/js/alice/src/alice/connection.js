@@ -63,10 +63,11 @@ Alice.Connection = Class.create({
 
   _connect: function() {
     var now = new Date();
-    this.application.log("opening new connection");
+    var msgid = this.msgid();
+    this.application.log("opening new connection starting at "+msgid);
     this.request = new Ajax.Request('/stream', {
       method: 'get',
-      parameters: {msgid: this.msgid(), t: now.getTime() / 1000},
+      parameters: {msgid: msgid, t: now.getTime() / 1000},
       on401: this.gotoLogin,
       onException: this.handleException.bind(this),
       onInteractive: this.handleUpdate.bind(this),
@@ -223,13 +224,16 @@ Alice.Connection = Class.create({
     var win = item[0],
          cb = item[1];
 
+    this.application.log("requesting messages for "+win.title+" starting at "+win.msgid);
     new Ajax.Request("/messages", {
       method: "get",
       parameters: {source: win.id, msgid: win.msgid, limit: win.messageLimit},
       onSuccess: function(response) {
+        this.application.log("inserting messages for "+win.title);
         win.messages.down("ul").insert({bottom: response.responseText});
         win.trimMessages();
         win.setupMessages();
+        this.application.log("new msgid for "+win.title+" is "+win.msgid);
         cb();
 
         if (this.windowQueue.length) {

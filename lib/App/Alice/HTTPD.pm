@@ -141,7 +141,7 @@ sub login {
 
 sub logout {
   my ($self, $req) = @_;
-  $_->close for $self->app->streams;
+  $_->close for @{$self->app->streams};
   $self->app->purge_disconnects;
   my $res = $req->new_response;
   if (!$self->auth_enabled) {
@@ -296,7 +296,6 @@ sub window_messages {
           if (my $msg = shift @$rows) {
             $writer->write(encode_utf8 $msg->{html});
           } else {
-            $writer->write('<script type="text/javascript">alice.getWindow("'.$window->id.'").msgid = '.$max.';</script>');
             $writer->close;
             undef $idle_w;
           }

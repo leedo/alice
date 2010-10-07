@@ -251,13 +251,15 @@ sub connected {
 
   # kludge to work around broken MOTDs with an extra \015 in the
   # line ending (e.g. irc.omgwtfhax.net)
-  $self->{orig_on_read} = $cl->{socket}{on_read};
-  $cl->{socket}->on_read(sub {
-    my ($hdl) = @_;
-    $hdl->push_read (line => qr{\015?\015?\012}, sub {
-      $cl->_feed_irc_data ($_[1]);
+  if ($cl->{socket}) {
+    $self->{orig_on_read} = $cl->{socket}{on_read};
+    $cl->{socket}->on_read(sub {
+      my ($hdl) = @_;
+      $hdl->push_read (line => qr{\015?\015?\012}, sub {
+        $cl->_feed_irc_data ($_[1]);
+      });
     });
-  });
+  }
 
   if (defined $err) {
     $self->log(info => "connect error: $err");
@@ -321,8 +323,9 @@ sub registered {
   my @log;
 
   # set the client's on read function back to the default
-  $self->cl->{socket}->on_read($self->{orig_on_read});
-  delete $self->{orig_on_read};
+  if ($self->{orig_on_read} and ref $self->{orig_on_read} eq "CODE") {
+    $self->cl->{socket}->on_read(delete $self->{orig_on_read});
+  }
 
   $self->cl->enable_ping (300, sub {
     $self->disconnected("ping timeout");

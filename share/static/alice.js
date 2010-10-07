@@ -10449,10 +10449,11 @@ Alice.Connection = Class.create({
 
   _connect: function() {
     var now = new Date();
-    this.application.log("opening new connection");
+    var msgid = this.msgid();
+    this.application.log("opening new connection starting at "+msgid);
     this.request = new Ajax.Request('/stream', {
       method: 'get',
-      parameters: {msgid: this.msgid(), t: now.getTime() / 1000},
+      parameters: {msgid: msgid, t: now.getTime() / 1000},
       on401: this.gotoLogin,
       onException: this.handleException.bind(this),
       onInteractive: this.handleUpdate.bind(this),
@@ -10608,13 +10609,16 @@ Alice.Connection = Class.create({
     var win = item[0],
          cb = item[1];
 
+    this.application.log("requesting messages for "+win.title+" starting at "+win.msgid);
     new Ajax.Request("/messages", {
       method: "get",
       parameters: {source: win.id, msgid: win.msgid, limit: win.messageLimit},
       onSuccess: function(response) {
+        this.application.log("inserting messages for "+win.title);
         win.messages.down("ul").insert({bottom: response.responseText});
         win.trimMessages();
         win.setupMessages();
+        this.application.log("new msgid for "+win.title+" is "+win.msgid);
         cb();
 
         if (this.windowQueue.length) {
@@ -10647,7 +10651,7 @@ Alice.Window = Class.create({
     this.visibleNick = "";
     this.visibleNickTimeout = "";
     this.nicks = [];
-    this.messageLimit = this.application.isMobile ? 50 : 250;
+    this.messageLimit = this.application.isMobile ? 50 : 200;
     this.msgid = 0;
 
     this.setupEvents();
@@ -10693,8 +10697,9 @@ Alice.Window = Class.create({
     });
 
     this.messages.select('span.timestamp').each(function(elem) {
-      if (elem.innerHTML) {
-        elem.innerHTML = Alice.epochToLocal(elem.innerHTML.strip(), alice.options.timeformat);
+      var inner = elem.innerHTML.strip();
+      if (inner.match(/^\d+$/)) {
+        elem.innerHTML = Alice.epochToLocal(inner, alice.options.timeformat);
         elem.style.opacity = 1;
       }
     });
@@ -10711,6 +10716,12 @@ Alice.Window = Class.create({
         msg.innerHTML = this.application.applyFilters(msg.innerHTML);
       }.bind(this));
     }.bind(this), this.application.loadDelay);
+
+    var last = this.messages.down("li:last-child");
+    if (last && last.id) {
+      this.application.log("setting "+this.title+" msgid to "+last.id);
+      this.msgid = last.id;
+    }
   },
 
   isTabWrapped: function() {
@@ -10889,7 +10900,7 @@ Alice.Window = Class.create({
   },
 
   addMessage: function(message) {
-    if (!message.html) return;
+    if (!message.html || message.msgid <= this.msgid) return;
 
     this.messages.down('ul').insert(message.html);
     if (message.msgid) this.msgid = message.msgid;
@@ -11358,7 +11369,6 @@ Alice.Keyboard = Class.create({
     this.shortcut("Cmd+F");
     this.shortcut("Opt+Up");
     this.shortcut("Opt+Down");
-    this.shortcut("Opt+Enter");
     this.shortcut("Cmd+Shift+M");
     this.shortcut("Cmd+Shift+J");
     this.shortcut("Cmd+Shift+K");
@@ -11447,10 +11457,6 @@ Alice.Keyboard = Class.create({
 
   onOptDown: function() {
     this.activeWindow.input.nextCommand();
-  },
-
-  onOptEnter: function() {
-    this.activeWindow.input.newLine();
   },
 
   onEnter: function() {
