@@ -212,7 +212,7 @@ sub write {
   my $self = shift;
   my $callback = pop;
   mkdir $self->path if !-d $self->path;
-  aio_open $self->fullpath, POSIX::O_WRONLY | POSIX::O_TRUNC, 0644, sub {
+  aio_open $self->fullpath, POSIX::O_CREAT | POSIX::O_WRONLY | POSIX::O_TRUNC, 0644, sub {
     my $fh = shift;
     if ($fh) {
       local $Data::Dumper::Terse = 1;
