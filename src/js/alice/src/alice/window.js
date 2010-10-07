@@ -70,7 +70,7 @@ Alice.Window = Class.create({
 
     // change timestamps from epoch to local time
     this.messages.select('span.timestamp').each(function(elem) {
-      var inner = elem.innerHTML;
+      var inner = elem.innerHTML.strip();
       if (inner.match(/^\d+$/)) {
         elem.innerHTML = Alice.epochToLocal(inner, alice.options.timeformat);
         elem.style.opacity = 1;
