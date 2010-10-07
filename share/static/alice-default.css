@@ -472,7 +472,9 @@ div.msg a {
 
 div.msg img {
   display: block;
-  border: none; }
+  border: none;
+  max-width: 300px;
+  max-height: 300px; }
 
 ul.messages li.monospace + li.monospace.consecutive {
   padding-top: 0px; }
