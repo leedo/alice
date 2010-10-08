@@ -116,9 +116,10 @@ if (window == window.parent) {
       alice.activeWindow().scrollToBottom(true);
     };
 
-    // editing the copy buffer only seems to work webkit/mac
+    // editing the copy buffer only seems to work with Safari on Mac
 
-    if (Prototype.Browser.WebKit && navigator.platform.match("Mac")) {
+    if (Prototype.Browser.WebKit && !navigator.userAgent.match("Chrome")
+        && navigator.platform.match("Mac")) {
       document.observe("copy", function(e) {
         if (e.findElement("ul.messages")) {
           var userSelection = window.getSelection();
