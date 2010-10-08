@@ -115,6 +115,26 @@ if (window == window.parent) {
     window.onorientationchange = function() {
       alice.activeWindow().scrollToBottom(true);
     };
+
+    // editing the copy buffer only seems to work webkit/mac
+
+    if (Prototype.Browser.WebKit && navigator.platform.match("Mac")) {
+      document.observe("copy", function(e) {
+        if (e.findElement("ul.messages")) {
+          var userSelection = window.getSelection();
+          if (userSelection) {
+            userSelection = String(userSelection);
+            userSelection = userSelection.replace(/\n\s*\d+\:\d{2}[ap]?/g, "");
+            userSelection = userSelection.replace(/\n\s*/g, "\n");
+            userSelection = userSelection.replace(/>\s*\n([^<])/g, "> $1");
+            if (e.clipboardData) {
+              e.preventDefault();
+              e.clipboardData.setData("Text", userSelection);
+            }
+          }
+        }
+      });
+    }
     
     // setup default filters
 
