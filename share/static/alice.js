@@ -11673,7 +11673,8 @@ if (window == window.parent) {
     };
 
 
-    if (Prototype.Browser.WebKit && navigator.platform.match("Mac")) {
+    if (Prototype.Browser.WebKit && !navigator.userAgent.match("Chrome")
+        && navigator.platform.match("Mac")) {
       document.observe("copy", function(e) {
         if (e.findElement("ul.messages")) {
           var userSelection = window.getSelection();
