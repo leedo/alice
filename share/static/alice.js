@@ -11338,6 +11338,8 @@ Alice.Input = Class.create({
   },
 
   pasteHandler: function(e) {
+    if (!e.clipboardData) return;
+
     var url = e.clipboardData.getData("URL");
     if (url) {
       e.preventDefault();
@@ -11669,6 +11671,25 @@ if (window == window.parent) {
     window.onorientationchange = function() {
       alice.activeWindow().scrollToBottom(true);
     };
+
+
+    if (Prototype.Browser.WebKit && navigator.platform.match("Mac")) {
+      document.observe("copy", function(e) {
+        if (e.findElement("ul.messages")) {
+          var userSelection = window.getSelection();
+          if (userSelection) {
+            userSelection = String(userSelection);
+            userSelection = userSelection.replace(/\n\s*\d+\:\d{2}[ap]?/g, "");
+            userSelection = userSelection.replace(/\n\s*/g, "\n");
+            userSelection = userSelection.replace(/>\s*\n([^<])/g, "> $1");
+            if (e.clipboardData) {
+              e.preventDefault();
+              e.clipboardData.setData("Text", userSelection);
+            }
+          }
+        }
+      });
+    }
 
 
     alice.addFilters([
