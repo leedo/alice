@@ -5,9 +5,9 @@
       <a href="javascript:alice.connection.requestWindow('<?= $msg->{nick} ?>','<?= $msg->{window}{id} ?>')" class="nick">
         <? if ($avatar) { ?>
           <img src="<?= $avatar ?>" alt="<?= $msg->{nick} ?>" />
-          <span class="nickhint"><?= $msg->{nick} ?></span>
+          <span class="nickhint"><span class="nickborder">&lt;</span><?= $msg->{nick} ?><span class="nickborder">&gt;</span>
         <? } else { ?>
-          <?= $msg->{nick} ?>
+          <span class="nickborder">&lt;</span><?= $msg->{nick} ?><span class="nickborder">&gt;</span>
         <?}?>
       </a>
     </div>

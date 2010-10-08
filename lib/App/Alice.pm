@@ -64,7 +64,7 @@ has streams => (
   default => sub {[]},
 );
 
-sub add_stream {push @{shift->streams}, @_}
+sub add_stream {unshift @{shift->streams}, @_}
 sub no_streams {@{$_[0]->streams} == 0}
 sub stream_count {scalar @{$_[0]->streams}}
 
