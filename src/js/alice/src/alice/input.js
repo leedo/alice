@@ -231,6 +231,8 @@ Alice.Input = Class.create({
   },
 
   pasteHandler: function(e) {
+    if (!e.clipboardData) return;
+
     var url = e.clipboardData.getData("URL");
     if (url) {
       e.preventDefault();
