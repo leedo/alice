@@ -50,32 +50,5 @@ sub format_message {
   return $message;
 }
 
-sub copy_message {
-  my ($self, $msg) = @_;
-  my $copy = {
-    type   => "message",
-    event  => "say",
-    nick   => $msg->{nick},
-    window => $self->serialized,
-    html   => $msg->{html},
-    self   => $msg->{self},
-    highlight   => $msg->{highlight},
-    msgid       => $self->buffer->next_msgid,
-    timestamp   => $msg->{timestamp},
-    monospaced  => $msg->{monospaced},
-    consecutive => $msg->{nick} eq $self->buffer->previous_nick ? 1 : 0,
-  };
-
-  # a gross way to remove consecutive class from messages
-  if ($msg->{consecutive} and !$copy->{consecutive}) {
-    $copy->{html} =~ s/(<li class="[^"]*)consecutive/$1/;
-  } elsif (!$msg->{consecutive} and $copy->{consecutive}) {
-    $copy->{html} =~ s/(<li class=")/$1consecutive /;
-  }
-
-  $self->buffer->add($copy);
-  return $copy;
-}
-
 __PACKAGE__->meta->make_immutable;
 1;

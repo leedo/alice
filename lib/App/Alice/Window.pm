@@ -185,11 +185,18 @@ sub format_message {
     msgid     => $self->buffer->next_msgid,
     timestamp => time,
     monospaced => $monospace,
-    consecutive => $nick eq $self->buffer->previous_nick ? 1 : 0,
+    consecutive => $nick eq $self->buffer->previous_nick,
   };
+
   unless ($message->{self}) {
-    $message->{highlight} = $self->app->is_highlight($own_nick, $body);
+    if ($message->{highlight} = $self->is_highlight($body)) {
+      my $idle_w; $idle_w = AE::idle sub {
+        undef $idle_w;
+        $self->app->send_highlight($nick, $body);
+      };
+    }
   }
+
   $message->{html} = $self->render("message", $message);
 
   $self->buffer->add($message);
@@ -272,6 +279,11 @@ sub hashtag {
     return "/" . $self->title;
   }
   return "/" . $self->session . "/" . $self->title;
+}
+
+sub is_highlight {
+  my ($self, $body) = @_;
+  return $self->app->is_highlight($self->nick, $body);
 }
 
 sub reply {
