@@ -423,10 +423,6 @@ sub broadcast {
   my ($self, @messages) = @_;
 
   return if $self->no_streams or !@messages;
-  
-  # add any highlighted messages to the log window
-  push @messages, map {$self->info_window->copy_message($_)}
-                  grep {$_->{highlight}} @messages;
 
   my $purge = 0;
   for my $stream (@{$self->streams}) {
@@ -437,6 +433,12 @@ sub broadcast {
     $stream->send(\@messages);
   }
   $self->purge_disconnects if $purge;
+}
+
+sub send_highlight {
+  my ($self, $nick, $body) = @_;
+  my $message = $self->info_window->format_message($nick, $body, self => 1);
+  $self->broadcast($message);
 }
 
 sub purge_disconnects {
