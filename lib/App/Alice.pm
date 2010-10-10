@@ -492,7 +492,7 @@ sub static_url {
 
 sub ping {
   my $self = shift;
-  $self->ping_timer(AE::timer 5, 10, sub {
+  $self->ping_timer(AE::timer 1, 10, sub {
     $self->broadcast({
       type => "action",
       event => "ping",
