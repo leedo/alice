@@ -10388,6 +10388,7 @@ Alice.Application = Class.create({
 Alice.Connection = Class.create({
   initialize: function(application) {
     this.application = application;
+    this.connected = false;
     this.len = 0;
     this.aborting = false;
     this.request = null;
@@ -10396,6 +10397,7 @@ Alice.Connection = Class.create({
     this.reconnecting = false;
     this.windowQueue = [];
     this.windowWatcher = false;
+    this.sendQueue = [];
   },
 
   gotoLogin: function() {
@@ -10418,12 +10420,14 @@ Alice.Connection = Class.create({
     if (this.reconnect_count > 3) {
       this.aborting = true;
       this.application.activeWindow().showAlert("Alice server is not responding (<a href='javascript:alice.connection.reconnect()'>reconnect</a>)");
+      this.hideStatus();
       return;
     }
     this.closeConnection();
     this.len = 0;
     this.reconnect_count++;
 
+    this.showStatus("connecting...");
 
     var active_window = this.application.activeWindow();
     var other_windows = this.application.windows().filter(function(win){return win.id != active_window.id});
@@ -10447,15 +10451,30 @@ Alice.Connection = Class.create({
     this.getWindowMessages(active_window, cb);
   },
 
+  showStatus: function(text) {
+    var div = $('connection_status');
+    if (!div) {
+      div = new Element("div", {id: "connection_status"});
+      $('container').insert(div);
+    }
+    div.update(text);
+  },
+
+  hideStatus: function() {
+    var div = $('connection_status');
+    if (div) div.remove();
+  },
+
   _connect: function() {
     var now = new Date();
     var msgid = this.msgid();
     this.application.log("opening new connection starting at "+msgid);
+    this.hideStatus();
     this.request = new Ajax.Request('/stream', {
       method: 'get',
       parameters: {msgid: msgid, t: now.getTime() / 1000},
       on401: this.gotoLogin,
-      on500, this.gotoLogin,
+      on500: this.gotoLogin,
       on502: this.gotoLogin,
       on503: this.gotoLogin,
       onException: this.handleException.bind(this),
@@ -10473,14 +10492,21 @@ Alice.Connection = Class.create({
 
   handleException: function(request, exception) {
     this.application.log("encountered an error with stream.");
+    this.application.log(exception);
+    this.connected = false;
     if (!this.aborting)
       setTimeout(this.connect.bind(this), 2000);
+    else
+      this.hideStatus();
   },
 
   handleComplete: function(transport) {
     this.application.log("connection was closed cleanly.");
+    this.connected = false;
     if (!this.aborting)
       setTimeout(this.connect.bind(this), 2000);
+    else
+      this.hideStatus();
   },
 
   handleUpdate: function(transport) {
@@ -10488,19 +10514,25 @@ Alice.Connection = Class.create({
       this.application.activeWindow().showHappyAlert("Reconnected to the Alice server");
       this.reconnecting = false;
     }
+
+    this.connected = true;
     this.reconnect_count = 0;
+
     var time = new Date();
     var data = transport.responseText.slice(this.len);
     var start, end;
     start = data.indexOf(this.seperator);
+
     if (start > -1) {
       start += this.seperator.length;
       end = data.indexOf(this.seperator, start);
       if (end == -1) return;
     }
     else return;
+
     this.len += (end + this.seperator.length) - start;
     data = data.slice(start, end);
+
     try {
       data = data.evalJSON();
       var queue = data.queue;
@@ -10524,6 +10556,11 @@ Alice.Connection = Class.create({
       this.application.log("lag is " + Math.round(lag) + "s, reconnecting.");
       this.connect();
     }
+
+    while (this.sendQueue.length) {
+      var msg = this.sendQueue.shift();
+      this.sendRequest.apply(this, msg);
+    }
   },
 
   requestWindow: function(title, windowId, message) {
@@ -10543,7 +10580,7 @@ Alice.Connection = Class.create({
   },
 
   closeWindow: function(win) {
-    new Ajax.Request('/say', {
+    this.sendRequest('/say', {
       method: 'post',
       on401: this.gotoLogin,
       parameters: {source: win.id, msg: "/close"}
@@ -10575,7 +10612,7 @@ Alice.Connection = Class.create({
   },
 
   sendMessage: function(form) {
-    new Ajax.Request('/say', {
+    this.sendRequest('/say', {
       method: 'post',
       parameters: form.serialize(),
       on401: this.gotoLogin,
@@ -10585,8 +10622,17 @@ Alice.Connection = Class.create({
     });
   },
 
+  sendRequest: function(url, options) {
+    if (this.connected) {
+      new Ajax.Request(url, options);
+    }
+    else {
+      this.sendQueue.push([url, options]);
+    }
+  },
+
   sendTabOrder: function (windows) {
-    new Ajax.Request('/tabs', {
+    this.sendRequest('/tabs', {
       method: 'post',
       on401: this.gotoLogin,
       parameters: {tabs: windows}
