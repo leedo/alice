@@ -970,7 +970,7 @@ div.config ul#connections li.disconnected {
 div.config ul#connections li.connected {
   color: #333333; }
 
-#auto-generated css classes for irc- > html
+/* auto-generated css classes for irc->html */
 .bold {
   font-weight: bold; }
 
