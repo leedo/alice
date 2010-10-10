@@ -69,7 +69,7 @@ Alice.Connection = Class.create({
       method: 'get',
       parameters: {msgid: msgid, t: now.getTime() / 1000},
       on401: this.gotoLogin,
-      on500, this.gotoLogin,
+      on500: this.gotoLogin,
       on502: this.gotoLogin,
       on503: this.gotoLogin,
       onException: this.handleException.bind(this),
