@@ -10608,9 +10608,17 @@ Alice.Connection = Class.create({
   sendMessage: function(form) {
     if (!this.connected) return false;
 
+    var params;
+    if (form.nodeName && form.nodeName == "FORM") {
+      params = form.serialize();
+    }
+    else {
+      params = form;
+    }
+
     new Ajax.Request('/say', {
       method: 'post',
-      parameters: form.serialize(),
+      parameters: params,
       on401: this.gotoLogin,
       onException: function (request, exception) {
         alert("There was an error sending a message.");
@@ -11471,6 +11479,10 @@ Alice.Keyboard = Class.create({
   onCmdK: function() {
     this.activeWindow.messages.down("ul").update("");
     this.activeWindow.lastNick = "";
+    this.application.connection.sendMessage({
+      msg: "/clear",
+      source: this.activeWindow.id,
+    });
   },
 
   onCmdU: function() {
