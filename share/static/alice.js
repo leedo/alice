@@ -10397,7 +10397,6 @@ Alice.Connection = Class.create({
     this.reconnecting = false;
     this.windowQueue = [];
     this.windowWatcher = false;
-    this.sendQueue = [];
   },
 
   gotoLogin: function() {
@@ -10470,6 +10469,7 @@ Alice.Connection = Class.create({
     var msgid = this.msgid();
     this.application.log("opening new connection starting at "+msgid);
     this.hideStatus();
+    this.connected = true;
     this.request = new Ajax.Request('/stream', {
       method: 'get',
       parameters: {msgid: msgid, t: now.getTime() / 1000},
@@ -10515,7 +10515,6 @@ Alice.Connection = Class.create({
       this.reconnecting = false;
     }
 
-    this.connected = true;
     this.reconnect_count = 0;
 
     var time = new Date();
@@ -10556,11 +10555,6 @@ Alice.Connection = Class.create({
       this.application.log("lag is " + Math.round(lag) + "s, reconnecting.");
       this.connect();
     }
-
-    while (this.sendQueue.length) {
-      var msg = this.sendQueue.shift();
-      this.sendRequest.apply(this, msg);
-    }
   },
 
   requestWindow: function(title, windowId, message) {
@@ -10580,7 +10574,7 @@ Alice.Connection = Class.create({
   },
 
   closeWindow: function(win) {
-    this.sendRequest('/say', {
+    new Ajax.Request('/say', {
       method: 'post',
       on401: this.gotoLogin,
       parameters: {source: win.id, msg: "/close"}
@@ -10612,7 +10606,9 @@ Alice.Connection = Class.create({
   },
 
   sendMessage: function(form) {
-    this.sendRequest('/say', {
+    if (!this.connected) return false;
+
+    new Ajax.Request('/say', {
       method: 'post',
       parameters: form.serialize(),
       on401: this.gotoLogin,
@@ -10620,19 +10616,16 @@ Alice.Connection = Class.create({
         alert("There was an error sending a message.");
       }
     });
+
+    return true;
   },
 
   sendRequest: function(url, options) {
-    if (this.connected) {
-      new Ajax.Request(url, options);
-    }
-    else {
-      this.sendQueue.push([url, options]);
-    }
+    new Ajax.Request(url, options);
   },
 
   sendTabOrder: function (windows) {
-    this.sendRequest('/tabs', {
+    new Ajax.Request('/tabs', {
       method: 'post',
       on401: this.gotoLogin,
       parameters: {tabs: windows}
@@ -11293,14 +11286,20 @@ Alice.Input = Class.create({
   },
 
   send: function() {
-    this.application.connection.sendMessage(this.textarea.form);
-    this.history.push(this.getValue());
-    this.setValue("");
-    if (this.editor) this.editor.update();
-    this.index = -1;
-    this.stash();
-    this.update();
-    this.focus(1);
+    var success = this.application.connection.sendMessage(this.textarea.form);
+    console.log(success);
+    if (success) {
+      this.history.push(this.getValue());
+      this.setValue("");
+      if (this.editor) this.editor.update();
+      this.index = -1;
+      this.stash();
+      this.update();
+      this.focus(1);
+    }
+    else {
+      alert("Could not send message, not connected for alice");
+    }
   },
 
   completeNickname: function() {
