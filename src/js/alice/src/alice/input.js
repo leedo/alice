@@ -136,7 +136,6 @@ Alice.Input = Class.create({
   
   send: function() {
     var success = this.application.connection.sendMessage(this.textarea.form);
-    console.log(success);
     if (success) {
       this.history.push(this.getValue());
       this.setValue("");
