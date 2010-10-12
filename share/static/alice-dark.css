@@ -1,3 +1,6 @@
+tr.input, div.msg {
+  -webkit-font-smoothing: antialiased; }
+
 div.window.active {
   display: block; }
 
