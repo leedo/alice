@@ -1137,7 +1137,7 @@ div.config ul#connections li.connected {
   color: $tab_text;
 }
 
-#auto-generated css classes for irc->html
+/* auto-generated css classes for irc->html */
  .bold { font-weight: bold }
  .ul { text-decoration: underline }
  .italic { font-style: italic }
@@ -1181,3 +1181,15 @@ span.nickborder {
   left: -1000px; 
 }
 
+div#connection_status {
+  z-index: 9999;
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  background: #FE8036;
+  color: #fff;
+  padding: 1px 2px 2px 4px;
+  font-size: 12px;
+  height: 1.2em;
+  width: 95px;
+}
