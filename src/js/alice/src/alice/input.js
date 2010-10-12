@@ -135,14 +135,19 @@ Alice.Input = Class.create({
   },
   
   send: function() {
-    this.application.connection.sendMessage(this.textarea.form);
-    this.history.push(this.getValue());
-    this.setValue("");
-    if (this.editor) this.editor.update();
-    this.index = -1;
-    this.stash();
-    this.update();
-    this.focus(1);
+    var success = this.application.connection.sendMessage(this.textarea.form);
+    if (success) {
+      this.history.push(this.getValue());
+      this.setValue("");
+      if (this.editor) this.editor.update();
+      this.index = -1;
+      this.stash();
+      this.update();
+      this.focus(1);
+    }
+    else {
+      alert("Could not send message, not connected for alice");
+    }
   },
   
   completeNickname: function() {

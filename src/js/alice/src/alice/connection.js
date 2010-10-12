@@ -1,6 +1,7 @@
 Alice.Connection = Class.create({
   initialize: function(application) {
     this.application = application;
+    this.connected = false;
     this.len = 0;
     this.aborting = false;
     this.request = null;
@@ -31,12 +32,14 @@ Alice.Connection = Class.create({
     if (this.reconnect_count > 3) {
       this.aborting = true;
       this.application.activeWindow().showAlert("Alice server is not responding (<a href='javascript:alice.connection.reconnect()'>reconnect</a>)");
+      this.hideStatus();
       return;
     }
     this.closeConnection();
     this.len = 0;
     this.reconnect_count++;
 
+    this.showStatus("connecting...");
 
     var active_window = this.application.activeWindow();
     var other_windows = this.application.windows().filter(function(win){return win.id != active_window.id});
@@ -61,14 +64,33 @@ Alice.Connection = Class.create({
     this.getWindowMessages(active_window, cb);
   },
 
+  showStatus: function(text) {
+    var div = $('connection_status');
+    if (!div) {
+      div = new Element("div", {id: "connection_status"});
+      $('container').insert(div);
+    }
+    div.update(text);
+  },
+
+  hideStatus: function() {
+    var div = $('connection_status');
+    if (div) div.remove();
+  },
+
   _connect: function() {
     var now = new Date();
     var msgid = this.msgid();
     this.application.log("opening new connection starting at "+msgid);
+    this.hideStatus();
+    this.connected = true;
     this.request = new Ajax.Request('/stream', {
       method: 'get',
       parameters: {msgid: msgid, t: now.getTime() / 1000},
       on401: this.gotoLogin,
+      on500: this.gotoLogin,
+      on502: this.gotoLogin,
+      on503: this.gotoLogin,
       onException: this.handleException.bind(this),
       onInteractive: this.handleUpdate.bind(this),
       onComplete: this.handleComplete.bind(this)
@@ -84,14 +106,21 @@ Alice.Connection = Class.create({
 
   handleException: function(request, exception) {
     this.application.log("encountered an error with stream.");
+    this.application.log(exception);
+    this.connected = false;
     if (!this.aborting)
       setTimeout(this.connect.bind(this), 2000);
+    else
+      this.hideStatus();
   },
 
   handleComplete: function(transport) {
     this.application.log("connection was closed cleanly.");
+    this.connected = false;
     if (!this.aborting)
       setTimeout(this.connect.bind(this), 2000);
+    else
+      this.hideStatus();
   },
   
   handleUpdate: function(transport) {
@@ -99,19 +128,24 @@ Alice.Connection = Class.create({
       this.application.activeWindow().showHappyAlert("Reconnected to the Alice server");
       this.reconnecting = false;
     }
+
     this.reconnect_count = 0;
+
     var time = new Date();
     var data = transport.responseText.slice(this.len);
     var start, end;
     start = data.indexOf(this.seperator);
+
     if (start > -1) {
       start += this.seperator.length;
       end = data.indexOf(this.seperator, start);
       if (end == -1) return;
     }
     else return;
+
     this.len += (end + this.seperator.length) - start;
     data = data.slice(start, end);
+
     try {
       data = data.evalJSON();
       var queue = data.queue;
@@ -187,14 +221,30 @@ Alice.Connection = Class.create({
   },
   
   sendMessage: function(form) {
+    if (!this.connected) return false;
+
+    var params;
+    if (form.nodeName && form.nodeName == "FORM") {
+      params = form.serialize();
+    }
+    else {
+      params = form;
+    }
+
     new Ajax.Request('/say', {
       method: 'post',
-      parameters: form.serialize(),
+      parameters: params,
       on401: this.gotoLogin,
       onException: function (request, exception) {
         alert("There was an error sending a message.");
       }
     });
+
+    return true;
+  },
+
+  sendRequest: function(url, options) {
+    new Ajax.Request(url, options);
   },
   
   sendTabOrder: function (windows) {
@@ -223,11 +273,12 @@ Alice.Connection = Class.create({
     var item = this.windowQueue.shift();
     var win = item[0],
          cb = item[1];
+    var date = new Date();
 
     this.application.log("requesting messages for "+win.title+" starting at "+win.msgid);
     new Ajax.Request("/messages", {
       method: "get",
-      parameters: {source: win.id, msgid: win.msgid, limit: win.messageLimit},
+      parameters: {source: win.id, msgid: win.msgid, limit: win.messageLimit, time: date.getTime()},
       onSuccess: function(response) {
         this.application.log("inserting messages for "+win.title);
         win.messages.down("ul").insert({bottom: response.responseText});
