@@ -10421,7 +10421,7 @@ Alice.Connection = Class.create({
     if (this.reconnect_count > 3) {
       this.aborting = true;
       this.application.activeWindow().showAlert("Alice server is not responding (<a href='javascript:alice.connection.reconnect()'>reconnect</a>)");
-      this.hideStatus();
+      this.changeStatus("ok");
       return;
     }
     this.pings = [];
@@ -10429,7 +10429,7 @@ Alice.Connection = Class.create({
     this.len = 0;
     this.reconnect_count++;
 
-    this.showStatus("connecting...");
+    this.changeStatus("loading");
 
     var active_window = this.application.activeWindow();
     var other_windows = this.application.windows().filter(function(win){return win.id != active_window.id});
@@ -10453,25 +10453,15 @@ Alice.Connection = Class.create({
     this.getWindowMessages(active_window, cb);
   },
 
-  showStatus: function(text) {
-    var div = $('connection_status');
-    if (!div) {
-      div = new Element("div", {id: "connection_status"});
-      $('container').insert(div);
-    }
-    div.update(text);
-  },
-
-  hideStatus: function() {
-    var div = $('connection_status');
-    if (div) div.remove();
+  changeStatus: function(classname) {
+    $('connection_status').className = classname;
   },
 
   _connect: function() {
     var now = new Date();
     var msgid = this.msgid();
     this.application.log("opening new connection starting at "+msgid);
-    this.hideStatus();
+    this.changeStatus("ok");
     this.connected = true;
     this.request = new Ajax.Request('/stream', {
       method: 'get',
@@ -10500,7 +10490,7 @@ Alice.Connection = Class.create({
     if (!this.aborting)
       setTimeout(this.connect.bind(this), 2000);
     else
-      this.hideStatus();
+      this.changeStatus("ok");
   },
 
   handleComplete: function(transport) {
@@ -10509,7 +10499,7 @@ Alice.Connection = Class.create({
     if (!this.aborting)
       setTimeout(this.connect.bind(this), 2000);
     else
-      this.hideStatus();
+      this.changeStatus("ok");
   },
 
   handleUpdate: function(transport) {
