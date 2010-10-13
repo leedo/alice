@@ -10285,12 +10285,14 @@ Alice.Application = Class.create({
     }
   },
 
-  highlightChannelSelect: function() {
-    $('tab_overflow_button').addClassName('unread');
+  highlightChannelSelect: function(classname) {
+    if (!classname) classname = "unread";
+    $('tab_overflow_button').addClassName(classname);
   },
 
   unHighlightChannelSelect: function() {
     $('tab_overflow_button').removeClassName('unread');
+    $('tab_overflow_button').removeClassName('highlight');
   },
 
   updateChannelSelect: function() {
@@ -11016,10 +11018,11 @@ Alice.Window = Class.create({
       if (message.event == "say") {
         this.tab.addClassName("unread");
         this.tabOverflowButton.addClassName("unread");
-        if (this.isTabWrapped()) this.application.highlightChannelSelect();
+        if (this.isTabWrapped()) this.application.highlightChannelSelect("unread");
       }
       if (message.highlight) {
         this.tab.addClassName("highlight");
+        if (this.isTabWrapped()) this.application.highlightChannelSelect("highlight");
       }
     }
 

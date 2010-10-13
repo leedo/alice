@@ -245,12 +245,14 @@ Alice.Application = Class.create({
     }
   },
   
-  highlightChannelSelect: function() {
-    $('tab_overflow_button').addClassName('unread');
+  highlightChannelSelect: function(classname) {
+    if (!classname) classname = "unread";
+    $('tab_overflow_button').addClassName(classname);
   },
   
   unHighlightChannelSelect: function() {
     $('tab_overflow_button').removeClassName('unread');
+    $('tab_overflow_button').removeClassName('highlight');
   },
   
   updateChannelSelect: function() {

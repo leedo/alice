@@ -334,10 +334,11 @@ Alice.Window = Class.create({
       if (message.event == "say") {
         this.tab.addClassName("unread");
         this.tabOverflowButton.addClassName("unread");
-        if (this.isTabWrapped()) this.application.highlightChannelSelect();
+        if (this.isTabWrapped()) this.application.highlightChannelSelect("unread");
       }
       if (message.highlight) {
         this.tab.addClassName("highlight");
+        if (this.isTabWrapped()) this.application.highlightChannelSelect("highlight");
       }
     }
 
