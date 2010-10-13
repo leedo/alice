@@ -67,6 +67,15 @@ li#config_button {
   background: url(image/sprites.png) 4px -216px no-repeat;
 }
 
+li#connection_status.loading {
+  background: url(image/loading.gif) center 3px no-repeat;
+  opacity: 0.4;
+}
+
+ul#controls li#connection_status:hover {
+  background-color: transparent;
+}
+
 body {
   font-family: $font_family;
   text-rendering: optimizeLegibility;
@@ -322,7 +331,7 @@ ul#controls {
   right: 0px;
   height: 23px;
   margin: 0;
-  padding: 0 18px 0 0;
+  padding: 0 2px 0 0;
   list-style: none;
 }
 
@@ -333,7 +342,6 @@ ul#controls li {
   height: 16px;
   width: 16px;
   padding: 4px 3px 3px 3px;
-  cursor: pointer;
 }
 
 ul#controls li:hover {
@@ -1181,15 +1189,4 @@ span.nickborder {
   left: -1000px; 
 }
 
-div#connection_status {
-  z-index: 9999;
-  position: absolute;
-  top: 0px;
-  left: 0px;
-  background: #FE8036;
-  color: #fff;
-  padding: 1px 2px 2px 4px;
-  font-size: 12px;
-  height: 1.2em;
-  width: 95px;
-}
+
