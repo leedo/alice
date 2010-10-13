@@ -10397,6 +10397,8 @@ Alice.Connection = Class.create({
     this.reconnecting = false;
     this.windowQueue = [];
     this.windowWatcher = false;
+    this.pings = [];
+    this.pingLimit = 10;
   },
 
   gotoLogin: function() {
@@ -10550,11 +10552,25 @@ Alice.Connection = Class.create({
       this.application.log(e.toString());
     }
 
-    var lag = time / 1000 -  data.time;
+    var lag = this.addPing(time / 1000 -  data.time);
+
     if (lag > 5) {
       this.application.log("lag is " + Math.round(lag) + "s, reconnecting.");
       this.connect();
     }
+  },
+
+  addPing: function(ping) {
+    this.pings.push(ping);
+    if (this.pings.length > this.pingLimit)
+      this.pings.shift();
+
+    return this.lag();
+  },
+
+  lag: function() {
+    if (!this.pings.length) return 0;
+    return this.pings.inject(0, function (acc, n) {return acc + n}) / this.pings.length;
   },
 
   requestWindow: function(title, windowId, message) {
