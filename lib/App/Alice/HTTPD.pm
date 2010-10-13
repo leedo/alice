@@ -17,16 +17,30 @@ use Encode;
 use utf8;
 use Any::Moose;
 
-has 'app' => (
+has app => (
   is  => 'ro',
   isa => 'App::Alice',
   required => 1,
 );
 
-has 'httpd' => (
+has httpd => (
   is  => 'rw',
   lazy => 1,
   builder => "_build_httpd",
+);
+
+has ping => (
+  is  => 'rw',
+  lazy => 1,
+  default => sub {
+    my $self = shift;
+    AE::timer 1, 5, sub {
+      $self->app->broadcast({
+        type => "action",
+        event => "ping",
+      });
+    };
+  },
 );
 
 sub config {$_[0]->app->config}
@@ -57,6 +71,7 @@ my $ok = sub{ [200, ["Content-Type", "text/plain", "Content-Length", 2], ['ok']]
 sub BUILD {
   my $self = shift;
   $self->httpd;
+  $self->ping;
 }
 
 sub _build_httpd {
