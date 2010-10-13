@@ -53,6 +53,9 @@ li#tab_overflow_button {
 li#tab_overflow_button.unread {
   background: url(image/sprites.png) 3px -194px no-repeat; }
 
+li#tab_overflow_button.unread.highlight {
+  background: url(image/sprites.png) -20px -194px no-repeat; }
+
 li#config_button {
   background: url(image/sprites.png) 4px -216px no-repeat; }
 
