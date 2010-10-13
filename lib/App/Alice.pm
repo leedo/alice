@@ -88,8 +88,6 @@ has history => (
   },
 );
 
-has 'ping_timer' => (is  => 'rw');
-
 sub store {
   my ($self, @args) = @_;
   my $idle_w; $idle_w = AE::idle sub {
@@ -206,7 +204,6 @@ sub run {
     $self->info_window;
     $self->template;
     $self->httpd;
-    $self->ping;
 
     print STDERR "Location: http://".$self->config->http_address.":".$self->config->http_port."/\n"
       if $self->standalone;
@@ -488,16 +485,6 @@ sub ignores {
 sub static_url {
   my ($self, $file) = @_;
   return $self->config->static_prefix . $file;
-}
-
-sub ping {
-  my $self = shift;
-  $self->ping_timer(AE::timer 1, 10, sub {
-    $self->broadcast({
-      type => "action",
-      event => "ping",
-    });
-  });
 }
 
 sub auth_enabled {
