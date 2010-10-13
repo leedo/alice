@@ -37,6 +37,7 @@ Alice.Connection = Class.create({
       this.hideStatus();
       return;
     }
+    this.pings = [];
     this.closeConnection();
     this.len = 0;
     this.reconnect_count++;
