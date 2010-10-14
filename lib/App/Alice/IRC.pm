@@ -607,13 +607,9 @@ sub irc_301 {
   my ($from, $awaymsg) = @{$msg->{params}};
   utf8::decode($_) for ($from, $awaymsg);
 
-  $awaymsg = "$from is away ($awaymsg)";
-  
   if (my $window = $self->find_window($from)) {
+    $awaymsg = "$from is away ($awaymsg)";
     $window->reply($awaymsg);
-  }
-  else {
-    $self->log_message($awaymsg);
   }
 }
 
