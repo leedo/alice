@@ -121,17 +121,17 @@ if (window == window.parent) {
     if (Prototype.Browser.WebKit && !navigator.userAgent.match("Chrome")
         && navigator.platform.match("Mac")) {
       document.observe("copy", function(e) {
-        if (e.findElement("ul.messages")) {
+        if (e.findElement("ul.messages") && e.clipboardData) {
           var userSelection = window.getSelection();
           if (userSelection) {
             userSelection = String(userSelection);
             userSelection = userSelection.replace(/\n\s*\d+\:\d{2}[ap]?/g, "");
             userSelection = userSelection.replace(/\n\s*/g, "\n");
             userSelection = userSelection.replace(/>\s*\n([^<])/g, "> $1");
-            if (e.clipboardData) {
-              e.preventDefault();
-              e.clipboardData.setData("Text", userSelection);
-            }
+            userSelection = userSelection.replace(/\n([^<])/g, "\n<$1");
+
+            e.preventDefault();
+            e.clipboardData.setData("Text", userSelection);
           }
         }
       });
