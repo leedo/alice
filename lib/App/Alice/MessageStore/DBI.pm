@@ -76,11 +76,11 @@ sub _handle_trim {
 sub _trim {
   my $window_id = shift;
   $dbi->exec(
-    "SELECT msgid FROM window_buffer WHERE window_id=? ORDER BY msgid DESC LIMIT 100",
+    "SELECT msgid FROM window_buffer WHERE window_id=? ORDER BY msgid DESC LIMIT 100,1",
     $window_id, sub {
       my $rows = $_[1];
       if (@$rows) {
-        my $minid = $rows->[-1][0];
+        my $minid = $rows->[0][0];
         $dbi->exec(
           "DELETE FROM window_buffer WHERE window_id=? AND msgid < ?",
           $window_id, $minid, sub{}
