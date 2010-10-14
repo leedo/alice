@@ -37,7 +37,7 @@ sub add {
   $trim{$self->{id}} = 1;
 
   if (!$insert_t) {
-    $insert_t = AE::timer 1, 0, sub {_handle_insert()};
+    $insert_t = AE::timer 1, 0, \&_handle_insert;
   }
 }
 
@@ -54,7 +54,7 @@ sub _handle_insert {
   };
   
   if (!$trim_t) {
-    $trim_t = AE::timer 60, 0, sub {_handle_trim()};
+    $trim_t = AE::timer 60, 0, \&_handle_trim;
   }
 }
 
