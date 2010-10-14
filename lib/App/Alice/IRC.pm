@@ -110,6 +110,9 @@ sub BUILD {
     connect        => sub{$self->connected(@_)},
     disconnect     => sub{$self->disconnected(@_)},
     irc_001        => sub{$self->log_message($_[1])},
+    irc_301        => sub{$self->irc_301(@_)}, # AWAY message
+    irc_305        => sub{$self->log_message($_[1])}, # AWAY
+    irc_306        => sub{$self->log_message($_[1])}, # not AWAY
     irc_352        => sub{$self->irc_352(@_)}, # WHO info
     irc_311        => sub{$self->irc_311(@_)}, # WHOIS info
     irc_312        => sub{$self->irc_312(@_)}, # WHOIS server
@@ -596,6 +599,22 @@ sub nick_windows {
       @channels
   }
   return ();
+}
+
+sub irc_301 {
+  my ($self, $cl, $msg) = @_;
+
+  my ($from, $awaymsg) = @{$msg->{params}};
+  utf8::decode($_) for ($from, $awaymsg);
+
+  $awaymsg = "$from is away ($awaymsg)";
+  
+  if (my $window = $self->find_window($from)) {
+    $window->reply($awaymsg);
+  }
+  else {
+    $self->log_message($awaymsg);
+  }
 }
 
 sub irc_319 {

@@ -238,7 +238,7 @@ sub handle_message {
         $self->app->handle_command($_, $window) if length $_;
       };
       if ($@) {
-        $self->app->log(info => $@);
+        warn $@;
       }
     }
   }

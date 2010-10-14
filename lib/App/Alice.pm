@@ -512,5 +512,11 @@ sub authenticate {
   return 1;
 }
 
+sub set_away {
+  my ($self, $message) = @_;
+  my @args = (defined $message ? (AWAY => $message) : "AWAY");
+  $_->send_srv(@args) for $self->connected_ircs;
+}
+
 __PACKAGE__->meta->make_immutable;
 1;
