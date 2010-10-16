@@ -331,7 +331,7 @@ Alice.Window = Class.create({
     if (this.element.hasClassName('active'))
       this.scrollToBottom();
     else if (this.title != "info") {
-      if (message.event == "say") {
+      if (message.event == "say" && !message.self) {
         this.tab.addClassName("unread");
         this.tabOverflowButton.addClassName("unread");
         if (this.isTabWrapped()) this.application.highlightChannelSelect("unread");
