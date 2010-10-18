@@ -275,10 +275,12 @@ sub previous_nick {
 
 sub hashtag {
   my $self = shift;
-  if ($self->type eq "info") {
-    return "/" . $self->title;
-  }
-  return "/" . $self->session . "/" . $self->title;
+
+  my $name = $self->title;
+  $name =~ s/#//;
+  my $path = $self->type eq "privmsg" ? "users" : "channels";
+  
+  return "/" . $self->session . "/$path/" . $name;
 }
 
 sub is_highlight {
