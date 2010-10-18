@@ -70,7 +70,7 @@ sub BUILDARGS {
 
 sub sort_name {
   my $name = $_[0]->title;
-  $name =~ s/^#//;
+  $name =~ s/^[^\w\d]+//;
   $name;
 }
 
@@ -277,7 +277,7 @@ sub hashtag {
   my $self = shift;
 
   my $name = $self->title;
-  $name =~ s/#//;
+  $name =~ s/[#&~@]//g;
   my $path = $self->type eq "privmsg" ? "users" : "channels";
   
   return "/" . $self->session . "/$path/" . $name;
