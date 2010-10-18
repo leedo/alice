@@ -50,5 +50,10 @@ sub format_message {
   return $message;
 }
 
+sub hashtag {
+  my $self = shift;
+  return "/info";
+}
+
 __PACKAGE__->meta->make_immutable;
 1;
