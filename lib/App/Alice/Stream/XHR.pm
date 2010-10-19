@@ -1,4 +1,4 @@
-package App::Alice::Stream;
+package App::Alice::Stream::XHR;
 
 use JSON;
 use Time::HiRes qw/time/;
