@@ -2,6 +2,7 @@ package App::Alice::Stream::WebSocket;
 
 use JSON;
 use Any::Moose;
+use Digest::MD5 qw/md5/;
 
 has env => (
   is => 'ro',
@@ -10,13 +11,22 @@ has env => (
 
 has handle => (
   is => 'rw',
-  isa => 'AnyEvent::Handle',
 );
 
 has [qw/offset last_send start_time/]=> (
   is  => 'rw',
   isa => 'Num',
   default => 0,
+);
+
+has closed => (
+  is => 'rw',
+  default => 0,
+);
+
+has on_read => (
+  is => 'ro',
+  isa => 'CodeRef',
 );
 
 sub BUILD {
@@ -60,16 +70,29 @@ sub BUILD {
   $h->push_write("$digest");
   
   $h->on_error(sub {
+    warn $_[2];
     $self->close;
     undef $h;
   });
 
   $h->on_eof(sub {
+    warn $_[2];
     $self->close;
     undef $h;
   }); 
 
-  $h->on_read($self->on_read);
+  $h->on_read(sub {
+    $_[0]->push_read(
+      line => "\xff",
+      sub {
+        my ($h, $line) = @_;
+        $line =~ s/^\0// or warn;
+        $self->on_read->($self, decode_json $line);
+      }
+    );
+  });
+    
+  $self->handle($h);
 }
 
 sub send {

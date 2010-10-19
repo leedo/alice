@@ -60,7 +60,7 @@ has httpd => (
 
 has streams => (
   is      => 'rw',
-  isa     => 'ArrayRef[App::Alice::Stream]',
+  isa     => 'ArrayRef',
   default => sub {[]},
 );
 
