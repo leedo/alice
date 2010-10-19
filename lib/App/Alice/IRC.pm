@@ -778,5 +778,10 @@ sub update_realname {
   }
 }
 
+sub is_channel {
+  my ($self, $channel) = @_;
+  return $self->cl->is_channel_name($channel);
+}
+
 __PACKAGE__->meta->make_immutable;
 1;
