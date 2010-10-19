@@ -210,17 +210,17 @@ sub setup_stream {
     );
 
     $app->add_stream($stream);
-    $app->_update_stream($req, $stream);
+    _update_stream($app, $req, $stream);
   }
 }
 
 sub _update_stream {
-  my ($self, $req, $stream) = @_;
+  my ($app, $req, $stream) = @_;
 
   my $min = $req->parameters->{msgid} || 0;
   my $limit = $req->parameters->{limit} || 100;
 
-  for my $window ($self->windows) {
+  for my $window ($app->windows) {
     $window->buffer->messages($limit, $min, sub {
       my $msgs = shift;
       return unless @$msgs;
@@ -242,17 +242,18 @@ sub setup_ws_stream {
     my $stream = eval {
       App::Alice::Stream::WebSocket->new(
         queue   => [ map({$_->join_action} $app->windows) ],
-        start_time => $req->parameters->{t},
+        start_time => $req->parameters->{t} || time,
         env     => $req->env,
-        on_read => sub { $self->handle_ws_message },
+        on_read => sub { $self->handle_ws_message(@_) },
       );
     };
     if ($@) {
+      warn $@;
       $respond->([500, ["Content-Type", "text/plain"], ["something broke"]]);
       return;
     }
     $app->add_stream($stream);
-    $app->_update_stream($req, $stream);
+    _update_stream($app, $req, $stream);
   };
 }
 
@@ -274,6 +275,11 @@ sub handle_message {
     }
   }
   return $ok->();
+}
+
+sub handle_ws_message {
+  my ($self, $stream, $message) = @_;
+  print STDERR @_;
 }
 
 sub send_index {
