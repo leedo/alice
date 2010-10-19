@@ -786,9 +786,15 @@ sub is_channel {
 __PACKAGE__->meta->make_immutable;
 1;
 
+=pod
+
+=head1 NAME
+
+App::Alice::IRC - an Altogether Lovely Internet Chatting Experience
+
 =head2 METHODS
 
-=over
+=over 4
 
 =item $irc->connect
 
@@ -904,3 +910,7 @@ Update this connection's REALNAME, which will tchange your avatar
 for other alice users. Sends a REALNAME command to the server.
 This command is only understood by the hector IRC server, and
 will be ignored by others.
+
+=back
+
+=cut
