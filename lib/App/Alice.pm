@@ -429,7 +429,10 @@ sub broadcast {
 }
 
 sub update_stream {
-  my ($self, $stream, $min, $limit) = @_;
+  my ($self, $stream, $params) = @_;
+
+  my $min = $params->{msgid} || 0;
+  my $limit = $params->{limit} || 100;
 
   for my $window ($self->windows) {
     $window->buffer->messages($limit, $min, sub {

@@ -188,11 +188,8 @@ sub setup_stream {
       min_bytes  => $req->user_agent =~ /android/i ? 4096 : 0,
     );
 
-    my $min = $req->parameters->{msgid} || 0;
-    my $limit = $req->parameters->{limit} || 100;
-
     $app->add_stream($stream);
-    $app->update_stream($stream, $min, $limit);
+    $app->update_stream($stream, $req->parameters);
   }
 }
 
@@ -203,12 +200,13 @@ sub setup_ws_stream {
 
   return sub {
     my $respond = shift;
+
     my $stream = eval {
       App::Alice::Stream::WebSocket->new(
         queue   => [ map({$_->join_action} $app->windows) ],
         start_time => $req->parameters->{t} || time,
         env     => $req->env,
-        on_read => sub { $self->handle_ws_message($app, @_) },
+        on_read => sub { $app->handle_message(@_) },
       );
     };
 
@@ -218,11 +216,8 @@ sub setup_ws_stream {
       return;
     }
 
-    my $min = $req->parameters->{msgid} || 0;
-    my $limit = $req->parameters->{limit} || 100;
-
     $app->add_stream($stream);
-    $app->update_stream($stream, $min, $limit);
+    $app->update_stream($stream, $req->parameters);
   };
 }
 
@@ -236,11 +231,6 @@ sub handle_message {
   });
   
   return $ok->();
-}
-
-sub handle_ws_message {
-  my ($self, $app, $message) = @_;
-  $app->handle_message($message);
 }
 
 sub send_index {
