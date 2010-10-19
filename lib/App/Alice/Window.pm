@@ -74,9 +74,13 @@ sub sort_name {
   $name;
 }
 
-sub type {
-  return $_[0]->title =~ /^[#&]/ ? "channel" : "privmsg";
-}
+has type => (
+  is => 'ro',
+  lazy => 1,
+  default => sub {
+    $_[0]->irc->is_channel($_[0]->title) ? "channel" : "privmsg";
+  },
+);
 
 sub is_channel {$_[0]->type eq "channel"}
 sub irc {$_[0]->_irc}
