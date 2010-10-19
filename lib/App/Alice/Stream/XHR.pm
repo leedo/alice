@@ -42,11 +42,8 @@ has min_bytes => (
   default => 1024,
 );
 
-sub BUILD {
+sub setup_stream {
   my $self = shift;
-  my $local_time = time;
-  my $remote_time = $self->start_time || $local_time;
-  $self->offset($local_time - $remote_time);
 
   # better way to get the AE handle?
   my $hdl = $self->writer->{handle};

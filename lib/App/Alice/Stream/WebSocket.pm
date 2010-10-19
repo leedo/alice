@@ -20,12 +20,8 @@ has on_read => (
   isa => 'CodeRef',
 );
 
-sub BUILD {
+sub setup_stream {
   my $self = shift;
-
-  my $local_time = time;
-  my $remote_time = $self->start_time || $local_time;
-  $self->offset($local_time - $remote_time);
 
   my $env = $self->env;
 
@@ -100,7 +96,6 @@ sub send {
 sub close {
   my $self = shift;
   $self->handle->destroy;
-  $self->handle(undef);
   $self->closed(1);
 }
 
