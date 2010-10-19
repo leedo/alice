@@ -9,7 +9,8 @@ use Plack::Builder;
 use Plack::Middleware::Static;
 use Plack::Session::Store::File;
 use IRC::Formatting::HTML qw/html_to_irc/;
-use App::Alice::Stream;
+use App::Alice::Stream::XHR;
+use App::Alice::Stream::WebSocket;
 use App::Alice::Commands;
 use List::Util qw/max/;
 use JSON;
@@ -48,6 +49,7 @@ sub config {$_[0]->app->config}
 my $url_handlers = [
   [ "say"          => "handle_message" ],
   [ "stream"       => "setup_stream" ],
+  [ "wsstream"     => "setup_ws_stream" ],
   [ ""             => "send_index" ],
   [ "messages"     => "window_messages" ],
   [ "config"       => "send_config" ],
@@ -195,14 +197,11 @@ sub setup_stream {
   my $app = $self->app;
   $app->log(info => "opening new stream");
 
-  my $min = $req->parameters->{msgid} || 0;
-  my $limit = $req->parameters->{limit} || 100;
-
   return sub {
     my $respond = shift;
 
-    my $writer = $respond->([200, [@App::Alice::Stream::headers]]);
-    my $stream = App::Alice::Stream->new(
+    my $writer = $respond->([200, [@App::Alice::Stream::XHR::headers]]);
+    my $stream = App::Alice::Stream::XHR->new(
       queue      => [ map({$_->join_action} $app->windows) ],
       writer     => $writer,
       start_time => $req->parameters->{t},
@@ -211,18 +210,50 @@ sub setup_stream {
     );
 
     $app->add_stream($stream);
-
-    for my $window ($app->windows) {
-      $window->buffer->messages($limit, $min, sub {
-        my $msgs = shift;
-        return unless @$msgs;
-        my $idle_w; $idle_w = AE::idle sub {
-          $stream->send($msgs); 
-          undef $idle_w;
-        };
-      });
-    };
+    $app->_update_stream($req, $stream);
   }
+}
+
+sub _update_stream {
+  my ($self, $req, $stream) = @_;
+
+  my $min = $req->parameters->{msgid} || 0;
+  my $limit = $req->parameters->{limit} || 100;
+
+  for my $window ($self->windows) {
+    $window->buffer->messages($limit, $min, sub {
+      my $msgs = shift;
+      return unless @$msgs;
+      my $idle_w; $idle_w = AE::idle sub {
+        $stream->send($msgs); 
+        undef $idle_w;
+      };
+    });
+  }
+}
+
+sub setup_ws_stream {
+  my ($self, $req) = @_;
+  my $app = $self->app;
+  $app->log(info => "opening new websocket stream");
+
+  return sub {
+    my $respond = shift;
+    my $stream = eval {
+      App::Alice::Stream::WebSocket->new(
+        queue   => [ map({$_->join_action} $app->windows) ],
+        start_time => $req->parameters->{t},
+        env     => $req->env,
+        on_read => sub { $self->handle_ws_message },
+      );
+    };
+    if ($@) {
+      $respond->([500, ["Content-Type", "text/plain"], ["something broke"]]);
+      return;
+    }
+    $app->add_stream($stream);
+    $app->_update_stream($req, $stream);
+  };
 }
 
 sub handle_message {
