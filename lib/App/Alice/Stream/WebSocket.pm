@@ -4,6 +4,8 @@ use JSON;
 use Any::Moose;
 use Digest::MD5 qw/md5/;
 
+extends 'App::Alice::Stream';
+
 has env => (
   is => 'ro',
   required => 1,
@@ -11,17 +13,6 @@ has env => (
 
 has handle => (
   is => 'rw',
-);
-
-has [qw/offset last_send start_time/]=> (
-  is  => 'rw',
-  isa => 'Num',
-  default => 0,
-);
-
-has closed => (
-  is => 'rw',
-  default => 0,
 );
 
 has on_read => (
