@@ -8,7 +8,6 @@ use Plack::Request;
 use Plack::Builder;
 use Plack::Middleware::Static;
 use Plack::Session::Store::File;
-use IRC::Formatting::HTML qw/html_to_irc/;
 use App::Alice::Stream::XHR;
 use App::Alice::Stream::WebSocket;
 use App::Alice::Commands;
@@ -59,11 +58,7 @@ my $url_handlers = [
   [ "tabs"         => "tab_order" ],
   [ "login"        => "login" ],
   [ "logout"       => "logout" ],
-  [ "logs"         => "send_logs" ],
-  [ "search"       => "send_search" ],
-  [ "range"        => "send_range" ],
   [ "view"         => "send_index" ],
-  [ "get"          => "image_proxy" ],
 ];
 
 sub url_handlers { return $url_handlers }
@@ -176,22 +171,6 @@ sub shutdown {
   $self->httpd(undef);
 }
 
-sub image_proxy {
-  my ($self, $req) = @_;
-  my $url = $req->request_uri;
-  $url =~ s/^\/get\///;
-  return sub {
-    my $respond = shift;
-    http_get $url, sub {
-      my ($data, $headers) = @_;
-      my $res = $req->new_response($headers->{Status});
-      $res->headers($headers);
-      $res->body($data);
-      $respond->($res->finalize);
-    };
-  }
-}
-
 sub setup_stream {
   my ($self, $req) = @_;
   my $app = $self->app;
@@ -209,26 +188,11 @@ sub setup_stream {
       min_bytes  => $req->user_agent =~ /android/i ? 4096 : 0,
     );
 
+    my $min = $req->parameters->{msgid} || 0;
+    my $limit = $req->parameters->{limit} || 100;
+
     $app->add_stream($stream);
-    _update_stream($app, $req, $stream);
-  }
-}
-
-sub _update_stream {
-  my ($app, $req, $stream) = @_;
-
-  my $min = $req->parameters->{msgid} || 0;
-  my $limit = $req->parameters->{limit} || 100;
-
-  for my $window ($app->windows) {
-    $window->buffer->messages($limit, $min, sub {
-      my $msgs = shift;
-      return unless @$msgs;
-      my $idle_w; $idle_w = AE::idle sub {
-        $stream->send($msgs); 
-        undef $idle_w;
-      };
-    });
+    $app->update_stream($stream, $min, $limit);
   }
 }
 
@@ -244,42 +208,39 @@ sub setup_ws_stream {
         queue   => [ map({$_->join_action} $app->windows) ],
         start_time => $req->parameters->{t} || time,
         env     => $req->env,
-        on_read => sub { $self->handle_ws_message(@_) },
+        on_read => sub { $self->handle_ws_message($app, @_) },
       );
     };
+
     if ($@) {
       warn $@;
       $respond->([500, ["Content-Type", "text/plain"], ["something broke"]]);
       return;
     }
+
+    my $min = $req->parameters->{msgid} || 0;
+    my $limit = $req->parameters->{limit} || 100;
+
     $app->add_stream($stream);
-    _update_stream($app, $req, $stream);
+    $app->update_stream($stream, $min, $limit);
   };
 }
 
 sub handle_message {
   my ($self, $req) = @_;
-  my $msg  = $req->parameters->{msg};
-  utf8::decode($msg) unless utf8::is_utf8($msg);
-  $msg = html_to_irc($msg) if $req->parameters->{html};
-  my $source = $req->parameters->{source};
+
+  $self->app->handle_message({
+    msg    => $req->parameters->{msg},
+    html   => $req->parameters->{html},
+    source => $req->parameters->{source}
+  });
   
-  if (my $window = $self->app->get_window($source)) {
-    for (split /\n/, $msg) {
-      eval {
-        $self->app->handle_command($_, $window) if length $_;
-      };
-      if ($@) {
-        warn $@;
-      }
-    }
-  }
   return $ok->();
 }
 
 sub handle_ws_message {
-  my ($self, $stream, $message) = @_;
-  print STDERR @_;
+  my ($self, $app, $message) = @_;
+  $app->handle_message($message);
 }
 
 sub send_index {
@@ -372,48 +333,6 @@ sub merged_options {
    timeformat => $req->parameters->{timeformat} || $config->timeformat,
   );
   join "&", map {"$_=$options{$_}"} keys %options;
-}
-
-sub send_logs {
-  my ($self, $req) = @_;
-  my $output = $self->render('logs');
-  my $res = $req->new_response(200);
-  $res->body(encode_utf8 $output);
-  return $res->finalize;
-}
-
-sub send_search {
-  my ($self, $req) = @_;
-  my $app = $self->app;
-  return sub {
-    my $respond = shift;
-    $app->history->search(
-      user => $app->user, %{$req->parameters}, sub {
-      my $rows = shift;
-      my $content = $self->render('results', $rows);
-      my $res = $req->new_response(200);
-      $res->body(encode_utf8 $content);
-      $respond->($res->finalize);
-    });
-  }
-}
-
-sub send_range {
-  my ($self, $req) = @_;
-  my $app = $self->app;
-  return sub {
-    my $respond = shift;
-    $app->history->range(
-      $app->user, $req->parameters->{channel}, $req->parameters->{id}, sub {
-        my ($before, $after) = @_;
-        $before = $self->render('range', $before, 'before');
-        $after = $self->render('range', $after, 'after');
-        my $res = $req->new_response(200);
-        $res->body(to_json [$before, $after]);
-        $respond->($res->finalize);
-      }
-    ); 
-  }
 }
 
 sub send_config {

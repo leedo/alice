@@ -14,6 +14,7 @@ use File::Copy;
 use Digest::MD5 qw/md5_hex/;
 use List::Util qw/first/;
 use List::MoreUtils qw/any none/;
+use IRC::Formatting::HTML qw/html_to_irc/;
 use Try::Tiny;
 use Encode;
 
@@ -276,11 +277,6 @@ sub _shutdown {
   $self->{on_shutdown}->() if $self->{on_shutdown};
 }
 
-sub handle_command {
-  my ($self, $command, $window) = @_;
-  $self->commands->handle($self, $command, $window);
-}
-
 sub reload_commands {
   my $self = shift;
   $self->commands->reload_handlers;
@@ -430,6 +426,40 @@ sub broadcast {
     $stream->send(\@messages);
   }
   $self->purge_disconnects if $purge;
+}
+
+sub update_stream {
+  my ($self, $stream, $min, $limit) = @_;
+
+  for my $window ($self->windows) {
+    $window->buffer->messages($limit, $min, sub {
+      my $msgs = shift;
+      return unless @$msgs;
+      my $idle_w; $idle_w = AE::idle sub {
+        $stream->send($msgs); 
+        undef $idle_w;
+      };
+    });
+  }
+}
+
+sub handle_message {
+  my ($self, $message) = @_;
+
+  my $msg  = $message->{msg};
+  utf8::decode($msg) unless utf8::is_utf8($msg);
+  $msg = html_to_irc($msg) if $message->{html};
+
+  if (my $window = $self->get_window($message->{source})) {
+    for (split /\n/, $msg) {
+      eval {
+        $self->commands->handle($self, $_, $window) if length $_;
+      };
+      if ($@) {
+        warn $@;
+      }
+    }
+  }
 }
 
 sub send_highlight {

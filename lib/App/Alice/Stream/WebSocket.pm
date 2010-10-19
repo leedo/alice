@@ -87,7 +87,7 @@ sub BUILD {
       sub {
         my ($h, $line) = @_;
         $line =~ s/^\0// or warn;
-        $self->on_read->($self, decode_json $line);
+        $self->on_read->(decode_json $line);
       }
     );
   });
