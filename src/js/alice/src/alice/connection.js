@@ -138,9 +138,21 @@ Alice.Connection = Class.create({
 
     this.len += (end + this.seperator.length) - start;
     data = data.slice(start, end);
+    var data = json.evalJSON();
 
+    this.processMessages(data);
+
+    var lag = this.addPing(time / 1000 -  data.time);
+    console.log(lag);
+
+    if (lag > 5) {
+      this.application.log("lag is " + Math.round(lag) + "s, reconnecting.");
+      this.connect();
+    }
+  },
+
+  processMessages: function(data) {
     try {
-      data = data.evalJSON();
       var queue = data.queue;
       var length = queue.length;
       for (var i=0; i<length; i++) {
@@ -155,13 +167,6 @@ Alice.Connection = Class.create({
     }
     catch (e) {
       this.application.log(e.toString());
-    }
-
-    var lag = this.addPing(time / 1000 -  data.time);
-
-    if (lag > 5) {
-      this.application.log("lag is " + Math.round(lag) + "s, reconnecting.");
-      this.connect();
     }
   },
 
@@ -249,10 +254,6 @@ Alice.Connection = Class.create({
     return true;
   },
 
-  sendRequest: function(url, options) {
-    new Ajax.Request(url, options);
-  },
-  
   sendTabOrder: function (windows) {
     new Ajax.Request('/tabs', {
       method: 'post',

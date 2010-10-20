@@ -35,10 +35,7 @@ has ping => (
   default => sub {
     my $self = shift;
     AE::timer 1, 5, sub {
-      $self->app->broadcast({
-        type => "action",
-        event => "ping",
-      });
+      $self->app->ping;
     };
   },
 );

@@ -428,6 +428,23 @@ sub broadcast {
   $self->purge_disconnects if $purge;
 }
 
+sub ping {
+  my $self = shift;
+  return if $self->no_streams;
+
+  my $purge = 0;
+  my @streams = grep {$_->is_xhr} @{$self->streams};
+
+  for my $stream (@streams) {
+    if ($stream->closed) {
+      $purge = 1;
+      next;
+    }
+    $stream->ping;
+  }
+  $self->purge_disconnects if $purge;
+}
+
 sub update_stream {
   my ($self, $stream, $params) = @_;
 
