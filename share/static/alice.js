@@ -10531,7 +10531,6 @@ Alice.Connection = Class.create({
     this.processMessages(data);
 
     var lag = this.addPing(time / 1000 -  data.time);
-    console.log(lag);
 
     if (lag > 5) {
       this.application.log("lag is " + Math.round(lag) + "s, reconnecting.");
@@ -10563,7 +10562,9 @@ Alice.Connection = Class.create({
     if (this.pings.length > this.pingLimit)
       this.pings.shift();
 
-    return this.lag();
+    var lag = this.lag();
+    console.log(lag);
+    return lag;
   },
 
   lag: function() {
@@ -10707,6 +10708,7 @@ Alice.Connection.WebSocket = Class.create(Alice.Connection, {
   },
 
   initPing: function(e) {
+    if (this.interval) clearInterval(this.interval);
     this.interval = setInterval(function() {
       var time = (new Date()).getTime() / 1000;
       this.sendMessage({ping: time});
@@ -10718,7 +10720,6 @@ Alice.Connection.WebSocket = Class.create(Alice.Connection, {
 
     if (data['pong']) {
       var lag = this.addPing(data['pong'][1] - data['pong'][0]);
-      console.log(lag);
 
       if (lag > 5) {
         this.application.log("lag is " + Math.round(lag) + "s, reconnecting.");
