@@ -3,7 +3,7 @@ Alice.Application = Class.create({
     this.isFocused = true;
     this.window_map = new Hash();
     this.previousFocus = 0;
-    this.connection = WebSocket ? new Alice.Connection.WebSocket(this) : new Alice.Connection.XHR(this);
+    this.connection = window.WebSocket ? new Alice.Connection.WebSocket(this) : new Alice.Connection.XHR(this);
     this.filters = [];
     this.keyboard = new Alice.Keyboard(this);
 
