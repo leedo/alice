@@ -570,3 +570,107 @@ sub set_away {
 
 __PACKAGE__->meta->make_immutable;
 1;
+
+=pod
+
+=head1 NAME
+
+App::Alice - an Altogether Lovely Internet Chatting Experience
+
+=head1 SYNPOSIS
+
+    my $app = App::Alice->new;
+    $app->run;
+
+=head1 DESCRIPTION
+
+This is an overview of the App::Alice class. If you are curious
+about running and/or using alice please read the L<App::Alice::Readme>.
+
+=head2 CONSTRUCTOR
+
+=over 4
+
+=item App::Alice->new(%options)
+
+App::Alice's contructor takes these options:
+
+=item standalone => Boolean
+
+If this is false App::Alice will not create a AE::cv and wait. That means
+if you do not create your own the program will exit immediately.
+
+=item user => $username
+
+This can be a unique name for this App::Alice instance, if none is
+provided it will simply use $ENV{USER}.
+
+=back
+
+=head2 METHODS
+
+=over 4
+
+=item run
+
+This will start the App::Alice. It will start up the HTTP server and
+begin connecting to IRC servers that are set to autoconnect.
+
+=item handle_command ($command_string, $window)
+
+Take a string and matches it to the correct action as defined by
+L<App::Alice::Command>. A source L<App::Alice::Window> must also
+be provided.
+
+=item find_window ($title, $connection)
+
+Takes a window title and App::Alice::IRC object. It will attempt
+to find a matching window and return undef if none is found.
+
+=item alert ($alertstring)
+
+Send a message to all connected clients. It will show up as a red
+line in their currently focused window.
+
+=item create_window ($title, $connection)
+
+This will create a new L<App::Alice::Window> object associated
+with the provided L<App::Alice::IRC> object.
+
+=item find_or_create_window ($title, $connection)
+
+This will attempt to find an existing window with the provided
+title and connection. If no window is found it will create
+a new one.
+
+=item windows
+
+Returns a list of all the L<App::Alice::Window>s.
+
+=item sorted_windows
+
+Returns a list of L<App::Alice::Windows> sorted in the order
+defined by the user's config.
+
+=item close_window ($window)
+
+Takes an L<App::Alice::Window> object to be closed. It will
+part if it is a channel and send the required messages to the
+client to close the tab.
+
+=item ircs
+
+Returns a list of all the L<App::Alice::IRC>s.
+
+=item connected_ircs
+
+Returns a list of all the connected L<App::Alice::IRC>s.
+
+=item config
+
+Returns this instance's L<App::Alice::Config> object.
+
+=back
+
+=cut
+

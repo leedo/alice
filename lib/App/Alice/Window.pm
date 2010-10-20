@@ -70,13 +70,17 @@ sub BUILDARGS {
 
 sub sort_name {
   my $name = $_[0]->title;
-  $name =~ s/^#//;
+  $name =~ s/^[^\w\d]+//;
   $name;
 }
 
-sub type {
-  return $_[0]->title =~ /^[#&]/ ? "channel" : "privmsg";
-}
+has type => (
+  is => 'ro',
+  lazy => 1,
+  default => sub {
+    $_[0]->irc->is_channel($_[0]->title) ? "channel" : "privmsg";
+  },
+);
 
 sub is_channel {$_[0]->type eq "channel"}
 sub irc {$_[0]->_irc}
@@ -275,10 +279,12 @@ sub previous_nick {
 
 sub hashtag {
   my $self = shift;
-  if ($self->type eq "info") {
-    return "/" . $self->title;
-  }
-  return "/" . $self->session . "/" . $self->title;
+
+  my $name = $self->title;
+  $name =~ s/[#&~@]//g;
+  my $path = $self->type eq "privmsg" ? "users" : "channels";
+  
+  return "/" . $self->session . "/$path/" . $name;
 }
 
 sub is_highlight {
