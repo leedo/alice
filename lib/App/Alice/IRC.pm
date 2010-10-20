@@ -391,9 +391,6 @@ sub disconnect {
 
   $self->disabled(1);
 
-  #$self->app->remove_windows($self->windows)
-  #  unless $self->app->shutting_down;
-
   $self->log(debug => "disconnecting: $msg") if $msg;
   $self->send_srv(QUIT => $msg);
 
