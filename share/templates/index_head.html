@@ -20,14 +20,13 @@
         <li id="connection_status" class="ok"></li>
         <li id="config_button">
           <select class="select_overlay" id="config_overlay">
-            <option value="Logs">Logs</option>
-            <option value="Preferences">Preferences</option>
-            <option value="Connections">Connections</option>
-            <option value="Help">Help</option>
             <? if ($app->auth_enabled) { ?>
-            <option disabled>──────</option>
             <option value="Logout">Logout</option>
             <? } ?>
+            <option value="Help">Help</option>
+            <option disabled>──────</option>
+            <option value="Preferences">Preferences</option>
+            <option value="Connections">Connections</option>
           </select>
         </li>
         <li id="tab_overflow_button">

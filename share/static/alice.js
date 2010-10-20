@@ -10148,19 +10148,6 @@ Alice.Application = Class.create({
     if (e) e.stop();
   },
 
-  toggleLogs: function(e) {
-    if (this.logWindow && !this.logWindow.closed && this.logWindow.focus) {
-      this.logWindow.focus();
-    } else {
-      this.logWindow = window.open(null, "logs", "resizable=no,scrollbars=no,statusbar=no, toolbar=no,location=no,width=500,height=480");
-      this.connection.getLog(function (transport) {
-        this.logWindow.document.write(transport.responseText);
-      }.bind(this));
-    }
-
-    if (e) e.stop();
-  },
-
   windows: function () {
     return this.window_map.values();
   },
@@ -11747,9 +11734,6 @@ if (window == window.parent) {
     });
     $('config_overlay').observe("change", function (e) {
       switch ($('config_overlay').value) {
-        case "Logs":
-          alice.toggleLogs(e);
-          break;
         case "Connections":
           alice.toggleConfig(e);
           break;
