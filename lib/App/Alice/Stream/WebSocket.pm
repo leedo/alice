@@ -79,11 +79,6 @@ sub BUILD {
       sub {
         my ($h, $line) = @_;
         $line =~ s/^\0// or warn;
-        my $data = decode_json $line;
-        if ($data->{ping}) {
-          $h->push_write("\x00".encode_json({pong => [$data->{ping}, time]})."\xff");
-          return;
-        }
         $self->on_read->(decode_json $line);
       }
     );
