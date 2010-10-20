@@ -86,10 +86,7 @@ sub send {
 sub ping {
   my $self = shift;
   return if $self->closed;
-  $self->writer->write(encode_json {
-    queue => [{type => "action", event => "ping"}],
-    time => time,
-  });
+  $self->send([{type => "action", event => "ping"}]);
 }
 
 sub close {
