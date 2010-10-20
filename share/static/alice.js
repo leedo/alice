@@ -10567,7 +10567,6 @@ Alice.Connection.WebSocket = Class.create(Alice.Connection, {
     this.reconnecting = false;
     this.windowQueue = [];
     this.windowWatcher = false;
-
   },
 
   _connect: function() {
@@ -10602,8 +10601,7 @@ Alice.Connection.WebSocket = Class.create(Alice.Connection, {
 
   closeConnection: function() {
     this.aborting = true;
-    if (this.request && this.request.transport)
-      this.request.close();
+    if (this.request) this.request.close();
     this.aborting = false;
   },
 
@@ -10611,14 +10609,6 @@ Alice.Connection.WebSocket = Class.create(Alice.Connection, {
     this.request.send(Object.toJSON(
       {source: win.id, msg: "/close"}
     ));
-  },
-
-  closeWindow: function(win) {
-    new Ajax.Request('/say', {
-      method: 'post',
-      on401: this.gotoLogin,
-      parameters: {source: win.id, msg: "/close"}
-    });
   },
 
 
@@ -10737,6 +10727,15 @@ Alice.Connection.XHR = Class.create(Alice.Connection, {
       this.request.transport.abort();
     this.aborting = false;
   },
+
+  closeWindow: function(win) {
+    new Ajax.Request('/say', {
+      method: 'post',
+      on401: this.gotoLogin,
+      parameters: {source: win.id, msg: "/close"}
+    });
+  }
+
 });
 Alice.Window = Class.create({
   initialize: function(application, element, title, active, hashtag) {

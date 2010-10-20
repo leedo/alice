@@ -112,4 +112,13 @@ Alice.Connection.XHR = Class.create(Alice.Connection, {
       this.request.transport.abort();
     this.aborting = false;
   },
+
+  closeWindow: function(win) {
+    new Ajax.Request('/say', {
+      method: 'post',
+      on401: this.gotoLogin,
+      parameters: {source: win.id, msg: "/close"}
+    });
+  }
+
 });
