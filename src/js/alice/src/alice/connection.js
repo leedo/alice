@@ -145,7 +145,7 @@ Alice.Connection = Class.create({
     var lag = this.addPing(time / 1000 -  data.time);
 
     if (lag > 5) {
-      this.application.log("lag is " + Math.round(lag) + "s, reconnecting.");
+      this.application.log("lag is over 5s, reconnecting.");
       this.connect();
     }
   },
@@ -175,7 +175,7 @@ Alice.Connection = Class.create({
       this.pings.shift();
 
     var lag = this.lag();
-    console.log(lag);
+    if (console.log) console.log((Math.round(lag * 10000) / 10) + "ms");
     return lag;
   },
 

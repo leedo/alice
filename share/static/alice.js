@@ -10533,7 +10533,7 @@ Alice.Connection = Class.create({
     var lag = this.addPing(time / 1000 -  data.time);
 
     if (lag > 5) {
-      this.application.log("lag is " + Math.round(lag) + "s, reconnecting.");
+      this.application.log("lag is over 5s, reconnecting.");
       this.connect();
     }
   },
@@ -10563,7 +10563,7 @@ Alice.Connection = Class.create({
       this.pings.shift();
 
     var lag = this.lag();
-    console.log(lag);
+    if (console.log) console.log((Math.round(lag * 10000) / 10) + "ms");
     return lag;
   },
 
@@ -10722,9 +10722,10 @@ Alice.Connection.WebSocket = Class.create(Alice.Connection, {
       var lag = this.addPing(data['pong'][1] - data['pong'][0]);
 
       if (lag > 5) {
-        this.application.log("lag is " + Math.round(lag) + "s, reconnecting.");
+        this.application.log("lag is over 5s, reconnecting.");
         this.connect();
       }
+      return;
     }
 
     this.processMessages(data);
@@ -10750,6 +10751,12 @@ Alice.Connection.WebSocket = Class.create(Alice.Connection, {
     if (this.request && this.request.transport)
       this.request.close();
     this.aborting = false;
+  },
+
+  closeWindow: function(win) {
+    this.request.send(Object.toJSON(
+      {source: win.id, msg: "/close"}
+    ));
   }
 });
 Alice.Window = Class.create({
