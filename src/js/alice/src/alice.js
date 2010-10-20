@@ -61,9 +61,6 @@ if (window == window.parent) {
     });
     $('config_overlay').observe("change", function (e) {  
       switch ($('config_overlay').value) {
-        case "Logs":
-          alice.toggleLogs(e);
-          break;
         case "Connections":
           alice.toggleConfig(e);
           break;
