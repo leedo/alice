@@ -3,6 +3,7 @@ package App::Alice::Stream::WebSocket;
 use JSON;
 use Any::Moose;
 use Digest::MD5 qw/md5/;
+use Time::HiRes qw/time/;
 
 extends 'App::Alice::Stream';
 
@@ -20,7 +21,12 @@ has on_read => (
   isa => 'CodeRef',
 );
 
-sub setup_stream {
+has is_xhr => (
+  is => 'ro',
+  default => 0,
+);
+
+sub BUILD {
   my $self = shift;
 
   my $env = $self->env;
@@ -30,7 +36,7 @@ sub setup_stream {
     'Upgrade: WebSocket',
     'Connection: Upgrade',
     "Sec-WebSocket-Origin: $env->{HTTP_ORIGIN}",
-    "Sec-WebSocket-Location: ws://$env->{HTTP_HOST}$env->{SCRIPT_NAME}$env->{PATH_INFO}",
+    "Sec-WebSocket-Location: ws://$env->{HTTP_HOST}$env->{SCRIPT_NAME}$env->{PATH_INFO}?$env->{QUERY_STRING}",
     '',
   );
 
@@ -63,7 +69,6 @@ sub setup_stream {
   });
 
   $h->on_eof(sub {
-    warn $_[2];
     $self->close;
     undef $h;
   }); 
@@ -74,6 +79,11 @@ sub setup_stream {
       sub {
         my ($h, $line) = @_;
         $line =~ s/^\0// or warn;
+        my $data = decode_json $line;
+        if ($data->{ping}) {
+          $h->push_write("\x00".encode_json({pong => [$data->{ping}, time]})."\xff");
+          return;
+        }
         $self->on_read->(decode_json $line);
       }
     );
@@ -85,10 +95,10 @@ sub setup_stream {
 sub send {
   my ($self, $messages) = @_;
 
-  my $line = to_json({
-    queue => $messages,
-    time  => time - $self->offset,
-  }, {utf8 => 1, shrink => 1});
+  my $line = to_json(
+    {queue => $messages},
+    {utf8 => 1, shrink => 1}
+  );
   
   $self->handle->push_write("\x00$line\xff");
 }

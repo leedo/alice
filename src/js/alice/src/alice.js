@@ -10,6 +10,7 @@ var Alice = { };
 //= require <alice/util>
 //= require <alice/application>
 //= require <alice/connection>
+//= require <alice/connection/websocket>
 //= require <alice/window>
 //= require <alice/toolbar>
 //= require <alice/input>

@@ -10044,7 +10044,7 @@ Alice.Application = Class.create({
     this.isFocused = true;
     this.window_map = new Hash();
     this.previousFocus = 0;
-    this.connection = new Alice.Connection(this);
+    this.connection = WebSocket ? new Alice.Connection.WebSocket(this) : new Alice.Connection(this);
     this.filters = [];
     this.keyboard = new Alice.Keyboard(this);
 
@@ -10526,9 +10526,21 @@ Alice.Connection = Class.create({
 
     this.len += (end + this.seperator.length) - start;
     data = data.slice(start, end);
+    var data = json.evalJSON();
 
+    this.processMessages(data);
+
+    var lag = this.addPing(time / 1000 -  data.time);
+    console.log(lag);
+
+    if (lag > 5) {
+      this.application.log("lag is " + Math.round(lag) + "s, reconnecting.");
+      this.connect();
+    }
+  },
+
+  processMessages: function(data) {
     try {
-      data = data.evalJSON();
       var queue = data.queue;
       var length = queue.length;
       for (var i=0; i<length; i++) {
@@ -10543,13 +10555,6 @@ Alice.Connection = Class.create({
     }
     catch (e) {
       this.application.log(e.toString());
-    }
-
-    var lag = this.addPing(time / 1000 -  data.time);
-
-    if (lag > 5) {
-      this.application.log("lag is " + Math.round(lag) + "s, reconnecting.");
-      this.connect();
     }
   },
 
@@ -10637,10 +10642,6 @@ Alice.Connection = Class.create({
     return true;
   },
 
-  sendRequest: function(url, options) {
-    new Ajax.Request(url, options);
-  },
-
   sendTabOrder: function (windows) {
     new Ajax.Request('/tabs', {
       method: 'post',
@@ -10688,6 +10689,66 @@ Alice.Connection = Class.create({
         }
       }.bind(this)
     });
+  }
+});
+Alice.Connection.WebSocket = Class.create(Alice.Connection, {
+  _connect: function() {
+    var now = new Date();
+    var msgid = this.msgid();
+    this.application.log("opening new websocket connection starting at "+msgid);
+    this.changeStatus("ok");
+    this.connected = true;
+    var parameters = Object.toQueryString({msgid: msgid, t: now.getTime() / 1000});
+    this.request = new WebSocket("ws://localhost:44444/wsstream?"+parameters);
+    this.request.onmessage = this.handleUpdate.bind(this);
+    this.request.onerror = this.handleException.bind(this);
+    this.request.onclose = this.handleComplete.bind(this);
+    this.request.onopen = this.initPing.bind(this);
+  },
+
+  initPing: function(e) {
+    this.interval = setInterval(function() {
+      var time = (new Date()).getTime() / 1000;
+      this.sendMessage({ping: time});
+    }.bind(this), 5000);
+  },
+
+  handleUpdate: function(e) {
+    var data = e.data.evalJSON();
+
+    if (data['pong']) {
+      var lag = this.addPing(data['pong'][1] - data['pong'][0]);
+      console.log(lag);
+
+      if (lag > 5) {
+        this.application.log("lag is " + Math.round(lag) + "s, reconnecting.");
+        this.connect();
+      }
+    }
+
+    this.processMessages(data);
+  },
+
+  sendMessage: function(form) {
+    if (!this.connected) return false;
+
+    var params;
+    if (form.nodeName && form.nodeName == "FORM") {
+      params = form.serialize(true);
+    }
+    else {
+      params = form;
+    }
+
+    this.request.send(Object.toJSON(params));
+    return true;
+  },
+
+  closeConnection: function() {
+    this.aborting = true;
+    if (this.request && this.request.transport)
+      this.request.close();
+    this.aborting = false;
   }
 });
 Alice.Window = Class.create({

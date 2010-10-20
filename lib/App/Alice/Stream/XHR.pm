@@ -28,6 +28,12 @@ has [qw/delayed started/] => (
   default => 0,
 );
 
+has [qw/offset last_send start_time/]=> (
+  is  => 'rw',
+  isa => 'Num',
+  default => 0,
+);
+
 has 'timer' => (
   is  => 'rw',
 );
@@ -42,8 +48,12 @@ has min_bytes => (
   default => 1024,
 );
 
-sub setup_stream {
+sub BUILD {
   my $self = shift;
+
+  my $local_time = time;
+  my $remote_time = $self->start_time || $local_time;
+  $self->offset($local_time - $remote_time);
 
   # better way to get the AE handle?
   my $hdl = $self->writer->{handle};
@@ -71,6 +81,15 @@ sub send {
   }
   $self->writer->write( $self->to_string );
   $self->flush;
+}
+
+sub ping {
+  my $self = shift;
+  return if $self->closed;
+  $self->writer->write(encode_json {
+    queue => [{type => "action", event => "ping"}],
+    time => time,
+  });
 }
 
 sub close {
