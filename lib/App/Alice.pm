@@ -121,18 +121,6 @@ sub get_window {first {$_->id eq $_[1]} $_[0]->windows}
 sub remove_window {$_[0]->_windows([grep {$_->id ne $_[1]} $_[0]->windows])}
 sub window_ids {map {$_->id} $_[0]->windows}
 
-sub remove_windows {
-  my ($self, @windows) = @_;
-  return unless @windows;
-
-  my @ids = map {$_->id} @windows;
-
-  $self->_windows([
-    grep {my $id = $_->id; none {$id eq $_} @ids} $self->windows
-  ]);
-
-}
-
 has 'template' => (
   is => 'ro',
   isa => 'Text::MicroTemplate::File',
