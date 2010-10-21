@@ -62,6 +62,7 @@ sub BUILD {
     $hdl->destroy;
     undef $hdl;
     $self->close;
+    $self->on_error->();
   };
 
   $hdl->on_eof($close);

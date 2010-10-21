@@ -35,11 +35,13 @@ sub BUILD {
     warn $_[2];
     $self->close;
     undef $h;
+    $self->on_error->();
   });
 
   $h->on_eof(sub {
     $self->close;
     undef $h;
+    $self->on_error->();
   }); 
 
   $h->on_read(sub {
