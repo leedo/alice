@@ -449,7 +449,7 @@ sub update_stream {
         $stream->send_raw(
           encode_json {
             window => $window->id,
-            chunk  => encode_utf8 (join "", map {$_->{html}} @$msgs),
+            chunk  => join "", map {$_->{html}} @$msgs,
           }
         ); 
         undef $idle_w;
