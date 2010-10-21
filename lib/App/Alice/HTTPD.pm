@@ -44,7 +44,7 @@ sub config {$_[0]->app->config}
 
 my $url_handlers = [
   [ "say"          => "handle_message" ],
-  [ "stream"       => "setup_stream" ],
+  [ "stream"       => "setup_xhr_stream" ],
   [ "wsstream"     => "setup_ws_stream" ],
   [ ""             => "send_index" ],
   [ "config"       => "send_config" ],
@@ -167,7 +167,7 @@ sub shutdown {
   $self->httpd(undef);
 }
 
-sub setup_stream {
+sub setup_xhr_stream {
   my ($self, $req) = @_;
   my $app = $self->app;
   $app->log(info => "opening new stream");
