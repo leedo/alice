@@ -47,7 +47,6 @@ my $url_handlers = [
   [ "stream"       => "setup_stream" ],
   [ "wsstream"     => "setup_ws_stream" ],
   [ ""             => "send_index" ],
-  [ "messages"     => "window_messages" ],
   [ "config"       => "send_config" ],
   [ "prefs"        => "send_prefs" ],
   [ "serverconfig" => "server_config" ],
@@ -264,50 +263,6 @@ sub send_index {
       }
     };
   }
-}
-
-sub window_messages {
-  my ($self, $req) = @_;
-  my $app = $self->app;
-
-  return sub {
-    my $respond = shift;
-
-    my $source = $req->parameters->{source};
-    if (my $window = $app->get_window($source)) {
-      my $limit = $req->parameters->{limit} || 100;
-      my $msgid = $req->parameters->{msgid} || 0;
-
-      my $writer = $respond->([200, ["Content-type" => "text/html; charset=utf-8"]]);
-
-      $self->app->log(debug => "sending $limit messages for window ".$window->title.", starting at $msgid");
-
-      $window->buffer->messages($limit, $msgid, sub {
-        my $rows = shift;
-
-        if (!@$rows) {
-          $writer->close;
-          return;
-        }
-
-        my $max = $rows->[-1]{msgid};
-
-        my $idle_w; $idle_w = AE::idle sub {
-          if (my $msg = shift @$rows) {
-            $writer->write(encode_utf8 $msg->{html});
-          } else {
-            $writer->close;
-            undef $idle_w;
-          }
-        };
-      });
-    }
-    else {
-      my $res = $req->new_response(404);
-      $res->body("not found");
-      $respond->($res->finalize);
-    }
-  };
 }
 
 sub merged_options {

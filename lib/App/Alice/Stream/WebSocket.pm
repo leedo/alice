@@ -98,6 +98,11 @@ sub send {
   $self->handle->push_write("\x00$line\xff");
 }
 
+sub send_raw {
+  my ($self, $string) = @_;
+  $self->handle->push_write("\x00$string\xff");
+}
+
 sub close {
   my $self = shift;
   $self->handle->destroy;

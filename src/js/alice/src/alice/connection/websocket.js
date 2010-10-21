@@ -12,7 +12,7 @@ Alice.Connection.WebSocket = Class.create(Alice.Connection, {
 
   _connect: function() {
     var now = new Date();
-    var msgid = this.msgid();
+    var msgid = this.application.msgid();
     this.application.log("opening new websocket connection starting at "+msgid);
     this.changeStatus("ok");
     this.connected = true;

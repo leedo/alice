@@ -16,6 +16,7 @@ use List::Util qw/first/;
 use List::MoreUtils qw/any none/;
 use IRC::Formatting::HTML qw/html_to_irc/;
 use Try::Tiny;
+use JSON;
 use Encode;
 
 our $VERSION = '0.19';
@@ -440,11 +441,17 @@ sub update_stream {
   my $limit = $params->{limit} || 100;
 
   for my $window ($self->windows) {
+    $self->log(debug => "updating stream from $min for ".$window->title);
     $window->buffer->messages($limit, $min, sub {
       my $msgs = shift;
       return unless @$msgs;
       my $idle_w; $idle_w = AE::idle sub {
-        $stream->send($msgs); 
+        $stream->send_raw(
+          encode_json {
+            window => $window->id,
+            chunk  => encode_utf8 (join "", map {$_->{html}} @$msgs),
+          }
+        ); 
         undef $idle_w;
       };
     });
