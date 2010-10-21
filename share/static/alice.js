@@ -10576,7 +10576,8 @@ Alice.Connection.WebSocket = Class.create(Alice.Connection, {
     this.changeStatus("ok");
     this.connected = true;
     var parameters = Object.toQueryString({msgid: msgid, t: now.getTime() / 1000});
-    this.request = new WebSocket("ws://localhost:44444/wsstream?"+parameters);
+    var url = "ws://" + window.location.host + "/wsstream?" + parameters;
+    this.request = new WebSocket(url);
     this.request.onmessage = this.handleUpdate.bind(this);
     this.request.onerror = this.handleException.bind(this);
     this.request.onclose = this.handleComplete.bind(this);
