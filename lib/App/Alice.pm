@@ -403,35 +403,16 @@ sub format_info {
 
 sub broadcast {
   my ($self, @messages) = @_;
-
   return if $self->no_streams or !@messages;
-
-  my $purge = 0;
   for my $stream (@{$self->streams}) {
-    if ($stream->closed) {
-      $purge = 1;
-      next;
-    }
     $stream->send(\@messages);
   }
-  $self->purge_disconnects if $purge;
 }
 
 sub ping {
   my $self = shift;
   return if $self->no_streams;
-
-  my $purge = 0;
-  my @streams = grep {$_->is_xhr} @{$self->streams};
-
-  for my $stream (@streams) {
-    if ($stream->closed) {
-      $purge = 1;
-      next;
-    }
-    $stream->ping;
-  }
-  $self->purge_disconnects if $purge;
+  $_->ping for grep {$_->is_xhr} @{$self->streams};
 }
 
 sub update_stream {

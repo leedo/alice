@@ -151,7 +151,6 @@ sub login {
 sub logout {
   my ($self, $req) = @_;
   $_->close for @{$self->app->streams};
-  $self->app->purge_disconnects;
   my $res = $req->new_response;
   if (!$self->auth_enabled) {
     $res->redirect("/");
@@ -183,6 +182,7 @@ sub setup_xhr_stream {
       start_time => $req->parameters->{t},
       # android requires 4K updates to trigger loading event
       min_bytes  => $req->user_agent =~ /android/i ? 4096 : 0,
+      on_error => sub { $app->purge_disconnects },
     );
 
     $app->add_stream($stream);
@@ -204,6 +204,7 @@ sub setup_ws_stream {
         start_time => $req->parameters->{t} || time,
         fh      => $fh,
         on_read => sub { $app->handle_message(@_) },
+        on_error => sub { $app->purge_disconnects },
       );
       $app->add_stream($stream);
       $app->update_stream($stream, $req->parameters);
