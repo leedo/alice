@@ -83,6 +83,7 @@ sub _build_httpd {
           expires => "24h";
       }
       enable "Static", path => qr{^/static/}, root => $self->config->assetdir;
+      enable "WebSocket";
       sub {$self->dispatch(shift)}
     }
   );
@@ -197,23 +198,20 @@ sub setup_ws_stream {
   return sub {
     my $respond = shift;
 
-    my $stream = eval {
-      App::Alice::Stream::WebSocket->new(
+    if (my $fh = $req->env->{'websocket.impl'}->handshake) {
+      my $stream = App::Alice::Stream::WebSocket->new(
         queue   => [ map({$_->join_action} $app->windows) ],
         start_time => $req->parameters->{t} || time,
-        env     => $req->env,
+        fh      => $fh,
         on_read => sub { $app->handle_message(@_) },
       );
-    };
-
-    if ($@) {
-      warn $@;
-      $respond->([500, ["Content-Type", "text/plain"], ["something broke"]]);
-      return;
+      $app->add_stream($stream);
+      $app->update_stream($stream, $req->parameters);
     }
-
-    $app->add_stream($stream);
-    $app->update_stream($stream, $req->parameters);
+    else {
+      my $code = $req->env->{'websocket.impl'}->error_code;
+      $respond->([$code, ["Content-Type", "text/plain"], ["something broke"]]);
+    }
   };
 }
 

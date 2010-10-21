@@ -10363,7 +10363,7 @@ Alice.Application = Class.create({
     for (var i=0; i < arguments.length; i++) {
       if (this.options.debug == "true") {
         if (window.console && window.console.log) {
-          console.log(arguments[i]);
+          console.log(arguments[i].toString());
         }
         if (win) {
           win.addMessage({
@@ -10567,6 +10567,17 @@ Alice.Connection.WebSocket = Class.create(Alice.Connection, {
       {source: win.id, msg: "/close"}
     ));
   },
+
+  handleException: function(exception) {
+    this.application.log("encountered an error with stream.");
+    this.application.log(exception);
+    this.connected = false;
+    if (!this.aborting)
+      setTimeout(this.connect.bind(this), 2000);
+    else
+      this.changeStatus("ok");
+  },
+
 
 
 });

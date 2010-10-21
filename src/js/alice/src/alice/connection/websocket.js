@@ -53,5 +53,16 @@ Alice.Connection.WebSocket = Class.create(Alice.Connection, {
     ));
   },
 
+  handleException: function(exception) {
+    this.application.log("encountered an error with stream.");
+    this.application.log(exception);
+    this.connected = false;
+    if (!this.aborting)
+      setTimeout(this.connect.bind(this), 2000);
+    else
+      this.changeStatus("ok");
+  },
+
+
 
 });
