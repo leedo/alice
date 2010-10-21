@@ -272,6 +272,12 @@ Alice.Window = Class.create({
   trimMessages: function() {
     this.messages.select("li").reverse().slice(this.messageLimit).invoke("remove");
   },
+
+  addChunk: function(chunk) {
+    this.messages.down("ul").insert({bottom: chunk});
+    this.trimMessages();
+    this.setupMessages();
+  },
   
   addMessage: function(message) {
     if (!message.html || message.msgid <= this.msgid) return;

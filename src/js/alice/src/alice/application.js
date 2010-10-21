@@ -333,4 +333,10 @@ Alice.Application = Class.create({
       }
     }
   },
+
+  msgid: function() {
+    var ids = this.windows().map(function(w){return w.msgid});
+    return Math.max.apply(Math, ids);
+  }
+ 
 });

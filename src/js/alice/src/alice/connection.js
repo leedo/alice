@@ -2,12 +2,7 @@ Alice.Connection = {
   gotoLogin: function() {
     window.location = "/login";
   },
-  
-  msgid: function() {
-    var ids = this.application.windows().map(function(w){return w.msgid});
-    return Math.max.apply(Math, ids);
-  },
-  
+ 
   connect: function() {
     if (this.reconnect_count > 3) {
       this.aborting = true;
@@ -21,28 +16,7 @@ Alice.Connection = {
     this.reconnect_count++;
 
     this.changeStatus("loading");
-
-    var active_window = this.application.activeWindow();
-    var other_windows = this.application.windows().filter(function(win){return win.id != active_window.id});
-
-    // called after the first window gets and displays its messages
-    var cb = function() {
-      setTimeout(function() {
-
-        if (!other_windows.length) {
-          this._connect(); 
-          return;
-        }
-
-        var last = other_windows.pop();
-        for (var i=0; i < other_windows.length; i++) {
-          this.getWindowMessages(other_windows[i]);
-        }
-        this.getWindowMessages(last, this._connect.bind(this));
-      }.bind(this), this.application.loadDelay);
-    }.bind(this);
-
-    this.getWindowMessages(active_window, cb);
+    this._connect();
   },
 
   changeStatus: function(classname) {
@@ -75,6 +49,22 @@ Alice.Connection = {
   },
   
   processMessages: function(data) {
+    if (data.queue) {
+      this.processQueue(data);
+    }
+    else if (data.chunk) {
+      this.processChunk(data);
+    }
+  },
+
+  processChunk: function(data) {
+    var win = this.application.getWindow(data['window']);
+    if (win) {
+      win.addChunk(data.chunk);
+    }
+  },
+
+  processQueue: function(data) {
     try {
       var queue = data.queue;
       var length = queue.length;
@@ -140,45 +130,4 @@ Alice.Connection = {
       parameters: {tabs: windows}
     });
   },
-  
-  getWindowMessages: function(win, cb) {
-    if (!cb) cb = function(){};
-
-    if (win)
-      win.active ?
-        this.windowQueue.unshift([win, cb]) :
-        this.windowQueue.push([win, cb]);
-
-    if (!this.windowWatcher) {
-      this.windowWatcher = true;
-      this._getWindowMessages();
-    }
-  },
-
-  _getWindowMessages: function() {
-    var item = this.windowQueue.shift();
-    var win = item[0],
-         cb = item[1];
-    var date = new Date();
-
-    this.application.log("requesting messages for "+win.title+" starting at "+win.msgid);
-    new Ajax.Request("/messages", {
-      method: "get",
-      parameters: {source: win.id, msgid: win.msgid, limit: win.messageLimit, time: date.getTime()},
-      onSuccess: function(response) {
-        this.application.log("inserting messages for "+win.title);
-        win.messages.down("ul").insert({bottom: response.responseText});
-        win.trimMessages();
-        win.setupMessages();
-        this.application.log("new msgid for "+win.title+" is "+win.msgid);
-        cb();
-
-        if (this.windowQueue.length) {
-          this._getWindowMessages();
-        } else {
-          this.windowWatcher = false;
-        }
-      }.bind(this)
-    });
-  }
 };

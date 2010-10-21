@@ -79,8 +79,28 @@ sub send {
     $self->delay($delay);
     return;
   }
-  $self->writer->write( $self->to_string );
+  $self->send_raw( $self->to_string );
   $self->flush;
+}
+
+sub send_raw {
+  my ($self, $string) = @_;
+
+  my $output;
+
+  if (! $self->started) {
+    $output .= "--$separator\n";
+    $self->started(1);
+  }
+  
+  $output .= $string;
+
+  $output .= "\n--$separator\n"
+          .  " " x ($self->min_bytes - length $output);
+
+
+  $self->writer->write( $output );
+  $self->last_send(time);
 }
 
 sub ping {
@@ -128,22 +148,11 @@ sub flush {
 
 sub to_string {
   my $self = shift;
-  my $output;
 
-  if (! $self->started) {
-    $output .= "--$separator\n";
-    $self->started(1);
-  }
-
-  $output .= to_json({
+  return to_json({
     queue => $self->queue,
     time  => time - $self->offset,
   }, {utf8 => 1, shrink => 1});
-
-  $output .= "\n--$separator\n"
-          .  " " x ($self->min_bytes - length $output);
-
-  return $output
 }
 
 __PACKAGE__->meta->make_immutable;

@@ -10373,15 +10373,16 @@ Alice.Application = Class.create({
       }
     }
   },
+
+  msgid: function() {
+    var ids = this.windows().map(function(w){return w.msgid});
+    return Math.max.apply(Math, ids);
+  }
+
 });
 Alice.Connection = {
   gotoLogin: function() {
     window.location = "/login";
-  },
-
-  msgid: function() {
-    var ids = this.application.windows().map(function(w){return w.msgid});
-    return Math.max.apply(Math, ids);
   },
 
   connect: function() {
@@ -10397,27 +10398,7 @@ Alice.Connection = {
     this.reconnect_count++;
 
     this.changeStatus("loading");
-
-    var active_window = this.application.activeWindow();
-    var other_windows = this.application.windows().filter(function(win){return win.id != active_window.id});
-
-    var cb = function() {
-      setTimeout(function() {
-
-        if (!other_windows.length) {
-          this._connect();
-          return;
-        }
-
-        var last = other_windows.pop();
-        for (var i=0; i < other_windows.length; i++) {
-          this.getWindowMessages(other_windows[i]);
-        }
-        this.getWindowMessages(last, this._connect.bind(this));
-      }.bind(this), this.application.loadDelay);
-    }.bind(this);
-
-    this.getWindowMessages(active_window, cb);
+    this._connect();
   },
 
   changeStatus: function(classname) {
@@ -10450,6 +10431,22 @@ Alice.Connection = {
   },
 
   processMessages: function(data) {
+    if (data.queue) {
+      this.processQueue(data);
+    }
+    else if (data.chunk) {
+      this.processChunk(data);
+    }
+  },
+
+  processChunk: function(data) {
+    var win = this.application.getWindow(data['window']);
+    if (win) {
+      win.addChunk(data.chunk);
+    }
+  },
+
+  processQueue: function(data) {
     try {
       var queue = data.queue;
       var length = queue.length;
@@ -10515,47 +10512,6 @@ Alice.Connection = {
       parameters: {tabs: windows}
     });
   },
-
-  getWindowMessages: function(win, cb) {
-    if (!cb) cb = function(){};
-
-    if (win)
-      win.active ?
-        this.windowQueue.unshift([win, cb]) :
-        this.windowQueue.push([win, cb]);
-
-    if (!this.windowWatcher) {
-      this.windowWatcher = true;
-      this._getWindowMessages();
-    }
-  },
-
-  _getWindowMessages: function() {
-    var item = this.windowQueue.shift();
-    var win = item[0],
-         cb = item[1];
-    var date = new Date();
-
-    this.application.log("requesting messages for "+win.title+" starting at "+win.msgid);
-    new Ajax.Request("/messages", {
-      method: "get",
-      parameters: {source: win.id, msgid: win.msgid, limit: win.messageLimit, time: date.getTime()},
-      onSuccess: function(response) {
-        this.application.log("inserting messages for "+win.title);
-        win.messages.down("ul").insert({bottom: response.responseText});
-        win.trimMessages();
-        win.setupMessages();
-        this.application.log("new msgid for "+win.title+" is "+win.msgid);
-        cb();
-
-        if (this.windowQueue.length) {
-          this._getWindowMessages();
-        } else {
-          this.windowWatcher = false;
-        }
-      }.bind(this)
-    });
-  }
 };
 Alice.Connection.WebSocket = Class.create(Alice.Connection, {
   initialize: function(application) {
@@ -10571,7 +10527,7 @@ Alice.Connection.WebSocket = Class.create(Alice.Connection, {
 
   _connect: function() {
     var now = new Date();
-    var msgid = this.msgid();
+    var msgid = this.application.msgid();
     this.application.log("opening new websocket connection starting at "+msgid);
     this.changeStatus("ok");
     this.connected = true;
@@ -10632,8 +10588,9 @@ Alice.Connection.XHR = Class.create(Alice.Connection, {
   },
 
   _connect: function() {
+    setTimeout(function () {
     var now = new Date();
-    var msgid = this.msgid();
+    var msgid = this.application.msgid();
     this.application.log("opening new connection starting at "+msgid);
     this.changeStatus("ok");
     this.connected = true;
@@ -10648,6 +10605,7 @@ Alice.Connection.XHR = Class.create(Alice.Connection, {
       onInteractive: this.handleUpdate.bind(this),
       onComplete: this.handleComplete.bind(this)
     });
+    }.bind(this), this.application.loadDelay);
   },
 
   handleUpdate: function(transport) {
@@ -10676,11 +10634,13 @@ Alice.Connection.XHR = Class.create(Alice.Connection, {
 
     this.processMessages(data);
 
-    var lag = this.addPing(time / 1000 -  data.time);
+    if (data.time) {
+      var lag = this.addPing(time / 1000 -  data.time);
 
-    if (lag > 5) {
-      this.application.log("lag is over 5s, reconnecting.");
-      this.connect();
+      if (lag > 5) {
+        this.application.log("lag is over 5s, reconnecting.");
+        this.connect();
+      }
     }
   },
 
@@ -11005,6 +10965,12 @@ Alice.Window = Class.create({
 
   trimMessages: function() {
     this.messages.select("li").reverse().slice(this.messageLimit).invoke("remove");
+  },
+
+  addChunk: function(chunk) {
+    this.messages.down("ul").insert({bottom: chunk});
+    this.trimMessages();
+    this.setupMessages();
   },
 
   addMessage: function(message) {

@@ -16,8 +16,9 @@ Alice.Connection.XHR = Class.create(Alice.Connection, {
   },
 
   _connect: function() {
+    setTimeout(function () {
     var now = new Date();
-    var msgid = this.msgid();
+    var msgid = this.application.msgid();
     this.application.log("opening new connection starting at "+msgid);
     this.changeStatus("ok");
     this.connected = true;
@@ -32,6 +33,7 @@ Alice.Connection.XHR = Class.create(Alice.Connection, {
       onInteractive: this.handleUpdate.bind(this),
       onComplete: this.handleComplete.bind(this)
     });
+    }.bind(this), this.application.loadDelay);
   },
 
   handleUpdate: function(transport) {
@@ -60,11 +62,13 @@ Alice.Connection.XHR = Class.create(Alice.Connection, {
 
     this.processMessages(data);
 
-    var lag = this.addPing(time / 1000 -  data.time);
+    if (data.time) {
+      var lag = this.addPing(time / 1000 -  data.time);
 
-    if (lag > 5) {
-      this.application.log("lag is over 5s, reconnecting.");
-      this.connect();
+      if (lag > 5) {
+        this.application.log("lag is over 5s, reconnecting.");
+        this.connect();
+      }
     }
   },
 
