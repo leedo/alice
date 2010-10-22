@@ -48,22 +48,6 @@ Alice.Connection = {
       this.changeStatus("ok");
   },
   
-  processMessages: function(data) {
-    if (data.queue) {
-      this.processQueue(data);
-    }
-    else if (data.chunk) {
-      this.processChunk(data);
-    }
-  },
-
-  processChunk: function(data) {
-    var win = this.application.getWindow(data['window']);
-    if (win) {
-      win.addChunk(data.chunk);
-    }
-  },
-
   processQueue: function(data) {
     try {
       var queue = data.queue;
@@ -75,6 +59,9 @@ Alice.Connection = {
           if (queue[i].timestamp)
             queue[i].timestamp = Alice.epochToLocal(queue[i].timestamp, this.application.options.timeformat);
           this.application.displayMessage(queue[i]);
+        }
+        else if (queue[i].type == "chunk") {
+          this.application.displayChunk(queue[i]);
         }
       }
     }

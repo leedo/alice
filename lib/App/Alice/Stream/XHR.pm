@@ -81,6 +81,7 @@ sub send {
     return;
   }
   $self->send_raw( $self->to_string );
+  $self->last_send(time);
   $self->flush;
 }
 
@@ -101,7 +102,6 @@ sub send_raw {
 
 
   $self->writer->write( $output );
-  $self->last_send(time);
 }
 
 sub ping {

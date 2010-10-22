@@ -421,20 +421,27 @@ sub update_stream {
   my $min = $params->{msgid} || 0;
   my $limit = $params->{limit} || 100;
 
-  for my $window ($self->windows) {
+  $self->log(debug => "sending stream update");
+
+  my @windows = $self->windows;
+
+  if (my $id = $params->{tab}) {
+    if (my $active = $self->get_window($id)) {
+      @windows = grep {$_->id ne $id} @windows;
+      unshift @windows, $active;
+    }
+  }
+
+  for my $window (@windows) {
     $self->log(debug => "updating stream from $min for ".$window->title);
     $window->buffer->messages($limit, $min, sub {
       my $msgs = shift;
       return unless @$msgs;
-      my $idle_w; $idle_w = AE::idle sub {
-        $stream->send_raw(
-          encode_json {
-            window => $window->id,
-            chunk  => join "", map {$_->{html}} @$msgs,
-          }
-        ); 
-        undef $idle_w;
-      };
+      $stream->send([{
+        window => $window->serialized,
+        type   => "chunk",
+        html   => join "", map {$_->{html}} @$msgs,
+      }]); 
     });
   }
 }

@@ -10311,6 +10311,13 @@ Alice.Application = Class.create({
     }
   },
 
+  displayChunk: function(message) {
+    var win = this.getWindow(message['window'].id);
+    if (win) {
+      win.addChunk(message);
+    }
+  },
+
   focusHash: function(hash) {
     if (!hash) hash = window.location.hash;
     if (hash) {
@@ -10363,7 +10370,7 @@ Alice.Application = Class.create({
     for (var i=0; i < arguments.length; i++) {
       if (this.options.debug == "true") {
         if (window.console && window.console.log) {
-          console.log(arguments[i].toString());
+          console.log(arguments[i]);
         }
         if (win) {
           win.addMessage({
@@ -10430,22 +10437,6 @@ Alice.Connection = {
       this.changeStatus("ok");
   },
 
-  processMessages: function(data) {
-    if (data.queue) {
-      this.processQueue(data);
-    }
-    else if (data.chunk) {
-      this.processChunk(data);
-    }
-  },
-
-  processChunk: function(data) {
-    var win = this.application.getWindow(data['window']);
-    if (win) {
-      win.addChunk(data.chunk);
-    }
-  },
-
   processQueue: function(data) {
     try {
       var queue = data.queue;
@@ -10457,6 +10448,9 @@ Alice.Connection = {
           if (queue[i].timestamp)
             queue[i].timestamp = Alice.epochToLocal(queue[i].timestamp, this.application.options.timeformat);
           this.application.displayMessage(queue[i]);
+        }
+        else if (queue[i].type == "chunk") {
+          this.application.displayChunk(queue[i]);
         }
       }
     }
@@ -10531,7 +10525,11 @@ Alice.Connection.WebSocket = Class.create(Alice.Connection, {
     this.application.log("opening new websocket connection starting at "+msgid);
     this.changeStatus("ok");
     this.connected = true;
-    var parameters = Object.toQueryString({msgid: msgid, t: now.getTime() / 1000});
+    var parameters = Object.toQueryString({
+      msgid: msgid,
+      t: now.getTime() / 1000,
+      tab: this.application.activeWindow().id
+    });
     var url = "ws://" + window.location.host + "/wsstream?" + parameters;
     this.request = new WebSocket(url);
     this.request.onmessage = this.handleUpdate.bind(this);
@@ -10541,7 +10539,7 @@ Alice.Connection.WebSocket = Class.create(Alice.Connection, {
 
   handleUpdate: function(e) {
     var data = e.data.evalJSON();
-    this.processMessages(data);
+    this.processQueue(data);
   },
 
   sendMessage: function(form) {
@@ -10607,7 +10605,11 @@ Alice.Connection.XHR = Class.create(Alice.Connection, {
     this.connected = true;
     this.request = new Ajax.Request('/stream', {
       method: 'get',
-      parameters: {msgid: msgid, t: now.getTime() / 1000},
+      parameters: {
+        msgid: msgid,
+        t: now.getTime() / 1000,
+        tab: this.application.activeWindow().id
+      },
       on401: this.gotoLogin,
       on500: this.gotoLogin,
       on502: this.gotoLogin,
@@ -10643,7 +10645,7 @@ Alice.Connection.XHR = Class.create(Alice.Connection, {
     data = data.slice(start, end);
     var data = data.evalJSON();
 
-    this.processMessages(data);
+    this.processQueue(data);
 
     if (data.time) {
       var lag = this.addPing(time / 1000 -  data.time);
@@ -10979,7 +10981,7 @@ Alice.Window = Class.create({
   },
 
   addChunk: function(chunk) {
-    this.messages.down("ul").insert({bottom: chunk});
+    this.messages.down("ul").insert({bottom: chunk.html});
     this.trimMessages();
     this.setupMessages();
   },
