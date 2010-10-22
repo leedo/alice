@@ -274,7 +274,7 @@ Alice.Window = Class.create({
   },
 
   addChunk: function(chunk) {
-    this.messages.down("ul").insert({bottom: chunk});
+    this.messages.down("ul").insert({bottom: chunk.html});
     this.trimMessages();
     this.setupMessages();
   },

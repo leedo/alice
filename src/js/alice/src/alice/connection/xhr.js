@@ -24,7 +24,11 @@ Alice.Connection.XHR = Class.create(Alice.Connection, {
     this.connected = true;
     this.request = new Ajax.Request('/stream', {
       method: 'get',
-      parameters: {msgid: msgid, t: now.getTime() / 1000},
+      parameters: {
+        msgid: msgid,
+        t: now.getTime() / 1000,
+        tab: this.application.activeWindow().id
+      },
       on401: this.gotoLogin,
       on500: this.gotoLogin,
       on502: this.gotoLogin,
@@ -60,7 +64,7 @@ Alice.Connection.XHR = Class.create(Alice.Connection, {
     data = data.slice(start, end);
     var data = data.evalJSON();
 
-    this.processMessages(data);
+    this.processQueue(data);
 
     if (data.time) {
       var lag = this.addPing(time / 1000 -  data.time);
