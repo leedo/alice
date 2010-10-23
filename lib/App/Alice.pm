@@ -440,6 +440,7 @@ sub update_stream {
       $stream->send([{
         window => $window->serialized,
         type   => "chunk",
+        nicks  => $window->all_nicks,
         html   => join "", map {$_->{html}} @$msgs,
       }]); 
     });

@@ -200,12 +200,12 @@ sub setup_ws_stream {
 
     if (my $fh = $req->env->{'websocket.impl'}->handshake) {
       my $stream = App::Alice::Stream::WebSocket->new(
-        queue   => [ map({$_->join_action} $app->windows) ],
         start_time => $req->parameters->{t} || time,
         fh      => $fh,
         on_read => sub { $app->handle_message(@_) },
         on_error => sub { $app->purge_disconnects },
       );
+      $stream->send([ map({$_->join_action} $app->windows) ]);
       $app->add_stream($stream);
       $app->update_stream($stream, $req->parameters);
     }
