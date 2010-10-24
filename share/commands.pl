@@ -288,6 +288,8 @@ my $commands = [
   {
     name => 'away',
     re => qr{^/away(?:\s+(\S+))?},
+    eg => "/AWAY [<message>]",
+    desc => "Set or remove an away message",
     code => sub {
       my ($self, $app, $window, $message) = @_;
       if ($message) {
