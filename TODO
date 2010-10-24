@@ -8,5 +8,10 @@
 - More tests
 
 - transition from AE::IRC::Client to AE::IRC::Connection
+  - or just subclass AE::IRC::Client
 
 - Make info tab highlights links to the transcript window
+
+- Add click-to-inline image option
+- Add /safe endpoint that forces no images and no avatars
+- Do all avatar toggling client-side
