@@ -1,2 +1,4 @@
 ? my ($app, $window, $selected) = @_;
-<option value="<?= $window->id ?>" id="<?= $window->id ?>_tab_overflow_button"<? if ($window->{active}) { ?>selected="selected"<?}?>><?= $window->title ?></option>
+<li id="<?= $window->id ?>_tab_overflow"<? if ($window->{active}) { ?>class="active"<?}?>>
+  <a href="/#<?= $window->hashtag ?>"><?= $window->title ?></a>
+</li>

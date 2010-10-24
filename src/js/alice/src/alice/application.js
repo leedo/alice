@@ -225,8 +225,8 @@ Alice.Application = Class.create({
     if (!$(windowId)) {
       $('windows').insert(html['window']);
       $('tabs').insert(html.tab);
-      $('tab_overflow_overlay').insert(html.select);
-      $(windowId+"_tab_overflow_button").selected = false;
+      $('tab_menu').down('ul').insert(html.select);
+      $(windowId+"_tab_overflow").selected = false;
       this.activeWindow().tabOverflowButton.selected = true;
       this.makeSortable();
     }
@@ -234,12 +234,12 @@ Alice.Application = Class.create({
   
   highlightChannelSelect: function(classname) {
     if (!classname) classname = "unread";
-    $('tab_overflow_button').addClassName(classname);
+    $('tab_menu').addClassName(classname);
   },
   
   unHighlightChannelSelect: function() {
-    $('tab_overflow_button').removeClassName('unread');
-    $('tab_overflow_button').removeClassName('highlight');
+    $('tab_menu').removeClassName('unread');
+    $('tab_menu').removeClassName('highlight');
   },
   
   updateChannelSelect: function() {

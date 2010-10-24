@@ -31,32 +31,27 @@ body.blurred ul#controls {
 ul#controls li {
   position: relative; }
 
-select.select_overlay {
-  display: block;
-  position: absolute;
-  top: 0px;
-  left: 0px;
-  bottom: 0px;
+ul#controls li.dropdown {
   width: 22px;
+  height: 22px;
   border: none;
   padding: 0;
   margin: 0;
-  opacity: 0;
-  font-size: 12px; }
+  position: relative; }
 
-select#tab_overflow_overlay option.unread {
+li.dropdown li.unread {
   font-weight: bold; }
 
-li#tab_overflow_button {
+li#tab_menu {
   background: url(image/sprites.png) 3px -174px no-repeat; }
 
-li#tab_overflow_button.unread {
+li#tab_menu.unread {
   background: url(image/sprites.png) 3px -194px no-repeat; }
 
-li#tab_overflow_button.unread.highlight {
+li#tab_menu.unread.highlight {
   background: url(image/sprites.png) -20px -194px no-repeat; }
 
-li#config_button {
+li#config_menu {
   background: url(image/sprites.png) 4px -216px no-repeat; }
 
 li#connection_status.loading {
@@ -295,7 +290,7 @@ ul#controls {
   padding: 0 2px 0 0;
   list-style: none; }
 
-ul#controls li {
+ul#controls > li {
   float: right;
   margin: 0;
   padding: 0;
@@ -303,7 +298,7 @@ ul#controls li {
   width: 16px;
   padding: 4px 3px 3px 3px; }
 
-ul#controls li:hover {
+ul#controls > li:hover {
   background-color: #3a3a3a; }
 
 tr.topic td {
@@ -1093,3 +1088,33 @@ span.nickborder {
   opacity: 0;
   position: absolute;
   left: -1000px; }
+
+ul#controls li.dropdown.open {
+  background-color: #3a3a3a; }
+
+li.dropdown ul {
+  position: absolute;
+  bottom: 26px;
+  right: 0px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 14px;
+  background: #444444;
+  border: 1px solid #222222;
+  -webkit-border-radius: 2px;
+  min-width: 100px;
+  display: none; }
+
+li.dropdown.open ul {
+  display: block; }
+
+li.dropdown ul li a {
+  display: block;
+  padding: 3px 4px;
+  text-decoration: none;
+  color: white; }
+
+li.dropdown ul li a:hover {
+  text-shadow: none;
+  background: #3a3a3a; }
