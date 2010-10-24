@@ -10265,8 +10265,8 @@ Alice.Application = Class.create({
     if (!$(windowId)) {
       $('windows').insert(html['window']);
       $('tabs').insert(html.tab);
-      $('tab_overflow_overlay').insert(html.select);
-      $(windowId+"_tab_overflow_button").selected = false;
+      $('tab_menu').down('ul').insert(html.select);
+      $(windowId+"_tab_overflow").selected = false;
       this.activeWindow().tabOverflowButton.selected = true;
       this.makeSortable();
     }
@@ -10274,12 +10274,12 @@ Alice.Application = Class.create({
 
   highlightChannelSelect: function(classname) {
     if (!classname) classname = "unread";
-    $('tab_overflow_button').addClassName(classname);
+    $('tab_menu').addClassName(classname);
   },
 
   unHighlightChannelSelect: function() {
-    $('tab_overflow_button').removeClassName('unread');
-    $('tab_overflow_button').removeClassName('highlight');
+    $('tab_menu').removeClassName('unread');
+    $('tab_menu').removeClassName('highlight');
   },
 
   updateChannelSelect: function() {
@@ -10723,7 +10723,7 @@ Alice.Window = Class.create({
     this.tab = $(this.id + "_tab");
     this.input = new Alice.Input(this, this.id + "_msg");
     this.tabButton = $(this.id + "_tab_button");
-    this.tabOverflowButton = $(this.id + "_tab_overflow_button");
+    this.tabOverflowButton = $(this.id + "_tab_overflow");
     this.form = $(this.id + "_form");
     this.topic = $(this.id + "_topic");
     this.messages = this.element.down('.message_wrap');
@@ -11707,29 +11707,26 @@ if (window == window.parent) {
 
     $('helpclose').observe("click", function () { $('help').hide(); });
 
+    $$('li.dropdown').each(function (li) {
+      li.observe("click", function (e) {
+        var element = e.element();
+        if (element.hasClassName("dropdown")) {
+          if (li.hasClassName("open")) {
+            li.removeClassName("open");
+          }
+          else {
+            $$("li.dropdown").invoke("removeClassName", "open");
+            li.addClassName("open");
+          }
+          e.stop();
+        }
+      });
+    });
 
-    $$('#config_overlay option').each(function(opt){opt.selected = false});
-    $('tab_overflow_overlay').observe("change", function (e) {
-      var win = alice.getWindow($('tab_overflow_overlay').value);
-      if (win) win.focus();
+    document.observe("click", function (e) {
+      $$('li.dropdown.open').invoke("removeClassName", "open");
     });
-    $('config_overlay').observe("change", function (e) {
-      switch ($('config_overlay').value) {
-        case "Connections":
-          alice.toggleConfig(e);
-          break;
-        case "Preferences":
-          alice.togglePrefs(e);
-          break;
-        case "Logout":
-          if (confirm("Logout?")) window.location = "/logout";
-          break;
-        case "Help":
-          alice.toggleHelp();
-          break;
-      }
-      $$('#config_overlay option').each(function(opt){opt.selected = false});
-    });
+
 
 
     window.onkeydown = function (e) {
@@ -11762,7 +11759,7 @@ if (window == window.parent) {
         window.document.body.addClassName("blurred");
       alice.isFocused = false
     };
-    window.onhashchange = alice.focusHash.bind(alice);
+    window.onhashchange = function (e) {alice.focusHash()};
 
     window.onorientationchange = function() {
       alice.activeWindow().scrollToBottom(true);

@@ -18,23 +18,22 @@
     <div id="container">
       <ul id="controls">
         <li id="connection_status" class="ok"></li>
-        <li id="config_button">
-          <select class="select_overlay" id="config_overlay">
+        <li class="dropdown" id="config_menu">
+          <ul>
             <? if ($app->auth_enabled) { ?>
-            <option value="Logout">Logout</option>
+            <li><a href="/logout">Logout</a></li>
             <? } ?>
-            <option value="Help">Help</option>
-            <option disabled>──────</option>
-            <option value="Preferences">Preferences</option>
-            <option value="Connections">Connections</option>
-          </select>
+            <li><a href="javascript:alice.toggleHelp()">Help</a></li>
+            <li><a href="javascript:alice.togglePrefs()">Preferences</a></li>
+            <li><a href="javascript:alice.toggleConfig()">Connections</a></li>
+          </ul>
         </li>
-        <li id="tab_overflow_button">
-          <select class="select_overlay" id="tab_overflow_overlay">
+        <li class="dropdown" id="tab_menu">
+          <ul>
             <? for my $window (@windows) { ?>
               <?= $_mt->render_file('select.html', $_[0], $window); ?>
             <? } ?>
-          </select>
+          </ul>
         </li>
       </ul>
       <div id="tab_container">

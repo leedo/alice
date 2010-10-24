@@ -52,31 +52,27 @@ if (window == window.parent) {
 
     $('helpclose').observe("click", function () { $('help').hide(); });
 
-    // setup select menus
+    $$('li.dropdown').each(function (li) {
+      li.observe("click", function (e) {
+        var element = e.element();
+        if (element.hasClassName("dropdown")) {
+          if (li.hasClassName("open")) {
+            li.removeClassName("open");
+          }
+          else {
+            $$("li.dropdown").invoke("removeClassName", "open");
+            li.addClassName("open");
+          }
+          e.stop();
+        }
+      });
+    });
 
-    $$('#config_overlay option').each(function(opt){opt.selected = false});
-    $('tab_overflow_overlay').observe("change", function (e) {
-      var win = alice.getWindow($('tab_overflow_overlay').value);
-      if (win) win.focus();
+    document.observe("click", function (e) {
+      $$('li.dropdown.open').invoke("removeClassName", "open");
     });
-    $('config_overlay').observe("change", function (e) {  
-      switch ($('config_overlay').value) {
-        case "Connections":
-          alice.toggleConfig(e);
-          break;
-        case "Preferences":
-          alice.togglePrefs(e);
-          break;
-        case "Logout":
-          if (confirm("Logout?")) window.location = "/logout";
-          break;
-        case "Help":
-          alice.toggleHelp();
-          break;
-      }
-      $$('#config_overlay option').each(function(opt){opt.selected = false});
-    });
-    
+
+
     // setup window events
     
     window.onkeydown = function (e) {
@@ -109,7 +105,7 @@ if (window == window.parent) {
         window.document.body.addClassName("blurred");
       alice.isFocused = false
     };
-    window.onhashchange = alice.focusHash.bind(alice);
+    window.onhashchange = function (e) {alice.focusHash()};
 
     window.onorientationchange = function() {
       alice.activeWindow().scrollToBottom(true);
