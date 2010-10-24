@@ -287,7 +287,7 @@ my $commands = [
   },
   {
     name => 'away',
-    re => qr{^/away(?:\s+(\S+))?},
+    re => qr{^/away(?:\s+(.+))?},
     eg => "/AWAY [<message>]",
     desc => "Set or remove an away message",
     code => sub {
