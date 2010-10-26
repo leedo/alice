@@ -1,8 +1,7 @@
 Alice.Input = Class.create({
-  initialize: function(win, element) {
+  initialize: function(application, element) {
 
-    this.window = win;
-    this.application = this.window.application;
+    this.application = application;
     this.textarea = $(element);
     this.disabled = false;
 
@@ -153,7 +152,7 @@ Alice.Input = Class.create({
   completeNickname: function() {
     if (this.disabled) return;
     if (!this.completion) {
-      this.completion = new Alice.Completion(this.window.getNicknames());
+      this.completion = new Alice.Completion(this.activeWindow().getNicknames());
     }
 
     this.completion.next();
@@ -187,7 +186,6 @@ Alice.Input = Class.create({
       this.textarea.setValue(this.editor.innerHTML);
     }
     (function() {
-      if (!this.window.active) return;
       var height = this.getContentHeight();
       if (height == 0) {
         this.element.setStyle({ height: null, top: 0 });
