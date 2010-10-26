@@ -74,7 +74,7 @@ div.window {
   top: 0px;
   left: 0px;
   right: 0px;
-  bottom: 23px; }
+  bottom: 53px; }
 
 div.window table {
   table-layout: fixed;
@@ -82,30 +82,29 @@ div.window table {
   height: 100%;
   padding: 0; }
 
-tr.input td {
-  height: 20px;
+div#input {
   background: #efefef;
   border-bottom: 1px solid #999999;
   border-top: 1px solid #aaaaaa; }
 
-body.blurred tr.input td {
+body.blurred div#input {
   border-bottom: 1px solid #aaaaaa; }
 
-tr.input form {
+div#input form {
   display: block;
   margin: 0;
   padding: 0;
   height: auto;
   line-height: 0px; }
 
-tr.input div {
+div#input div {
   padding: 0 3px;
   background: white;
   margin: 3px 0;
   position: relative; }
 
-tr.input div.editor,
-tr.input textarea {
+div#input div.editor,
+div#input textarea {
   line-height: 1.2em;
   min-height: 1.2em;
   width: 100%;
@@ -122,7 +121,7 @@ div.editor {
   white-space: pre-wrap;
   -khtml-nbsp-mode: space; }
 
-tr.input div.editor_toolbar {
+div#input div.editor_toolbar {
   overflow: hidden;
   position: absolute;
   right: -170px;
@@ -139,7 +138,7 @@ tr.input div.editor_toolbar {
   -webkit-transition-property: right;
   -webkit-transition-duration: 0.3s; }
 
-tr.input div.editor_toolbar button {
+div#input div.editor_toolbar button {
   visibility: hidden;
   display: block;
   float: left;
@@ -153,10 +152,10 @@ tr.input div.editor_toolbar button {
   cursor: pointer;
   border: none; }
 
-tr.input div.editor_toolbar button:hover {
+div#input div.editor_toolbar button:hover {
   color: white; }
 
-tr.input div.editor_toolbar button.selected {
+div#input div.editor_toolbar button.selected {
   color: yellow; }
 
 .bold {
@@ -168,15 +167,15 @@ tr.input div.editor_toolbar button.selected {
 .underline {
   text-decoration: underline; }
 
-tr.input div.editor_toolbar:hover {
+div#input div.editor_toolbar:hover {
   opacity: 0.4;
   cursor: pointer; }
 
-tr.input div.editor_toolbar.visible:hover {
+div#input div.editor_toolbar.visible:hover {
   opacity: 1;
   cursor: inherit; }
 
-tr.input div.editor_toolbar.visible {
+div#input div.editor_toolbar.visible {
   background-color: rgba(0, 0, 0, 0.6);
   background-image: none;
   right: -4px;
@@ -184,7 +183,7 @@ tr.input div.editor_toolbar.visible {
   -webkit-transition-duration: 0.3s;
   opacity: 1; }
 
-tr.input div.editor_toolbar.visible button {
+div#input div.editor_toolbar.visible button {
   visibility: visible; }
 
 div.editor div,
@@ -202,7 +201,7 @@ div.editor span {
 div.editor img {
   display: none !important; }
 
-tr.input input.send {
+div#input input.send {
   display: none; }
 
 div#tab_container {
@@ -210,7 +209,7 @@ div#tab_container {
   bottom: 0px;
   left: 0px;
   right: 0px;
-  height: 23px;
+  height: 53px;
   background: #dddddd; }
 
 body.blurred div#tab_container {
@@ -808,11 +807,11 @@ div.color_picker div.toggle span#bg.active {
     height: 1.2em;
     overflow: hidden; }
 
-  tr.input div {
+  div#input div {
     margin-right: 55px;
     background: none; }
 
-  tr.input input.send {
+  div#input input.send {
     display: block;
     position: absolute;
     bottom: 2px;
