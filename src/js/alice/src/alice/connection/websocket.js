@@ -6,8 +6,6 @@ Alice.Connection.WebSocket = Class.create(Alice.Connection, {
     this.request = null;
     this.reconnect_count = 0;
     this.reconnecting = false;
-    this.windowQueue = [];
-    this.windowWatcher = false;
   },
 
   _connect: function() {
