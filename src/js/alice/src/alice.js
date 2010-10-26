@@ -76,9 +76,8 @@ if (window == window.parent) {
     // setup window events
     
     window.onkeydown = function (e) {
-      var win = alice.activeWindow();
-      if (win && !$('config') && !Alice.isSpecialKey(e.which))
-        win.input.focus();
+      if (!$('config') && !Alice.isSpecialKey(e.which))
+        alice.input.focus();
     };
     
     window.onresize = function () {
@@ -92,8 +91,7 @@ if (window == window.parent) {
       if (!alice.isMobile)
         window.document.body.removeClassName("blurred");
 
-      if (alice.activeWindow())
-        alice.activeWindow().input.focus();
+      alice.input.focus();
 
       alice.isFocused = true
       alice.clearMissed();

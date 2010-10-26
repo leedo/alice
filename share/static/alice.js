@@ -10053,6 +10053,12 @@ Alice.Application = Class.create({
     this.isJankyScroll = Prototype.Browser.Gecko || Prototype.Browser.IE;
     this.loadDelay = this.isMobile ? 3000 : 1000;
 
+    this.input = new Alice.Input(this, "msg");
+    this.submit = $("submit");
+
+    this.submit.observe("click", function (e) {
+        this.input.send(); e.stop()}.bind(this));
+
     this.makeSortable();
   },
 
@@ -10384,6 +10390,10 @@ Alice.Application = Class.create({
   msgid: function() {
     var ids = this.windows().map(function(w){return w.msgid});
     return Math.max.apply(Math, ids);
+  },
+
+  setSource: function(id) {
+    $('source').value = id;
   }
 
 });
@@ -10550,6 +10560,7 @@ Alice.Connection.WebSocket = Class.create(Alice.Connection, {
       params = form.serialize(true);
     }
 
+    console.log(params);
     this.request.send(Object.toJSON(params));
     return true;
   },
@@ -10721,13 +10732,10 @@ Alice.Window = Class.create({
     this.id = this.element.identify();
     this.active = active;
     this.tab = $(this.id + "_tab");
-    this.input = new Alice.Input(this, this.id + "_msg");
     this.tabButton = $(this.id + "_tab_button");
     this.tabOverflowButton = $(this.id + "_tab_overflow");
-    this.form = $(this.id + "_form");
-    this.topic = $(this.id + "_topic");
-    this.messages = this.element.down('.message_wrap');
-    this.submit = $(this.id + "_submit");
+    this.topic = this.element.down(".topic");
+    this.messages = this.element.down('.messages');
     this.nicksVisible = false;
     this.visibleNick = "";
     this.visibleNickTimeout = "";
@@ -10754,8 +10762,6 @@ Alice.Window = Class.create({
   },
 
   setupEvents: function() {
-    this.submit.observe("click", function (e) {this.input.send(); e.stop()}.bind(this));
-
     this.tab.observe("mousedown", function(e) {
       if (!this.active) {this.focus(); this.focusing = true}
     }.bind(this));
@@ -10811,14 +10817,13 @@ Alice.Window = Class.create({
 
   unFocus: function() {
     this.active = false;
-    this.input.uncancelNextFocus();
     this.element.removeClassName('active');
     this.tab.removeClassName('active');
     this.tabOverflowButton.selected = false;
   },
 
   showNick: function (e) {
-    var li = e.findElement("#" + this.id + " ul.messages li.message");
+    var li = e.findElement("li.message");
     if (li) {
       if (this.nicksVisible || li == this.visibleNick) return;
       clearTimeout(this.visibleNickTimeout);
@@ -10893,14 +10898,13 @@ Alice.Window = Class.create({
     document.title = this.title;
     this.application.previousFocus = this.application.activeWindow();
     this.application.windows().invoke("unFocus");
+    this.application.setSource(this.id);
     this.active = true;
     this.tab.addClassName('active');
     this.element.addClassName('active');
     this.tabOverflowButton.selected = true;
     this.markRead();
     this.scrollToBottom(true);
-
-    if (!this.application.isMobile) this.input.focus();
 
     if (this.application.isJankyScroll) {
       this.resizeMessagearea();
@@ -10951,7 +10955,7 @@ Alice.Window = Class.create({
 
   resizeMessagearea: function() {
     var top = this.messages.up().cumulativeOffset().top;
-    var bottom = this.input.element.getHeight() + 14;
+    var bottom = this.application.input.element.getHeight() + 14;
     this.messages.setStyle({
       position: 'absolute',
       top: top+"px",
@@ -10963,14 +10967,14 @@ Alice.Window = Class.create({
   },
 
   showHappyAlert: function (message) {
-    this.messages.down('ul').insert(
+    this.messages.insert(
       "<li class='event happynotice'><div class='msg'>"+message+"</div></li>"
     );
     this.scrollToBottom();
   },
 
   showAlert: function (message) {
-    this.messages.down('ul').insert(
+    this.messages.insert(
       "<li class='event notice'><div class='msg'>"+message+"</div></li>"
     );
     this.scrollToBottom();
@@ -10981,7 +10985,7 @@ Alice.Window = Class.create({
   },
 
   addChunk: function(chunk) {
-    this.messages.down("ul").insert({bottom: chunk.html});
+    this.messages.insert({bottom: chunk.html});
     this.trimMessages();
     this.setupMessages();
     if (chunk.nicks && chunk.nicks.length)
@@ -10991,11 +10995,11 @@ Alice.Window = Class.create({
   addMessage: function(message) {
     if (!message.html || message.msgid <= this.msgid) return;
 
-    this.messages.down('ul').insert(message.html);
+    this.messages.insert(message.html);
     if (message.msgid) this.msgid = message.msgid;
     this.trimMessages();
 
-    var li = this.messages.down('ul.messages > li:last-child');
+    var li = this.messages.down('li:last-child');
 
     if (message.consecutive) {
       var prev = li.previous();
@@ -11067,15 +11071,15 @@ Alice.Window = Class.create({
     var bottom, height;
 
     if (!force) {
-      var lastmsg = this.messages.down('ul.messages > li:last-child');
+      var lastmsg = this.messages.down('li:last-child');
       if (!lastmsg) return;
       var msgheight = lastmsg.offsetHeight;
-      bottom = this.messages.scrollTop + this.messages.offsetHeight;
-      height = this.messages.scrollHeight;
+      bottom = this.element.scrollTop + this.element.offsetHeight;
+      height = this.element.scrollHeight;
     }
 
     if (force || bottom + msgheight + 100 >= height) {
-      this.messages.scrollTop = this.messages.scrollHeight;
+      this.element.scrollTop = this.element.scrollHeight;
       this.element.redraw();
     }
   },
@@ -11198,10 +11202,9 @@ Alice.Colorpicker = Class.create({
   }
 });
 Alice.Input = Class.create({
-  initialize: function(win, element) {
+  initialize: function(application, element) {
 
-    this.window = win;
-    this.application = this.window.application;
+    this.application = application;
     this.textarea = $(element);
     this.disabled = false;
 
@@ -11351,7 +11354,7 @@ Alice.Input = Class.create({
   completeNickname: function() {
     if (this.disabled) return;
     if (!this.completion) {
-      this.completion = new Alice.Completion(this.window.getNicknames());
+      this.completion = new Alice.Completion(this.activeWindow().getNicknames());
     }
 
     this.completion.next();
@@ -11385,7 +11388,6 @@ Alice.Input = Class.create({
       this.textarea.setValue(this.editor.innerHTML);
     }
     (function() {
-      if (!this.window.active) return;
       var height = this.getContentHeight();
       if (height == 0) {
         this.element.setStyle({ height: null, top: 0 });
@@ -11507,8 +11509,7 @@ Alice.Keyboard = Class.create({
   },
 
   onCmdC: function(event) {
-    if (!this.activeWindow.input.focused)
-      this.activeWindow.input.cancelNextFocus();
+    this.application.input.cancelNextFocus();
   },
 
   onCtrlC: function(event) {
@@ -11553,23 +11554,23 @@ Alice.Keyboard = Class.create({
   },
 
   onOptUp: function() {
-    this.activeWindow.input.previousCommand();
+    this.application.input.previousCommand();
   },
 
   onOptDown: function() {
-    this.activeWindow.input.nextCommand();
+    this.appliaction.input.nextCommand();
   },
 
   onEnter: function() {
-    this.activeWindow.input.send();
+    this.application.input.send();
   },
 
   onTab: function() {
-    this.activeWindow.input.completeNickname();
+    this.appliaction.input.completeNickname();
   },
 
   onEsc: function() {
-    this.activeWindow.input.stopCompletion();
+    this.appliaction.input.stopCompletion();
   },
 
   enable: function() {
@@ -11730,9 +11731,8 @@ if (window == window.parent) {
 
 
     window.onkeydown = function (e) {
-      var win = alice.activeWindow();
-      if (win && !$('config') && !Alice.isSpecialKey(e.which))
-        win.input.focus();
+      if (!$('config') && !Alice.isSpecialKey(e.which))
+        alice.input.focus();
     };
 
     window.onresize = function () {
@@ -11746,8 +11746,7 @@ if (window == window.parent) {
       if (!alice.isMobile)
         window.document.body.removeClassName("blurred");
 
-      if (alice.activeWindow())
-        alice.activeWindow().input.focus();
+      alice.input.focus();
 
       alice.isFocused = true
       alice.clearMissed();
