@@ -12,6 +12,12 @@ Alice.Application = Class.create({
     this.isJankyScroll = Prototype.Browser.Gecko || Prototype.Browser.IE;
     this.loadDelay = this.isMobile ? 3000 : 1000;
 
+    this.input = new Alice.Input(this, "msg");
+    this.submit = $("submit");
+
+    this.submit.observe("click", function (e) {
+        this.input.send(); e.stop()}.bind(this));
+
     // setup UI elements in initial state
     this.makeSortable();
   },
@@ -344,6 +350,10 @@ Alice.Application = Class.create({
   msgid: function() {
     var ids = this.windows().map(function(w){return w.msgid});
     return Math.max.apply(Math, ids);
+  },
+
+  setSource: function(id) {
+    $('source').value = id;
   }
  
 });

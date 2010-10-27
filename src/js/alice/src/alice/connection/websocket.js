@@ -39,6 +39,7 @@ Alice.Connection.WebSocket = Class.create(Alice.Connection, {
       params = form.serialize(true);
     }
 
+    console.log(params);
     this.request.send(Object.toJSON(params));
     return true;
   },

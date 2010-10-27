@@ -92,28 +92,27 @@ div.window {
   top: 0px;
   left: 0px;
   right: 0px;
-  bottom: 23px;
+  bottom: 53px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  background: $message_background;
 }
 
-div.window table {
-  table-layout: fixed;
-  width: 100%;
-  height: 100%;
-  padding: 0;
-}
-
-tr.input td {
-  height: 20px;
+div#input {
   background: $tab_background_active;
   border-bottom: 1px solid $tab_border_active;
   border-top: 1px solid $textentry_border;
+  position: absolute;
+  bottom: 24px;
+  left: 0px;
+  right: 0px;
 }
 
-body.blurred tr.input td {
+body.blurred div#input {
   border-bottom: 1px solid $tab_border_blurred;
 }
 
-tr.input form {
+div#input form {
   display: block;
   margin: 0;
   padding: 0;
@@ -121,15 +120,15 @@ tr.input form {
   line-height: 0px;
 }
 
-tr.input div {
+div#input div {
   padding: 0 3px;
   background: $textentry_background;
   margin: 3px 0;
   position: relative;
 }
 
-tr.input div.editor,
-tr.input textarea {
+div#input div.editor,
+div#input textarea {
   line-height: 1.2em;
   min-height: 1.2em;
   width: 100%;
@@ -148,7 +147,7 @@ div.editor {
   -khtml-nbsp-mode: space;
 }
 
-tr.input div.editor_toolbar {
+div#input div.editor_toolbar {
   overflow: hidden;
   position: absolute;
   right: -170px;
@@ -166,7 +165,7 @@ tr.input div.editor_toolbar {
   -webkit-transition-duration: 0.3s;
 }
 
-tr.input div.editor_toolbar button {
+div#input div.editor_toolbar button {
   visibility: hidden;
   display: block;
   float: left;
@@ -181,11 +180,11 @@ tr.input div.editor_toolbar button {
   border: none;
 }
 
-tr.input div.editor_toolbar button:hover {
+div#input div.editor_toolbar button:hover {
   color: $textentry_toolbar_button_hover_color;
 }
 
-tr.input div.editor_toolbar button.selected {
+div#input div.editor_toolbar button.selected {
   color: yellow;
 }
 
@@ -194,16 +193,16 @@ tr.input div.editor_toolbar button.selected {
 .underline {text-decoration: underline;}
 
 
-tr.input div.editor_toolbar:hover {
+div#input div.editor_toolbar:hover {
   opacity: 0.4;
   cursor: pointer;
 }
-tr.input div.editor_toolbar.visible:hover {
+div#input div.editor_toolbar.visible:hover {
   opacity: 1;
   cursor: inherit;
 }
 
-tr.input div.editor_toolbar.visible {
+div#input div.editor_toolbar.visible {
   background-color: $textentry_toolbar_background;
   background-image: none;
   right: -4px;
@@ -212,7 +211,7 @@ tr.input div.editor_toolbar.visible {
   opacity: 1;
 }
 
-tr.input div.editor_toolbar.visible button{
+div#input div.editor_toolbar.visible button{
   visibility: visible;
 }
 
@@ -234,7 +233,7 @@ div.editor img {
   display: none !important;
 }
 
-tr.input input.send {
+div#input input.send {
   display: none;
 }
 
@@ -243,7 +242,7 @@ div#tab_container {
   bottom: 0px;
   left: 0px;
   right: 0px;
-  height: 23px;
+  height: 52px;
   background: $tab_background;
 }
 
@@ -256,10 +255,10 @@ ul#tabs {
   margin: 0;
   padding: 0;
   font-size: 11px;
-  position: relative;
-  float: left;
-  margin-right: 62px;
-  padding-left: 3px;
+  position: absolute;
+  bottom: 0px;
+  left: 3px;
+  right: 62px;
 }
 
 body.blurred ul#tabs li {
@@ -347,7 +346,7 @@ ul#controls > li:hover {
   background-color: $tab_background_hover;
 }
 
-tr.topic td {
+div.topic {
   width: 100%;
   background: $topic_background;
   font-size: 11px;
@@ -356,22 +355,11 @@ tr.topic td {
   border-bottom: $topic_border_bottom;
   padding: 1px 0;
   height: 1.2em;
-}
-
-tr.topic td div.topic {
-  height: 1.2em;
   overflow: hidden;
 }
 
-tr.topic a {
+div.topic {
   text-decoration: none;
-}
-
-div.message_wrap {
-  height: 100%;
-  overflow-x: hidden;
-  overflow-y: auto;
-  background: $message_background;
 }
 
 ul.messages {
@@ -945,12 +933,12 @@ div.color_picker div.toggle span#bg.active {
     overflow: hidden;
   }
 
-  tr.input div {
+  div#input div {
     margin-right: 55px;
     background: none;
   }
 
-  tr.input input.send {
+  div#input input.send {
     display: block;
     position: absolute;
     bottom: 2px;
