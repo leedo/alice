@@ -1033,7 +1033,8 @@ li.dropdown ul {
   border: 1px solid #999999;
   -webkit-border-radius: 2px;
   min-width: 100px;
-  display: none; }
+  display: none;
+  white-space: nowrap; }
 
 li.dropdown.open ul {
   display: block; }
