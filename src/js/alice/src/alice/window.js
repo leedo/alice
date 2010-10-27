@@ -72,11 +72,6 @@ Alice.Window = Class.create({
       }
     });
 
-    if (this.application.isJankyScroll) {
-      this.resizeMessagearea();
-      this.scrollToBottom();
-    }
-
     if (this.active) this.scrollToBottom(true);
 
     // wait a second to load images, otherwise the browser will say "loading..."
@@ -187,11 +182,6 @@ Alice.Window = Class.create({
     this.tabOverflowButton.selected = true;
     this.markRead();
     this.scrollToBottom(true);
-
-    if (this.application.isJankyScroll) {
-      this.resizeMessagearea();
-      this.scrollToBottom();
-    }
 
     this.element.redraw();
     this.setWindowHash();
