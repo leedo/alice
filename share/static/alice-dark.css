@@ -19,7 +19,8 @@ ul#tabs li:hover {
   cursor: default; }
 
 ul#controls {
-  background: #444444; }
+  background: #444444;
+  z-index: 901; }
 
 body.blurred ul#controls {
   background: #333333; }
