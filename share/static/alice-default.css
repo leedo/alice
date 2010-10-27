@@ -16,7 +16,8 @@ ul#tabs li:hover {
   cursor: default; }
 
 ul#controls {
-  background: #dddddd; }
+  background: #dddddd;
+  z-index: 901; }
 
 body.blurred ul#controls {
   background: #eeeeee; }

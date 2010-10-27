@@ -22,6 +22,7 @@ ul#tabs li:hover {
 
 ul#controls {
   background: $tab_background;
+  z-index: 901;
 }
 
 body.blurred ul#controls {
