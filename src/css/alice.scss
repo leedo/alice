@@ -1121,6 +1121,7 @@ li.dropdown ul {
   -webkit-border-radius: 2px;
   min-width: 100px;
   display: none;
+  white-space: nowrap;
 }
 
 li.dropdown.open ul {
