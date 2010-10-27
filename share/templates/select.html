@@ -1,4 +1,4 @@
 ? my ($app, $window, $selected) = @_;
 <li id="<?= $window->id ?>_tab_overflow"<? if ($window->{active}) { ?>class="active"<?}?>>
-  <a href="/#<?= $window->hashtag ?>"><?= $window->title ?></a>
+  <a href="javascript:alice.getWindow('<?= $window->id ?>').focus()"><?= $window->title ?></a>
 </li>
