@@ -53,8 +53,7 @@ Alice.Keyboard = Class.create({
   },
 
   onCmdC: function(event) {
-    if (!this.activeWindow.input.focused)
-      this.activeWindow.input.cancelNextFocus();
+    this.application.input.cancelNextFocus();
   },
 
   onCtrlC: function(event) {
@@ -99,23 +98,23 @@ Alice.Keyboard = Class.create({
   },
   
   onOptUp: function() {
-    this.activeWindow.input.previousCommand();
+    this.application.input.previousCommand();
   },
   
   onOptDown: function() {
-    this.activeWindow.input.nextCommand();
+    this.appliaction.input.nextCommand();
   },
   
   onEnter: function() {
-    this.activeWindow.input.send();
+    this.application.input.send();
   },
   
   onTab: function() {
-    this.activeWindow.input.completeNickname();
+    this.appliaction.input.completeNickname();
   },
   
   onEsc: function() {
-    this.activeWindow.input.stopCompletion();
+    this.appliaction.input.stopCompletion();
   },
   
   enable: function() {
