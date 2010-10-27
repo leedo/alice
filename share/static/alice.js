@@ -10050,7 +10050,6 @@ Alice.Application = Class.create({
 
     this.isPhone = window.navigator.platform.match(/(android|iphone)/i) ? 1 : 0;
     this.isMobile = this.isPhone || Prototype.Browser.MobileSafari;
-    this.isJankyScroll = Prototype.Browser.Gecko || Prototype.Browser.IE;
     this.loadDelay = this.isMobile ? 3000 : 1000;
 
     this.input = new Alice.Input(this, "msg");
@@ -10786,11 +10785,6 @@ Alice.Window = Class.create({
       }
     });
 
-    if (this.application.isJankyScroll) {
-      this.resizeMessagearea();
-      this.scrollToBottom();
-    }
-
     if (this.active) this.scrollToBottom(true);
 
     setTimeout(function () {
@@ -10900,11 +10894,6 @@ Alice.Window = Class.create({
     this.tabOverflowButton.selected = true;
     this.markRead();
     this.scrollToBottom(true);
-
-    if (this.application.isJankyScroll) {
-      this.resizeMessagearea();
-      this.scrollToBottom();
-    }
 
     this.element.redraw();
     this.setWindowHash();
