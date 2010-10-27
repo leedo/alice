@@ -16,16 +16,11 @@ body {
   color: $default_text;
 }
 
-ul#tabs {
-  z-index: 20;
-}
-
 ul#tabs li:hover {
   cursor: default;
 }
 
 ul#controls {
-  z-index: 30;
   background: $tab_background;
 }
 
@@ -242,7 +237,8 @@ div#tab_container {
   bottom: 0px;
   left: 0px;
   right: 0px;
-  height: 52px;
+  z-index: 900;
+  height: 51px;
   background: $tab_background;
 }
 
@@ -311,8 +307,8 @@ ul#tabs li.active div.hit_area {
 }
 
 ul#tabs li.active {
-  height: 23px;
-  z-index: 21;
+  height: 24px;
+  z-index: 903;
 }
 
 ul#tabs li.active:hover div.hit_area {
@@ -452,7 +448,7 @@ li.event div.left span.timestamp {
 }
 
 ul.messages li.avatar:not(.consecutive) {
-  z-index: 900;
+  z-index: 800;
 }
 
 div.left img {
@@ -465,7 +461,7 @@ div.left img {
 
 div.left span.nickhint {
   position: absolute;
-  z-index: 901;
+  z-index: 801;
   right: 5px;
   top: 4px;
   padding: 0 2px;
@@ -782,7 +778,7 @@ ul#logresults span.metadata {
 
 div#help {
   position: absolute;
-  z-index: 999;
+  z-index: 980;
   background: rgba(0,0,0,0.8);
   color: #fff;
   left: 20px;
@@ -943,7 +939,7 @@ div.color_picker div.toggle span#bg.active {
     position: absolute;
     bottom: 2px;
     right: 0px;
-    z-index: 999;
+    z-index: 904;
   }
 
   div.msg.monospace, div.msg.announce {
@@ -958,7 +954,7 @@ div.config {
   left: 50%;
   background: $tab_background_active;
   padding-bottom: 29px;
-  z-index: 999;
+  z-index: 981;
   -webkit-box-shadow: 0 0 10px #000;
   -moz-box-shadow: 0 0 10px #000;
   box-shadow: 0 0 10px #000;
