@@ -307,7 +307,8 @@ div.topic {
   border-bottom: 1px solid #aaaaaa;
   padding: 1px 0;
   height: 1.2em;
-  overflow: hidden; }
+  overflow: hidden;
+  z-index: 901; }
 
 div.topic {
   text-decoration: none; }
