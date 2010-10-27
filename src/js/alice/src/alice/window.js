@@ -359,12 +359,12 @@ Alice.Window = Class.create({
       var lastmsg = this.messages.down('li:last-child');
       if (!lastmsg) return;
       var msgheight = lastmsg.offsetHeight; 
-      bottom = this.element.scrollTop + this.element.offsetHeight;
-      height = this.element.scrollHeight;
+      bottom = this.messages.scrollTop + this.element.offsetHeight;
+      height = this.messages.scrollHeight;
     }
 
     if (force || bottom + msgheight + 100 >= height) {
-      this.element.scrollTop = this.element.scrollHeight;
+      this.messages.scrollTop = this.messages.scrollHeight;
       this.element.redraw();
     }
   },

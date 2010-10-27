@@ -13,6 +13,7 @@ input[type="hidden"] {
 body {
   margin: 0;
   padding: 0;
+  overflow: hidden;
   color: white; }
 
 ul#tabs li:hover {
@@ -70,13 +71,11 @@ a:hover {
   text-shadow: rgba(255, 255, 255, 0.8) 0 1px 1px; }
 
 div.window {
-  position: fixed;
+  position: absolute;
   top: 0px;
   left: 0px;
   right: 0px;
-  bottom: 53px;
-  overflow-x: hidden;
-  overflow-y: auto;
+  bottom: 51px;
   background: #222222; }
 
 div#input {
@@ -206,7 +205,7 @@ div#input input.send {
   display: none; }
 
 div#tab_container {
-  position: fixed;
+  position: absolute;
   bottom: 0px;
   left: 0px;
   right: 0px;
@@ -280,7 +279,7 @@ ul#tabs li:hover div.hit_area {
   background: #3a3a3a; }
 
 ul#controls {
-  position: fixed;
+  position: absolute;
   bottom: 0px;
   right: 0px;
   height: 23px;
@@ -300,7 +299,10 @@ ul#controls > li:hover {
   background-color: #3a3a3a; }
 
 div.topic {
-  width: 100%;
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  right: 0px;
   background: #3a3a3a;
   font-size: 11px;
   text-align: center;
@@ -316,9 +318,15 @@ div.topic {
 ul.messages {
   list-style: none;
   margin: 0;
-  padding: 0;
-  overflow: hidden;
-  margin: 3px 0; }
+  padding: 3px 0;
+  margin: 0;
+  position: absolute;
+  overflow-x: hidden;
+  overflow-y: auto;
+  top: 17px;
+  bottom: 0px;
+  right: 0px;
+  left: 0px; }
 
 ul.messages > li {
   font-size: 13px;
@@ -595,72 +603,6 @@ ul#tabs li.highlight.channel_tab div.tab_button {
 
 ul#tabs li.disabled.channel_tab div.tab_button {
   background: url(image/sprites.png) 0 -60px no-repeat; }
-
-div#logsearch {
-  background: #eee;
-  border-bottom: 1px solid #999;
-  position: fixed;
-  top: 0px;
-  left: 0px;
-  right: 0px;
-  height: 28px;
-  padding: 5px 0 0 0; }
-
-div#logsearch label {
-  font-size: 0.7em;
-  padding-right: 2px;
-  padding-left: 10px;
-  color: #666; }
-
-div#logsearch form {
-  display: block;
-  margin: 0; }
-
-ul#logresults {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  position: absolute;
-  top: 34px;
-  bottom: 0px;
-  left: 0px;
-  right: 0px;
-  overflow: auto; }
-
-ul#logresults li {
-  border-bottom: 1px solid #eee;
-  padding: 0;
-  font-size: 0.8em;
-  cursor: pointer; }
-
-ul#logresults div.focus:hover {
-  background: #eee; }
-
-ul#logresults li div.focus {
-  background: #fff;
-  padding: 5px 10px; }
-
-ul#logresults li.context div.focus:hover {
-  background: #fff; }
-
-ul#logresults li.context ul {
-  margin: 0;
-  padding: 5px 10px;
-  list-style: none; }
-
-ul#logresults li.context ul li {
-  border: none;
-  margin: 0;
-  padding: 2px 0; }
-
-ul#logresults li.context {
-  border-top: 1px solid #999;
-  border-bottom: 1px solid #999;
-  background: url(image/shadow-bottom.png) bottom left repeat-x, url(image/shadow-top.png) top left repeat-x #eeeeee; }
-
-ul#logresults span.metadata {
-  font-size: 0.7em;
-  color: #666; }
 
 div#help {
   position: absolute;
