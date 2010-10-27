@@ -80,7 +80,6 @@ Alice.Connection.XHR = Class.create(Alice.Connection, {
       this.pings.shift();
 
     var lag = this.lag();
-    if (console.log) console.log((Math.round(lag * 10000) / 10) + "ms");
     return lag;
   },
 
