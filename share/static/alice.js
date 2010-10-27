@@ -10558,7 +10558,6 @@ Alice.Connection.WebSocket = Class.create(Alice.Connection, {
       params = form.serialize(true);
     }
 
-    console.log(params);
     this.request.send(Object.toJSON(params));
     return true;
   },
@@ -11070,12 +11069,12 @@ Alice.Window = Class.create({
       var lastmsg = this.messages.down('li:last-child');
       if (!lastmsg) return;
       var msgheight = lastmsg.offsetHeight;
-      bottom = this.element.scrollTop + this.element.offsetHeight;
-      height = this.element.scrollHeight;
+      bottom = this.messages.scrollTop + this.element.offsetHeight;
+      height = this.messages.scrollHeight;
     }
 
     if (force || bottom + msgheight + 100 >= height) {
-      this.element.scrollTop = this.element.scrollHeight;
+      this.messages.scrollTop = this.messages.scrollHeight;
       this.element.redraw();
     }
   },
@@ -11350,7 +11349,7 @@ Alice.Input = Class.create({
   completeNickname: function() {
     if (this.disabled) return;
     if (!this.completion) {
-      this.completion = new Alice.Completion(this.activeWindow().getNicknames());
+      this.completion = new Alice.Completion(this.application.activeWindow().getNicknames());
     }
 
     this.completion.next();
@@ -11513,7 +11512,7 @@ Alice.Keyboard = Class.create({
   },
 
   onCmdK: function() {
-    this.activeWindow.messages.down("ul").update("");
+    this.activeWindow.messages.update("");
     this.activeWindow.lastNick = "";
     this.application.connection.sendMessage({
       msg: "/clear",
@@ -11554,7 +11553,7 @@ Alice.Keyboard = Class.create({
   },
 
   onOptDown: function() {
-    this.appliaction.input.nextCommand();
+    this.applicaction.input.nextCommand();
   },
 
   onEnter: function() {
@@ -11562,11 +11561,11 @@ Alice.Keyboard = Class.create({
   },
 
   onTab: function() {
-    this.appliaction.input.completeNickname();
+    this.application.input.completeNickname();
   },
 
   onEsc: function() {
-    this.appliaction.input.stopCompletion();
+    this.application.input.stopCompletion();
   },
 
   enable: function() {

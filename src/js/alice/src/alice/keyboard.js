@@ -61,7 +61,7 @@ Alice.Keyboard = Class.create({
   },
 
   onCmdK: function() {
-    this.activeWindow.messages.down("ul").update("");
+    this.activeWindow.messages.update("");
     this.activeWindow.lastNick = "";
     this.application.connection.sendMessage({
       msg: "/clear",
@@ -102,7 +102,7 @@ Alice.Keyboard = Class.create({
   },
   
   onOptDown: function() {
-    this.appliaction.input.nextCommand();
+    this.applicaction.input.nextCommand();
   },
   
   onEnter: function() {
@@ -110,11 +110,11 @@ Alice.Keyboard = Class.create({
   },
   
   onTab: function() {
-    this.appliaction.input.completeNickname();
+    this.application.input.completeNickname();
   },
   
   onEsc: function() {
-    this.appliaction.input.stopCompletion();
+    this.application.input.stopCompletion();
   },
   
   enable: function() {
