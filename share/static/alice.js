@@ -9878,7 +9878,7 @@ Object.extend(Alice, {
 
     remove: function() {
       alice.windows().each(function(win) {
-        win.input.disabled = false;
+        alice.input.disabled = false;
       });
       $('prefs').remove();
     },
@@ -10010,7 +10010,7 @@ Object.extend(Alice, {
 
     remove: function() {
       alice.windows().each(function(win) {
-        win.input.disabled = false;
+        alice.input.disabled = false;
       });
       $('servers').remove();
     },
@@ -10137,7 +10137,7 @@ Alice.Application = Class.create({
 
   toggleConfig: function(e) {
     this.connection.getConfig(function (transport) {
-      alice.activeWindow().input.disabled = true;
+      this.input.disabled = true;
       $('container').insert(transport.responseText);
     }.bind(this));
 
@@ -10146,7 +10146,7 @@ Alice.Application = Class.create({
 
   togglePrefs: function(e) {
     this.connection.getPrefs(function (transport) {
-      alice.activeWindow().input.disabled = true;
+      this.input.disabled = true;
       $('container').insert(transport.responseText);
     }.bind(this));
 

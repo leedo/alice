@@ -139,7 +139,7 @@ Object.extend(Alice, {
 
     remove: function() {
       alice.windows().each(function(win) {
-        win.input.disabled = false;
+        alice.input.disabled = false;
       });
       $('prefs').remove();
     },
@@ -272,7 +272,7 @@ Object.extend(Alice, {
 
     remove: function() {
       alice.windows().each(function(win) {
-        win.input.disabled = false;
+        alice.input.disabled = false;
       });
       $('servers').remove();
     },

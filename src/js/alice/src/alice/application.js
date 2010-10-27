@@ -97,7 +97,7 @@ Alice.Application = Class.create({
 
   toggleConfig: function(e) {
     this.connection.getConfig(function (transport) {
-      alice.activeWindow().input.disabled = true;
+      this.input.disabled = true;
       $('container').insert(transport.responseText);
     }.bind(this));
     
@@ -106,7 +106,7 @@ Alice.Application = Class.create({
   
   togglePrefs: function(e) {
     this.connection.getPrefs(function (transport) {
-      alice.activeWindow().input.disabled = true;
+      this.input.disabled = true;
       $('container').insert(transport.responseText);
     }.bind(this));
     
