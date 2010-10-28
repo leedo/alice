@@ -9826,7 +9826,7 @@ Object.extend(Alice, {
     image.style.display = 'block';
     image.style.visibility = 'visible';
     setTimeout(function () {
-      var messagelist = image.up(".message_wrap");
+      var messagelist = image.up(".messages");
       messagelist.scrollTop = messagelist.scrollHeight;
     }, 50);
   },
@@ -10049,7 +10049,7 @@ Alice.Application = Class.create({
     this.keyboard = new Alice.Keyboard(this);
 
     this.isPhone = window.navigator.platform.match(/(android|iphone)/i) ? 1 : 0;
-    this.isMobile = this.isPhone || Prototype.Browser.MobileSafari;
+    this.isMobile = this.isPhone || Prototype.Browser.MobileSafari || Prototype.Browser.Gecko;
     this.loadDelay = this.isMobile ? 3000 : 1000;
 
     this.input = new Alice.Input(this, "msg");
@@ -10086,7 +10086,7 @@ Alice.Application = Class.create({
     clear: function (action) {
       var win = this.getWindow(action['window'].id);
       if (win) {
-        win.messages.down("ul").update("");
+        win.messages.update("");
         win.lastNick = "";
       }
     },
@@ -10936,19 +10936,6 @@ Alice.Window = Class.create({
     this.topic.innerHTML = this.topic.innerHTML.replace(/(https?:\/\/[^\s]+)/ig, '<a href="$1" target="_blank" rel="noreferrer">$1</a>');
   },
 
-  resizeMessagearea: function() {
-    var top = this.messages.up().cumulativeOffset().top;
-    var bottom = this.application.input.element.getHeight() + 14;
-    this.messages.setStyle({
-      position: 'absolute',
-      top: top+"px",
-      bottom: bottom + "px",
-      right: "0px",
-      left: "0px",
-      height: 'auto'
-    });
-  },
-
   showHappyAlert: function (message) {
     this.messages.insert(
       "<li class='event happynotice'><div class='msg'>"+message+"</div></li>"
@@ -11712,7 +11699,6 @@ if (window == window.parent) {
     });
 
 
-
     window.onkeydown = function (e) {
       if (!$('config') && !Alice.isSpecialKey(e.which))
         alice.input.focus();
@@ -11720,8 +11706,7 @@ if (window == window.parent) {
 
     window.onresize = function () {
       if (alice.activeWindow()) {
-        if (Prototype.Browser.Gecko) alice.activeWindow().resizeMessagearea();
-          alice.activeWindow().scrollToBottom();
+        alice.activeWindow().scrollToBottom();
       }
     };
 

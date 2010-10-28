@@ -46,7 +46,7 @@ Alice.Application = Class.create({
     clear: function (action) {
       var win = this.getWindow(action['window'].id);
       if (win) {
-        win.messages.down("ul").update("");
+        win.messages.update("");
         win.lastNick = "";
       }
     },
