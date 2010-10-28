@@ -11,7 +11,6 @@ use Plack::Session::Store::File;
 use App::Alice::Stream::XHR;
 use App::Alice::Stream::WebSocket;
 use App::Alice::Commands;
-use List::Util qw/max/;
 use JSON;
 use Encode;
 use utf8;
