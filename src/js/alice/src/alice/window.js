@@ -225,19 +225,6 @@ Alice.Window = Class.create({
     this.topic.innerHTML = this.topic.innerHTML.replace(/(https?:\/\/[^\s]+)/ig, '<a href="$1" target="_blank" rel="noreferrer">$1</a>');
   },
   
-  resizeMessagearea: function() {
-    var top = this.messages.up().cumulativeOffset().top;
-    var bottom = this.application.input.element.getHeight() + 14;
-    this.messages.setStyle({
-      position: 'absolute',
-      top: top+"px",
-      bottom: bottom + "px",
-      right: "0px",
-      left: "0px",
-      height: 'auto'
-    });
-  },
-  
   showHappyAlert: function (message) {
     this.messages.insert(
       "<li class='event happynotice'><div class='msg'>"+message+"</div></li>"

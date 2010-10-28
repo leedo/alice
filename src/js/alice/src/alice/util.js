@@ -87,7 +87,7 @@ Object.extend(Alice, {
     image.style.display = 'block';
     image.style.visibility = 'visible';
     setTimeout(function () {
-      var messagelist = image.up(".message_wrap");
+      var messagelist = image.up(".messages");
       messagelist.scrollTop = messagelist.scrollHeight;
     }, 50);
   },
