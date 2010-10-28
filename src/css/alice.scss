@@ -530,7 +530,7 @@ ul.messages li:first-child div.msg {
 
 /* so the last avatar doesn't hang off the edge */
 ul.messages li.avatar:not(.consecutive) div.msg {
-  min-height: 24px;
+  min-height: 35px;
 }
 ul.messages li.monospace.avatar:not(.consecutive) div.msg {
   min-height: 24px;
