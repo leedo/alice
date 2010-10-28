@@ -72,7 +72,6 @@ if (window == window.parent) {
       $$('li.dropdown.open').invoke("removeClassName", "open");
     });
 
-
     // setup window events
     
     window.onkeydown = function (e) {
@@ -82,8 +81,7 @@ if (window == window.parent) {
     
     window.onresize = function () {
       if (alice.activeWindow()) {
-        if (Prototype.Browser.Gecko) alice.activeWindow().resizeMessagearea();
-          alice.activeWindow().scrollToBottom();
+        alice.activeWindow().scrollToBottom();
       }
     };
     

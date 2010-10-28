@@ -35,8 +35,8 @@ ul#controls li {
 }
 
 ul#controls li.dropdown {
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
   border: none;
   padding: 0;
   margin: 0;
@@ -48,11 +48,11 @@ li.dropdown li.unread {
 }
 
 li#tab_menu {
-  background: url(image/sprites.png) 3px -174px no-repeat;
+  background: url(image/sprites.png) 4px -174px no-repeat;
 }
 
 li#tab_menu.unread {
-  background: url(image/sprites.png) 3px -194px no-repeat;
+  background: url(image/sprites.png) 4px -194px no-repeat;
 }
 
 li#tab_menu.unread.highlight {
@@ -60,7 +60,7 @@ li#tab_menu.unread.highlight {
 }
 
 li#config_menu {
-  background: url(image/sprites.png) 4px -216px no-repeat;
+  background: url(image/sprites.png) 5px -216px no-repeat;
 }
 
 li#connection_status.loading {
@@ -238,7 +238,8 @@ div#tab_container {
   left: 0px;
   right: 0px;
   z-index: 900;
-  height: 51px;
+  height: 52px;
+  overflow: hidden;
   background: $tab_background;
 }
 
@@ -252,9 +253,9 @@ ul#tabs {
   padding: 0;
   font-size: 11px;
   position: absolute;
-  bottom: 0px;
+  top: 28px;
   left: 3px;
-  right: 62px;
+  right: 72px;
 }
 
 body.blurred ul#tabs li {
@@ -284,7 +285,7 @@ ul#tabs li div.hit_area {
   border-top: none;
   float:left;
   height: 14px;
-  padding: 2px 10px 8px 4px;
+  padding: 3px 10px 8px 4px;
 }
 
 body.blurred ul#tabs li div.hit_area {
@@ -302,7 +303,7 @@ ul#tabs li.active div.hit_area {
   border-top: none;
   background: $tab_background_active;
   height: 11px;
-  padding-top: 3px;
+  padding-top: 4px;
   margin-top: -1px;
 }
 
@@ -323,7 +324,7 @@ ul#controls {
   position: absolute;
   bottom: 0px;
   right: 0px;
-  height: 23px;
+  height: 24px;
   margin: 0;
   padding: 0 2px 0 0;
   list-style: none;
@@ -529,7 +530,7 @@ ul.messages li:first-child div.msg {
 
 /* so the last avatar doesn't hang off the edge */
 ul.messages li.avatar:not(.consecutive) div.msg {
-  min-height: 35px;
+  min-height: 24px;
 }
 ul.messages li.monospace.avatar:not(.consecutive) div.msg {
   min-height: 24px;
@@ -850,10 +851,11 @@ div.color_picker div.toggle span#bg.active {
 @media screen and (max-device-width: 480px) {
   div.left {
     width: 40px !important;
+    padding-right: 0px !important;
   }
 
   div.msg {
-    margin-left: 52px !important;
+    margin-left: 44px !important;
   }
 
   div.topic {
@@ -1110,7 +1112,7 @@ ul#controls li.dropdown.open {
 
 li.dropdown ul {
   position: absolute;
-  bottom: 26px;
+  bottom: 30px;
   right: 0px;
   list-style: none;
   margin: 0;
@@ -1130,7 +1132,7 @@ li.dropdown.open ul {
 
 li.dropdown ul li a {
   display: block;
-  padding: 3px 4px;
+  padding: 4px 5px;
   text-decoration: none;
   color: $tab_text;
 }
