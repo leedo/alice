@@ -101,6 +101,7 @@ div#input {
   bottom: 23px;
   left: 0px;
   right: 0px;
+  z-index: 900;
 }
 
 body.blurred div#input {
@@ -232,7 +233,7 @@ div#input input.send {
   display: none;
 }
 
-body.blurred div#tab_container {
+body.blurred ul#tabs {
   background: $tab_background_blurred;
 }
 
