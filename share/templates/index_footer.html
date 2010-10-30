@@ -21,6 +21,38 @@
           });
         </script>
       </div>
+      <ul id="controls">
+        <li id="connection_status" class="ok"></li>
+        <li class="dropdown" id="config_menu">
+          <ul>
+            <? if ($app->auth_enabled) { ?>
+            <li><a href="/logout">Logout</a></li>
+            <? } ?>
+            <li><a href="javascript:alice.toggleHelp()">Help</a></li>
+            <li><a href="javascript:alice.togglePrefs()">Preferences</a></li>
+            <li><a href="javascript:alice.toggleConfig()">Connections</a></li>
+          </ul>
+        </li>
+        <li class="dropdown" id="tab_menu">
+          <ul>
+            <? for my $window (@windows) { ?>
+              <?= $_mt->render_file('select.html', $_[0], $window); ?>
+            <? } ?>
+          </ul>
+        </li>
+      </ul>
+      <ul id="tabs">
+        <? for my $window (@windows) { ?>
+          <?= $_mt->render_file('tab.html', $_[0], $window) ?>
+        <? } ?>
+      </ul>
+      <div id="input">
+        <form autocomplete="off">
+          <input type="hidden" value="" name="source" id="source" />
+          <div class="textarea_wrap"><textarea name="msg" id="msg" rows="1" autocapitalize="off"></textarea></div>
+          <input type="submit" id="submit" class="send" value="Send">
+        </form>
+      </div>
     </div>
     <?= $_mt->render_file('help.html', $_[0]) ?>
   </body>

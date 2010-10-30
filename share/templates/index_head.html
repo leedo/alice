@@ -16,38 +16,4 @@
   <body>
     <img style="position:absolute;top:-100px;left:-100px" src="<?= $app->static_url("image/sprites.png") ?>" />
     <div id="container">
-      <ul id="controls">
-        <li id="connection_status" class="ok"></li>
-        <li class="dropdown" id="config_menu">
-          <ul>
-            <? if ($app->auth_enabled) { ?>
-            <li><a href="/logout">Logout</a></li>
-            <? } ?>
-            <li><a href="javascript:alice.toggleHelp()">Help</a></li>
-            <li><a href="javascript:alice.togglePrefs()">Preferences</a></li>
-            <li><a href="javascript:alice.toggleConfig()">Connections</a></li>
-          </ul>
-        </li>
-        <li class="dropdown" id="tab_menu">
-          <ul>
-            <? for my $window (@windows) { ?>
-              <?= $_mt->render_file('select.html', $_[0], $window); ?>
-            <? } ?>
-          </ul>
-        </li>
-      </ul>
-      <div id="tab_container">
-        <div id="input">
-          <form autocomplete="off">
-            <input type="hidden" value="" name="source" id="source" />
-            <div class="textarea_wrap"><textarea name="msg" id="msg" rows="1" autocapitalize="off"></textarea></div>
-            <input type="submit" id="submit" class="send" value="Send">
-          </form>
-        </div>
-        <ul id="tabs">
-          <? for my $window (@windows) { ?>
-            <?= $_mt->render_file('tab.html', $_[0], $window) ?>
-          <? } ?>
-        </ul>
-      </div>
       <div id="windows">
