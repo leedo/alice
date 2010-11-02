@@ -85,7 +85,8 @@ div#input {
   position: absolute;
   bottom: 23px;
   left: 0px;
-  right: 0px; }
+  right: 0px;
+  z-index: 900; }
 
 body.blurred div#input {
   border-bottom: 1px solid #111111; }
@@ -204,7 +205,7 @@ div.editor img {
 div#input input.send {
   display: none; }
 
-body.blurred div#tab_container {
+body.blurred ul#tabs {
   background: #333333; }
 
 ul#tabs {
@@ -676,7 +677,7 @@ div#help dd {
 div.color_picker {
   position: absolute;
   right: 25px;
-  bottom: 27px;
+  bottom: 50px;
   width: 80px;
   border-bottom: none;
   margin: 0;
