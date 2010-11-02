@@ -65,6 +65,13 @@ Alice.Connection.WebSocket = Class.create(Alice.Connection, {
       this.changeStatus("ok");
   },
 
-
+  requestWindow: function(title, windowId, message) {
+    this.sendMessage({source: windowId, msg: "/create " + title});
+    if (message) {
+      setTimeout(function() {
+        this.application.displayMessage(message) 
+      }.bind(this), 1000);
+    }
+  }
 
 });

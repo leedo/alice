@@ -10468,22 +10468,6 @@ Alice.Connection = {
     }
   },
 
-  requestWindow: function(title, windowId, message) {
-    new Ajax.Request('/say', {
-      method: 'post',
-      parameters: {source: windowId, msg: "/create " + title},
-      on401: this.gotoLogin,
-      onSuccess: function (transport) {
-        this.handleUpdate(transport);
-        if (message) {
-          setTimeout(function() {
-            this.application.displayMessage(message)
-          }.bind(this), 1000);
-        }
-      }.bind(this)
-    });
-  },
-
   getConfig: function(callback) {
     new Ajax.Request('/config', {
       method: 'get',
@@ -10583,7 +10567,14 @@ Alice.Connection.WebSocket = Class.create(Alice.Connection, {
       this.changeStatus("ok");
   },
 
-
+  requestWindow: function(title, windowId, message) {
+    this.sendMessage({source: windowId, msg: "/create " + title});
+    if (message) {
+      setTimeout(function() {
+        this.application.displayMessage(message)
+      }.bind(this), 1000);
+    }
+  }
 
 });
 Alice.Connection.XHR = Class.create(Alice.Connection, {
@@ -10711,6 +10702,22 @@ Alice.Connection.XHR = Class.create(Alice.Connection, {
       method: 'post',
       on401: this.gotoLogin,
       parameters: {source: win.id, msg: "/close"}
+    });
+  },
+
+  requestWindow: function(title, windowId, message) {
+    new Ajax.Request('/say', {
+      method: 'post',
+      parameters: {source: windowId, msg: "/create " + title},
+      on401: this.gotoLogin,
+      onSuccess: function (transport) {
+        this.handleUpdate(transport);
+        if (message) {
+          setTimeout(function() {
+            this.application.displayMessage(message)
+          }.bind(this), 1000);
+        }
+      }.bind(this)
     });
   }
 

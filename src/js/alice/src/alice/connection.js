@@ -70,22 +70,6 @@ Alice.Connection = {
     }
   },
 
-  requestWindow: function(title, windowId, message) {
-    new Ajax.Request('/say', {
-      method: 'post',
-      parameters: {source: windowId, msg: "/create " + title},
-      on401: this.gotoLogin,
-      onSuccess: function (transport) {
-        this.handleUpdate(transport);
-        if (message) {
-          setTimeout(function() {
-            this.application.displayMessage(message) 
-          }.bind(this), 1000);
-        }
-      }.bind(this)
-    });
-  },
-  
   getConfig: function(callback) {
     new Ajax.Request('/config', {
       method: 'get',
