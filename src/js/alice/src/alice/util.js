@@ -53,7 +53,7 @@ Object.extend(Alice, {
         );
 
         popup.ondisplay = function() {
-          setTimeout(function () {popup.cancel();}, 3000);
+          setTimeout(function () {popup.cancel();}, 5000);
         };
 
         popup.show();
