@@ -493,7 +493,7 @@ sub remove_nick_channel {
 sub remove_channel {
   my ($self, $channel) = @_;
   for my $info ($self->all_nick_info) {
-    $_->[2] = [ grep {$_ ne $channel} @{$_->[2]} ]
+    $info->[2] = [ grep {$_ ne $channel} @{$info->[2]} ]
   }
 }
 
