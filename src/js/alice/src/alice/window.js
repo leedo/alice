@@ -48,7 +48,12 @@ Alice.Window = Class.create({
     this.tab.observe("click", function(e) {this.focusing = false}.bind(this));
 
     this.tabButton.observe("click", function(e) {
-      if (this.active && !this.focusing) this.close()}.bind(this));
+      if (this.active && !this.focusing) 
+        if (this.application.isPhone && confirm("Are you sure you want to close this tab?"))
+          this.close()
+        else
+          this.close()
+    }.bind(this));
 
     this.messages.observe("mouseover", this.showNick.bind(this));
   },
