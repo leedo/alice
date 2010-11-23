@@ -1,15 +1,9 @@
 ? my ($app, $window) = @_;
 
 <div class="window<?= $window->{active} ? " active" : "" ?> <?= $window->type ?>" id="<?= $window->id ?>">
-  <table cellspacing="0" cellpadding="0">
+  <div class="topic" id="<?= $window->id ?>_topic">
     <? if ($window->type eq "channel") { ?>
-    <tr class="topic">
-      <td>
-        <div class="topic" id="<?= $window->id ?>_topic"><?= $window->topic->{string} ?></div>
-      </td>
-    </tr>
+      <?= $window->topic->{string} ?>
     <? } ?>
-    <tr>
-      <td valign="top">
-        <div class="message_wrap">
-          <ul class="messages" id="<?= $window->id ?>_messages">
+  </div>
+  <ul class="messages" id="<?= $window->id ?>_messages">

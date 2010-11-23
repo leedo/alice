@@ -27,6 +27,18 @@
     <? my $connection = $connections[$index]; ?>
     <? my $alias = $connection->alias; ?>
 
+? my ($action, $status);
+? if ($connection->is_connected) {
+?   $status = "connected";
+?   $action = "disconnect";
+? } elsif ($connection->reconnect_timer) {
+?   $status = "reconnecting";
+?   $action = "disconnect";
+? } else {
+?   $status = "disconnected";
+?   $action = "connect";
+? }
+
     <div class="setting<? if ($index == 0) {?> active<?}?>" id="setting_<?= $alias ?>">
 
       <div class="field" style="width:138px">
@@ -37,7 +49,6 @@
 
       <div class="field" style="width:150px;margin-right:0">
         <label>Status</label>
-        <? my $status = $connection->is_connected ? "connected" : "disconnected" ?>
         <span class="<?= $status ?>" id="<?= $alias ?>_status"><?= $status ?></span>
       </div>
 
@@ -47,7 +58,6 @@
       </div>
 
       <div class="field">
-        <? my $action = $connection->is_connected ? "disconnect" : "connect" ?>
         <button id="<?= $alias ?>_connection" onclick="return Alice.connections.serverConnection('<?= $connection->alias ?>', '<?= $action ?>')">
           <?= $action ?>
         </button>

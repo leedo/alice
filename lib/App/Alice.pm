@@ -14,7 +14,9 @@ use File::Copy;
 use Digest::MD5 qw/md5_hex/;
 use List::Util qw/first/;
 use List::MoreUtils qw/any none/;
+use IRC::Formatting::HTML qw/html_to_irc/;
 use Try::Tiny;
+use JSON;
 use Encode;
 
 our $VERSION = '0.19';
@@ -60,7 +62,7 @@ has httpd => (
 
 has streams => (
   is      => 'rw',
-  isa     => 'ArrayRef[App::Alice::Stream]',
+  isa     => 'ArrayRef',
   default => sub {[]},
 );
 
@@ -87,8 +89,6 @@ has history => (
     App::Alice::History->new(dbfile => $config);
   },
 );
-
-has 'ping_timer' => (is  => 'rw');
 
 sub store {
   my ($self, @args) = @_;
@@ -121,18 +121,6 @@ sub has_window {$_[0]->get_window($_[1])}
 sub get_window {first {$_->id eq $_[1]} $_[0]->windows}
 sub remove_window {$_[0]->_windows([grep {$_->id ne $_[1]} $_[0]->windows])}
 sub window_ids {map {$_->id} $_[0]->windows}
-
-sub remove_windows {
-  my ($self, @windows) = @_;
-  return unless @windows;
-
-  my @ids = map {$_->id} @windows;
-
-  $self->_windows([
-    grep {my $id = $_->id; none {$id eq $_} @ids} $self->windows
-  ]);
-
-}
 
 has 'template' => (
   is => 'ro',
@@ -206,7 +194,6 @@ sub run {
     $self->info_window;
     $self->template;
     $self->httpd;
-    $self->ping;
 
     print STDERR "Location: http://".$self->config->http_address.":".$self->config->http_port."/\n"
       if $self->standalone;
@@ -277,11 +264,6 @@ sub _shutdown {
   
   delete $self->{shutdown_timer} if $self->{shutdown_timer};
   $self->{on_shutdown}->() if $self->{on_shutdown};
-}
-
-sub handle_command {
-  my ($self, $command, $window) = @_;
-  $self->commands->handle($self, $command, $window);
 }
 
 sub reload_commands {
@@ -421,18 +403,67 @@ sub format_info {
 
 sub broadcast {
   my ($self, @messages) = @_;
-
   return if $self->no_streams or !@messages;
-
-  my $purge = 0;
   for my $stream (@{$self->streams}) {
-    if ($stream->closed) {
-      $purge = 1;
-      next;
-    }
     $stream->send(\@messages);
   }
-  $self->purge_disconnects if $purge;
+}
+
+sub ping {
+  my $self = shift;
+  return if $self->no_streams;
+  $_->ping for grep {$_->is_xhr} @{$self->streams};
+}
+
+sub update_stream {
+  my ($self, $stream, $params) = @_;
+
+  my $min = $params->{msgid} || 0;
+  my $limit = $params->{limit} || 100;
+
+  $self->log(debug => "sending stream update");
+
+  my @windows = $self->windows;
+
+  if (my $id = $params->{tab}) {
+    if (my $active = $self->get_window($id)) {
+      @windows = grep {$_->id ne $id} @windows;
+      unshift @windows, $active;
+    }
+  }
+
+  for my $window (@windows) {
+    $self->log(debug => "updating stream from $min for ".$window->title);
+    $window->buffer->messages($limit, $min, sub {
+      my $msgs = shift;
+      return unless @$msgs;
+      $stream->send([{
+        window => $window->serialized,
+        type   => "chunk",
+        nicks  => $window->all_nicks,
+        html   => join "", map {$_->{html}} @$msgs,
+      }]); 
+    });
+  }
+}
+
+sub handle_message {
+  my ($self, $message) = @_;
+
+  my $msg  = $message->{msg};
+  utf8::decode($msg) unless utf8::is_utf8($msg);
+  $msg = html_to_irc($msg) if $message->{html};
+
+  if (my $window = $self->get_window($message->{source})) {
+    for (split /\n/, $msg) {
+      eval {
+        $self->commands->handle($self, $_, $window) if length $_;
+      };
+      if ($@) {
+        warn $@;
+      }
+    }
+  }
 }
 
 sub send_highlight {
@@ -490,16 +521,6 @@ sub static_url {
   return $self->config->static_prefix . $file;
 }
 
-sub ping {
-  my $self = shift;
-  $self->ping_timer(AE::timer 1, 10, sub {
-    $self->broadcast({
-      type => "action",
-      event => "ping",
-    });
-  });
-}
-
 sub auth_enabled {
   my $self = shift;
 
@@ -525,5 +546,115 @@ sub authenticate {
   return 1;
 }
 
+sub set_away {
+  my ($self, $message) = @_;
+  my @args = (defined $message ? (AWAY => $message) : "AWAY");
+  $_->send_srv(@args) for $self->connected_ircs;
+}
+
 __PACKAGE__->meta->make_immutable;
 1;
+
+=pod
+
+=head1 NAME
+
+App::Alice - an Altogether Lovely Internet Chatting Experience
+
+=head1 SYNPOSIS
+
+    my $app = App::Alice->new;
+    $app->run;
+
+=head1 DESCRIPTION
+
+This is an overview of the App::Alice class. If you are curious
+about running and/or using alice please read the L<App::Alice::Readme>.
+
+=head2 CONSTRUCTOR
+
+=over 4
+
+=item App::Alice->new(%options)
+
+App::Alice's contructor takes these options:
+
+=item standalone => Boolean
+
+If this is false App::Alice will not create a AE::cv and wait. That means
+if you do not create your own the program will exit immediately.
+
+=item user => $username
+
+This can be a unique name for this App::Alice instance, if none is
+provided it will simply use $ENV{USER}.
+
+=back
+
+=head2 METHODS
+
+=over 4
+
+=item run
+
+This will start the App::Alice. It will start up the HTTP server and
+begin connecting to IRC servers that are set to autoconnect.
+
+=item handle_command ($command_string, $window)
+
+Take a string and matches it to the correct action as defined by
+L<App::Alice::Command>. A source L<App::Alice::Window> must also
+be provided.
+
+=item find_window ($title, $connection)
+
+Takes a window title and App::Alice::IRC object. It will attempt
+to find a matching window and return undef if none is found.
+
+=item alert ($alertstring)
+
+Send a message to all connected clients. It will show up as a red
+line in their currently focused window.
+
+=item create_window ($title, $connection)
+
+This will create a new L<App::Alice::Window> object associated
+with the provided L<App::Alice::IRC> object.
+
+=item find_or_create_window ($title, $connection)
+
+This will attempt to find an existing window with the provided
+title and connection. If no window is found it will create
+a new one.
+
+=item windows
+
+Returns a list of all the L<App::Alice::Window>s.
+
+=item sorted_windows
+
+Returns a list of L<App::Alice::Windows> sorted in the order
+defined by the user's config.
+
+=item close_window ($window)
+
+Takes an L<App::Alice::Window> object to be closed. It will
+part if it is a channel and send the required messages to the
+client to close the tab.
+
+=item ircs
+
+Returns a list of all the L<App::Alice::IRC>s.
+
+=item connected_ircs
+
+Returns a list of all the connected L<App::Alice::IRC>s.
+
+=item config
+
+Returns this instance's L<App::Alice::Config> object.
+
+=back
+
+=cut
+

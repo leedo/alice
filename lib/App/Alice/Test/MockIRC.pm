@@ -104,5 +104,10 @@ sub reg_cb {
   }
 }
 
+sub is_channel_name {
+  my ($self, $name) = @_;
+  return $name =~ /^[#&]/;
+}
+
 __PACKAGE__->meta->make_immutable;
 1;

@@ -46,3 +46,7 @@ $tab_border_active: #222;
 $tab_border_blurred: #111;
 $tab_text: #fff;;
 $tab_text_blurred: #ccc;
+
+tr.input, div.msg {
+  -webkit-font-smoothing: antialiased;
+}

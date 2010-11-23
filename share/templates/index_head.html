@@ -16,32 +16,4 @@
   <body>
     <img style="position:absolute;top:-100px;left:-100px" src="<?= $app->static_url("image/sprites.png") ?>" />
     <div id="container">
-      <ul id="controls">
-        <li id="config_button">
-          <select class="select_overlay" id="config_overlay">
-            <option value="Logs">Logs</option>
-            <option value="Preferences">Preferences</option>
-            <option value="Connections">Connections</option>
-            <option value="Help">Help</option>
-            <? if ($app->auth_enabled) { ?>
-            <option disabled>──────</option>
-            <option value="Logout">Logout</option>
-            <? } ?>
-          </select>
-        </li>
-        <li id="tab_overflow_button">
-          <select class="select_overlay" id="tab_overflow_overlay">
-            <? for my $window (@windows) { ?>
-              <?= $_mt->render_file('select.html', $_[0], $window); ?>
-            <? } ?>
-          </select>
-        </li>
-      </ul>
-      <div id="tab_container">
-        <ul id="tabs">
-          <? for my $window (@windows) { ?>
-            <?= $_mt->render_file('tab.html', $_[0], $window) ?>
-          <? } ?>
-        </ul>
-      </div>
       <div id="windows">
