@@ -286,6 +286,23 @@ my $commands = [
     }
   },
   {
+    name => 'away',
+    re => qr{^/away(?:\s+(.+))?},
+    eg => "/AWAY [<message>]",
+    desc => "Set or remove an away message",
+    code => sub {
+      my ($self, $app, $window, $message) = @_;
+      if ($message) {
+        $window->reply("Setting away status: $message");
+      }
+      else {
+        $window->reply("Removing away status");
+      }
+
+      $app->set_away($message);
+    }
+  },
+  {
     name => 'help',
     re => qr{^/help(?:\s+(\S+))?},
     code => sub {

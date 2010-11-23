@@ -37,7 +37,7 @@ sub add {
   $trim{$self->{id}} = 1;
 
   if (!$insert_t) {
-    $insert_t = AE::timer 1, 0, sub {_handle_insert()};
+    $insert_t = AE::timer 1, 0, \&_handle_insert;
   }
 }
 
@@ -54,7 +54,7 @@ sub _handle_insert {
   };
   
   if (!$trim_t) {
-    $trim_t = AE::timer 60, 0, sub {_handle_trim()};
+    $trim_t = AE::timer 60, 0, \&_handle_trim;
   }
 }
 
@@ -76,11 +76,11 @@ sub _handle_trim {
 sub _trim {
   my $window_id = shift;
   $dbi->exec(
-    "SELECT msgid FROM window_buffer WHERE window_id=? ORDER BY msgid DESC LIMIT 100",
+    "SELECT msgid FROM window_buffer WHERE window_id=? ORDER BY msgid DESC LIMIT 100,1",
     $window_id, sub {
       my $rows = $_[1];
       if (@$rows) {
-        my $minid = $rows->[-1][0];
+        my $minid = $rows->[0][0];
         $dbi->exec(
           "DELETE FROM window_buffer WHERE window_id=? AND msgid < ?",
           $window_id, $minid, sub{}

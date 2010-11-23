@@ -110,6 +110,9 @@ sub BUILD {
     connect        => sub{$self->connected(@_)},
     disconnect     => sub{$self->disconnected(@_)},
     irc_001        => sub{$self->log_message($_[1])},
+    irc_301        => sub{$self->irc_301(@_)}, # AWAY message
+    irc_305        => sub{$self->log_message($_[1])}, # AWAY
+    irc_306        => sub{$self->log_message($_[1])}, # not AWAY
     irc_352        => sub{$self->irc_352(@_)}, # WHO info
     irc_311        => sub{$self->irc_311(@_)}, # WHOIS info
     irc_312        => sub{$self->irc_312(@_)}, # WHOIS server
@@ -388,9 +391,6 @@ sub disconnect {
 
   $self->disabled(1);
 
-  #$self->app->remove_windows($self->windows)
-  #  unless $self->app->shutting_down;
-
   $self->log(debug => "disconnecting: $msg") if $msg;
   $self->send_srv(QUIT => $msg);
 
@@ -493,7 +493,7 @@ sub remove_nick_channel {
 sub remove_channel {
   my ($self, $channel) = @_;
   for my $info ($self->all_nick_info) {
-    $_->[2] = [ grep {$_ ne $channel} @{$_->[2]} ]
+    $info->[2] = [ grep {$_ ne $channel} @{$info->[2]} ]
   }
 }
 
@@ -596,6 +596,18 @@ sub nick_windows {
       @channels
   }
   return ();
+}
+
+sub irc_301 {
+  my ($self, $cl, $msg) = @_;
+
+  my ($from, $awaymsg) = @{$msg->{params}};
+  utf8::decode($_) for ($from, $awaymsg);
+
+  if (my $window = $self->find_window($from)) {
+    $awaymsg = "$from is away ($awaymsg)";
+    $window->reply($awaymsg);
+  }
 }
 
 sub irc_319 {
@@ -763,5 +775,139 @@ sub update_realname {
   }
 }
 
+sub is_channel {
+  my ($self, $channel) = @_;
+  return $self->cl->is_channel_name($channel);
+}
+
 __PACKAGE__->meta->make_immutable;
 1;
+
+=pod
+
+=head1 NAME
+
+App::Alice::IRC - an Altogether Lovely Internet Chatting Experience
+
+=head2 METHODS
+
+=over 4
+
+=item $irc->connect
+
+Connect to the server. This will not force a reconnect if already
+connected.
+
+
+=item $irc->disconnect
+
+=item $irc->disconnect ($quitmsg)
+
+Sends QUIT with an optional $quitmsg to the server and disconnects.
+
+
+=item $irc->reconnect
+=item $irc->reconnect ($seconds)
+
+Reconnects to the IRC server with an optional $second delay. It will
+continue attempting to reconnect until it succeeds, increasing the
+delay by 15 seconds each time (maxing out at 5 minutes).
+
+
+=item $irc->alias
+
+A short name used to describe this server.
+
+
+=item $irc->is_connected
+
+Returns true if connected to the server.
+
+
+=item $irc->get_nick_info ($nick)
+
+Get WHOIS related information about $nick.
+
+
+=item $irc->send_srv ($cmd, @params)
+
+Send the command to the server and format any parameters.
+
+
+=item $irc->send_raw ($line)
+
+Send the $line as-is to the server.
+
+
+=item $irc->log ($text, %options)
+
+=item $irc->log ([$text, $text, ... $text], %options)
+
+Takes one or more lines to log and an options hash. This lines
+will be sent to the client and printed in the "info" tab.
+
+
+=item $irc->window ($title)
+
+Returns an App::Alice::Window for this server using $title.
+If one already exists it will be returned, otherwise a new
+Window will be created.
+
+
+=item $irc->find_window ($title)
+
+Find an App::Alice::Window from this server by $title.
+
+
+=item $irc->nick
+
+The nick being used on this server.
+
+
+=item $irc->windows
+
+Returns a list of App::Alice::Windows for this server.
+
+
+=item $irc->channels
+
+Returns a list of channel names currently joined for this server.
+
+
+=item $irc->is_channel ($channelname)
+
+This will return a true value if $channelname is a valid channel name
+on this server (e.g. starts with #). This uses the CHANTYPES list
+provided by the server's ISUPPORT line.
+
+
+=item $irc->channel_nicks  ($channelname)
+
+Returns a list of nicks that are in the given $channelname.
+
+
+=item $irc->nick_channels ($nick)
+
+Returns a list of channel names that $nick is in.
+
+
+=item $irc->nick_windows ($nick)
+
+Returns a list of App::Alice::Windows that $nick is in.
+
+
+=item $irc->nick_avatar ($nick)
+
+Returns the avatar (image URL) for $nick, or undef if there is no avatar. 
+
+
+=item $irc->update_realname ($new_realname)
+
+Update this connection's REALNAME, which will tchange your avatar
+for other alice users. Sends a REALNAME command to the server.
+This command is only understood by the hector IRC server, and
+will be ignored by others.
+
+=back
+
+=cut

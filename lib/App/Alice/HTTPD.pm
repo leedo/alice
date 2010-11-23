@@ -8,34 +8,44 @@ use Plack::Request;
 use Plack::Builder;
 use Plack::Middleware::Static;
 use Plack::Session::Store::File;
-use IRC::Formatting::HTML qw/html_to_irc/;
-use App::Alice::Stream;
+use App::Alice::Stream::XHR;
+use App::Alice::Stream::WebSocket;
 use App::Alice::Commands;
-use List::Util qw/max/;
 use JSON;
 use Encode;
 use utf8;
 use Any::Moose;
 
-has 'app' => (
+has app => (
   is  => 'ro',
   isa => 'App::Alice',
   required => 1,
 );
 
-has 'httpd' => (
+has httpd => (
   is  => 'rw',
   lazy => 1,
   builder => "_build_httpd",
+);
+
+has ping => (
+  is  => 'rw',
+  lazy => 1,
+  default => sub {
+    my $self = shift;
+    AE::timer 1, 5, sub {
+      $self->app->ping;
+    };
+  },
 );
 
 sub config {$_[0]->app->config}
 
 my $url_handlers = [
   [ "say"          => "handle_message" ],
-  [ "stream"       => "setup_stream" ],
+  [ "stream"       => "setup_xhr_stream" ],
+  [ "wsstream"     => "setup_ws_stream" ],
   [ ""             => "send_index" ],
-  [ "messages"     => "window_messages" ],
   [ "config"       => "send_config" ],
   [ "prefs"        => "send_prefs" ],
   [ "serverconfig" => "server_config" ],
@@ -43,11 +53,7 @@ my $url_handlers = [
   [ "tabs"         => "tab_order" ],
   [ "login"        => "login" ],
   [ "logout"       => "logout" ],
-  [ "logs"         => "send_logs" ],
-  [ "search"       => "send_search" ],
-  [ "range"        => "send_range" ],
   [ "view"         => "send_index" ],
-  [ "get"          => "image_proxy" ],
 ];
 
 sub url_handlers { return $url_handlers }
@@ -57,6 +63,7 @@ my $ok = sub{ [200, ["Content-Type", "text/plain", "Content-Length", 2], ['ok']]
 sub BUILD {
   my $self = shift;
   $self->httpd;
+  $self->ping;
 }
 
 sub _build_httpd {
@@ -75,6 +82,7 @@ sub _build_httpd {
           expires => "24h";
       }
       enable "Static", path => qr{^/static/}, root => $self->config->assetdir;
+      enable "WebSocket";
       sub {$self->dispatch(shift)}
     }
   );
@@ -142,7 +150,6 @@ sub login {
 sub logout {
   my ($self, $req) = @_;
   $_->close for @{$self->app->streams};
-  $self->app->purge_disconnects;
   my $res = $req->new_response;
   if (!$self->auth_enabled) {
     $res->redirect("/");
@@ -159,74 +166,64 @@ sub shutdown {
   $self->httpd(undef);
 }
 
-sub image_proxy {
-  my ($self, $req) = @_;
-  my $url = $req->request_uri;
-  $url =~ s/^\/get\///;
-  return sub {
-    my $respond = shift;
-    http_get $url, sub {
-      my ($data, $headers) = @_;
-      my $res = $req->new_response($headers->{Status});
-      $res->headers($headers);
-      $res->body($data);
-      $respond->($res->finalize);
-    };
-  }
-}
-
-sub setup_stream {
+sub setup_xhr_stream {
   my ($self, $req) = @_;
   my $app = $self->app;
   $app->log(info => "opening new stream");
 
-  my $min = $req->parameters->{msgid} || 0;
-  my $limit = $req->parameters->{limit} || 100;
-
   return sub {
     my $respond = shift;
 
-    my $writer = $respond->([200, [@App::Alice::Stream::headers]]);
-    my $stream = App::Alice::Stream->new(
+    my $writer = $respond->([200, [@App::Alice::Stream::XHR::headers]]);
+    my $stream = App::Alice::Stream::XHR->new(
       queue      => [ map({$_->join_action} $app->windows) ],
       writer     => $writer,
       start_time => $req->parameters->{t},
       # android requires 4K updates to trigger loading event
       min_bytes  => $req->user_agent =~ /android/i ? 4096 : 0,
+      on_error => sub { $app->purge_disconnects },
     );
 
     $app->add_stream($stream);
-
-    for my $window ($app->windows) {
-      $window->buffer->messages($limit, $min, sub {
-        my $msgs = shift;
-        return unless @$msgs;
-        my $idle_w; $idle_w = AE::idle sub {
-          $stream->send($msgs); 
-          undef $idle_w;
-        };
-      });
-    };
+    $app->update_stream($stream, $req->parameters);
   }
+}
+
+sub setup_ws_stream {
+  my ($self, $req) = @_;
+  my $app = $self->app;
+  $app->log(info => "opening new websocket stream");
+
+  return sub {
+    my $respond = shift;
+
+    if (my $fh = $req->env->{'websocket.impl'}->handshake) {
+      my $stream = App::Alice::Stream::WebSocket->new(
+        start_time => $req->parameters->{t} || time,
+        fh      => $fh,
+        on_read => sub { $app->handle_message(@_) },
+        on_error => sub { $app->purge_disconnects },
+      );
+      $stream->send([ map({$_->join_action} $app->windows) ]);
+      $app->add_stream($stream);
+      $app->update_stream($stream, $req->parameters);
+    }
+    else {
+      my $code = $req->env->{'websocket.impl'}->error_code;
+      $respond->([$code, ["Content-Type", "text/plain"], ["something broke"]]);
+    }
+  };
 }
 
 sub handle_message {
   my ($self, $req) = @_;
-  my $msg  = $req->parameters->{msg};
-  utf8::decode($msg) unless utf8::is_utf8($msg);
-  $msg = html_to_irc($msg) if $req->parameters->{html};
-  my $source = $req->parameters->{source};
+
+  $self->app->handle_message({
+    msg    => $req->parameters->{msg},
+    html   => $req->parameters->{html},
+    source => $req->parameters->{source}
+  });
   
-  if (my $window = $self->app->get_window($source)) {
-    for (split /\n/, $msg) {
-      eval {
-        $self->app->handle_command($_, $window) if length $_;
-      };
-      if ($@) {
-        $self->app->log(info => $@);
-      }
-    }
-  }
   return $ok->();
 }
 
@@ -266,50 +263,6 @@ sub send_index {
   }
 }
 
-sub window_messages {
-  my ($self, $req) = @_;
-  my $app = $self->app;
-
-  return sub {
-    my $respond = shift;
-
-    my $source = $req->parameters->{source};
-    if (my $window = $app->get_window($source)) {
-      my $limit = $req->parameters->{limit} || 100;
-      my $msgid = $req->parameters->{msgid} || 0;
-
-      my $writer = $respond->([200, ["Content-type" => "text/html; charset=utf-8"]]);
-
-      $self->app->log(debug => "sending $limit messages for window ".$window->title.", starting at $msgid");
-
-      $window->buffer->messages($limit, $msgid, sub {
-        my $rows = shift;
-
-        if (!@$rows) {
-          $writer->close;
-          return;
-        }
-
-        my $max = $rows->[-1]{msgid};
-
-        my $idle_w; $idle_w = AE::idle sub {
-          if (my $msg = shift @$rows) {
-            $writer->write(encode_utf8 $msg->{html});
-          } else {
-            $writer->close;
-            undef $idle_w;
-          }
-        };
-      });
-    }
-    else {
-      my $res = $req->new_response(404);
-      $res->body("not found");
-      $respond->($res->finalize);
-    }
-  };
-}
-
 sub merged_options {
   my ($self, $req) = @_;
   my $config = $self->app->config;
@@ -320,48 +273,6 @@ sub merged_options {
    timeformat => $req->parameters->{timeformat} || $config->timeformat,
   );
   join "&", map {"$_=$options{$_}"} keys %options;
-}
-
-sub send_logs {
-  my ($self, $req) = @_;
-  my $output = $self->render('logs');
-  my $res = $req->new_response(200);
-  $res->body(encode_utf8 $output);
-  return $res->finalize;
-}
-
-sub send_search {
-  my ($self, $req) = @_;
-  my $app = $self->app;
-  return sub {
-    my $respond = shift;
-    $app->history->search(
-      user => $app->user, %{$req->parameters}, sub {
-      my $rows = shift;
-      my $content = $self->render('results', $rows);
-      my $res = $req->new_response(200);
-      $res->body(encode_utf8 $content);
-      $respond->($res->finalize);
-    });
-  }
-}
-
-sub send_range {
-  my ($self, $req) = @_;
-  my $app = $self->app;
-  return sub {
-    my $respond = shift;
-    $app->history->range(
-      $app->user, $req->parameters->{channel}, $req->parameters->{id}, sub {
-        my ($before, $after) = @_;
-        $before = $self->render('range', $before, 'before');
-        $after = $self->render('range', $after, 'after');
-        my $res = $req->new_response(200);
-        $res->body(to_json [$before, $after]);
-        $respond->($res->finalize);
-      }
-    ); 
-  }
 }
 
 sub send_config {

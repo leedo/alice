@@ -53,7 +53,7 @@ Object.extend(Alice, {
         );
 
         popup.ondisplay = function() {
-          setTimeout(function () {popup.cancel();}, 3000);
+          setTimeout(function () {popup.cancel();}, 5000);
         };
 
         popup.show();
@@ -87,7 +87,7 @@ Object.extend(Alice, {
     image.style.display = 'block';
     image.style.visibility = 'visible';
     setTimeout(function () {
-      var messagelist = image.up(".message_wrap");
+      var messagelist = image.up(".messages");
       messagelist.scrollTop = messagelist.scrollHeight;
     }, 50);
   },
@@ -139,7 +139,7 @@ Object.extend(Alice, {
 
     remove: function() {
       alice.windows().each(function(win) {
-        win.input.disabled = false;
+        alice.input.disabled = false;
       });
       $('prefs').remove();
     },
@@ -272,7 +272,7 @@ Object.extend(Alice, {
 
     remove: function() {
       alice.windows().each(function(win) {
-        win.input.disabled = false;
+        alice.input.disabled = false;
       });
       $('servers').remove();
     },

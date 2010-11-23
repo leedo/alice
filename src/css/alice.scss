@@ -13,11 +13,8 @@ input[type="hidden"] {
 body {
   margin: 0;
   padding: 0;
+  overflow: hidden;
   color: $default_text;
-}
-
-ul#tabs {
-  z-index: 20;
 }
 
 ul#tabs li:hover {
@@ -25,8 +22,8 @@ ul#tabs li:hover {
 }
 
 ul#controls {
-  z-index: 30;
   background: $tab_background;
+  z-index: 901;
 }
 
 body.blurred ul#controls {
@@ -37,34 +34,42 @@ ul#controls li {
   position: relative;
 }
 
-select.select_overlay {
-  display: block;
-  position: absolute;
-  top: 0px;
-  left: 0px;
-  bottom: 0px;
-  width: 22px;
+ul#controls li.dropdown {
+  width: 24px;
+  height: 24px;
   border: none;
   padding: 0;
   margin: 0;
-  opacity: 0;
-  font-size: 12px;
+  position: relative;
 }
 
-select#tab_overflow_overlay option.unread {
+li.dropdown li.unread {
   font-weight: bold;
 }
 
-li#tab_overflow_button {
-  background: url(image/sprites.png) 3px -174px no-repeat;
+li#tab_menu {
+  background: url(image/sprites.png) 4px -174px no-repeat;
 }
 
-li#tab_overflow_button.unread {
-  background: url(image/sprites.png) 3px -194px no-repeat;
+li#tab_menu.unread {
+  background: url(image/sprites.png) 4px -194px no-repeat;
 }
 
-li#config_button {
-  background: url(image/sprites.png) 4px -216px no-repeat;
+li#tab_menu.unread.highlight {
+  background: url(image/sprites.png) -20px -194px no-repeat;
+}
+
+li#config_menu {
+  background: url(image/sprites.png) 5px -216px no-repeat;
+}
+
+li#connection_status.loading {
+  background: url(image/loading.gif) center 3px no-repeat;
+  opacity: 0.4;
+}
+
+ul#controls li#connection_status:hover {
+  background-color: transparent;
 }
 
 body {
@@ -80,32 +85,30 @@ a:hover {
 }
 
 div.window {
-  position:fixed;
+  position:absolute;
   top: 0px;
   left: 0px;
   right: 0px;
-  bottom: 23px;
+  bottom: 51px;
+  background: $message_background;
 }
 
-div.window table {
-  table-layout: fixed;
-  width: 100%;
-  height: 100%;
-  padding: 0;
-}
-
-tr.input td {
-  height: 20px;
+div#input {
   background: $tab_background_active;
   border-bottom: 1px solid $tab_border_active;
   border-top: 1px solid $textentry_border;
+  position: absolute;
+  bottom: 23px;
+  left: 0px;
+  right: 0px;
+  z-index: 900;
 }
 
-body.blurred tr.input td {
+body.blurred div#input {
   border-bottom: 1px solid $tab_border_blurred;
 }
 
-tr.input form {
+div#input form {
   display: block;
   margin: 0;
   padding: 0;
@@ -113,15 +116,15 @@ tr.input form {
   line-height: 0px;
 }
 
-tr.input div {
+div#input div {
   padding: 0 3px;
   background: $textentry_background;
   margin: 3px 0;
   position: relative;
 }
 
-tr.input div.editor,
-tr.input textarea {
+div#input div.editor,
+div#input textarea {
   line-height: 1.2em;
   min-height: 1.2em;
   width: 100%;
@@ -140,7 +143,7 @@ div.editor {
   -khtml-nbsp-mode: space;
 }
 
-tr.input div.editor_toolbar {
+div#input div.editor_toolbar {
   overflow: hidden;
   position: absolute;
   right: -170px;
@@ -158,7 +161,7 @@ tr.input div.editor_toolbar {
   -webkit-transition-duration: 0.3s;
 }
 
-tr.input div.editor_toolbar button {
+div#input div.editor_toolbar button {
   visibility: hidden;
   display: block;
   float: left;
@@ -173,11 +176,11 @@ tr.input div.editor_toolbar button {
   border: none;
 }
 
-tr.input div.editor_toolbar button:hover {
+div#input div.editor_toolbar button:hover {
   color: $textentry_toolbar_button_hover_color;
 }
 
-tr.input div.editor_toolbar button.selected {
+div#input div.editor_toolbar button.selected {
   color: yellow;
 }
 
@@ -186,16 +189,16 @@ tr.input div.editor_toolbar button.selected {
 .underline {text-decoration: underline;}
 
 
-tr.input div.editor_toolbar:hover {
+div#input div.editor_toolbar:hover {
   opacity: 0.4;
   cursor: pointer;
 }
-tr.input div.editor_toolbar.visible:hover {
+div#input div.editor_toolbar.visible:hover {
   opacity: 1;
   cursor: inherit;
 }
 
-tr.input div.editor_toolbar.visible {
+div#input div.editor_toolbar.visible {
   background-color: $textentry_toolbar_background;
   background-image: none;
   right: -4px;
@@ -204,7 +207,7 @@ tr.input div.editor_toolbar.visible {
   opacity: 1;
 }
 
-tr.input div.editor_toolbar.visible button{
+div#input div.editor_toolbar.visible button{
   visibility: visible;
 }
 
@@ -226,20 +229,11 @@ div.editor img {
   display: none !important;
 }
 
-tr.input input.send {
+div#input input.send {
   display: none;
 }
 
-div#tab_container {
-  position: fixed;
-  bottom: 0px;
-  left: 0px;
-  right: 0px;
-  height: 23px;
-  background: $tab_background;
-}
-
-body.blurred div#tab_container {
+body.blurred ul#tabs {
   background: $tab_background_blurred;
 }
 
@@ -248,10 +242,14 @@ ul#tabs {
   margin: 0;
   padding: 0;
   font-size: 11px;
-  position: relative;
-  float: left;
-  margin-right: 62px;
+  position: absolute;
+  bottom: 0px;
+  height: 24px;
+  overflow: hidden;
+  background-color: $tab_background;
+  left: 0px;
   padding-left: 3px;
+  right: 72px;
 }
 
 body.blurred ul#tabs li {
@@ -264,7 +262,6 @@ ul#tabs li {
   margin: 0;
   margin-left: -1px;
   color: $tab_text;
-  background: $tab_background;
 }
 
 body.blurred ul#tabs li:first-child div.hit_area {
@@ -281,7 +278,7 @@ ul#tabs li div.hit_area {
   border-top: none;
   float:left;
   height: 14px;
-  padding: 2px 10px 8px 4px;
+  padding: 3px 10px 8px 4px;
 }
 
 body.blurred ul#tabs li div.hit_area {
@@ -299,13 +296,14 @@ ul#tabs li.active div.hit_area {
   border-top: none;
   background: $tab_background_active;
   height: 11px;
-  padding-top: 3px;
+  padding-top: 4px;
   margin-top: -1px;
 }
 
 ul#tabs li.active {
-  height: 23px;
-  z-index: 21;
+  height: 24px;
+  z-index: 903;
+  background: $tab_background;
 }
 
 ul#tabs li.active:hover div.hit_area {
@@ -317,31 +315,33 @@ ul#tabs li:hover div.hit_area {
 }
 
 ul#controls {
-  position: fixed;
+  position: absolute;
   bottom: 0px;
   right: 0px;
   height: 23px;
   margin: 0;
-  padding: 0 18px 0 0;
+  padding: 0 2px 0 0;
   list-style: none;
 }
 
-ul#controls li {
+ul#controls > li {
   float: right;
   margin: 0;
   padding: 0;
   height: 16px;
   width: 16px;
   padding: 4px 3px 3px 3px;
-  cursor: pointer;
 }
 
-ul#controls li:hover {
+ul#controls > li:hover {
   background-color: $tab_background_hover;
 }
 
-tr.topic td {
-  width: 100%;
+div.topic {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  right: 0px;
   background: $topic_background;
   font-size: 11px;
   text-align: center;
@@ -349,30 +349,26 @@ tr.topic td {
   border-bottom: $topic_border_bottom;
   padding: 1px 0;
   height: 1.2em;
-}
-
-tr.topic td div.topic {
-  height: 1.2em;
   overflow: hidden;
+  z-index: 901;
 }
 
-tr.topic a {
+div.topic {
   text-decoration: none;
-}
-
-div.message_wrap {
-  height: 100%;
-  overflow-x: hidden;
-  overflow-y: auto;
-  background: $message_background;
 }
 
 ul.messages {
   list-style: none;
   margin: 0;
-  padding: 0;
-  overflow: hidden;
-  margin: 3px 0;
+  padding: 3px 0;
+  margin: 0;
+  position: absolute;
+  overflow-x: hidden;
+  overflow-y: auto;
+  top: 17px;
+  bottom: 0px;
+  right: 0px;
+  left: 0px;
 }
 
 ul.messages > li {
@@ -457,7 +453,7 @@ li.event div.left span.timestamp {
 }
 
 ul.messages li.avatar:not(.consecutive) {
-  z-index: 900;
+  z-index: 800;
 }
 
 div.left img {
@@ -470,7 +466,7 @@ div.left img {
 
 div.left span.nickhint {
   position: absolute;
-  z-index: 901;
+  z-index: 801;
   right: 5px;
   top: 4px;
   padding: 0 2px;
@@ -707,87 +703,9 @@ ul#tabs li.disabled.channel_tab div.tab_button {
   background: url(image/sprites.png) 0 -60px no-repeat;
 }
 
-div#logsearch {
-  background: #eee;
-  border-bottom: 1px solid #999;
-  position: fixed;
-  top: 0px;
-  left: 0px;
-  right: 0px;
-  height: 28px;
-  padding: 5px 0 0 0;
-}
-
-div#logsearch label {
-  font-size: 0.7em;
-  padding-right: 2px;
-  padding-left: 10px;
-  color: #666;
-}
-
-div#logsearch form {
-  display: block;
-  margin: 0;
-}
-
-ul#logresults {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  position: absolute;
-  top: 34px;
-  bottom: 0px;
-  left: 0px;
-  right: 0px;
-  overflow: auto;
-}
-
-ul#logresults li {
-  border-bottom: 1px solid #eee;
-  padding: 0;
-  font-size: 0.8em;
-  cursor: pointer;
-}
-
-ul#logresults div.focus:hover {
-  background: #eee;
-}
-
-ul#logresults li div.focus {
-  background: #fff;
-  padding: 5px 10px;
-}
-
-ul#logresults li.context div.focus:hover {
-  background: #fff;
-}
-
-ul#logresults li.context ul {
-  margin: 0;
-  padding: 5px 10px;
-  list-style: none;
-}
-
-ul#logresults li.context ul li {
-  border: none;
-  margin: 0;
-  padding: 2px 0;
-}
-
-ul#logresults li.context {
-  border-top: 1px solid #999;
-  border-bottom: 1px solid #999;
-  background: url(image/shadow-bottom.png) bottom left repeat-x, url(image/shadow-top.png) top left repeat-x #eee;
-}
-
-ul#logresults span.metadata {
-  font-size: 0.7em;
-  color: #666;
-}
-
 div#help {
   position: absolute;
-  z-index: 999;
+  z-index: 980;
   background: rgba(0,0,0,0.8);
   color: #fff;
   left: 20px;
@@ -870,7 +788,7 @@ div#help dd {
 div.color_picker {
   position: absolute;
   right: 25px;
-  bottom: 27px;
+  bottom: 50px;
   width: 80px;
   border-bottom: none;
   margin: 0;
@@ -927,10 +845,11 @@ div.color_picker div.toggle span#bg.active {
 @media screen and (max-device-width: 480px) {
   div.left {
     width: 40px !important;
+    padding-right: 0px !important;
   }
 
   div.msg {
-    margin-left: 52px !important;
+    margin-left: 44px !important;
   }
 
   div.topic {
@@ -938,17 +857,17 @@ div.color_picker div.toggle span#bg.active {
     overflow: hidden;
   }
 
-  tr.input div {
+  div#input div {
     margin-right: 55px;
     background: none;
   }
 
-  tr.input input.send {
+  div#input input.send {
     display: block;
     position: absolute;
     bottom: 2px;
     right: 0px;
-    z-index: 999;
+    z-index: 904;
   }
 
   div.msg.monospace, div.msg.announce {
@@ -963,7 +882,7 @@ div.config {
   left: 50%;
   background: $tab_background_active;
   padding-bottom: 29px;
-  z-index: 999;
+  z-index: 981;
   -webkit-box-shadow: 0 0 10px #000;
   -moz-box-shadow: 0 0 10px #000;
   box-shadow: 0 0 10px #000;
@@ -975,15 +894,15 @@ div.config#prefs {
   padding-bottom: 29px;
   width: 326px;
   height: 224px;
-  margin-left: -163px;
-  margin-top: -112px;
+  margin-left: -178px;
+  margin-top: -136px;
 }
 
 div.config#servers {
   width: 460px;
   height: 380px;
-  margin-left: -250px;
-  margin-top: -230px;
+  margin-left: -230px;
+  margin-top: -210px;
 }
 
 div.config div.buttons {
@@ -1181,15 +1100,38 @@ span.nickborder {
   left: -1000px; 
 }
 
-div#connection_status {
-  z-index: 9999;
+ul#controls li.dropdown.open {
+  background-color: $tab_background_hover;
+}
+
+li.dropdown ul {
   position: absolute;
-  top: 0px;
-  left: 0px;
-  background: #FE8036;
-  color: #fff;
-  padding: 1px 2px 2px 4px;
-  font-size: 12px;
-  height: 1.2em;
-  width: 95px;
+  bottom: 30px;
+  right: 0px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 14px;
+  background: $tab_background;
+  border: 1px solid $tab_border;
+  -webkit-border-radius: 2px;
+  min-width: 100px;
+  display: none;
+  white-space: nowrap;
+}
+
+li.dropdown.open ul {
+  display: block;
+}
+
+li.dropdown ul li a {
+  display: block;
+  padding: 4px 5px;
+  text-decoration: none;
+  color: $tab_text;
+}
+
+li.dropdown ul li a:hover {
+  text-shadow: none;
+  background: $tab_background_hover;
 }

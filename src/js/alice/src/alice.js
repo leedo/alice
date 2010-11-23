@@ -10,6 +10,8 @@ var Alice = { };
 //= require <alice/util>
 //= require <alice/application>
 //= require <alice/connection>
+//= require <alice/connection/websocket>
+//= require <alice/connection/xhr>
 //= require <alice/window>
 //= require <alice/toolbar>
 //= require <alice/input>
@@ -50,46 +52,36 @@ if (window == window.parent) {
 
     $('helpclose').observe("click", function () { $('help').hide(); });
 
-    // setup select menus
+    $$('li.dropdown').each(function (li) {
+      li.observe("click", function (e) {
+        var element = e.element();
+        if (element.hasClassName("dropdown")) {
+          if (li.hasClassName("open")) {
+            li.removeClassName("open");
+          }
+          else {
+            $$("li.dropdown").invoke("removeClassName", "open");
+            li.addClassName("open");
+          }
+          e.stop();
+        }
+      });
+    });
 
-    $$('#config_overlay option').each(function(opt){opt.selected = false});
-    $('tab_overflow_overlay').observe("change", function (e) {
-      var win = alice.getWindow($('tab_overflow_overlay').value);
-      if (win) win.focus();
+    document.observe("click", function (e) {
+      $$('li.dropdown.open').invoke("removeClassName", "open");
     });
-    $('config_overlay').observe("change", function (e) {  
-      switch ($('config_overlay').value) {
-        case "Logs":
-          alice.toggleLogs(e);
-          break;
-        case "Connections":
-          alice.toggleConfig(e);
-          break;
-        case "Preferences":
-          alice.togglePrefs(e);
-          break;
-        case "Logout":
-          if (confirm("Logout?")) window.location = "/logout";
-          break;
-        case "Help":
-          alice.toggleHelp();
-          break;
-      }
-      $$('#config_overlay option').each(function(opt){opt.selected = false});
-    });
-    
+
     // setup window events
     
     window.onkeydown = function (e) {
-      var win = alice.activeWindow();
-      if (win && !$('config') && !Alice.isSpecialKey(e.which))
-        win.input.focus();
+      if (!$('config') && !Alice.isSpecialKey(e.which))
+        alice.input.focus();
     };
     
     window.onresize = function () {
       if (alice.activeWindow()) {
-        if (Prototype.Browser.Gecko) alice.activeWindow().resizeMessagearea();
-          alice.activeWindow().scrollToBottom();
+        alice.activeWindow().scrollToBottom();
       }
     };
     
@@ -97,8 +89,7 @@ if (window == window.parent) {
       if (!alice.isMobile)
         window.document.body.removeClassName("blurred");
 
-      if (alice.activeWindow())
-        alice.activeWindow().input.focus();
+      alice.input.focus();
 
       alice.isFocused = true
       alice.clearMissed();
@@ -110,7 +101,7 @@ if (window == window.parent) {
         window.document.body.addClassName("blurred");
       alice.isFocused = false
     };
-    window.onhashchange = alice.focusHash.bind(alice);
+    window.onhashchange = function (e) {alice.focusHash()};
 
     window.onorientationchange = function() {
       alice.activeWindow().scrollToBottom(true);
@@ -121,17 +112,17 @@ if (window == window.parent) {
     if (Prototype.Browser.WebKit && !navigator.userAgent.match("Chrome")
         && navigator.platform.match("Mac")) {
       document.observe("copy", function(e) {
-        if (e.findElement("ul.messages")) {
+        if (e.findElement("ul.messages") && e.clipboardData) {
           var userSelection = window.getSelection();
           if (userSelection) {
             userSelection = String(userSelection);
             userSelection = userSelection.replace(/\n\s*\d+\:\d{2}[ap]?/g, "");
             userSelection = userSelection.replace(/\n\s*/g, "\n");
             userSelection = userSelection.replace(/>\s*\n([^<])/g, "> $1");
-            if (e.clipboardData) {
-              e.preventDefault();
-              e.clipboardData.setData("Text", userSelection);
-            }
+            userSelection = userSelection.replace(/\n([^<])/g, "\n<$1");
+
+            e.preventDefault();
+            e.clipboardData.setData("Text", userSelection);
           }
         }
       });

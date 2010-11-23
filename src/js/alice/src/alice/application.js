@@ -3,14 +3,19 @@ Alice.Application = Class.create({
     this.isFocused = true;
     this.window_map = new Hash();
     this.previousFocus = 0;
-    this.connection = new Alice.Connection(this);
+    this.connection = window.WebSocket ? new Alice.Connection.WebSocket(this) : new Alice.Connection.XHR(this);
     this.filters = [];
     this.keyboard = new Alice.Keyboard(this);
 
     this.isPhone = window.navigator.platform.match(/(android|iphone)/i) ? 1 : 0;
-    this.isMobile = this.isPhone || Prototype.Browser.MobileSafari;
-    this.isJankyScroll = Prototype.Browser.Gecko || Prototype.Browser.IE;
+    this.isMobile = this.isPhone || Prototype.Browser.MobileSafari || Prototype.Browser.Gecko;
     this.loadDelay = this.isMobile ? 3000 : 1000;
+
+    this.input = new Alice.Input(this, "msg");
+    this.submit = $("submit");
+
+    this.submit.observe("click", function (e) {
+        this.input.send(); e.stop()}.bind(this));
 
     // setup UI elements in initial state
     this.makeSortable();
@@ -41,7 +46,7 @@ Alice.Application = Class.create({
     clear: function (action) {
       var win = this.getWindow(action['window'].id);
       if (win) {
-        win.messages.down("ul").update("");
+        win.messages.update("");
         win.lastNick = "";
       }
     },
@@ -92,7 +97,7 @@ Alice.Application = Class.create({
 
   toggleConfig: function(e) {
     this.connection.getConfig(function (transport) {
-      alice.activeWindow().input.disabled = true;
+      this.input.disabled = true;
       $('container').insert(transport.responseText);
     }.bind(this));
     
@@ -101,26 +106,13 @@ Alice.Application = Class.create({
   
   togglePrefs: function(e) {
     this.connection.getPrefs(function (transport) {
-      alice.activeWindow().input.disabled = true;
+      this.input.disabled = true;
       $('container').insert(transport.responseText);
     }.bind(this));
     
     if (e) e.stop();
   },
 
-  toggleLogs: function(e) {
-    if (this.logWindow && !this.logWindow.closed && this.logWindow.focus) {
-      this.logWindow.focus();
-    } else {
-      this.logWindow = window.open(null, "logs", "resizable=no,scrollbars=no,statusbar=no, toolbar=no,location=no,width=500,height=480");
-      this.connection.getLog(function (transport) {
-        this.logWindow.document.write(transport.responseText);
-      }.bind(this));
-    }
-
-    if (e) e.stop();
-  },
-  
   windows: function () {
     return this.window_map.values();
   },
@@ -238,19 +230,21 @@ Alice.Application = Class.create({
     if (!$(windowId)) {
       $('windows').insert(html['window']);
       $('tabs').insert(html.tab);
-      $('tab_overflow_overlay').insert(html.select);
-      $(windowId+"_tab_overflow_button").selected = false;
+      $('tab_menu').down('ul').insert(html.select);
+      $(windowId+"_tab_overflow").selected = false;
       this.activeWindow().tabOverflowButton.selected = true;
       this.makeSortable();
     }
   },
   
-  highlightChannelSelect: function() {
-    $('tab_overflow_button').addClassName('unread');
+  highlightChannelSelect: function(classname) {
+    if (!classname) classname = "unread";
+    $('tab_menu').addClassName(classname);
   },
   
   unHighlightChannelSelect: function() {
-    $('tab_overflow_button').removeClassName('unread');
+    $('tab_menu').removeClassName('unread');
+    $('tab_menu').removeClassName('highlight');
   },
   
   updateChannelSelect: function() {
@@ -281,7 +275,14 @@ Alice.Application = Class.create({
       );
     }
   },
-  
+
+  displayChunk: function(message) {
+    var win = this.getWindow(message['window'].id);
+    if (win) {
+      win.addChunk(message);
+    }
+  },
+
   focusHash: function(hash) {
     if (!hash) hash = window.location.hash;
     if (hash) {
@@ -344,4 +345,14 @@ Alice.Application = Class.create({
       }
     }
   },
+
+  msgid: function() {
+    var ids = this.windows().map(function(w){return w.msgid});
+    return Math.max.apply(Math, ids);
+  },
+
+  setSource: function(id) {
+    $('source').value = id;
+  }
+ 
 });
