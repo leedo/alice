@@ -308,6 +308,10 @@ sub server_config {
   return $res->finalize;
 }
 
+#
+# TODO separate methods for saving prefs and server configs
+#
+
 sub save_config {
   my ($self, $req) = @_;
   $self->app->log(info => "saving config");
@@ -316,13 +320,14 @@ sub save_config {
   if ($req->parameters->{has_servers}) {
     $new_config->{servers} = {};
   }
+  else {
+    $new_config->{$_} = [$req->parameters->get_all($_)] for qw/highlights monospace_nicks/;
+  }
+
   for my $name (keys %{$req->parameters}) {
     next unless $req->parameters->{$name};
-    next if $name eq "has_servers";
-    if ($name eq "highlights" or $name eq "monospace_nicks") {
-      $new_config->{$name} = [$req->parameters->get_all($name)];
-    }
-    elsif ($name =~ /^(.+?)_(.+)/ and exists $new_config->{servers}) {
+    next if $name =~ /^(?:has_servers|highlights|monospace_nicks)$/;
+    if ($name =~ /^(.+?)_(.+)/ and exists $new_config->{servers}) {
       if ($2 eq "channels" or $2 eq "on_connect") {
         $new_config->{servers}{$1}{$2} = [$req->parameters->get_all($name)];
       } else {
@@ -333,6 +338,7 @@ sub save_config {
       $new_config->{$name} = $req->parameters->{$name};
     }
   }
+
   $self->app->reload_config($new_config);
 
   $self->app->broadcast(
