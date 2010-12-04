@@ -733,6 +733,9 @@ div.color_picker div.toggle span#bg.active {
   div.msg {
     margin-left: 44px !important; }
 
+  div.window {
+    bottom: 30px; }
+
   div.topic {
     height: 1.2em;
     overflow: hidden; }
