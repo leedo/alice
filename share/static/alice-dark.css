@@ -740,15 +740,32 @@ div.color_picker div.toggle span#bg.active {
     height: 1.2em;
     overflow: hidden; }
 
+  ul#tabs {
+    display: none; }
+
+  ul#controls {
+    padding-right: 0;
+    background: none;
+    position: absolute;
+    bottom: 2px;
+    right: 1px; }
+
+  ul#controls li#connection_status, ul#controls li#config_menu {
+    display: none; }
+
+  div#input {
+    bottom: 0px;
+    border-bottom: none; }
+
   div#input div {
-    margin-right: 55px;
+    margin-right: 80px;
     background: none; }
 
   div#input input.send {
     display: block;
     position: absolute;
-    bottom: 2px;
-    right: 0px;
+    bottom: 0px;
+    right: 26px;
     z-index: 904; }
 
   div.msg.monospace, div.msg.announce {
