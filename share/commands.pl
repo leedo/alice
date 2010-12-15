@@ -159,7 +159,7 @@ my $commands = [
     desc => "Sends a CTCP ACTION to the current window.",
     code => sub {
       my ($self, $app, $window, $action) = @_;
-      $window->show("• $action");
+      $window->show("\x{2022} $action");
       $window->irc->send_srv(PRIVMSG => $window->title, chr(01) . "ACTION $action" . chr(01));
     },
   },
