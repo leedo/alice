@@ -160,6 +160,7 @@ my $commands = [
     code => sub {
       my ($self, $app, $window, $action) = @_;
       $window->show("\x{2022} $action");
+      $action = AnyEvent::IRC::Util::encode_ctcp($action);
       $window->irc->send_srv(PRIVMSG => $window->title, chr(01) . "ACTION $action" . chr(01));
     },
   },
