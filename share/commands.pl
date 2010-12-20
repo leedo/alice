@@ -17,7 +17,7 @@ my $commands = [
       }
 
       $window->show($msg);
-      $window->irc->send_srv(PRIVMSG => $window->title, $msg);
+      $window->irc->cl->send_long_message("utf8", 0, PRIVMSG => $window->title, $msg);
       $app->store(nick => $window->nick, channel => $window->title, body => $msg);
     },
   },
@@ -159,8 +159,9 @@ my $commands = [
     desc => "Sends a CTCP ACTION to the current window.",
     code => sub {
       my ($self, $app, $window, $action) = @_;
-      $window->show("• $action");
-      $window->irc->send_srv(PRIVMSG => $window->title, chr(01) . "ACTION $action" . chr(01));
+      $window->show("\x{2022} $action");
+      $action = AnyEvent::IRC::Util::encode_ctcp(["ACTION", $action]);
+      $window->irc->send_srv(PRIVMSG => $window->title, $action);
     },
   },
   {
