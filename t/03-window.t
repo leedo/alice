@@ -40,7 +40,7 @@ my $irc = $app->get_irc("test");
 }
 
 {
-  my @channels = qw/
+  my @channels = shuffle qw/
     #TC.Premiere
     #alice
     #tc.beta

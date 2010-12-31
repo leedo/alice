@@ -340,7 +340,7 @@ sub sorted_windows {
     %o = map {$self->config->order->[$_] => sprintf "%02d", $_ + 2}
              0 .. @{$self->config->order} - 1;
   }
-  $o{info} = 1;
+  $o{info} = "01";
   sort { ($o{$a->title} || $a->sort_name) cmp ($o{$b->title} || $b->sort_name) }
        $self->windows;
 }
