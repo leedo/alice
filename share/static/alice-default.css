@@ -797,6 +797,10 @@ div.config#servers {
   margin-left: -230px;
   margin-top: -210px; }
 
+div.config#tabsets {
+  width: 300px;
+  height: 200px; }
+
 div.config div.buttons {
   clear: both;
   position: absolute;
@@ -847,6 +851,7 @@ div.config select[multiple] {
   color: black;
   padding: 2px; }
 
+div.config li#tabset_controls,
 div.config li#server_controls {
   position: absolute;
   bottom: 0px;
@@ -1049,14 +1054,15 @@ li.dropdown ul {
   background: #dddddd;
   border: 1px solid #999999;
   -webkit-border-radius: 2px;
-  min-width: 100px;
+  -webkit-box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.4);
+  width: 100px;
   display: none;
   white-space: nowrap; }
 
-li.dropdown.open ul {
+li.dropdown.open > ul {
   display: block; }
 
-li.dropdown ul li a {
+li.dropdown > ul > li a {
   display: block;
   padding: 4px 5px;
   text-decoration: none;
@@ -1065,3 +1071,16 @@ li.dropdown ul li a {
 li.dropdown ul li a:hover {
   text-shadow: none;
   background: #cccccc; }
+
+li.dropdown > ul ul {
+  display: none;
+  left: -100px;
+  width: 100px;
+  bottom: auto;
+  top: -1px; }
+
+li.dropdown li.submenu {
+  border-bottom: 1px solid #999999; }
+
+li.dropdown > ul li.submenu:hover ul {
+  display: block; }
