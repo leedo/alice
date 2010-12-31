@@ -69,7 +69,7 @@ sub BUILDARGS {
 }
 
 sub sort_name {
-  my $name = $_[0]->title;
+  my $name = lc $_[0]->title;
   $name =~ s/^[^\w\d]+//;
   $name;
 }
