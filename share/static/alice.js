@@ -10153,6 +10153,13 @@ Alice.Application = Class.create({
     if (e) e.stop();
   },
 
+  toggleTabsets: function(e) {
+    this.connection.getTabsets(function (transport) {
+      this.input.disabled = true;
+      $('container').insert(transport.responseText);
+    }.bind(this));
+  },
+
   windows: function () {
     return this.window_map.values();
   },
@@ -10470,6 +10477,14 @@ Alice.Connection = {
 
   getConfig: function(callback) {
     new Ajax.Request('/config', {
+      method: 'get',
+      on401: this.gotoLogin,
+      onSuccess: callback
+    });
+  },
+
+  getTabsets: function(callback) {
+    new Ajax.Request('/tabsets', {
       method: 'get',
       on401: this.gotoLogin,
       onSuccess: callback

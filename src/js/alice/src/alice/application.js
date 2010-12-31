@@ -113,6 +113,13 @@ Alice.Application = Class.create({
     if (e) e.stop();
   },
 
+  toggleTabsets: function(e) {
+    this.connection.getTabsets(function (transport) {
+      this.input.disabled = true;
+      $('container').insert(transport.responseText);
+    }.bind(this));
+  },
+
   windows: function () {
     return this.window_map.values();
   },
