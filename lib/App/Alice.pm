@@ -337,10 +337,10 @@ sub sorted_windows {
   my $self = shift;
   my %o;
   if ($self->config->order) {
-    %o = map {$self->config->order->[$_] => $_ + 2}
+    %o = map {$self->config->order->[$_] => sprintf "%02d", $_ + 2}
              0 .. @{$self->config->order} - 1;
   }
-  $o{info} = 1;
+  $o{info} = "01";
   sort { ($o{$a->title} || $a->sort_name) cmp ($o{$b->title} || $b->sort_name) }
        $self->windows;
 }

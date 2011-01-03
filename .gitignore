@@ -13,3 +13,4 @@ App-Alice-*
 README
 #extlib
 *.acorn
+t/alice/test_config
