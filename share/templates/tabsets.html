@@ -1,11 +1,11 @@
 ? my $app = shift;
 
 <div id="tabsets" class="config">
-  <form id="tabset_data" onsubmit="return Alice.tabsets.submit(this)">
+  <form onsubmit="return Alice.tabsets.submit(this)">
     <table>
       <tr>
         <td>
-          <ul id="tabset_list">
+          <ul id="sets">
             <li class="header">Sets</li>
             <? for my $set (()) { ?>
               <li>
@@ -20,7 +20,7 @@
             </li>
           </ul>
         </td>
-        <td>
+        <td id="tabset_data">
         <? for my $set (()) { ?>
          <select multiple="multiple" name="tabset_<?= $set->id ?>">
           <? for my $window ($app->sorted_windows) { ?>

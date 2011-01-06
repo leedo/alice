@@ -1039,6 +1039,7 @@ div.config input[type="checkbox"] {
   margin-right: 4px;
 }
 
+div.config ul#sets,
 div.config ul#connections {
   list-style: none;
   position: absolute;
@@ -1052,6 +1053,7 @@ div.config ul#connections {
   border-right: 1px solid $tab_border;
 }
 
+div.config ul#sets li.header,
 div.config ul#connections li.header {
   text-transform: uppercase;
   color: $tab_text_blurred;
@@ -1060,10 +1062,12 @@ div.config ul#connections li.header {
   cursor: default;
 }
 
+div.config ul#sets li.header:hover,
 div.config ul#connections li.header:hover {
   background: $tab_background_hover;
 }
 
+div.config ul#sets li,
 div.config ul#connections li {
   padding: 5px 8px;
   cursor: pointer;
@@ -1071,10 +1075,12 @@ div.config ul#connections li {
   font-size: 0.8em;
 }
 
+div.config ul#sets li:hover,
 div.config ul#connections li:hover {
   background: $tab_background_blurred;
 }
 
+div.config ul#sets li.active,
 div.config ul#connections li.disconnected.active,
 div.config ul#connections li.connected.active {
   color: $tab_background_blurred;
