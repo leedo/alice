@@ -780,6 +780,36 @@ sub is_channel {
   return $self->cl->is_channel_name($channel);
 }
 
+*AnyEvent::IRC::Util::split_unicode_string = sub {
+  my ($enc, $str, $maxlen) = @_;
+
+  return $str unless length (encode ($enc, $str)) > $maxlen;
+
+  my $cur_out = '';
+  my $word = '';
+  my @lines;
+
+  while (length ($str) > 0) {
+    $word .= substr $str, 0, 1, '';
+
+    if ($word =~ /\w\W$/
+        || length ($str) == 0
+        || length ( encode ($enc, $word)) >= $maxlen) {
+
+      if (length (encode ($enc, $cur_out.$word)) > $maxlen) {
+        push @lines, $cur_out;
+        $cur_out = '';
+      }
+
+      $cur_out .= $word;
+      $word = '';
+    }
+  }
+
+  push @lines, $cur_out if length ($cur_out);
+  return @lines;
+};
+
 __PACKAGE__->meta->make_immutable;
 1;
 
