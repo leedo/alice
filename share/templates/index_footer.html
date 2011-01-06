@@ -35,6 +35,11 @@
         </li>
         <li class="dropdown" id="tab_menu">
           <ul>
+            <li class="submenu"><a>Sets</a>
+              <ul>
+                <li><a href="javascript:alice.toggleTabsets()">Edit</a></li>
+              </ul>
+            </li>
             <? for my $window (@windows) { ?>
               <?= $_mt->render_file('select.html', $_[0], $window); ?>
             <? } ?>
