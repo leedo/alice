@@ -781,9 +781,9 @@ div.config {
   background: #333333;
   padding-bottom: 29px;
   z-index: 981;
-  -webkit-box-shadow: 0 0 10px #000;
-  -moz-box-shadow: 0 0 10px #000;
-  box-shadow: 0 0 10px #000;
+  -webkit-box-shadow: 1px 1px 3px #000;
+  -moz-box-shadow: 1px 1px 3px #000;
+  box-shadow: 1px 1px 3px #000;
   border: 5px solid #222222; }
 
 div.config#prefs {
