@@ -114,7 +114,13 @@ Object.extend(Alice, {
     addSet: function () {
 			var name = prompt("Please enter a name for this tab set.");
 			if (! name) return;
+
+			$$('#tabset_data select').invoke('removeClassName',"active");
+			$$('#sets li').invoke('removeClassName',"active");
+
+      $('sets').insert('<li class="active">'+name.escapeHTML()+'</li>');
     },
+
     remove: function () {
       alice.input.disabled = false;
       $('tabsets').remove();

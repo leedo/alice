@@ -888,6 +888,7 @@ div.config input[type="checkbox"] {
   float: left;
   margin-right: 4px; }
 
+div.config ul#sets,
 div.config ul#connections {
   list-style: none;
   position: absolute;
@@ -900,6 +901,7 @@ div.config ul#connections {
   background: #cccccc;
   border-right: 1px solid #999999; }
 
+div.config ul#sets li.header,
 div.config ul#connections li.header {
   text-transform: uppercase;
   color: #777777;
@@ -907,18 +909,22 @@ div.config ul#connections li.header {
   font-size: 0.7em;
   cursor: default; }
 
+div.config ul#sets li.header:hover,
 div.config ul#connections li.header:hover {
   background: #cccccc; }
 
+div.config ul#sets li,
 div.config ul#connections li {
   padding: 5px 8px;
   cursor: pointer;
   border-left: 1px solid #cccccc;
   font-size: 0.8em; }
 
+div.config ul#sets li:hover,
 div.config ul#connections li:hover {
   background: #eeeeee; }
 
+div.config ul#sets li.active,
 div.config ul#connections li.disconnected.active,
 div.config ul#connections li.connected.active {
   color: #eeeeee;
