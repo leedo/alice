@@ -12,6 +12,11 @@ use Encode;
 my $email_re = qr/([^<\s]+@[^\s>]+\.[^\s>]+)/;
 my $image_re = qr/(https?:\/\/\S+(?:jpe?g|png|gif))/i;
 
+{
+  no warnings;
+  *AnyEvent::IRC::Client::split_unicode_string = \&split_unicode_string;
+}
+
 has 'cl' => (
   is      => 'rw',
   default => sub {AnyEvent::IRC::Client->new},
@@ -780,7 +785,7 @@ sub is_channel {
   return $self->cl->is_channel_name($channel);
 }
 
-*AnyEvent::IRC::Util::split_unicode_string = sub {
+sub split_unicode_string {
   my ($enc, $str, $maxlen) = @_;
 
   return $str unless length (encode ($enc, $str)) > $maxlen;
