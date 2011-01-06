@@ -110,6 +110,17 @@ Object.extend(Alice, {
     };
   },
 
+  tabsets: {
+    addSet: function () {
+			var name = prompt("Please enter a name for this tab set.");
+			if (! name) return;
+    },
+    remove: function () {
+      alice.input.disabled = false;
+      $('tabsets').remove();
+    }
+  },
+
   prefs: {
     addHighlight: function (alias) {
 		  var channel = prompt("Enter a word to highlight.");
@@ -138,9 +149,7 @@ Object.extend(Alice, {
     },
 
     remove: function() {
-      alice.windows().each(function(win) {
-        alice.input.disabled = false;
-      });
+      alice.input.disabled = false;
       $('prefs').remove();
     },
 
@@ -271,9 +280,7 @@ Object.extend(Alice, {
     },
 
     remove: function() {
-      alice.windows().each(function(win) {
-        alice.input.disabled = false;
-      });
+      alice.input.disabled = false;
       $('servers').remove();
     },
 
