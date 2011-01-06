@@ -799,7 +799,9 @@ div.config#servers {
 
 div.config#tabsets {
   width: 300px;
-  height: 200px; }
+  height: 200px;
+  margin-left: -150px;
+  margin-top: -100px; }
 
 div.config div.buttons {
   clear: both;
