@@ -35,6 +35,7 @@ sub format_message {
     event  => "say",
     nick   => $from,
     window => $self->serialized,
+    ($options{source} ? (source => $options{source}) : ()),
     html   => encoded_string($html),
     self   => $options{self} ? 1 : 0,
     hightlight  => $options{highlight} ? 1 : 0,
