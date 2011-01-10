@@ -300,6 +300,10 @@ ul#tabs li.active div.hit_area {
   margin-top: -1px;
 }
 
+ul#tabs li:not(.active) {
+  z-index: 900 !important;
+}
+
 ul#tabs li.active {
   height: 24px;
   z-index: 903;

@@ -467,8 +467,8 @@ sub handle_message {
 }
 
 sub send_highlight {
-  my ($self, $nick, $body) = @_;
-  my $message = $self->info_window->format_message($nick, $body, self => 1);
+  my ($self, $nick, $body, $source) = @_;
+  my $message = $self->info_window->format_message($nick, $body, self => 1, source => $source);
   $self->broadcast($message);
 }
 
