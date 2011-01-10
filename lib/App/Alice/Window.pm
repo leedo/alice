@@ -196,7 +196,7 @@ sub format_message {
     if ($message->{highlight} = $self->is_highlight($body)) {
       my $idle_w; $idle_w = AE::idle sub {
         undef $idle_w;
-        $self->app->send_highlight($nick, $body);
+        $self->app->send_highlight($nick, $body, $self->title);
       };
     }
   }
