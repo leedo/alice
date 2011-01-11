@@ -9852,13 +9852,26 @@ Object.extend(Alice, {
   tabsets: {
     addSet: function () {
 			var name = prompt("Please enter a name for this tab set.");
-			if (! name) return;
+      if (name && !Alice.tabsets.hasTabset(name)) {
+        Alice.tabsets.clearActive();
+        $('sets').insert('<li class="active">'+name.escapeHTML()+'</li>');
+        $('tabset_data').insert($('empty_tabset').clone(true).addClassName('active').show());
+      }
+      else {
+        alert("Invalid tab set name.");
+      }
+    },
 
-			$$('#tabset_data ul').invoke('removeClassName',"active");
-			$$('#sets li').invoke('removeClassName',"active");
-
-      $('sets').insert('<li class="active">'+name.escapeHTML()+'</li>');
-      $('tabset_data').insert($('empty_tabset').clone(true).addClassName('active').show());
+    hasTabset: function (name) {
+      var sets = $$('#sets li');
+      console.log(sets);
+      for (var i=0; i < sets.length; i++) {
+        if (sets[i].innerHTML == name) {
+          console.log(sets[i].innerHTML);
+          return true;
+        }
+      }
+      return false;
     },
 
     remove: function () {
@@ -9866,14 +9879,24 @@ Object.extend(Alice, {
       $('tabsets').remove();
     },
 
+    clearActive: function () {
+			$$('#tabset_data ul.active').invoke('removeClassName',"active");
+			$$('#sets li.active').invoke('removeClassName',"active");
+    },
+
     focusSet: function (e) {
       var li = e.findElement('li');
-      if (li.hasClassName('controls')) return;
+      if (!li || li.hasClassName('controls') || li.hasClassName('header')) return;
+
       if (!li.hasClassName('active')) {
-        li.up('ul').select('li.active').invoke('removeClassName', 'active');
+        Alice.tabsets.clearActive();
+
         li.addClassName('active');
-        var count = li.previousSiblings().length;
-        console.log(count);
+        var length = li.previousSiblings().filter(function(i) {
+                       return !i.hasClassName('header') && !i.hasClassName('controls')
+                     }).length;
+
+        $$('#tabset_data ul')[length].addClassName('active');
       }
     },
   },
