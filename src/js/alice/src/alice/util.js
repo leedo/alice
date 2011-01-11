@@ -115,16 +115,26 @@ Object.extend(Alice, {
 			var name = prompt("Please enter a name for this tab set.");
 			if (! name) return;
 
-			$$('#tabset_data select').invoke('removeClassName',"active");
+			$$('#tabset_data ul').invoke('removeClassName',"active");
 			$$('#sets li').invoke('removeClassName',"active");
 
       $('sets').insert('<li class="active">'+name.escapeHTML()+'</li>');
+      $('tabset_data').insert($('empty_tabset').clone(true).addClassName('active').show());
     },
 
     remove: function () {
       alice.input.disabled = false;
       $('tabsets').remove();
-    }
+    },
+
+    focusSet: function (e) {
+      var li = e.findElement('li');
+      if (li.hasClassName('controls')) return;
+      if (!li.hasClassName('active')) {
+        li.up('ul').select('li.active').invoke('removeClassName', 'active');
+        li.addClassName('active');
+      }
+    },
   },
 
   prefs: {
