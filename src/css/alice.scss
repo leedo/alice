@@ -933,8 +933,8 @@ div.config#servers {
 div.config#tabsets {
   width: 300px;
   height: 200px;
-  margin-left: -150px;
-  margin-top: -100px;
+  margin-left: -155px;
+  margin-top: -120px;
 }
 
 div.config div.buttons {
@@ -1051,6 +1051,31 @@ div.config ul#connections {
   width: 150px;
   background: $tab_background_hover;
   border-right: 1px solid $tab_border;
+}
+
+div.config div#tabset_data {
+  position: absolute;
+  top: 5px;
+  bottom: 29px;
+  left: 155px;
+  right: 0px;
+  overflow: auto;
+  font-size: 0.8em;
+}
+
+div.config div#tabset_data ul {
+  display: none;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+div.config div#tabset_data ul.active {
+  display: block;
+}
+
+div.config div#tabset_data ul li {
+  margin-bottom: 0.25em;
 }
 
 div.config ul#sets li.header,

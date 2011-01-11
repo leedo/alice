@@ -2,38 +2,50 @@
 
 <div id="tabsets" class="config">
   <form onsubmit="return Alice.tabsets.submit(this)">
-    <table>
-      <tr>
-        <td>
-          <ul id="sets">
-            <li class="header">Sets</li>
-            <? for my $set (()) { ?>
-              <li>
-              <a href="#" onclick="Alice.tabsets.showSet('<?= $set->id ?>')">
-                <?= $set->name ?>
-              </a>
-              </li>
-            <? } ?>
-            <li id="tabset_controls" class="controls">
-              <a href="#" onclick="return Alice.tabsets.addSet()">New</a>
-              <a href="#" onclick="return Alice.tabsets.removeSet()">Remove</a>
-            </li>
-          </ul>
-        </td>
-        <td id="tabset_data">
-        <? for my $set (()) { ?>
-         <select multiple="multiple" name="tabset_<?= $set->id ?>">
-          <? for my $window ($app->sorted_windows) { ?>
-            <option<?= $set->includes($window->id) ? " selected" : "" ?> value="<?= $window->id ?>">$window->name</option>
-          <? } ?>
-          </select>
+
+    <ul id="sets" onclick="Alice.tabsets.focusSet(arguments[0])">
+      <li class="header">Sets</li>
+      <? for my $set (()) { ?>
+      <li>
+        <a href="#" onclick="Alice.tabsets.showSet('<?= $set->name ?>')">
+          <?= $set->name ?>
+        </a>
+      </li>
+      <? } ?>
+      <li id="tabset_controls" class="controls">
+        <a href="#" onclick="return Alice.tabsets.addSet()">New</a>
+        <a href="#" onclick="return Alice.tabsets.removeSet()">Remove</a>
+      </li>
+    </ul>
+
+    <div id="tabset_data">
+
+      <? for my $set (()) { ?>
+        <ul>
+        <? for my $window ($app->sorted_windows) { ?>
+          <li>
+            <input type="checkbox"<?= $set->includes($window->id) ? " checked" : "" ?> name="<?= $window->id ?>">
+            <?= $window->title ?>
+          </li>
         <? } ?>
-        </td>
-      </tr>
-    </table>
+        </ul>
+      <? } ?>
+
+      <ul id="empty_tabset">
+        <? for my $window ($app->sorted_windows) { ?>
+          <li>
+            <input type="checkbox" name="<?= $window->id ?>" />
+            <?= $window->title ?>
+          </li>
+        <? } ?>
+      </ul>
+
+    </div>
+
     <div class="buttons">
       <button type="submit">Save</button>
       <button onclick="Alice.tabsets.remove(); return false;">Cancel</button>
     </div>
+
   </form>
 </div>
