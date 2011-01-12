@@ -204,6 +204,7 @@ Alice.Window = Class.create({
     this.element.redraw();
     this.setWindowHash();
     this.application.updateChannelSelect();
+    return this;
   },
 
   setWindowHash: function () {

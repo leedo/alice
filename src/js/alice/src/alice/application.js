@@ -192,11 +192,8 @@ Alice.Application = Class.create({
 
     var id = nextTab.id.replace('_tab','');
     if (id != active.id) {
-      var win = this.getWindow(id);
-      win.focus();
-      if (!win.visible) {
-        this.nextWindow();
-      }
+      var win = this.getWindow(id).focus();
+      if (!win.visible) this.nextWindow();
     }
   },
 
@@ -230,11 +227,8 @@ Alice.Application = Class.create({
 
     var id = previousTab.id.replace('_tab','');
     if (id != active.id) {
-      var win = this.getWindow(id);
-      win.focus();
-      if (!win.visible) {
-        this.previousWindow();
-      }
+      var win = this.getWindow(id).focus();
+      if (!win.visible) this.previousWindow();
     }
   },
   
