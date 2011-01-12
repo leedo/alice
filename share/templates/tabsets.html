@@ -35,7 +35,7 @@
 
     </div>
 
-    <ul id="empty_tabset">
+    <ul id="empty_tabset" style="display:none">
       <? for my $window ($app->sorted_windows) { ?>
         <li>
           <input type="checkbox" name="<?= $window->id ?>" />

@@ -187,16 +187,16 @@ Object.extend(Alice, {
       $('tabset_data').down('.active').remove();
     },
 
+    focusIndex: function (i) {
+      Alice.tabsets.clearActive();
+      $('tabset_data').select('ul')[i].addClassName('active');
+      $('sets').select('li')[i].addClassName('active');
+    },
+
     focusSet: function (e) {
       var li = e.findElement('li');
-
-      if (!li.hasClassName('active')) {
-        Alice.tabsets.clearActive();
-
-        li.addClassName('active');
-        var length = li.previousSiblings().length;
-        
-        $$('#tabset_data ul')[length].addClassName('active');
+      if (li) {
+        Alice.tabsets.focusIndex(li.previousSiblings().length);
       }
     },
   },

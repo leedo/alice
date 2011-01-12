@@ -862,7 +862,7 @@ div.config div.sidebar div.controls {
   left: 0px;
   right: 0px;
   padding: 5px 8px;
-  background: #333333; }
+  background: #3a3a3a; }
 
 div.config .controls {
   clear: both;
@@ -896,8 +896,7 @@ div.config div.sidebar {
   bottom: 29px;
   left: 0px;
   width: 150px;
-  background: #3a3a3a;
-  border-right: 1px solid #222222; }
+  background: #444444; }
 
 div.config div.sidebar ul {
   list-style: none;
@@ -908,8 +907,7 @@ div.config div.sidebar ul {
   bottom: 24px;
   overflow: auto;
   right: 0px;
-  left: 0px;
-  border-top: 1px solid #111111; }
+  left: 0px; }
 
 div.config div#tabset_data {
   position: absolute;
@@ -945,17 +943,15 @@ div.config div.sidebar h2 {
 div.config div.sidebar li {
   padding: 5px 8px;
   cursor: pointer;
-  border-left: 1px solid #3a3a3a;
   font-size: 0.8em; }
 
 div.config div.sidebar li:hover {
-  background: #333333; }
+  background: #3a3a3a; }
 
 div.config div.sidebar li.active,
 div.config div.sidebar li.disconnected.active,
 div.config div.sidebar li.connected.active {
-  color: #333333;
-  background: #cccccc; }
+  background: #333333; }
 
 div.config div.sidebar li.disconnected {
   color: #cccccc; }

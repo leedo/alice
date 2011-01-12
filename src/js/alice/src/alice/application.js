@@ -117,6 +117,7 @@ Alice.Application = Class.create({
     this.connection.getTabsets(function (transport) {
       this.input.disabled = true;
       $('container').insert(transport.responseText);
+      Alice.tabsets.focusIndex(0);
     }.bind(this));
   },
 
@@ -191,7 +192,11 @@ Alice.Application = Class.create({
 
     var id = nextTab.id.replace('_tab','');
     if (id != active.id) {
-      this.getWindow(id).focus();
+      var win = this.getWindow(id);
+      win.focus();
+      if (!win.visible) {
+        this.nextWindow();
+      }
     }
   },
 
@@ -224,8 +229,13 @@ Alice.Application = Class.create({
     if (!previousTab) return;
 
     var id = previousTab.id.replace('_tab','');
-    if (id != active.id)
-      this.getWindow(id).focus();
+    if (id != active.id) {
+      var win = this.getWindow(id);
+      win.focus();
+      if (!win.visible) {
+        this.previousWindow();
+      }
+    }
   },
   
   closeWindow: function(windowId) {
@@ -360,6 +370,15 @@ Alice.Application = Class.create({
 
   setSource: function(id) {
     $('source').value = id;
+  },
+
+  showWindows: function(ids) {
+    alice.windows().each(function(win) {
+      ids.indexOf(win.id) >= 0 ? win.show() : win.hide();
+    });
+    if (!alice.activeWindow().visible) {
+      alice.nextWindow();
+    }
   }
  
 });

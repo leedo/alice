@@ -9926,16 +9926,16 @@ Object.extend(Alice, {
       $('tabset_data').down('.active').remove();
     },
 
+    focusIndex: function (i) {
+      Alice.tabsets.clearActive();
+      $('tabset_data').select('ul')[i].addClassName('active');
+      $('sets').select('li')[i].addClassName('active');
+    },
+
     focusSet: function (e) {
       var li = e.findElement('li');
-
-      if (!li.hasClassName('active')) {
-        Alice.tabsets.clearActive();
-
-        li.addClassName('active');
-        var length = li.previousSiblings().length;
-
-        $$('#tabset_data ul')[length].addClassName('active');
+      if (li) {
+        Alice.tabsets.focusIndex(li.previousSiblings().length);
       }
     },
   },
@@ -10244,6 +10244,7 @@ Alice.Application = Class.create({
     this.connection.getTabsets(function (transport) {
       this.input.disabled = true;
       $('container').insert(transport.responseText);
+      Alice.tabsets.focusIndex(0);
     }.bind(this));
   },
 
@@ -10318,7 +10319,11 @@ Alice.Application = Class.create({
 
     var id = nextTab.id.replace('_tab','');
     if (id != active.id) {
-      this.getWindow(id).focus();
+      var win = this.getWindow(id);
+      win.focus();
+      if (!win.visible) {
+        this.nextWindow();
+      }
     }
   },
 
@@ -10351,8 +10356,13 @@ Alice.Application = Class.create({
     if (!previousTab) return;
 
     var id = previousTab.id.replace('_tab','');
-    if (id != active.id)
-      this.getWindow(id).focus();
+    if (id != active.id) {
+      var win = this.getWindow(id);
+      win.focus();
+      if (!win.visible) {
+        this.previousWindow();
+      }
+    }
   },
 
   closeWindow: function(windowId) {
@@ -10487,6 +10497,15 @@ Alice.Application = Class.create({
 
   setSource: function(id) {
     $('source').value = id;
+  },
+
+  showWindows: function(ids) {
+    alice.windows().each(function(win) {
+      ids.indexOf(win.id) >= 0 ? win.show() : win.hide();
+    });
+    if (!alice.activeWindow().visible) {
+      alice.nextWindow();
+    }
   }
 
 });
@@ -10844,9 +10863,24 @@ Alice.Window = Class.create({
     this.nicks = [];
     this.messageLimit = this.application.isMobile ? 50 : 200;
     this.msgid = 0;
+    this.visible = true;
 
     this.setupEvents();
     this.setupTopic();
+  },
+
+  hide: function() {
+    this.tabOverflowButton.hide();
+    this.tab.hide();
+    this.element.hide();
+    this.visible = false;
+  },
+
+  show: function() {
+    this.tabOverflowButton.show();
+    this.tab.show();
+    this.element.show();
+    this.visible = true;
   },
 
   setupTopic: function() {

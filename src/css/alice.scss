@@ -1003,7 +1003,7 @@ div.config div.sidebar div.controls {
   left: 0px;
   right: 0px;
   padding: 5px 8px;
-  background: $tab_background_active;
+  background: $tab_background_hover;
 }
 
 div.config .controls {
@@ -1044,8 +1044,7 @@ div.config div.sidebar {
   bottom: 29px;
   left: 0px;
   width: 150px;
-  background: $tab_background_hover;
-  border-right: 1px solid $tab_border;
+  background: $tab_background;
 }
 
 div.config div.sidebar ul {
@@ -1058,7 +1057,6 @@ div.config div.sidebar ul {
   overflow: auto;
   right: 0px;
   left: 0px;
-  border-top: 1px solid $tab_border_blurred;
 }
 
 div.config div#tabset_data {
@@ -1100,19 +1098,17 @@ div.config div.sidebar h2 {
 div.config div.sidebar li {
   padding: 5px 8px;
   cursor: pointer;
-  border-left: 1px solid $tab_background_hover;
   font-size: 0.8em;
 }
 
 div.config div.sidebar li:hover {
-  background: $tab_background_blurred;
+  background: $tab_background_hover;
 }
 
 div.config div.sidebar li.active,
 div.config div.sidebar li.disconnected.active,
 div.config div.sidebar li.connected.active {
-  color: $tab_background_blurred;
-  background: $tab_text_blurred;
+  background: $tab_background_blurred;
 }
 
 div.config div.sidebar li.disconnected {
