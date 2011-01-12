@@ -299,13 +299,21 @@ sub save_tabsets {
   my ($self, $req) = @_;
   $self->app->log(info => "saving tabsets");
 
+  my $tabsets = {};
+
   for my $set (keys %{ $req->parameters }) {
     next if $set eq '_';
-     $self->app->config->tabsets->{$set} = [$req->parameters->get_all($set)];
+    my $wins = [$req->parameters->get_all($set)];
+    $tabsets->{$set} = $wins->[0] eq 'empty' ? [] : $wins;
   }
 
+  $self->app->config->tabsets($tabsets);
   $self->app->config->write;
-  return $ok->();
+
+  my $output = $self->render('tabset_menu');
+  my $res = $req->new_response(200);
+  $res->body($output);
+  return $res->finalize;
 }
 
 sub send_tabsets {

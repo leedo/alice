@@ -560,7 +560,7 @@ sub tabsets {
       name => $_,
       windows => $self->config->tabsets->{$_},
     );
-  } keys %{$self->config->tabsets};
+  } sort keys %{$self->config->tabsets};
 }
 
 __PACKAGE__->meta->make_immutable;
