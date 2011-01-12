@@ -1,16 +1,12 @@
 ? my $app = shift;
 
 <div id="tabsets" class="config">
-  <form onsubmit="return Alice.tabsets.submit(this)">
+  <form onsubmit="Alice.tabsets.submit(this); return false;">
 
     <ul id="sets" onclick="Alice.tabsets.focusSet(arguments[0])">
       <li class="header">Sets</li>
-      <? for my $set (()) { ?>
-      <li>
-        <a href="#" onclick="Alice.tabsets.showSet('<?= $set->name ?>')">
-          <?= $set->name ?>
-        </a>
-      </li>
+      <? for my $set ($app->tabsets) { ?>
+      <li><?= $set->name ?></li>
       <? } ?>
       <li id="tabset_controls" class="controls">
         <a href="#" onclick="return Alice.tabsets.addSet()">New</a>
@@ -20,7 +16,7 @@
 
     <div id="tabset_data">
 
-      <? for my $set (()) { ?>
+      <? for my $set ($app->tabsets) { ?>
         <ul>
         <? for my $window ($app->sorted_windows) { ?>
           <li>

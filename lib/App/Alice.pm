@@ -9,6 +9,7 @@ use App::Alice::IRC;
 use App::Alice::Config;
 use App::Alice::Logger;
 use App::Alice::History;
+use App::Alice::Tabset;
 use Any::Moose;
 use File::Copy;
 use Digest::MD5 qw/md5_hex/;
@@ -550,6 +551,16 @@ sub set_away {
   my ($self, $message) = @_;
   my @args = (defined $message ? (AWAY => $message) : "AWAY");
   $_->send_srv(@args) for $self->connected_ircs;
+}
+
+sub tabsets {
+  my $self = shift;
+  map {
+    App::Alice::Tabset->new(
+      name => $_,
+      windows => $self->config->tabsets->{$_},
+    );
+  } keys %{$self->config->tabsets};
 }
 
 __PACKAGE__->meta->make_immutable;
