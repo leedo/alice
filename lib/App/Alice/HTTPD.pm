@@ -48,6 +48,7 @@ my $url_handlers = [
   [ ""             => "send_index" ],
   [ "config"       => "send_config" ],
   [ "prefs"        => "send_prefs" ],
+  [ "savetabsets"  => "save_tabsets" ],
   [ "tabsets"      => "send_tabsets" ],
   [ "serverconfig" => "server_config" ],
   [ "save"         => "save_config" ],
@@ -292,6 +293,19 @@ sub send_prefs {
   my $res = $req->new_response(200);
   $res->body($output);
   return $res->finalize;
+}
+
+sub save_tabsets {
+  my ($self, $req) = @_;
+  $self->app->log(info => "saving tabsets");
+
+  for my $set (keys %{ $req->parameters }) {
+    next if $set eq '_';
+     $self->app->config->tabsets->{$set} = [$req->parameters->get_all($set)];
+  }
+
+  $self->app->config->write;
+  return $ok->();
 }
 
 sub send_tabsets {

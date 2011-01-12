@@ -116,7 +116,9 @@ Object.extend(Alice, {
       if (name && !Alice.tabsets.hasTabset(name)) {
         Alice.tabsets.clearActive();
         $('sets').insert('<li class="active">'+name.escapeHTML()+'</li>');
-        $('tabset_data').insert($('empty_tabset').clone(true).addClassName('active').show());
+        var list = $('empty_tabset').clone(true).addClassName('active').show();
+        list.id = null;
+        $('tabset_data').insert(list);
       }
       else {
         alert("Invalid tab set name.");
@@ -125,14 +127,49 @@ Object.extend(Alice, {
 
     hasTabset: function (name) {
       var sets = $$('#sets li');
-      console.log(sets);
       for (var i=0; i < sets.length; i++) {
         if (sets[i].innerHTML == name) {
-          console.log(sets[i].innerHTML);
           return true;
         }
       }
       return false;
+    },
+
+    submit: function () {
+      new Ajax.Request("/savetabsets", {
+        method: "post",
+        parameters: Object.toQueryString(Alice.tabsets.params()),
+        onSuccess: function(){Alice.tabsets.remove()}
+      });
+      return false;
+    },
+
+    params: function () {
+      var values = Alice.tabsets.values();
+      return Alice.tabsets.sets().inject({}, function(acc, set, index) {
+        acc[set] = values[index];
+        return acc;
+      });
+    },
+
+    sets: function () {
+      if (!$('sets')) return [];
+
+      return $('sets').select('li').filter(function(li) {
+        return !li.hasClassName('header') && !li.hasClassName('controls')
+      }).map(function(li) {return li.innerHTML});
+    },
+
+    values: function () {
+      if (!$('tabset_data')) return [];
+
+      return $$('#tabset_data ul').filter(function(ul) {
+        return ul.id != "empty_tabset";
+      }).map(function(ul) {
+        return ul.select('input').filter(function(input) {
+          return input.checked;
+        }).map(function(input){return input.name});
+      });
     },
 
     remove: function () {
