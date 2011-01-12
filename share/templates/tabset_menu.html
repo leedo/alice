@@ -1,7 +1,7 @@
 ? my $app = shift;
 
 <ul id="tabset_menu">
-  <li class="submenu"><a href="javascript:alice.toggleTabsets()">Edit</a></li>
+  <li class="separate-bottom"><a href="javascript:alice.toggleTabsets()">Edit</a></li>
   <? for my $set ($app->tabsets) { ?>
   <? my $ids = join ",", map {"'$_'"} @{$set->windows}; ?>
     <li><a href="javascript:alice.showWindows([<?=$ids?>])"><?= $set->name ?></a></li>
