@@ -113,6 +113,14 @@ Alice.Application = Class.create({
     if (e) e.stop();
   },
 
+  toggleTabsets: function(e) {
+    this.connection.getTabsets(function (transport) {
+      this.input.disabled = true;
+      $('container').insert(transport.responseText);
+      Alice.tabsets.focusIndex(0);
+    }.bind(this));
+  },
+
   windows: function () {
     return this.window_map.values();
   },
@@ -177,9 +185,9 @@ Alice.Application = Class.create({
   nextWindow: function() {
     var active = this.activeWindow();
 
-    var nextTab = active.tab.next();
+    var nextTab = active.tab.next('.visible');
     if (!nextTab)
-      nextTab = $$('ul#tabs li').first();
+      nextTab = $$('ul#tabs li.visible').first();
     if (!nextTab) return;
 
     var id = nextTab.id.replace('_tab','');
@@ -211,14 +219,13 @@ Alice.Application = Class.create({
   previousWindow: function() {
     var active = this.activeWindow();
 
-    var previousTab = this.activeWindow().tab.previous();
+    var previousTab = this.activeWindow().tab.previous('.visible');
     if (!previousTab)
-      previousTab = $$('ul#tabs li').last();
+      previousTab = $$('ul#tabs li.visible').last();
     if (!previousTab) return;
 
     var id = previousTab.id.replace('_tab','');
-    if (id != active.id)
-      this.getWindow(id).focus();
+    if (id != active.id) this.getWindow(id).focus();
   },
   
   closeWindow: function(windowId) {
@@ -353,6 +360,17 @@ Alice.Application = Class.create({
 
   setSource: function(id) {
     $('source').value = id;
+  },
+
+  showSet: function(elem, ids) {
+    elem.up('ul').select('li').invoke('removeClassName', 'selectedset');
+    elem.up('li').addClassName('selectedset');
+    alice.windows().each(function(win) {
+      ids.indexOf(win.id) >= 0 ? win.show() : win.hide();
+    });
+    if (!alice.activeWindow().visible) {
+      alice.nextWindow();
+    }
   }
  
 });

@@ -9849,6 +9849,97 @@ Object.extend(Alice, {
     };
   },
 
+  tabsets: {
+    addSet: function () {
+			var name = prompt("Please enter a name for this tab set.");
+      if (name && !Alice.tabsets.hasTabset(name)) {
+        Alice.tabsets.clearActive();
+        $('sets').insert('<li class="active">'+name.escapeHTML()+'</li>');
+        var list = $('empty_tabset').clone(true).addClassName('active').show();
+        list.id = null;
+        $('tabset_data').insert(list);
+      }
+      else {
+        alert("Invalid tab set name.");
+      }
+    },
+
+    hasTabset: function (name) {
+      var sets = $$('#sets li');
+      for (var i=0; i < sets.length; i++) {
+        if (sets[i].innerHTML == name) {
+          return true;
+        }
+      }
+      return false;
+    },
+
+    submit: function () {
+      var params = Alice.tabsets.params();
+      new Ajax.Request("/savetabsets", {
+        method: "post",
+        parameters: Object.toQueryString(Alice.tabsets.params()),
+        onSuccess: function(transport){
+          $('tabset_menu').replace(transport.responseText);
+          Alice.tabsets.remove()
+        }
+      });
+      return false;
+    },
+
+    params: function () {
+      var values = Alice.tabsets.values();
+      return Alice.tabsets.sets().inject({}, function(acc, set, index) {
+        acc[set] = values[index];
+        return acc;
+      });
+    },
+
+    sets: function () {
+      if (!$('sets')) return [];
+      return $('sets').select('li').map(function(li) {return li.innerHTML});
+    },
+
+    values: function () {
+      if (!$('tabset_data')) return [];
+
+      return $$('#tabset_data ul').map(function(ul) {
+        var windows = ul.select('input').filter(function(input) {
+          return input.checked;
+        }).map(function(input){return input.name});
+        return windows.length ? windows : 'empty';
+      });
+    },
+
+    remove: function () {
+      alice.input.disabled = false;
+      $('tabsets').remove();
+    },
+
+    clearActive: function () {
+      $('tabset_data').select('.active').invoke('removeClassName', 'active');
+      $('sets').select('.active').invoke('removeClassName', 'active');
+    },
+
+    removeSet: function () {
+      $('tabsets').down('.active').remove();
+      $('tabset_data').down('.active').remove();
+    },
+
+    focusIndex: function (i) {
+      Alice.tabsets.clearActive();
+      $('tabset_data').select('ul')[i].addClassName('active');
+      $('sets').select('li')[i].addClassName('active');
+    },
+
+    focusSet: function (e) {
+      var li = e.findElement('li');
+      if (li) {
+        Alice.tabsets.focusIndex(li.previousSiblings().length);
+      }
+    },
+  },
+
   prefs: {
     addHighlight: function (alias) {
 		  var channel = prompt("Enter a word to highlight.");
@@ -9877,9 +9968,7 @@ Object.extend(Alice, {
     },
 
     remove: function() {
-      alice.windows().each(function(win) {
-        alice.input.disabled = false;
-      });
+      alice.input.disabled = false;
       $('prefs').remove();
     },
 
@@ -10009,9 +10098,7 @@ Object.extend(Alice, {
     },
 
     remove: function() {
-      alice.windows().each(function(win) {
-        alice.input.disabled = false;
-      });
+      alice.input.disabled = false;
       $('servers').remove();
     },
 
@@ -10153,6 +10240,14 @@ Alice.Application = Class.create({
     if (e) e.stop();
   },
 
+  toggleTabsets: function(e) {
+    this.connection.getTabsets(function (transport) {
+      this.input.disabled = true;
+      $('container').insert(transport.responseText);
+      Alice.tabsets.focusIndex(0);
+    }.bind(this));
+  },
+
   windows: function () {
     return this.window_map.values();
   },
@@ -10217,9 +10312,9 @@ Alice.Application = Class.create({
   nextWindow: function() {
     var active = this.activeWindow();
 
-    var nextTab = active.tab.next();
+    var nextTab = active.tab.next('.visible');
     if (!nextTab)
-      nextTab = $$('ul#tabs li').first();
+      nextTab = $$('ul#tabs li.visible').first();
     if (!nextTab) return;
 
     var id = nextTab.id.replace('_tab','');
@@ -10251,14 +10346,13 @@ Alice.Application = Class.create({
   previousWindow: function() {
     var active = this.activeWindow();
 
-    var previousTab = this.activeWindow().tab.previous();
+    var previousTab = this.activeWindow().tab.previous('.visible');
     if (!previousTab)
-      previousTab = $$('ul#tabs li').last();
+      previousTab = $$('ul#tabs li.visible').last();
     if (!previousTab) return;
 
     var id = previousTab.id.replace('_tab','');
-    if (id != active.id)
-      this.getWindow(id).focus();
+    if (id != active.id) this.getWindow(id).focus();
   },
 
   closeWindow: function(windowId) {
@@ -10393,6 +10487,17 @@ Alice.Application = Class.create({
 
   setSource: function(id) {
     $('source').value = id;
+  },
+
+  showSet: function(elem, ids) {
+    elem.up('ul').select('li').invoke('removeClassName', 'selectedset');
+    elem.up('li').addClassName('selectedset');
+    alice.windows().each(function(win) {
+      ids.indexOf(win.id) >= 0 ? win.show() : win.hide();
+    });
+    if (!alice.activeWindow().visible) {
+      alice.nextWindow();
+    }
   }
 
 });
@@ -10470,6 +10575,14 @@ Alice.Connection = {
 
   getConfig: function(callback) {
     new Ajax.Request('/config', {
+      method: 'get',
+      on401: this.gotoLogin,
+      onSuccess: callback
+    });
+  },
+
+  getTabsets: function(callback) {
+    new Ajax.Request('/tabsets', {
       method: 'get',
       on401: this.gotoLogin,
       onSuccess: callback
@@ -10742,9 +10855,26 @@ Alice.Window = Class.create({
     this.nicks = [];
     this.messageLimit = this.application.isMobile ? 50 : 200;
     this.msgid = 0;
+    this.visible = true;
 
     this.setupEvents();
     this.setupTopic();
+  },
+
+  hide: function() {
+    this.tabOverflowButton.hide();
+    this.element.hide();
+    this.tab.addClassName('hidden');
+    this.tab.removeClassName('visible');
+    this.visible = false;
+  },
+
+  show: function() {
+    this.tabOverflowButton.show();
+    this.element.show();
+    this.tab.addClassName('visible');
+    this.tab.removeClassName('hidden');
+    this.visible = true;
   },
 
   setupTopic: function() {
@@ -10907,6 +11037,7 @@ Alice.Window = Class.create({
     this.element.redraw();
     this.setWindowHash();
     this.application.updateChannelSelect();
+    return this;
   },
 
   setWindowHash: function () {
