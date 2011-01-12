@@ -37,6 +37,7 @@ ul#controls li.dropdown {
   margin: 0;
   position: relative; }
 
+li.dropdown li.selectedset,
 li.dropdown li.unread {
   font-weight: bold; }
 
@@ -231,6 +232,12 @@ ul#tabs li {
   margin: 0;
   margin-left: -1px;
   color: white; }
+
+ul#tabs li.hidden {
+  display: none; }
+
+ul#tabs li.visible {
+  display: block; }
 
 body.blurred ul#tabs li:first-child div.hit_area {
   border-left: 1px solid #333333; }
@@ -1099,8 +1106,13 @@ li.dropdown > ul > li a {
   text-decoration: none;
   color: white; }
 
+li.dropdown li {
+  cursor: pointer; }
+
+li.dropdown li a:hover {
+  text-shadow: none; }
+
 li.dropdown ul li:hover {
-  text-shadow: none;
   background: #3a3a3a; }
 
 li.dropdown > ul ul {

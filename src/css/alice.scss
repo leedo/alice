@@ -43,6 +43,7 @@ ul#controls li.dropdown {
   position: relative;
 }
 
+li.dropdown li.selectedset,
 li.dropdown li.unread {
   font-weight: bold;
 }
@@ -262,6 +263,13 @@ ul#tabs li {
   margin: 0;
   margin-left: -1px;
   color: $tab_text;
+}
+
+ul#tabs li.hidden {
+  display: none;
+}
+ul#tabs li.visible {
+  display: block;
 }
 
 body.blurred ul#tabs li:first-child div.hit_area {
@@ -1195,8 +1203,15 @@ li.dropdown > ul > li a {
   color: $tab_text;
 }
 
-li.dropdown ul li:hover {
+li.dropdown li {
+  cursor: pointer;
+}
+
+li.dropdown li a:hover {
   text-shadow: none;
+}
+
+li.dropdown ul li:hover {
   background: $tab_background_hover;
 }
 
