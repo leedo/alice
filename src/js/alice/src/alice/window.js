@@ -18,9 +18,26 @@ Alice.Window = Class.create({
     this.nicks = [];
     this.messageLimit = this.application.isMobile ? 50 : 200;
     this.msgid = 0;
+    this.visible = true;
     
     this.setupEvents();
     this.setupTopic();
+  },
+
+  hide: function() {
+    this.tabOverflowButton.hide();
+    this.element.hide();
+    this.tab.addClassName('hidden');
+    this.tab.removeClassName('visible');
+    this.visible = false;
+  },
+
+  show: function() {
+    this.tabOverflowButton.show();
+    this.element.show();
+    this.tab.addClassName('visible');
+    this.tab.removeClassName('hidden');
+    this.visible = true;
   },
 
   setupTopic: function() {
@@ -189,6 +206,7 @@ Alice.Window = Class.create({
     this.element.redraw();
     this.setWindowHash();
     this.application.updateChannelSelect();
+    return this;
   },
 
   setWindowHash: function () {

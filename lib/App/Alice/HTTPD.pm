@@ -48,6 +48,8 @@ my $url_handlers = [
   [ ""             => "send_index" ],
   [ "config"       => "send_config" ],
   [ "prefs"        => "send_prefs" ],
+  [ "savetabsets"  => "save_tabsets" ],
+  [ "tabsets"      => "send_tabsets" ],
   [ "serverconfig" => "server_config" ],
   [ "save"         => "save_config" ],
   [ "tabs"         => "tab_order" ],
@@ -288,6 +290,36 @@ sub send_prefs {
   my ($self, $req) = @_;
   $self->app->log(info => "serving prefs");
   my $output = $self->render('prefs');
+  my $res = $req->new_response(200);
+  $res->body($output);
+  return $res->finalize;
+}
+
+sub save_tabsets {
+  my ($self, $req) = @_;
+  $self->app->log(info => "saving tabsets");
+
+  my $tabsets = {};
+
+  for my $set (keys %{ $req->parameters }) {
+    next if $set eq '_';
+    my $wins = [$req->parameters->get_all($set)];
+    $tabsets->{$set} = $wins->[0] eq 'empty' ? [] : $wins;
+  }
+
+  $self->app->config->tabsets($tabsets);
+  $self->app->config->write;
+
+  my $output = $self->render('tabset_menu');
+  my $res = $req->new_response(200);
+  $res->body($output);
+  return $res->finalize;
+}
+
+sub send_tabsets {
+  my ($self, $req) = @_;
+  $self->app->log(info => "serving tabsets");
+  my $output = $self->render('tabsets');
   my $res = $req->new_response(200);
   $res->body($output);
   return $res->finalize;

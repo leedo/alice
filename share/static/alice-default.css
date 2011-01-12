@@ -34,6 +34,7 @@ ul#controls li.dropdown {
   margin: 0;
   position: relative; }
 
+li.dropdown li.selectedset,
 li.dropdown li.unread {
   font-weight: bold; }
 
@@ -228,6 +229,12 @@ ul#tabs li {
   margin: 0;
   margin-left: -1px;
   color: #333333; }
+
+ul#tabs li.hidden {
+  display: none; }
+
+ul#tabs li.visible {
+  display: block; }
 
 body.blurred ul#tabs li:first-child div.hit_area {
   border-left: 1px solid #eeeeee; }
@@ -781,9 +788,9 @@ div.config {
   background: #efefef;
   padding-bottom: 29px;
   z-index: 981;
-  -webkit-box-shadow: 0 0 10px #000;
-  -moz-box-shadow: 0 0 10px #000;
-  box-shadow: 0 0 10px #000;
+  -webkit-box-shadow: 1px 1px 3px #000;
+  -moz-box-shadow: 1px 1px 3px #000;
+  box-shadow: 1px 1px 3px #000;
   border: 5px solid #999999; }
 
 div.config#prefs {
@@ -799,6 +806,12 @@ div.config#servers {
   height: 380px;
   margin-left: -230px;
   margin-top: -210px; }
+
+div.config#tabsets {
+  width: 300px;
+  height: 200px;
+  margin-left: -155px;
+  margin-top: -120px; }
 
 div.config div.buttons {
   clear: both;
@@ -850,13 +863,13 @@ div.config select[multiple] {
   color: black;
   padding: 2px; }
 
-div.config li#server_controls {
+div.config div.sidebar div.controls {
   position: absolute;
   bottom: 0px;
   left: 0px;
   right: 0px;
-  padding: 10px;
-  background: #efefef; }
+  padding: 5px 8px;
+  background: #cccccc; }
 
 div.config .controls {
   clear: both;
@@ -884,46 +897,73 @@ div.config input[type="checkbox"] {
   float: left;
   margin-right: 4px; }
 
-div.config ul#connections {
-  list-style: none;
+div.config div.sidebar {
   position: absolute;
   top: 0px;
   bottom: 29px;
   left: 0px;
+  width: 150px;
+  background: #dddddd; }
+
+div.config div.sidebar ul {
+  list-style: none;
   margin: 0;
   padding: 0px;
-  width: 150px;
-  background: #cccccc;
-  border-right: 1px solid #999999; }
+  position: absolute;
+  top: 22px;
+  bottom: 24px;
+  overflow: auto;
+  right: 0px;
+  left: 0px; }
 
-div.config ul#connections li.header {
+div.config div#tabset_data {
+  position: absolute;
+  top: 5px;
+  bottom: 29px;
+  left: 155px;
+  right: 0px;
+  overflow: auto;
+  font-size: 0.8em; }
+
+div.config div#tabset_data ul {
+  display: none;
+  margin: 0;
+  padding: 0;
+  list-style: none; }
+
+div.config div#tabset_data ul.active {
+  display: block; }
+
+div.config div#tabset_data ul li {
+  margin-bottom: 0.25em; }
+
+div.config div.sidebar h2 {
   text-transform: uppercase;
   color: #777777;
   letter-spacing: 1px;
   font-size: 0.7em;
-  cursor: default; }
+  cursor: default;
+  font-weight: normal;
+  padding: 5px 8px;
+  margin: 0; }
 
-div.config ul#connections li.header:hover {
-  background: #cccccc; }
-
-div.config ul#connections li {
+div.config div.sidebar li {
   padding: 5px 8px;
   cursor: pointer;
-  border-left: 1px solid #cccccc;
   font-size: 0.8em; }
 
-div.config ul#connections li:hover {
+div.config div.sidebar li:hover {
+  background: #cccccc; }
+
+div.config div.sidebar li.active,
+div.config div.sidebar li.disconnected.active,
+div.config div.sidebar li.connected.active {
   background: #eeeeee; }
 
-div.config ul#connections li.disconnected.active,
-div.config ul#connections li.connected.active {
-  color: #eeeeee;
-  background: #777777; }
-
-div.config ul#connections li.disconnected {
+div.config div.sidebar li.disconnected {
   color: #777777; }
 
-div.config ul#connections li.connected {
+div.config div.sidebar li.connected {
   color: #333333; }
 
 /* auto-generated css classes for irc->html */
@@ -1048,23 +1088,48 @@ li.dropdown ul {
   list-style: none;
   margin: 0;
   padding: 0;
-  font-size: 14px;
+  font-size: 12px;
   background: #dddddd;
   border: 1px solid #999999;
   -webkit-border-radius: 2px;
-  min-width: 100px;
+  -webkit-box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.4);
+  width: 100px;
   display: none;
   white-space: nowrap; }
 
-li.dropdown.open ul {
+li.dropdown.open > ul {
   display: block; }
 
-li.dropdown ul li a {
+li.dropdown > ul > li a {
   display: block;
   padding: 4px 5px;
   text-decoration: none;
   color: #333333; }
 
-li.dropdown ul li a:hover {
-  text-shadow: none;
+li.dropdown li {
+  cursor: pointer; }
+
+li.dropdown li a:hover {
+  text-shadow: none; }
+
+li.dropdown ul li:hover {
   background: #cccccc; }
+
+li.dropdown > ul ul {
+  display: none;
+  left: -100px;
+  width: 100px;
+  bottom: -1px;
+  top: auto; }
+
+li.dropdown li.separate-bottom {
+  border-bottom: 1px solid #cccccc; }
+
+li.dropdown li.submenu {
+  background: url(image/arrow.png) center right no-repeat; }
+
+li.dropdown li.submenu:hover {
+  background: url(image/arrow.png) #cccccc center right no-repeat; }
+
+li.dropdown > ul li.submenu:hover ul {
+  display: block; }
