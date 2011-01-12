@@ -136,10 +136,14 @@ Object.extend(Alice, {
     },
 
     submit: function () {
+      var params = Alice.tabsets.params();
       new Ajax.Request("/savetabsets", {
         method: "post",
         parameters: Object.toQueryString(Alice.tabsets.params()),
-        onSuccess: function(){Alice.tabsets.remove()}
+        onSuccess: function(transport){
+          $('tabset_menu').replace(transport.responseText);
+          Alice.tabsets.remove()
+        }
       });
       return false;
     },
@@ -154,21 +158,17 @@ Object.extend(Alice, {
 
     sets: function () {
       if (!$('sets')) return [];
-
-      return $('sets').select('li').filter(function(li) {
-        return !li.hasClassName('header') && !li.hasClassName('controls')
-      }).map(function(li) {return li.innerHTML});
+      return $('sets').select('li').map(function(li) {return li.innerHTML});
     },
 
     values: function () {
       if (!$('tabset_data')) return [];
 
-      return $$('#tabset_data ul').filter(function(ul) {
-        return ul.id != "empty_tabset";
-      }).map(function(ul) {
-        return ul.select('input').filter(function(input) {
+      return $$('#tabset_data ul').map(function(ul) {
+        var windows = ul.select('input').filter(function(input) {
           return input.checked;
         }).map(function(input){return input.name});
+        return windows.length ? windows : 'empty';
       });
     },
 
@@ -178,21 +178,23 @@ Object.extend(Alice, {
     },
 
     clearActive: function () {
-			$$('#tabset_data ul.active').invoke('removeClassName',"active");
-			$$('#sets li.active').invoke('removeClassName',"active");
+      $('tabset_data').select('.active').invoke('removeClassName', 'active');
+      $('sets').select('.active').invoke('removeClassName', 'active');
+    },
+
+    removeSet: function () {
+      $('tabsets').down('.active').remove();
+      $('tabset_data').down('.active').remove();
     },
 
     focusSet: function (e) {
       var li = e.findElement('li');
-      if (!li || li.hasClassName('controls') || li.hasClassName('header')) return;
 
       if (!li.hasClassName('active')) {
         Alice.tabsets.clearActive();
 
         li.addClassName('active');
-        var length = li.previousSiblings().filter(function(i) {
-                       return !i.hasClassName('header') && !i.hasClassName('controls')
-                     }).length;
+        var length = li.previousSiblings().length;
         
         $$('#tabset_data ul')[length].addClassName('active');
       }

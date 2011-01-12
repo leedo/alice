@@ -1,0 +1,9 @@
+? my $app = shift;
+
+<ul id="tabset_menu">
+  <li class="submenu"><a href="javascript:alice.toggleTabsets()">Edit</a></li>
+  <? for my $set ($app->tabsets) { ?>
+    <li><a href="#"><?= $set->name ?></a></li>
+  <? } ?>
+</ul>
+

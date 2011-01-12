@@ -3,16 +3,22 @@
 <div id="tabsets" class="config">
   <form onsubmit="Alice.tabsets.submit(this); return false;">
 
-    <ul id="sets" onclick="Alice.tabsets.focusSet(arguments[0])">
-      <li class="header">Sets</li>
-      <? for my $set ($app->tabsets) { ?>
-      <li><?= $set->name ?></li>
-      <? } ?>
-      <li id="tabset_controls" class="controls">
+    <div class="sidebar">
+
+      <h2>Sets</h2>
+
+      <ul id="sets" onclick="Alice.tabsets.focusSet(arguments[0])">
+        <? for my $set ($app->tabsets) { ?>
+        <li><?= $set->name ?></li>
+        <? } ?>
+      </ul>
+
+      <div id="tabset_controls" class="controls">
         <a href="#" onclick="return Alice.tabsets.addSet()">New</a>
         <a href="#" onclick="return Alice.tabsets.removeSet()">Remove</a>
-      </li>
-    </ul>
+      </div>
+
+    </div>
 
     <div id="tabset_data">
 
@@ -27,16 +33,16 @@
         </ul>
       <? } ?>
 
-      <ul id="empty_tabset">
-        <? for my $window ($app->sorted_windows) { ?>
-          <li>
-            <input type="checkbox" name="<?= $window->id ?>" />
-            <?= $window->title ?>
-          </li>
-        <? } ?>
-      </ul>
-
     </div>
+
+    <ul id="empty_tabset">
+      <? for my $window ($app->sorted_windows) { ?>
+        <li>
+          <input type="checkbox" name="<?= $window->id ?>" />
+          <?= $window->title ?>
+        </li>
+      <? } ?>
+    </ul>
 
     <div class="buttons">
       <button type="submit">Save</button>

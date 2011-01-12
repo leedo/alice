@@ -997,13 +997,12 @@ div.config select[multiple] {
   padding: 2px;
 }
 
-div.config li#tabset_controls,
-div.config li#server_controls {
+div.config div.sidebar div.controls {
   position: absolute;
   bottom: 0px;
   left: 0px;
   right: 0px;
-  padding: 10px;
+  padding: 5px 8px;
   background: $tab_background_active;
 }
 
@@ -1039,18 +1038,27 @@ div.config input[type="checkbox"] {
   margin-right: 4px;
 }
 
-div.config ul#sets,
-div.config ul#connections {
-  list-style: none;
+div.config div.sidebar {
   position: absolute;
   top: 0px;
   bottom: 29px;
   left: 0px;
-  margin: 0;
-  padding: 0px;
   width: 150px;
   background: $tab_background_hover;
   border-right: 1px solid $tab_border;
+}
+
+div.config div.sidebar ul {
+  list-style: none;
+  margin: 0;
+  padding: 0px;
+  position: absolute;
+  top: 22px;
+  bottom: 24px;
+  overflow: auto;
+  right: 0px;
+  left: 0px;
+  border-top: 1px solid $tab_border_blurred;
 }
 
 div.config div#tabset_data {
@@ -1078,45 +1086,40 @@ div.config div#tabset_data ul li {
   margin-bottom: 0.25em;
 }
 
-div.config ul#sets li.header,
-div.config ul#connections li.header {
+div.config div.sidebar h2 {
   text-transform: uppercase;
   color: $tab_text_blurred;
   letter-spacing: 1px;
   font-size: 0.7em;
   cursor: default;
+  font-weight: normal;
+  padding: 5px 8px;
+  margin: 0;
 }
 
-div.config ul#sets li.header:hover,
-div.config ul#connections li.header:hover {
-  background: $tab_background_hover;
-}
-
-div.config ul#sets li,
-div.config ul#connections li {
+div.config div.sidebar li {
   padding: 5px 8px;
   cursor: pointer;
   border-left: 1px solid $tab_background_hover;
   font-size: 0.8em;
 }
 
-div.config ul#sets li:hover,
-div.config ul#connections li:hover {
+div.config div.sidebar li:hover {
   background: $tab_background_blurred;
 }
 
-div.config ul#sets li.active,
-div.config ul#connections li.disconnected.active,
-div.config ul#connections li.connected.active {
+div.config div.sidebar li.active,
+div.config div.sidebar li.disconnected.active,
+div.config div.sidebar li.connected.active {
   color: $tab_background_blurred;
   background: $tab_text_blurred;
 }
 
-div.config ul#connections li.disconnected {
+div.config div.sidebar li.disconnected {
   color: $tab_text_blurred;
 }
 
-div.config ul#connections li.connected {
+div.config div.sidebar li.connected {
   color: $tab_text;
 }
 
@@ -1205,8 +1208,8 @@ li.dropdown > ul ul {
   display: none;
   left: -100px;
   width: 100px;
-  bottom: auto;
-  top: -1px;
+  bottom: -1px;
+  top: auto;
 }
 
 li.dropdown li.submenu {

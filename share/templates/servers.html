@@ -3,22 +3,27 @@
 
 <div class="config" id="servers">
 
-  <ul id="connections">
-    <li class="header">Connections</li>
-    <? for my $index (0 .. @connections - 1) { ?>
-    <? my $connection = $connections[$index]; ?>
-    <? my $alias = $connection->alias; ?>
-    <li class="<?= $connection->is_connected ? "connected" : "disconnected" ?> <? if ($index == 0) {?> active<?}?>"
-    onclick="Alice.connections.showConnection('<?= $alias ?>')" id="menu_<?= $alias ?>">
-    <?= $alias ?>
-    </li>
-    <? } ?>
+  <div class="sidebar">
 
-    <li class="controls" id="server_controls">
+    <h2>Connections</h2>
+    
+    <ul id="connections">
+      <? for my $index (0 .. @connections - 1) { ?>
+        <? my $connection = $connections[$index]; ?>
+        <? my $alias = $connection->alias; ?>
+        <li class="<?= $connection->is_connected ? "connected" : "disconnected" ?> <? if ($index == 0) {?> active<?}?>"
+            onclick="Alice.connections.showConnection('<?= $alias ?>')" id="menu_<?= $alias ?>">
+          <?= $alias ?>
+        </li>
+      <? } ?>
+    </ul>
+
+    <div class="controls" id="server_controls">
       <a href="#" onclick="return Alice.connections.addServer()">New</a>
       <a href="#" onclick="return Alice.connections.removeServer()">Remove</a>
-    </li>
-  </ul>
+    </div>
+
+  </div>
 
   <form id="config_data" onsubmit="return Alice.connections.submit(this)">
     <input type="hidden" name="has_servers" value="1" />
