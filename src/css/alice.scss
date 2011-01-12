@@ -1195,7 +1195,7 @@ li.dropdown > ul > li a {
   color: $tab_text;
 }
 
-li.dropdown ul li a:hover {
+li.dropdown ul li:hover {
   text-shadow: none;
   background: $tab_background_hover;
 }
@@ -1210,6 +1210,13 @@ li.dropdown > ul ul {
 
 li.dropdown li.separate-bottom {
   border-bottom: 1px solid $tab_background_hover;
+}
+
+li.dropdown li.submenu {
+  background: url(image/arrow.png) center right no-repeat;
+}
+li.dropdown li.submenu:hover {
+  background: url(image/arrow.png) $tab_background_hover center right no-repeat;
 }
 
 li.dropdown > ul li.submenu:hover ul {
