@@ -185,15 +185,14 @@ Alice.Application = Class.create({
   nextWindow: function() {
     var active = this.activeWindow();
 
-    var nextTab = active.tab.next();
+    var nextTab = active.tab.next('.visible');
     if (!nextTab)
-      nextTab = $$('ul#tabs li').first();
+      nextTab = $$('ul#tabs li.visible').first();
     if (!nextTab) return;
 
     var id = nextTab.id.replace('_tab','');
     if (id != active.id) {
-      var win = this.getWindow(id).focus();
-      if (!win.visible) this.nextWindow();
+      this.getWindow(id).focus();
     }
   },
 
@@ -220,16 +219,13 @@ Alice.Application = Class.create({
   previousWindow: function() {
     var active = this.activeWindow();
 
-    var previousTab = this.activeWindow().tab.previous();
+    var previousTab = this.activeWindow().tab.previous('.visible');
     if (!previousTab)
-      previousTab = $$('ul#tabs li').last();
+      previousTab = $$('ul#tabs li.visible').last();
     if (!previousTab) return;
 
     var id = previousTab.id.replace('_tab','');
-    if (id != active.id) {
-      var win = this.getWindow(id).focus();
-      if (!win.visible) this.previousWindow();
-    }
+    if (id != active.id) this.getWindow(id).focus();
   },
   
   closeWindow: function(windowId) {
@@ -366,7 +362,9 @@ Alice.Application = Class.create({
     $('source').value = id;
   },
 
-  showWindows: function(ids) {
+  showSet: function(elem, ids) {
+    elem.up('ul').select('li').invoke('removeClassName', 'selectedset');
+    elem.up('li').addClassName('selectedset');
     alice.windows().each(function(win) {
       ids.indexOf(win.id) >= 0 ? win.show() : win.hide();
     });

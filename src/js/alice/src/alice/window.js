@@ -26,15 +26,17 @@ Alice.Window = Class.create({
 
   hide: function() {
     this.tabOverflowButton.hide();
-    this.tab.hide();
     this.element.hide();
+    this.tab.addClassName('hidden');
+    this.tab.removeClassName('visible');
     this.visible = false;
   },
 
   show: function() {
     this.tabOverflowButton.show();
-    this.tab.show();
     this.element.show();
+    this.tab.addClassName('visible');
+    this.tab.removeClassName('hidden');
     this.visible = true;
   },
 

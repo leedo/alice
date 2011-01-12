@@ -4,6 +4,6 @@
   <li class="separate-bottom"><a href="javascript:alice.toggleTabsets()">Edit</a></li>
   <? for my $set ($app->tabsets) { ?>
   <? my $ids = join ",", map {"'$_'"} @{$set->windows}; ?>
-    <li><a href="javascript:alice.showWindows([<?=$ids?>])"><?= $set->name ?></a></li>
+    <li><a onclick="return alice.showSet(this, [<?=$ids?>])"><?= $set->name ?></a></li>
   <? } ?>
 </ul>
