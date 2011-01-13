@@ -11159,14 +11159,18 @@ Alice.Window = Class.create({
     if (this.element.hasClassName('active'))
       this.scrollToBottom();
     else if (this.title != "info") {
+      var wrapped = this.isTabWrapped();
       if (message.event == "say" && !message.self) {
         this.tab.addClassName("unread");
         this.tabOverflowButton.addClassName("unread");
-        if (this.isTabWrapped()) this.application.highlightChannelSelect("unread");
+        if (wrapped) this.application.highlightChannelSelect("unread");
       }
       if (message.highlight) {
         this.tab.addClassName("highlight");
-        if (this.isTabWrapped()) this.application.highlightChannelSelect("highlight");
+        if (wrapped) this.application.highlightChannelSelect("highlight");
+      }
+      if (message.window.type == "privmsg" && wrapped) {
+        this.application.highlightChannelSelect("highlight");
       }
     }
 
