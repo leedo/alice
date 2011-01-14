@@ -28,6 +28,11 @@ has httpd => (
   builder => "_build_httpd",
 );
 
+has current_response => (
+  is      => 'rw',
+  isa     => 'CodeRef',
+);
+
 has ping => (
   is  => 'rw',
   lazy => 1,
@@ -46,22 +51,18 @@ my $url_handlers = [
   [ "stream"       => "setup_xhr_stream" ],
   [ "wsstream"     => "setup_ws_stream" ],
   [ ""             => "send_index" ],
-  [ "config"       => "send_config" ],
-  [ "prefs"        => "send_prefs" ],
   [ "savetabsets"  => "save_tabsets" ],
-  [ "tabsets"      => "send_tabsets" ],
   [ "serverconfig" => "server_config" ],
   [ "save"         => "save_config" ],
-  [ "tabs"         => "tab_order" ],
   [ "login"        => "login" ],
   [ "logout"       => "logout" ],
   [ "export"       => "export_config" ],
-  [ "view"         => "send_index" ],
 ];
 
 sub url_handlers { return $url_handlers }
 
 my $ok = sub{ [200, ["Content-Type", "text/plain", "Content-Length", 2], ['ok']] };
+my $notfound = sub{ [404, ["Content-Type", "text/plain", "Content-Length", 9], ['not found']] };
 
 sub BUILD {
   my $self = shift;
@@ -86,7 +87,13 @@ sub _build_httpd {
       }
       enable "Static", path => qr{^/static/}, root => $self->config->assetdir;
       enable "WebSocket";
-      sub {$self->dispatch(shift)}
+      sub {
+        my $env = shift;
+        return sub {
+          $self->current_response(shift);
+          $self->dispatch($env);
+        }
+      }
     }
   );
   $self->httpd($httpd);
@@ -94,27 +101,41 @@ sub _build_httpd {
 
 sub dispatch {
   my ($self, $env) = @_;
+
   my $req = Plack::Request->new($env);
+  my $res = $req->new_response(200);
+
   if ($self->auth_enabled) {
     unless ($req->path eq "/login" or $self->is_logged_in($req)) {
-      my $res = $req->new_response;
-      if ($req->path eq "/") {
-        $res->redirect("/login");
-      } else {
-        $res->status(401);
-        $res->body("unauthorized");
-      }
-      return $res->finalize;
+      $self->auth_failed($req, $res);
     }
   }
   for my $handler (@{$self->url_handlers}) {
     my $path = $handler->[0];
     if ($req->path_info =~ /^\/$path\/?$/) {
       my $method = $handler->[1];
-      return $self->$method($req);
+      $self->$method($req, $res);
+      return;
     }
   }
-  return $self->not_found($req);
+  $self->template($req, $res);
+}
+
+sub respond {
+  my ($self, $response) = @_;
+  $self->current_response->($response);
+}
+
+sub auth_failed {
+  my ($self, $req, $res) = @_;
+
+  if ($req->path eq "/") {
+    $res->redirect("/login");
+  } else {
+    $res->status(401);
+    $res->body("unauthorized");
+  }
+  $self->respond( $res->finalize );
 }
 
 sub is_logged_in {
@@ -124,11 +145,11 @@ sub is_logged_in {
 }
 
 sub login {
-  my ($self, $req) = @_;
-  my $res = $req->new_response;
+  my ($self, $req, $res) = @_;
+
   if (!$self->auth_enabled or $self->is_logged_in($req)) {
     $res->redirect("/");
-    return $res->finalize;
+    $self->respond( $res->finalize );
   }
   elsif (my $user = $req->parameters->{username}
      and my $pass = $req->parameters->{password}) {
@@ -139,7 +160,7 @@ sub login {
         userid       => $self->app->user,
       };
       $res->redirect("/");
-      return $res->finalize;
+      $self->respond( $res->finalize );
     }
     $res->body($self->render("login", "bad username or password"));
   }
@@ -147,13 +168,12 @@ sub login {
     $res->body($self->render("login"));
   }
   $res->status(200);
-  return $res->finalize;
+  $self->respond( $res->finalize );
 }
 
 sub logout {
-  my ($self, $req) = @_;
+  my ($self, $req, $res) = @_;
   $_->close for @{$self->app->streams};
-  my $res = $req->new_response;
   if (!$self->auth_enabled) {
     $res->redirect("/");
   } else {
@@ -161,7 +181,7 @@ sub logout {
     $req->env->{"psgix.session.options"}{expire} = 1;
     $res->redirect("/login");
   }
-  return $res->finalize;
+  $self->respond( $res->finalize );
 }
 
 sub shutdown {
@@ -174,22 +194,18 @@ sub setup_xhr_stream {
   my $app = $self->app;
   $app->log(info => "opening new stream");
 
-  return sub {
-    my $respond = shift;
+  my $writer = $self->respond([200, [@App::Alice::Stream::XHR::headers]]);
+  my $stream = App::Alice::Stream::XHR->new(
+    queue      => [ map({$_->join_action} $app->windows) ],
+    writer     => $writer,
+    start_time => $req->parameters->{t},
+    # android requires 4K updates to trigger loading event
+    min_bytes  => $req->user_agent =~ /android/i ? 4096 : 0,
+    on_error => sub { $app->purge_disconnects },
+  );
 
-    my $writer = $respond->([200, [@App::Alice::Stream::XHR::headers]]);
-    my $stream = App::Alice::Stream::XHR->new(
-      queue      => [ map({$_->join_action} $app->windows) ],
-      writer     => $writer,
-      start_time => $req->parameters->{t},
-      # android requires 4K updates to trigger loading event
-      min_bytes  => $req->user_agent =~ /android/i ? 4096 : 0,
-      on_error => sub { $app->purge_disconnects },
-    );
-
-    $app->add_stream($stream);
-    $app->update_stream($stream, $req->parameters);
-  }
+  $app->add_stream($stream);
+  $app->update_stream($stream, $req->parameters);
 }
 
 sub setup_ws_stream {
@@ -197,25 +213,21 @@ sub setup_ws_stream {
   my $app = $self->app;
   $app->log(info => "opening new websocket stream");
 
-  return sub {
-    my $respond = shift;
-
-    if (my $fh = $req->env->{'websocket.impl'}->handshake) {
-      my $stream = App::Alice::Stream::WebSocket->new(
-        start_time => $req->parameters->{t} || time,
-        fh      => $fh,
-        on_read => sub { $app->handle_message(@_) },
-        on_error => sub { $app->purge_disconnects },
-      );
-      $stream->send([ map({$_->join_action} $app->windows) ]);
-      $app->add_stream($stream);
-      $app->update_stream($stream, $req->parameters);
-    }
-    else {
-      my $code = $req->env->{'websocket.impl'}->error_code;
-      $respond->([$code, ["Content-Type", "text/plain"], ["something broke"]]);
-    }
-  };
+  if (my $fh = $req->env->{'websocket.impl'}->handshake) {
+    my $stream = App::Alice::Stream::WebSocket->new(
+      start_time => $req->parameters->{t} || time,
+      fh      => $fh,
+      on_read => sub { $app->handle_message(@_) },
+      on_error => sub { $app->purge_disconnects },
+    );
+    $stream->send([ map({$_->join_action} $app->windows) ]);
+    $app->add_stream($stream);
+    $app->update_stream($stream, $req->parameters);
+  }
+  else {
+    my $code = $req->env->{'websocket.impl'}->error_code;
+    $self->respond([$code, ["Content-Type", "text/plain"], ["something broke"]]);
+  }
 }
 
 sub handle_message {
@@ -227,7 +239,7 @@ sub handle_message {
     source => $req->parameters->{source}
   });
   
-  return $ok->();
+  $self->respond( $ok->() );
 }
 
 sub send_index {
@@ -235,35 +247,32 @@ sub send_index {
   my $options = $self->merged_options($req);
   my $app = $self->app;
 
-  return sub {
-    my $respond = shift;
-    my $writer = $respond->([200, ["Content-type" => "text/html; charset=utf-8"]]);
-    my @windows = $app->sorted_windows;
-    @windows > 1 ? $windows[1]->{active} = 1 : $windows[0]->{active} = 1;
+  my $writer = $self->respond([200, ["Content-type" => "text/html; charset=utf-8"]]);
+  my @windows = $app->sorted_windows;
+  @windows > 1 ? $windows[1]->{active} = 1 : $windows[0]->{active} = 1;
 
-    my @queue;
+  my @queue;
     
-    push @queue, sub {$app->render('index_head', $options, @windows)};
-    for my $window (@windows) {
-      push @queue, sub {$app->render('window_head', $window)};
-      push @queue, sub {$app->render('window_footer', $window)};
-    }
-    push @queue, sub {
-      my $html = $app->render('index_footer', @windows);
-      delete $_->{active} for @windows;
-      return $html;
-    };
-
-    my $idle_w; $idle_w = AE::idle sub {
-      if (my $cb = shift @queue) {
-        my $content = encode_utf8 $cb->();
-        $writer->write($content);
-      } else {
-        $writer->close;
-        undef $idle_w;
-      }
-    };
+  push @queue, sub {$app->render('index_head', $options, @windows)};
+  for my $window (@windows) {
+    push @queue, sub {$app->render('window_head', $window)};
+    push @queue, sub {$app->render('window_footer', $window)};
   }
+  push @queue, sub {
+    my $html = $app->render('index_footer', @windows);
+    delete $_->{active} for @windows;
+    return $html;
+  };
+
+  my $idle_w; $idle_w = AE::idle sub {
+    if (my $cb = shift @queue) {
+      my $content = encode_utf8 $cb->();
+      $writer->write($content);
+    } else {
+      $writer->close;
+      undef $idle_w;
+    }
+  };
 }
 
 sub merged_options {
@@ -278,26 +287,21 @@ sub merged_options {
   join "&", map {"$_=$options{$_}"} keys %options;
 }
 
-sub send_config {
-  my ($self, $req) = @_;
-  $self->app->log(info => "serving config");
-  my $output = $self->render('servers');
-  my $res = $req->new_response(200);
-  $res->body($output);
-  return $res->finalize;
-}
+sub template {
+  my ($self, $req, $res) = @_;
+  my $path = $req->path;
+  $path =~ s/^\///;
 
-sub send_prefs {
-  my ($self, $req) = @_;
-  $self->app->log(info => "serving prefs");
-  my $output = $self->render('prefs');
-  my $res = $req->new_response(200);
-  $res->body($output);
-  return $res->finalize;
+  eval {
+    my $body = $self->render($path);
+    $res->body($self->render($path));
+  };
+
+  $self->respond( $@ ? $notfound->() : $res->finalize );
 }
 
 sub save_tabsets {
-  my ($self, $req) = @_;
+  my ($self, $req, $res) = @_;
   $self->app->log(info => "saving tabsets");
 
   my $tabsets = {};
@@ -311,23 +315,12 @@ sub save_tabsets {
   $self->app->config->tabsets($tabsets);
   $self->app->config->write;
 
-  my $output = $self->render('tabset_menu');
-  my $res = $req->new_response(200);
-  $res->body($output);
-  return $res->finalize;
-}
-
-sub send_tabsets {
-  my ($self, $req) = @_;
-  $self->app->log(info => "serving tabsets");
-  my $output = $self->render('tabsets');
-  my $res = $req->new_response(200);
-  $res->body($output);
-  return $res->finalize;
+  $res->body($self->render('tabset_menu'));
+  $self->respond( $res->finalize );
 }
 
 sub server_config {
-  my ($self, $req) = @_;
+  my ($self, $req, $res) = @_;
   $self->app->log(info => "serving blank server config");
   
   my $name = $req->parameters->{name};
@@ -335,10 +328,9 @@ sub server_config {
   my $config = $self->render('new_server', $name);
   my $listitem = $self->render('server_listitem', $name);
   
-  my $res = $req->new_response(200);
   $res->body(to_json({config => $config, listitem => $listitem}));
   $res->header("Cache-control" => "no-cache");
-  return $res->finalize;
+  $self->respond( $res->finalize );
 }
 
 #
@@ -378,7 +370,7 @@ sub save_config {
     $self->app->format_info("config", "saved")
   );
 
-  return $ok->();
+  $self->respond( $ok->() );
 }
 
 sub tab_order  {
@@ -386,14 +378,7 @@ sub tab_order  {
   $self->app->log(debug => "updating tab order");
   
   $self->app->tab_order([grep {defined $_} $req->parameters->get_all('tabs')]);
-  return $ok->();
-}
-
-sub not_found  {
-  my ($self, $req) = @_;
-  $self->app->log(debug => "sending 404 " . $req->path_info);
-  my $res = $req->new_response(404);
-  return $res->finalize;
+  $self->respond( $ok->() );
 }
 
 sub auth_enabled {
@@ -412,14 +397,13 @@ sub render {
 }
 
 sub export_config {
-  my ($self, $req) = @_;
-  my $res = $req->new_response(200);
+  my ($self, $req, $res) = @_;
   $res->content_type("text/plain");
   {
     $res->body(to_json($self->app->config->serialized,
       {utf8 => 1, pretty => 1}));
   }
-  return $res->finalize;
+  $self->respond( $res->finalize );
 }
 
 __PACKAGE__->meta->make_immutable;
