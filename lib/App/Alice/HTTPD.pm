@@ -15,7 +15,6 @@ use JSON;
 use Encode;
 use utf8;
 use Any::Moose;
-use Data::Dumper;
 
 has app => (
   is  => 'ro',
@@ -417,9 +416,8 @@ sub export_config {
   my $res = $req->new_response(200);
   $res->content_type("text/plain");
   {
-    local $Data::Dumper::Terse = 1;
-    local $Data::Dumper::Indent = 1;
-    $res->body(Dumper $self->app->config->serialized);
+    $res->body(to_json($self->app->config->serialized,
+      {utf8 => 1, pretty => 1}));
   }
   return $res->finalize;
 }
