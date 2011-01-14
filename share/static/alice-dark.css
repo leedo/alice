@@ -831,21 +831,14 @@ div.config div.buttons {
 div.config div.buttons button {
   float: right; }
 
-div.config div.setting {
-  margin-top: 0.5em;
-  margin-left: 160px;
+div.config div.config_body table {
   display: none; }
 
-div.config div.setting.active {
-  display: block; }
+div.config div.config_body table.active {
+  display: table; }
 
-div.config div.field {
-  float: left;
-  margin-bottom: 10px;
-  margin-right: 8px; }
-
-div.config div.field.clear {
-  clear: both; }
+div.config div.config_body table td {
+  padding: 10px 0px 0px 10px; }
 
 div.config label, div.config input {
   display: block;
@@ -873,6 +866,16 @@ div.config div.sidebar div.controls {
   right: 0px;
   padding: 5px 8px;
   background: #3a3a3a; }
+
+div.config div.config_body {
+  position: absolute;
+  left: 151px;
+  top: 0px;
+  bottom: 29px;
+  right: 0px; }
+
+div.config div.config_body > table {
+  width: 100%; }
 
 div.config .controls {
   clear: both;
