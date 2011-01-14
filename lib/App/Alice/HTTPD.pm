@@ -135,28 +135,38 @@ sub is_logged_in {
 sub login {
   my ($self, $req, $res) = @_;
 
+  # no more auth is required
   if (!$self->auth_enabled or $self->is_logged_in($req)) {
     $res->redirect("/");
     $res->send;
   }
+
+  # we have credentials
   elsif (my $user = $req->parameters->{username}
      and my $pass = $req->parameters->{password}) {
-    if ($self->authenticate($user, $pass)) {
-      $req->env->{"psgix.session"} = {
-        is_logged_in => 1,
-        username     => $self->app->config->auth->{user},
-        userid       => $self->app->user,
-      };
-      $res->redirect("/");
+
+    $self->authenticate($user, $pass, sub {
+      my $success = shift;
+      if ($success) {
+        $req->env->{"psgix.session"} = {
+          is_logged_in => 1,
+          username     => $self->app->config->auth->{user},
+          userid       => $self->app->user,
+        };
+        $res->redirect("/");
+      }
+      else {
+        $res->body($self->render("login", "bad username or password"));
+      }
       $res->send;
-    }
-    $res->body($self->render("login", "bad username or password"));
+    });
   }
+
+  # render the login page
   else {
     $res->body($self->render("login"));
+    $res->send;
   }
-  $res->status(200);
-  $res->send;
 }
 
 sub logout {
@@ -376,8 +386,9 @@ sub auth_enabled {
 }
 
 sub authenticate {
-  my $self = shift;
-  $self->app->authenticate(@_);
+  my ($self, $user, $pass, $cb) = @_;
+  my $success = $self->app->authenticate($user, $pass);
+  $cb->($success);
 }
 
 sub render {
