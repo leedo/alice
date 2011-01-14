@@ -214,12 +214,12 @@ sub setup_ws_stream {
   }
   else {
     my $code = $req->env->{'websocket.impl'}->error_code;
-    $self->respond([$code, ["Content-Type", "text/plain"], ["something broke"]]);
+    $res->send([$code, ["Content-Type", "text/plain"], ["something broke"]]);
   }
 }
 
 sub handle_message {
-  my ($self, $req) = @_;
+  my ($self, $req, $res) = @_;
 
   $self->app->handle_message({
     msg    => $req->parameters->{msg},
@@ -227,7 +227,7 @@ sub handle_message {
     source => $req->parameters->{source}
   });
   
-  $self->respond( $ok->() );
+  $res->send( $ok->() );
 }
 
 sub send_index {
@@ -327,7 +327,7 @@ sub server_config {
 #
 
 sub save_config {
-  my ($self, $req) = @_;
+  my ($self, $req, $res) = @_;
   $self->app->log(info => "saving config");
   
   my $new_config = {};
@@ -359,15 +359,15 @@ sub save_config {
     $self->app->format_info("config", "saved")
   );
 
-  $self->respond( $ok->() );
+  $res->send( $ok->() );
 }
 
 sub tab_order  {
-  my ($self, $req) = @_;
+  my ($self, $req, $res) = @_;
   $self->app->log(debug => "updating tab order");
   
   $self->app->tab_order([grep {defined $_} $req->parameters->get_all('tabs')]);
-  $self->respond( $ok->() );
+  $res->send( $ok->() );
 }
 
 sub auth_enabled {

@@ -350,8 +350,10 @@ Object.extend(Alice, {
         });
       });
 
+      console.log(form.serialize());
+
       new Ajax.Request('/save', {
-        method: 'get',
+        method: 'post',
         parameters: form.serialize(),
         onSuccess: function(){Alice.connections.remove()}
       });
