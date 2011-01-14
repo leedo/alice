@@ -8,6 +8,7 @@ use Plack::Request;
 use Plack::Builder;
 use Plack::Middleware::Static;
 use Plack::Session::Store::File;
+use App::Alice::Request;
 use App::Alice::Stream::XHR;
 use App::Alice::Stream::WebSocket;
 use App::Alice::Commands;
@@ -26,11 +27,6 @@ has httpd => (
   is  => 'rw',
   lazy => 1,
   builder => "_build_httpd",
-);
-
-has current_response => (
-  is      => 'rw',
-  isa     => 'CodeRef',
 );
 
 has ping => (
@@ -89,10 +85,7 @@ sub _build_httpd {
       enable "WebSocket";
       sub {
         my $env = shift;
-        return sub {
-          $self->current_response(shift);
-          $self->dispatch($env);
-        }
+        return sub {$self->dispatch($env, shift)}
       }
     }
   );
@@ -100,9 +93,9 @@ sub _build_httpd {
 }
 
 sub dispatch {
-  my ($self, $env) = @_;
+  my ($self, $env, $cb) = @_;
 
-  my $req = Plack::Request->new($env);
+  my $req = App::Alice::Request->new($env, $cb);
   my $res = $req->new_response(200);
 
   if ($self->auth_enabled) {
@@ -121,11 +114,6 @@ sub dispatch {
   $self->template($req, $res);
 }
 
-sub respond {
-  my ($self, $response) = @_;
-  $self->current_response->($response);
-}
-
 sub auth_failed {
   my ($self, $req, $res) = @_;
 
@@ -135,7 +123,7 @@ sub auth_failed {
     $res->status(401);
     $res->body("unauthorized");
   }
-  $self->respond( $res->finalize );
+  $res->send;
 }
 
 sub is_logged_in {
@@ -149,7 +137,7 @@ sub login {
 
   if (!$self->auth_enabled or $self->is_logged_in($req)) {
     $res->redirect("/");
-    $self->respond( $res->finalize );
+    $res->send;
   }
   elsif (my $user = $req->parameters->{username}
      and my $pass = $req->parameters->{password}) {
@@ -160,7 +148,7 @@ sub login {
         userid       => $self->app->user,
       };
       $res->redirect("/");
-      $self->respond( $res->finalize );
+      $res->send;
     }
     $res->body($self->render("login", "bad username or password"));
   }
@@ -168,7 +156,7 @@ sub login {
     $res->body($self->render("login"));
   }
   $res->status(200);
-  $self->respond( $res->finalize );
+  $res->send;
 }
 
 sub logout {
@@ -181,7 +169,7 @@ sub logout {
     $req->env->{"psgix.session.options"}{expire} = 1;
     $res->redirect("/login");
   }
-  $self->respond( $res->finalize );
+  $res->send;
 }
 
 sub shutdown {
@@ -190,14 +178,14 @@ sub shutdown {
 }
 
 sub setup_xhr_stream {
-  my ($self, $req) = @_;
+  my ($self, $req, $res) = @_;
   my $app = $self->app;
   $app->log(info => "opening new stream");
 
-  my $writer = $self->respond([200, [@App::Alice::Stream::XHR::headers]]);
+  $res->headers([@App::Alice::Stream::XHR::headers]);
   my $stream = App::Alice::Stream::XHR->new(
     queue      => [ map({$_->join_action} $app->windows) ],
-    writer     => $writer,
+    writer     => $res->writer,
     start_time => $req->parameters->{t},
     # android requires 4K updates to trigger loading event
     min_bytes  => $req->user_agent =~ /android/i ? 4096 : 0,
@@ -209,7 +197,7 @@ sub setup_xhr_stream {
 }
 
 sub setup_ws_stream {
-  my ($self, $req) = @_;
+  my ($self, $req, $res) = @_;
   my $app = $self->app;
   $app->log(info => "opening new websocket stream");
 
@@ -243,11 +231,12 @@ sub handle_message {
 }
 
 sub send_index {
-  my ($self, $req) = @_;
+  my ($self, $req, $res) = @_;
   my $options = $self->merged_options($req);
   my $app = $self->app;
 
-  my $writer = $self->respond([200, ["Content-type" => "text/html; charset=utf-8"]]);
+  $res->headers(["Content-type" => "text/html; charset=utf-8"]);
+  my $writer = $res->writer;
   my @windows = $app->sorted_windows;
   @windows > 1 ? $windows[1]->{active} = 1 : $windows[0]->{active} = 1;
 
@@ -297,7 +286,7 @@ sub template {
     $res->body($self->render($path));
   };
 
-  $self->respond( $@ ? $notfound->() : $res->finalize );
+  $@ ? $notfound->() : $res->send;
 }
 
 sub save_tabsets {
@@ -316,7 +305,7 @@ sub save_tabsets {
   $self->app->config->write;
 
   $res->body($self->render('tabset_menu'));
-  $self->respond( $res->finalize );
+  $res->send;
 }
 
 sub server_config {
@@ -330,7 +319,7 @@ sub server_config {
   
   $res->body(to_json({config => $config, listitem => $listitem}));
   $res->header("Cache-control" => "no-cache");
-  $self->respond( $res->finalize );
+  $res->send;
 }
 
 #
@@ -403,7 +392,7 @@ sub export_config {
     $res->body(to_json($self->app->config->serialized,
       {utf8 => 1, pretty => 1}));
   }
-  $self->respond( $res->finalize );
+  $res->send;
 }
 
 __PACKAGE__->meta->make_immutable;
