@@ -927,7 +927,6 @@ div.config {
 }
 
 div.config#prefs {
-  padding: 10px;
   padding-bottom: 29px;
   width: 326px;
   height: 224px;
@@ -974,8 +973,13 @@ div.config div.config_body table.active {
   display: table;
 }
 
-div.config div.config_body table td {
+div.config_body table td {
+  vertical-align: top;
   padding: 10px 0px 0px 10px;
+}
+
+div.config_body table table td {
+  padding: 0 0 5px 0;
 }
 
 div.config label, div.config input {
@@ -996,9 +1000,7 @@ div.config select {
 div.config select[multiple] {
   height: 70px;
   background: $textentry_background;
-  border: 1px solid $textentry_border;
   color: $default_text;
-  padding: 2px;
 }
 
 div.config div.sidebar div.controls {
@@ -1018,7 +1020,7 @@ div.config div.config_body {
   right: 0px;
 }
 
-div.config div.config_body > table {
+div.config_body table {
   width: 100%;
 }
 
@@ -1045,8 +1047,6 @@ div.config label {
 div.config input[type="text"] {
   background: $textentry_background;
   color: $default_text;
-  border: 1px solid $textentry_border;
-  padding: 2px;
 }
 
 div.config input[type="checkbox"] {
