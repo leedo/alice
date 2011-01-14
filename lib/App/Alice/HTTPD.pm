@@ -15,6 +15,7 @@ use JSON;
 use Encode;
 use utf8;
 use Any::Moose;
+use Data::Dumper;
 
 has app => (
   is  => 'ro',
@@ -55,6 +56,7 @@ my $url_handlers = [
   [ "tabs"         => "tab_order" ],
   [ "login"        => "login" ],
   [ "logout"       => "logout" ],
+  [ "export"       => "export_config" ],
   [ "view"         => "send_index" ],
 ];
 
@@ -408,6 +410,18 @@ sub authenticate {
 sub render {
   my $self = shift;
   return $self->app->render(@_);
+}
+
+sub export_config {
+  my ($self, $req) = @_;
+  my $res = $req->new_response(200);
+  $res->content_type("text/plain");
+  {
+    local $Data::Dumper::Terse = 1;
+    local $Data::Dumper::Indent = 1;
+    $res->body(Dumper $self->app->config->serialized);
+  }
+  return $res->finalize;
 }
 
 __PACKAGE__->meta->make_immutable;
