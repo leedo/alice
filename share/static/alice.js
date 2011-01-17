@@ -10519,13 +10519,13 @@ Alice.Application = Class.create({
       this.windows().each(function(win) {
         ids.indexOf(win.id) >= 0 ? win.show() : win.hide();
       });
+
+      this.selectSet(name);
+
       if (!this.activeWindow().visible) {
         this.nextWindow();
+        this.activeWindow().focus();
       }
-      else {
-        this.previousWindow();
-      }
-      this.selectSet(name);
     }
   },
 
