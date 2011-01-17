@@ -10,7 +10,11 @@
                 '<?= $window->hashtag ?>'
               );
             <? } ?>
-            alice.focusHash(orig_hash);
+
+            <? my $tabsets = {map {$_->name => $_->windows } $app->tabsets}; ?>
+            alice.tabsets = <?= Text::MicroTemplate::encoded_string(JSON::encode_json $tabsets) ?>;
+
+            alice.focusHash(orig_hash) || alice.activeWindow().focus();
             alice.ready();
             // required due to browser weirdness with scrolltobottom on initial focus
             setTimeout(function(){alice.activeWindow().scrollToBottom(true)}, 1);

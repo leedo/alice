@@ -192,6 +192,8 @@ Alice.Window = Class.create({
   },
 
   focus: function(event) {
+    if (!this.application.currentSetContains(this.id)) return;
+
     document.title = this.title;
     this.application.previousFocus = this.application.activeWindow();
     this.application.windows().invoke("unFocus");
@@ -210,7 +212,7 @@ Alice.Window = Class.create({
   },
 
   setWindowHash: function () {
-    window.location.hash = this.hashtag;
+    window.location.hash = this.application.selectedSet + this.hashtag;
     window.location = window.location.toString();
   },
   

@@ -3,6 +3,7 @@ Alice.Application = Class.create({
     this.isFocused = true;
     this.window_map = new Hash();
     this.previousFocus = 0;
+    this.selectedSet = '';
     this.connection = window.WebSocket ? new Alice.Connection.WebSocket(this) : new Alice.Connection.XHR(this);
     this.filters = [];
     this.keyboard = new Alice.Keyboard(this);
@@ -138,7 +139,6 @@ Alice.Application = Class.create({
   openWindow: function(element, title, active, hashtag) {
     var win = new Alice.Window(this, element, title, active, hashtag);
     this.addWindow(win);
-    if (active) win.focus();
     return win;
   },
   
@@ -291,19 +291,37 @@ Alice.Application = Class.create({
   },
 
   focusHash: function(hash) {
+    var success = false;
     if (!hash) hash = window.location.hash;
     if (hash) {
       hash = decodeURIComponent(hash);
       hash = hash.replace(/^#/, "");
+
+      if (hash.substr(0,1) != "/") {
+        var name = hash.match(/^([^\/]+)/)[0];
+        hash = hash.substr(name.length);
+        if (this.tabsets[name]) {
+          if (this.selectedSet != name) this.showSet(name);
+          success = true;
+        }
+        else {
+          window.location.hash = hash;
+          window.location = window.location.toString();
+          return false;
+        }
+      }
+
       var windows = this.windows();
       for (var i = 0; i < windows.length; i++) {
         var win = windows[i];
         if (win.hashtag == hash) {
-          if (win && !win.active) win.focus();
-          return;
+          if (!win.active) win.focus();
+          success = true;
+          break;
         }
       }
     }
+    return success;
   },
   
   makeSortable: function() {
@@ -362,21 +380,49 @@ Alice.Application = Class.create({
     $('source').value = id;
   },
 
-  showSet: function(elem, ids) {
-    elem.up('ul').select('li').invoke('removeClassName', 'selectedset');
-    elem.up('li').addClassName('selectedset');
-    alice.windows().each(function(win) {
-      ids.indexOf(win.id) >= 0 ? win.show() : win.hide();
-    });
-    if (!alice.activeWindow().visible) {
-      alice.nextWindow();
+  showSet: function(name) {
+    var ids = this.tabsets[name];
+    if (ids) {
+      var elem = $('tabset_menu').select('li a').find(function(li) {
+        return li.innerHTML.strip() == name;
+      });
+      elem.up('ul').select('li').invoke('removeClassName', 'selectedset');
+      elem.up('li').addClassName('selectedset');
+
+      this.windows().each(function(win) {
+        ids.indexOf(win.id) >= 0 ? win.show() : win.hide();
+      });
+      if (!this.activeWindow().visible) {
+        this.nextWindow();
+      }
+      else {
+        this.previousWindow();
+      }
+      this.selectSet(name);
     }
+  },
+
+  selectSet: function(name) {
+    var hash = window.location.hash;
+    hash = hash.replace(/^[^\/]*/, name);
+    window.location.hash = hash;
+    window.location = window.location.toString();
+    this.selectedSet = name;
   },
 
   clearSet: function(elem) {
     elem.up('ul').select('li').invoke('removeClassName', 'selectedset');
     elem.up('li').addClassName('selectedset');
-    alice.windows().invoke("show");
+    this.windows().invoke("show");
+    this.selectSet('');
+  },
+
+  currentSetContains: function(id) {
+    var set = this.selectedSet;
+    if (set && this.tabsets[set]) {
+      return (this.tabsets[set].indexOf(id) >= 0);
+    }
+    return true;
   }
  
 });
