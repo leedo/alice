@@ -10088,8 +10088,6 @@ Object.extend(Alice, {
         });
       });
 
-      console.log(form.serialize());
-
       new Ajax.Request('/save', {
         method: 'post',
         parameters: form.serialize(),
