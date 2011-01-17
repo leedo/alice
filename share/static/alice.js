@@ -10442,7 +10442,7 @@ Alice.Application = Class.create({
       for (var i = 0; i < windows.length; i++) {
         var win = windows[i];
         if (win.hashtag == hash) {
-          if (!win.active) win.focus();
+          win.focus();
           success = true;
           break;
         }
@@ -11095,8 +11095,11 @@ Alice.Window = Class.create({
   },
 
   setWindowHash: function () {
-    window.location.hash = this.application.selectedSet + this.hashtag;
-    window.location = window.location.toString();
+    var new_hash = this.application.selectedSet + this.hashtag;
+    if (new_hash != window.location.hash) {
+      window.location.hash = new_hash;
+      window.location = window.location.toString();
+    }
   },
 
   markRead: function () {

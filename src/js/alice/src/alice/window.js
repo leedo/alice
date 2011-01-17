@@ -212,8 +212,11 @@ Alice.Window = Class.create({
   },
 
   setWindowHash: function () {
-    window.location.hash = this.application.selectedSet + this.hashtag;
-    window.location = window.location.toString();
+    var new_hash = this.application.selectedSet + this.hashtag;
+    if (new_hash != window.location.hash) {
+      window.location.hash = new_hash;
+      window.location = window.location.toString();
+    }
   },
   
   markRead: function () {
