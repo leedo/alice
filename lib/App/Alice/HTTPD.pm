@@ -47,6 +47,7 @@ my $url_handlers = [
   [ "stream"       => "setup_xhr_stream" ],
   [ "wsstream"     => "setup_ws_stream" ],
   [ ""             => "send_index" ],
+  [ "tabs"         => "tab_order" ],
   [ "savetabsets"  => "save_tabsets" ],
   [ "serverconfig" => "server_config" ],
   [ "save"         => "save_config" ],
