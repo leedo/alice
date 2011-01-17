@@ -371,6 +371,12 @@ Alice.Application = Class.create({
     if (!alice.activeWindow().visible) {
       alice.nextWindow();
     }
+  },
+
+  clearSet: function(elem) {
+    elem.up('ul').select('li').invoke('removeClassName', 'selectedset');
+    elem.up('li').addClassName('selectedset');
+    alice.windows().invoke("show");
   }
  
 });
