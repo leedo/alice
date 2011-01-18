@@ -1,9 +1,10 @@
 Alice.Window = Class.create({
-  initialize: function(application, element, title, active, hashtag) {
+  initialize: function(application, element, title, active, hashtag, type) {
     this.application = application;
     
     this.element = $(element);
     this.title = title;
+    this.type = type;
     this.hashtag = hashtag;
     this.id = this.element.identify();
     this.active = active;
@@ -192,7 +193,7 @@ Alice.Window = Class.create({
   },
 
   focus: function(event) {
-    if (!this.application.currentSetContains(this.id)) return;
+    if (!this.application.currentSetContains(this)) return;
 
     document.title = this.title;
     this.application.previousFocus = this.application.activeWindow();

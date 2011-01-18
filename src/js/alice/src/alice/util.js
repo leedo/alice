@@ -135,11 +135,10 @@ Object.extend(Alice, {
       return false;
     },
 
-    submit: function () {
-      var params = Alice.tabsets.params();
+    submit: function (params) {
       new Ajax.Request("/savetabsets", {
         method: "post",
-        parameters: Object.toQueryString(Alice.tabsets.params()),
+        parameters: Object.toQueryString(params),
         onSuccess: function(transport){
           $('tabset_menu').replace(transport.responseText);
           Alice.tabsets.remove()
