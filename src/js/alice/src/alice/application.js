@@ -300,7 +300,6 @@ Alice.Application = Class.create({
   },
 
   focusHash: function(hash) {
-    var success = false;
     if (!hash) hash = window.location.hash;
     if (hash) {
       hash = decodeURIComponent(hash);
@@ -311,7 +310,6 @@ Alice.Application = Class.create({
         hash = hash.substr(name.length);
         if (this.tabsets[name]) {
           if (this.selectedSet != name) this.showSet(name);
-          success = true;
         }
         else {
           window.location.hash = hash;
@@ -325,12 +323,11 @@ Alice.Application = Class.create({
         var win = windows[i];
         if (win.hashtag == hash) {
           win.focus();
-          success = true;
-          break;
+          return true;
         }
       }
     }
-    return success;
+    return false;
   },
   
   makeSortable: function() {
