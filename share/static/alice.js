@@ -9874,11 +9874,10 @@ Object.extend(Alice, {
       return false;
     },
 
-    submit: function () {
-      var params = Alice.tabsets.params();
+    submit: function (params) {
       new Ajax.Request("/savetabsets", {
         method: "post",
-        parameters: Object.toQueryString(Alice.tabsets.params()),
+        parameters: Object.toQueryString(params),
         onSuccess: function(transport){
           $('tabset_menu').replace(transport.responseText);
           Alice.tabsets.remove()
@@ -10154,8 +10153,17 @@ Alice.Application = Class.create({
       var win = this.getWindow(action['window'].id);
       if (!win) {
         this.insertWindow(action['window'].id, action.html);
-        win = new Alice.Window(this, action['window'].id, action['window'].title, false, action['window'].hashtag);
-        this.addWindow(win);
+        win = this.openWindow(action['window'].id, action['window'].title, false, action['window'].hashtag, action['window'].type);
+        if (this.selectedSet && !this.currentSetContains(win)) {
+          if (confirm("You joined "+win.title+" which is not in the '"+this.selectedSet+"' set. Do you want to add it?")) {
+            this.tabsets[this.selectedSet].push(win.id);
+            win.show();
+            Alice.tabsets.submit(this.tabsets);
+          }
+          else {
+            win.hide();
+          }
+        }
       } else {
         win.enable();
       }
@@ -10263,8 +10271,8 @@ Alice.Application = Class.create({
     }
   },
 
-  openWindow: function(element, title, active, hashtag) {
-    var win = new Alice.Window(this, element, title, active, hashtag);
+  openWindow: function(element, title, active, hashtag, type) {
+    var win = new Alice.Window(this, element, title, active, hashtag, type);
     this.addWindow(win);
     return win;
   },
@@ -10544,10 +10552,10 @@ Alice.Application = Class.create({
     this.selectSet('');
   },
 
-  currentSetContains: function(id) {
+  currentSetContains: function(win) {
     var set = this.selectedSet;
-    if (set && this.tabsets[set]) {
-      return (this.tabsets[set].indexOf(id) >= 0);
+    if (win.type == "channel" && set && this.tabsets[set]) {
+      return (this.tabsets[set].indexOf(win.id) >= 0);
     }
     return true;
   }
@@ -10888,11 +10896,12 @@ Alice.Connection.XHR = Class.create(Alice.Connection, {
 
 });
 Alice.Window = Class.create({
-  initialize: function(application, element, title, active, hashtag) {
+  initialize: function(application, element, title, active, hashtag, type) {
     this.application = application;
 
     this.element = $(element);
     this.title = title;
+    this.type = type;
     this.hashtag = hashtag;
     this.id = this.element.identify();
     this.active = active;
@@ -11075,7 +11084,7 @@ Alice.Window = Class.create({
   },
 
   focus: function(event) {
-    if (!this.application.currentSetContains(this.id)) return;
+    if (!this.application.currentSetContains(this)) return;
 
     document.title = this.title;
     this.application.previousFocus = this.application.activeWindow();

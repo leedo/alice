@@ -1,7 +1,7 @@
 ? my $app = shift;
 
 <div id="tabsets" class="config">
-  <form onsubmit="Alice.tabsets.submit(this); return false;">
+  <form onsubmit="Alice.tabsets.submit(Alice.tabsets.params()); return false;">
 
     <div class="sidebar">
 
@@ -24,7 +24,7 @@
 
       <? for my $set ($app->tabsets) { ?>
         <ul>
-        <? for my $window ($app->sorted_windows) { ?>
+        <? for my $window (grep {$_->is_channel} $app->sorted_windows) { ?>
           <li>
             <input type="checkbox"<?= $set->includes($window->id) ? " checked" : "" ?> name="<?= $window->id ?>">
             <?= $window->title ?>
