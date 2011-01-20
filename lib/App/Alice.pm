@@ -15,6 +15,7 @@ use File::Copy;
 use Digest::MD5 qw/md5_hex/;
 use List::Util qw/first/;
 use List::MoreUtils qw/any none/;
+use AnyEvent::IRC::Util qw/filter_colors/;
 use IRC::Formatting::HTML qw/html_to_irc/;
 use Try::Tiny;
 use JSON;
@@ -486,6 +487,7 @@ sub render {
 
 sub is_highlight {
   my ($self, $own_nick, $body) = @_;
+  $body = filter_colors $body;
   any {my $h = quotemeta($_); $body =~ /\b$h\b/i }
       (@{$self->config->highlights}, $own_nick);
 }
