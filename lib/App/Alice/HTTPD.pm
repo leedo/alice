@@ -136,8 +136,8 @@ sub is_logged_in {
 sub login {
   my ($self, $req, $res) = @_;
 
-  # no more auth is required
-  if (!$self->auth_enabled or $self->is_logged_in($req)) {
+  # no auth is required
+  if (!$self->auth_enabled) {
     $res->redirect("/");
     $res->send;
   }
