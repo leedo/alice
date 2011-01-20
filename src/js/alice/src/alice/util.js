@@ -84,7 +84,7 @@ Object.extend(Alice, {
     else {
       image.style.height = 'auto';
     }
-    image.style.display = 'block';
+    image.style.display = 'inline';
     image.style.visibility = 'visible';
     setTimeout(function () {
       var messagelist = image.up(".messages");
