@@ -102,6 +102,7 @@ sub dispatch {
   if ($self->auth_enabled) {
     unless ($req->path eq "/login" or $self->is_logged_in($req)) {
       $self->auth_failed($req, $res);
+      return;
     }
   }
   for my $handler (@{$self->url_handlers}) {
@@ -120,6 +121,7 @@ sub auth_failed {
 
   if ($req->path eq "/") {
     $res->redirect("/login");
+    $res->body("bai");
   } else {
     $res->status(401);
     $res->body("unauthorized");
@@ -136,8 +138,8 @@ sub is_logged_in {
 sub login {
   my ($self, $req, $res) = @_;
 
-  # no more auth is required
-  if (!$self->auth_enabled or $self->is_logged_in($req)) {
+  # no auth is required
+  if (!$self->auth_enabled) {
     $res->redirect("/");
     $res->send;
   }
@@ -157,6 +159,8 @@ sub login {
         $res->redirect("/");
       }
       else {
+        $req->env->{"psgix.session"}{is_logged_in} = 0;
+        $req->env->{"psgix.session.options"}{expire} = 1;
         $res->body($self->render("login", "bad username or password"));
       }
       $res->send;
