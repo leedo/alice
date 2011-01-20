@@ -488,7 +488,7 @@ sub render {
 sub is_highlight {
   my ($self, $own_nick, $body) = @_;
   $body = filter_colors $body;
-  any {my $h = quotemeta($_); $body =~ /\b$h\b/i }
+  any {$body =~ /(?:\W|^)\Q$_\E(?:\W|$)/i }
       (@{$self->config->highlights}, $own_nick);
 }
 
