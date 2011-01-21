@@ -7,10 +7,15 @@
                 '<?= $window->id ?>',
                 '<?= $window->title ?>',
                 <?= $window->{active} ? "true" : "false" ?>,
-                '<?= $window->hashtag ?>'
+                '<?= $window->hashtag ?>',
+                '<?= $window->type ?>'
               );
             <? } ?>
-            alice.focusHash(orig_hash);
+
+            <? my $tabsets = {map {$_->name => $_->windows } $app->tabsets}; ?>
+            alice.tabsets = <?= Text::MicroTemplate::encoded_string(JSON::encode_json $tabsets) ?>;
+
+            alice.focusHash(orig_hash) || alice.activeWindow().focus();
             alice.ready();
             // required due to browser weirdness with scrolltobottom on initial focus
             setTimeout(function(){alice.activeWindow().scrollToBottom(true)}, 1);
@@ -35,6 +40,9 @@
         </li>
         <li class="dropdown" id="tab_menu">
           <ul>
+            <li class="submenu separate-bottom"><a href="javascript:alice.toggleTabsets()">Sets</a>
+              <?= $_mt->render_file('tabset_menu.html', $_[0]); ?>
+            </li>
             <? for my $window (@windows) { ?>
               <?= $_mt->render_file('select.html', $_[0], $window); ?>
             <? } ?>

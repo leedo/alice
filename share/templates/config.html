@@ -1,0 +1,160 @@
+? my $app = shift;
+? my @connections = $app->ircs;
+
+<div class="config" id="servers">
+
+  <div class="sidebar">
+
+    <h2>Connections</h2>
+    
+    <ul id="connections">
+      <? for my $index (0 .. @connections - 1) { ?>
+        <? my $connection = $connections[$index]; ?>
+        <? my $alias = $connection->alias; ?>
+        <li class="<?= $connection->is_connected ? "connected" : "disconnected" ?> <? if ($index == 0) {?> active<?}?>"
+            onclick="Alice.connections.showConnection('<?= $alias ?>')" id="menu_<?= $alias ?>">
+          <?= $alias ?>
+        </li>
+      <? } ?>
+    </ul>
+
+    <div class="controls" id="server_controls">
+      <a href="#" onclick="return Alice.connections.addServer()">New</a>
+      <a href="#" onclick="return Alice.connections.removeServer()">Remove</a>
+    </div>
+
+  </div>
+
+  <form id="config_data" onsubmit="return Alice.connections.submit(this)">
+
+  <div class="config_body">
+
+      <input type="hidden" name="has_servers" value="1" />
+    
+? for my $index (0 .. @connections - 1) {
+?   my $connection = $connections[$index];
+?   my $alias = $connection->alias;
+
+?   my ($action, $status);
+?   if ($connection->is_connected) {
+?     $status = "connected";
+?     $action = "disconnect";
+?   } elsif ($connection->reconnect_timer) {
+?     $status = "reconnecting";
+?     $action = "disconnect";
+?   } else {
+?     $status = "disconnected";
+?     $action = "connect";
+?   }
+
+    <table class="<? if ($index == 0) {?>active<?}?>" id="setting_<?= $alias ?>">
+
+      <tr>
+        <td>
+          <label>Name</label>
+          <span><?= $alias ?></span>
+          <input type="hidden" name="<?= $alias ?>_name" value="<?= $alias ?>" />
+        </td>
+
+        <td>
+          <label>Status</label>
+          <span class="<?= $status ?>" id="<?= $alias ?>_status"><?= $status ?></span>
+        </td>
+      </tr>
+
+      <tr>
+        <td>
+          <label>Auto-connect?</label>
+          <input type="checkbox"<? if ($connection->config->{autoconnect}) {?> checked="checked"<?}?> name="<?= $alias ?>_autoconnect" />
+        </td>
+
+        <td>
+          <button id="<?= $alias ?>_connection" onclick="return Alice.connections.serverConnection('<?= $connection->alias ?>', '<?= $action ?>')">
+            <?= $action ?>
+          </button>
+        </td>
+      </tr>
+
+      <tr>
+        <td>
+          <label>Server address</label>
+          <input type="text" name="<?= $alias ?>_host" value="<?= $connection->config->{host} || "" ?>" size="15"/>
+        </td>
+
+        <td>
+          <label>Port</label>
+          <input type="text" name="<?= $alias ?>_port" value="<?= $connection->config->{port} || "" ?>" size="6" style="float:left"/>
+
+            <input type="checkbox" name="<?= $alias ?>_ssl"<? if ($connection->config->{ssl}) { ?> checked="checked"<? } ?> />
+            <span style="font-size:0.7em">SSL</span>
+        </td>
+      </tr>
+
+      <tr>
+        <td>
+          <label>Nick</label>
+          <input type="text" name="<?= $alias ?>_nick" value="<?= $connection->config->{nick} || ""?>" size="15" />
+        </td>
+
+        <td>
+          <label>Name or Avatar URL</label>
+          <input type="text" name="<?= $alias ?>_ircname" value="<?= $connection->config->{ircname} || ""?>" size="15" />
+        </td>
+      </tr>
+
+      <tr>
+        <td
+          <label>Username</label>
+          <input type="text" name="<?= $alias ?>_username" value="<?= $connection->config->{username} || ""?>" size="15" />
+        </td>
+
+        <td>
+          <label>Password</label>
+          <input type="text" name="<?= $alias ?>_password" value="<?= $connection->config->{password} || ""?>" size="15" />
+        </td>
+      </tr>
+
+      <tr>
+        <td>
+          <label>Channels
+            <span style="font-size:0.8em">(e.g. <span style="font-family:monospace;font-size:1em">#alice</span>)</span>
+          </label>
+          <select name="<?= $alias ?>_channels" multiple="multiple" id="channels_<?= $alias ?>" class="channelselect">
+            <? for my $channel (@{$connection->config->{channels}}) { ?>
+            <option value="<?= $channel ?>"><?= $channel ?></option>
+            <? } ?>
+          </select>
+          <div class="controls">
+            <a href="#" onclick="return Alice.connections.addChannel('<?= $alias ?>')">Add</a>
+            <a href="#" onclick="return Alice.connections.removeChannels('<?= $alias ?>')">Remove</a>
+          </div>
+        </td>
+
+        <td>
+          <label>Commands</label>
+          <select name="<?= $alias ?>_on_connect" multiple="multiple" id="on_connect_<?= $alias ?>" class="channelselect">
+            <? for my $command (@{ $connection->config->{on_connect} }) { ?>
+            <option value="<?= $command ?>"><?= $command ?></option>
+            <? } ?>
+          </select>
+          <div class="controls">
+            <a href="#" onclick="return Alice.connections.addCommand('<?= $alias ?>')">Add</a>
+            <a href="#" onclick="return Alice.connections.removeCommands('<?= $alias ?>')">Remove</a>
+          </div>
+        </td>
+      </tr>
+    </table>
+
+? }
+
+  </div>
+
+  <div class="buttons">
+    <a style="text-decoration:none;color:#fff;font-size:11px" href="/export" target="_blank">export config</a>
+    <button type="submit">Save</button>
+    <button onclick="Alice.connections.remove(); return false;">Cancel</button>
+  </div>
+
+  </form>
+
+</div>

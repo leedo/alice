@@ -143,9 +143,9 @@ if (window == window.parent) {
         var filtered = content;
         if (alice.options.images == "show") {
           filtered = filtered.replace(
-            /(<a[^>]*>)([^<]*\.(:?jpe?g|gif|png|bmp|svg)(:?\?v=0)?)</gi,
-            "$1<img src=\"http://i.usealice.org/$2\" onload=\"Alice.loadInlineImage(this)\" " +
-            "alt=\"Loading Image...\" title=\"$2\" style=\"display:none\"/><");
+            /(<a[^>]*>)([^<]*\.(:?jpe?g|gif|png|bmp|svg)(:?\?v=0)?)<\/a>/gi,
+            "<div class=\"image\">$1<img src=\"http://i.usealice.org/$2\" onload=\"Alice.loadInlineImage(this)\" " +
+            "alt=\"Loading Image...\" title=\"$2\" style=\"display:none\"/></a></div>");
         }
         return filtered;
       }

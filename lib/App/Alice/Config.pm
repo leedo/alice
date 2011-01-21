@@ -69,6 +69,12 @@ has auth => (
   default => sub {{}},
 );
 
+has tabsets => (
+  is      => 'rw',
+  isa     => 'HashRef[ArrayRef]',
+  default => sub {{}},
+);
+
 has [qw/ignore highlights order monospace_nicks/]=> (
   is      => 'rw',
   isa     => 'ArrayRef[Str]',

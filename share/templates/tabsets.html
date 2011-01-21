@@ -1,0 +1,53 @@
+? my $app = shift;
+
+<div id="tabsets" class="config">
+  <form onsubmit="Alice.tabsets.submit(Alice.tabsets.params()); return false;">
+
+    <div class="sidebar">
+
+      <h2>Sets</h2>
+
+      <ul id="sets" onclick="Alice.tabsets.focusSet(arguments[0])">
+        <? for my $set ($app->tabsets) { ?>
+        <li><?= $set->name ?></li>
+        <? } ?>
+      </ul>
+
+      <div id="tabset_controls" class="controls">
+        <a href="#" onclick="return Alice.tabsets.addSet()">New</a>
+        <a href="#" onclick="return Alice.tabsets.removeSet()">Remove</a>
+      </div>
+
+    </div>
+
+    <div class="config_body" id="tabset_data">
+
+      <? for my $set ($app->tabsets) { ?>
+        <ul>
+        <? for my $window (grep {$_->is_channel} $app->sorted_windows) { ?>
+          <li>
+            <input type="checkbox"<?= $set->includes($window->id) ? " checked" : "" ?> name="<?= $window->id ?>">
+            <?= $window->title ?>
+          </li>
+        <? } ?>
+        </ul>
+      <? } ?>
+
+    </div>
+
+    <ul id="empty_tabset" style="display:none">
+      <? for my $window ($app->sorted_windows) { ?>
+        <li>
+          <input type="checkbox" name="<?= $window->id ?>" />
+          <?= $window->title ?>
+        </li>
+      <? } ?>
+    </ul>
+
+    <div class="buttons">
+      <button type="submit">Save</button>
+      <button onclick="Alice.tabsets.remove(); return false;">Cancel</button>
+    </div>
+
+  </form>
+</div>

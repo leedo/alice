@@ -1,0 +1,15 @@
+? my $app = shift;
+
+<ul id="tabset_menu">
+  <li class="separate-bottom"><a href="javascript:alice.toggleTabsets()">Edit</a></li>
+  <li><a onclick="return alice.clearSet(this)">All tabs</a></li>
+  <? for my $set ($app->tabsets) { ?>
+    <li><a onclick="return alice.showSet('<?= $set->name ?>')"><?= $set->name ?></a></li>
+  <? } ?>
+  <script type="text/javascript">
+    if (window.alice) {
+      <? my $tabsets = {map {$_->name => $_->windows } $app->tabsets}; ?>
+      alice.tabsets = <?= Text::MicroTemplate::encoded_string(JSON::encode_json $tabsets) ?>;
+    }
+  </script>
+</ul>

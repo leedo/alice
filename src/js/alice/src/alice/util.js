@@ -84,7 +84,7 @@ Object.extend(Alice, {
     else {
       image.style.height = 'auto';
     }
-    image.style.display = 'block';
+    image.style.display = 'inline';
     image.style.visibility = 'visible';
     setTimeout(function () {
       var messagelist = image.up(".messages");
@@ -108,6 +108,96 @@ Object.extend(Alice, {
       this.src = '/static/image/play.png';
       this.onclick = function () { Alice.playAudio(this, audio) };
     };
+  },
+
+  tabsets: {
+    addSet: function () {
+			var name = prompt("Please enter a name for this tab set.");
+      if (name && !Alice.tabsets.hasTabset(name)) {
+        Alice.tabsets.clearActive();
+        $('sets').insert('<li class="active">'+name.escapeHTML()+'</li>');
+        var list = $('empty_tabset').clone(true).addClassName('active').show();
+        list.id = null;
+        $('tabset_data').insert(list);
+      }
+      else {
+        alert("Invalid tab set name.");
+      }
+    },
+
+    hasTabset: function (name) {
+      var sets = $$('#sets li');
+      for (var i=0; i < sets.length; i++) {
+        if (sets[i].innerHTML == name) {
+          return true;
+        }
+      }
+      return false;
+    },
+
+    submit: function (params) {
+      new Ajax.Request("/savetabsets", {
+        method: "post",
+        parameters: Object.toQueryString(params),
+        onSuccess: function(transport){
+          $('tabset_menu').replace(transport.responseText);
+          Alice.tabsets.remove()
+        }
+      });
+      return false;
+    },
+
+    params: function () {
+      var values = Alice.tabsets.values();
+      return Alice.tabsets.sets().inject({}, function(acc, set, index) {
+        acc[set] = values[index];
+        return acc;
+      });
+    },
+
+    sets: function () {
+      if (!$('sets')) return [];
+      return $('sets').select('li').map(function(li) {return li.innerHTML});
+    },
+
+    values: function () {
+      if (!$('tabset_data')) return [];
+
+      return $$('#tabset_data ul').map(function(ul) {
+        var windows = ul.select('input').filter(function(input) {
+          return input.checked;
+        }).map(function(input){return input.name});
+        return windows.length ? windows : 'empty';
+      });
+    },
+
+    remove: function () {
+      alice.input.disabled = false;
+      $('tabsets').remove();
+    },
+
+    clearActive: function () {
+      $('tabset_data').select('.active').invoke('removeClassName', 'active');
+      $('sets').select('.active').invoke('removeClassName', 'active');
+    },
+
+    removeSet: function () {
+      $('tabsets').down('.active').remove();
+      $('tabset_data').down('.active').remove();
+    },
+
+    focusIndex: function (i) {
+      Alice.tabsets.clearActive();
+      $('tabset_data').select('ul')[i].addClassName('active');
+      $('sets').select('li')[i].addClassName('active');
+    },
+
+    focusSet: function (e) {
+      var li = e.findElement('li');
+      if (li) {
+        Alice.tabsets.focusIndex(li.previousSiblings().length);
+      }
+    },
   },
 
   prefs: {
@@ -138,9 +228,7 @@ Object.extend(Alice, {
     },
 
     remove: function() {
-      alice.windows().each(function(win) {
-        alice.input.disabled = false;
-      });
+      alice.input.disabled = false;
       $('prefs').remove();
     },
 
@@ -262,7 +350,7 @@ Object.extend(Alice, {
       });
 
       new Ajax.Request('/save', {
-        method: 'get',
+        method: 'post',
         parameters: form.serialize(),
         onSuccess: function(){Alice.connections.remove()}
       });
@@ -271,9 +359,7 @@ Object.extend(Alice, {
     },
 
     remove: function() {
-      alice.windows().each(function(win) {
-        alice.input.disabled = false;
-      });
+      alice.input.disabled = false;
       $('servers').remove();
     },
 
