@@ -260,6 +260,10 @@ sub connected {
   # kludge to work around broken MOTDs with an extra \015 in the
   # line ending (e.g. irc.omgwtfhax.net)
   if ($cl->{socket}) {
+
+    $cl->{socket}->{rbuf_max} = 1024 * 10; # 10K max read buffer
+    $cl->{socket}->{wbuf_max} = 1024 * 10; # 10K max write buffer
+
     $self->{orig_on_read} = $cl->{socket}{on_read};
     $cl->{socket}->on_read(sub {
       my ($hdl) = @_;
