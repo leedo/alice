@@ -77,6 +77,14 @@ Alice.Connection = {
       onSuccess: callback
     });
   },
+
+  getTabsets: function(callback) {
+    new Ajax.Request('/tabsets', {
+      method: 'get',
+      on401: this.gotoLogin,
+      onSuccess: callback
+    });
+  },
   
   getPrefs: function(callback) {
     new Ajax.Request('/prefs', {

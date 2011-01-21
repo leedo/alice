@@ -3,6 +3,7 @@ Alice.Application = Class.create({
     this.isFocused = true;
     this.window_map = new Hash();
     this.previousFocus = 0;
+    this.selectedSet = '';
     this.connection = window.WebSocket ? new Alice.Connection.WebSocket(this) : new Alice.Connection.XHR(this);
     this.filters = [];
     this.keyboard = new Alice.Keyboard(this);
@@ -26,8 +27,17 @@ Alice.Application = Class.create({
       var win = this.getWindow(action['window'].id);
       if (!win) {
         this.insertWindow(action['window'].id, action.html);
-        win = new Alice.Window(this, action['window'].id, action['window'].title, false, action['window'].hashtag);
-        this.addWindow(win);
+        win = this.openWindow(action['window'].id, action['window'].title, false, action['window'].hashtag, action['window'].type);
+        if (this.selectedSet && !this.currentSetContains(win)) {
+          if (confirm("You joined "+win.title+" which is not in the '"+this.selectedSet+"' set. Do you want to add it?")) {
+            this.tabsets[this.selectedSet].push(win.id);
+            win.show();
+            Alice.tabsets.submit(this.tabsets);
+          }
+          else {
+            win.hide();
+          }
+        }
       } else {
         win.enable();
       }
@@ -113,12 +123,20 @@ Alice.Application = Class.create({
     if (e) e.stop();
   },
 
+  toggleTabsets: function(e) {
+    this.connection.getTabsets(function (transport) {
+      this.input.disabled = true;
+      $('container').insert(transport.responseText);
+      Alice.tabsets.focusIndex(0);
+    }.bind(this));
+  },
+
   windows: function () {
     return this.window_map.values();
   },
 
   nth_window: function(n) {
-    var tab = $('tabs').down('li', n);
+    var tab = $('tabs').down('li.visible', n);
     if (tab) {
       var m = tab.id.match(/([^_]+)_tab/);
       if (m) {
@@ -127,10 +145,9 @@ Alice.Application = Class.create({
     }
   },
   
-  openWindow: function(element, title, active, hashtag) {
-    var win = new Alice.Window(this, element, title, active, hashtag);
+  openWindow: function(element, title, active, hashtag, type) {
+    var win = new Alice.Window(this, element, title, active, hashtag, type);
     this.addWindow(win);
-    if (active) win.focus();
     return win;
   },
   
@@ -177,9 +194,9 @@ Alice.Application = Class.create({
   nextWindow: function() {
     var active = this.activeWindow();
 
-    var nextTab = active.tab.next();
+    var nextTab = active.tab.next('.visible');
     if (!nextTab)
-      nextTab = $$('ul#tabs li').first();
+      nextTab = $$('ul#tabs li.visible').first();
     if (!nextTab) return;
 
     var id = nextTab.id.replace('_tab','');
@@ -211,14 +228,13 @@ Alice.Application = Class.create({
   previousWindow: function() {
     var active = this.activeWindow();
 
-    var previousTab = this.activeWindow().tab.previous();
+    var previousTab = this.activeWindow().tab.previous('.visible');
     if (!previousTab)
-      previousTab = $$('ul#tabs li').last();
+      previousTab = $$('ul#tabs li.visible').last();
     if (!previousTab) return;
 
     var id = previousTab.id.replace('_tab','');
-    if (id != active.id)
-      this.getWindow(id).focus();
+    if (id != active.id) this.getWindow(id).focus();
   },
   
   closeWindow: function(windowId) {
@@ -288,15 +304,30 @@ Alice.Application = Class.create({
     if (hash) {
       hash = decodeURIComponent(hash);
       hash = hash.replace(/^#/, "");
+
+      if (hash.substr(0,1) != "/") {
+        var name = hash.match(/^([^\/]+)/)[0];
+        hash = hash.substr(name.length);
+        if (this.tabsets[name]) {
+          if (this.selectedSet != name) this.showSet(name);
+        }
+        else {
+          window.location.hash = hash;
+          window.location = window.location.toString();
+          return false;
+        }
+      }
+
       var windows = this.windows();
       for (var i = 0; i < windows.length; i++) {
         var win = windows[i];
         if (win.hashtag == hash) {
-          if (win && !win.active) win.focus();
-          return;
+          win.focus();
+          return true;
         }
       }
     }
+    return false;
   },
   
   makeSortable: function() {
@@ -353,6 +384,51 @@ Alice.Application = Class.create({
 
   setSource: function(id) {
     $('source').value = id;
+  },
+
+  showSet: function(name) {
+    var ids = this.tabsets[name];
+    if (ids) {
+      var elem = $('tabset_menu').select('li a').find(function(li) {
+        return li.innerHTML.strip() == name;
+      });
+      elem.up('ul').select('li').invoke('removeClassName', 'selectedset');
+      elem.up('li').addClassName('selectedset');
+
+      this.windows().each(function(win) {
+        ids.indexOf(win.id) >= 0 ? win.show() : win.hide();
+      });
+
+      this.selectSet(name);
+
+      if (!this.activeWindow().visible) {
+        this.nextWindow();
+        this.activeWindow().focus();
+      }
+    }
+  },
+
+  selectSet: function(name) {
+    var hash = window.location.hash;
+    hash = hash.replace(/^[^\/]*/, name);
+    window.location.hash = hash;
+    window.location = window.location.toString();
+    this.selectedSet = name;
+  },
+
+  clearSet: function(elem) {
+    elem.up('ul').select('li').invoke('removeClassName', 'selectedset');
+    elem.up('li').addClassName('selectedset');
+    this.windows().invoke("show");
+    this.selectSet('');
+  },
+
+  currentSetContains: function(win) {
+    var set = this.selectedSet;
+    if (win.type == "channel" && set && this.tabsets[set]) {
+      return (this.tabsets[set].indexOf(win.id) >= 0);
+    }
+    return true;
   }
  
 });

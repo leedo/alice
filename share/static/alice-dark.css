@@ -37,6 +37,7 @@ ul#controls li.dropdown {
   margin: 0;
   position: relative; }
 
+li.dropdown li.selectedset,
 li.dropdown li.unread {
   font-weight: bold; }
 
@@ -231,6 +232,12 @@ ul#tabs li {
   margin: 0;
   margin-left: -1px;
   color: white; }
+
+ul#tabs li.hidden {
+  display: none; }
+
+ul#tabs li.visible {
+  display: block; }
 
 body.blurred ul#tabs li:first-child div.hit_area {
   border-left: 1px solid #333333; }
@@ -478,7 +485,6 @@ div.msg a {
   word-break: break-all; }
 
 div.msg img {
-  display: block;
   border: none;
   max-width: 300px;
   max-height: 300px; }
@@ -784,13 +790,12 @@ div.config {
   background: #333333;
   padding-bottom: 29px;
   z-index: 981;
-  -webkit-box-shadow: 0 0 10px #000;
-  -moz-box-shadow: 0 0 10px #000;
-  box-shadow: 0 0 10px #000;
+  -webkit-box-shadow: 1px 1px 3px #000;
+  -moz-box-shadow: 1px 1px 3px #000;
+  box-shadow: 1px 1px 3px #000;
   border: 5px solid #222222; }
 
 div.config#prefs {
-  padding: 10px;
   padding-bottom: 29px;
   width: 326px;
   height: 224px;
@@ -802,6 +807,12 @@ div.config#servers {
   height: 380px;
   margin-left: -230px;
   margin-top: -210px; }
+
+div.config#tabsets {
+  width: 300px;
+  height: 200px;
+  margin-left: -155px;
+  margin-top: -120px; }
 
 div.config div.buttons {
   clear: both;
@@ -818,21 +829,18 @@ div.config div.buttons {
 div.config div.buttons button {
   float: right; }
 
-div.config div.setting {
-  margin-top: 0.5em;
-  margin-left: 160px;
+div.config div.config_body table {
   display: none; }
 
-div.config div.setting.active {
-  display: block; }
+div.config div.config_body table.active {
+  display: table; }
 
-div.config div.field {
-  float: left;
-  margin-bottom: 10px;
-  margin-right: 8px; }
+div.config_body table td {
+  vertical-align: top;
+  padding: 10px 0px 0px 10px; }
 
-div.config div.field.clear {
-  clear: both; }
+div.config_body table table td {
+  padding: 0 0 5px 0; }
 
 div.config label, div.config input {
   display: block;
@@ -849,17 +857,25 @@ div.config select {
 div.config select[multiple] {
   height: 70px;
   background: black;
-  border: 1px solid #444444;
-  color: white;
-  padding: 2px; }
+  color: white; }
 
-div.config li#server_controls {
+div.config div.sidebar div.controls {
   position: absolute;
   bottom: 0px;
   left: 0px;
   right: 0px;
-  padding: 10px;
-  background: #333333; }
+  padding: 5px 8px;
+  background: #3a3a3a; }
+
+div.config div.config_body {
+  position: absolute;
+  left: 151px;
+  top: 0px;
+  bottom: 29px;
+  right: 0px; }
+
+div.config_body table {
+  width: 100%; }
 
 div.config .controls {
   clear: both;
@@ -879,54 +895,79 @@ div.config label {
 
 div.config input[type="text"] {
   background: black;
-  color: white;
-  border: 1px solid #444444;
-  padding: 2px; }
+  color: white; }
 
 div.config input[type="checkbox"] {
   float: left;
   margin-right: 4px; }
 
-div.config ul#connections {
-  list-style: none;
+div.config div.sidebar {
   position: absolute;
   top: 0px;
   bottom: 29px;
   left: 0px;
+  width: 150px;
+  background: #444444; }
+
+div.config div.sidebar ul {
+  list-style: none;
   margin: 0;
   padding: 0px;
-  width: 150px;
-  background: #3a3a3a;
-  border-right: 1px solid #222222; }
+  position: absolute;
+  top: 22px;
+  bottom: 24px;
+  overflow: auto;
+  right: 0px;
+  left: 0px; }
 
-div.config ul#connections li.header {
+div.config div#tabset_data {
+  position: absolute;
+  top: 5px;
+  bottom: 29px;
+  left: 155px;
+  right: 0px;
+  overflow: auto;
+  font-size: 0.8em; }
+
+div.config div#tabset_data ul {
+  display: none;
+  margin: 0;
+  padding: 0;
+  list-style: none; }
+
+div.config div#tabset_data ul.active {
+  display: block; }
+
+div.config div#tabset_data ul li {
+  margin-bottom: 0.25em; }
+
+div.config div.sidebar h2 {
   text-transform: uppercase;
   color: #cccccc;
   letter-spacing: 1px;
   font-size: 0.7em;
-  cursor: default; }
+  cursor: default;
+  font-weight: normal;
+  padding: 5px 8px;
+  margin: 0; }
 
-div.config ul#connections li.header:hover {
-  background: #3a3a3a; }
-
-div.config ul#connections li {
+div.config div.sidebar li {
   padding: 5px 8px;
   cursor: pointer;
-  border-left: 1px solid #3a3a3a;
   font-size: 0.8em; }
 
-div.config ul#connections li:hover {
+div.config div.sidebar li:hover {
+  background: #3a3a3a; }
+
+div.config div.sidebar li.active,
+div.config div.sidebar li.disconnected.active,
+div.config div.sidebar li.connected.active {
   background: #333333; }
 
-div.config ul#connections li.disconnected.active,
-div.config ul#connections li.connected.active {
-  color: #333333;
-  background: #cccccc; }
-
-div.config ul#connections li.disconnected {
+div.config div.sidebar li.disconnected {
   color: #cccccc; }
 
-div.config ul#connections li.connected {
+div.config div.sidebar li.connected {
   color: white; }
 
 /* auto-generated css classes for irc->html */
@@ -1051,23 +1092,48 @@ li.dropdown ul {
   list-style: none;
   margin: 0;
   padding: 0;
-  font-size: 14px;
+  font-size: 12px;
   background: #444444;
   border: 1px solid #222222;
   -webkit-border-radius: 2px;
-  min-width: 100px;
+  -webkit-box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.4);
+  width: 100px;
   display: none;
   white-space: nowrap; }
 
-li.dropdown.open ul {
+li.dropdown.open > ul {
   display: block; }
 
-li.dropdown ul li a {
+li.dropdown > ul > li a {
   display: block;
   padding: 4px 5px;
   text-decoration: none;
   color: white; }
 
-li.dropdown ul li a:hover {
-  text-shadow: none;
+li.dropdown li {
+  cursor: pointer; }
+
+li.dropdown li a:hover {
+  text-shadow: none; }
+
+li.dropdown ul li:hover {
   background: #3a3a3a; }
+
+li.dropdown > ul ul {
+  display: none;
+  left: -100px;
+  width: 100px;
+  bottom: -1px;
+  top: auto; }
+
+li.dropdown li.separate-bottom {
+  border-bottom: 1px solid #3a3a3a; }
+
+li.dropdown li.submenu {
+  background: url(image/arrow.png) center right no-repeat; }
+
+li.dropdown li.submenu:hover {
+  background: url(image/arrow.png) #3a3a3a center right no-repeat; }
+
+li.dropdown > ul li.submenu:hover ul {
+  display: block; }

@@ -1,9 +1,10 @@
 Alice.Window = Class.create({
-  initialize: function(application, element, title, active, hashtag) {
+  initialize: function(application, element, title, active, hashtag, type) {
     this.application = application;
     
     this.element = $(element);
     this.title = title;
+    this.type = type;
     this.hashtag = hashtag;
     this.id = this.element.identify();
     this.active = active;
@@ -18,9 +19,26 @@ Alice.Window = Class.create({
     this.nicks = [];
     this.messageLimit = this.application.isMobile ? 50 : 200;
     this.msgid = 0;
+    this.visible = true;
     
     this.setupEvents();
     this.setupTopic();
+  },
+
+  hide: function() {
+    this.tabOverflowButton.hide();
+    this.element.hide();
+    this.tab.addClassName('hidden');
+    this.tab.removeClassName('visible');
+    this.visible = false;
+  },
+
+  show: function() {
+    this.tabOverflowButton.show();
+    this.element.show();
+    this.tab.addClassName('visible');
+    this.tab.removeClassName('hidden');
+    this.visible = true;
   },
 
   setupTopic: function() {
@@ -175,6 +193,8 @@ Alice.Window = Class.create({
   },
 
   focus: function(event) {
+    if (!this.application.currentSetContains(this)) return;
+
     document.title = this.title;
     this.application.previousFocus = this.application.activeWindow();
     this.application.windows().invoke("unFocus");
@@ -189,11 +209,15 @@ Alice.Window = Class.create({
     this.element.redraw();
     this.setWindowHash();
     this.application.updateChannelSelect();
+    return this;
   },
 
   setWindowHash: function () {
-    window.location.hash = this.hashtag;
-    window.location = window.location.toString();
+    var new_hash = this.application.selectedSet + this.hashtag;
+    if (new_hash != window.location.hash) {
+      window.location.hash = new_hash;
+      window.location = window.location.toString();
+    }
   },
   
   markRead: function () {
@@ -312,14 +336,18 @@ Alice.Window = Class.create({
     if (this.element.hasClassName('active'))
       this.scrollToBottom();
     else if (this.title != "info") {
+      var wrapped = this.isTabWrapped();
       if (message.event == "say" && !message.self) {
         this.tab.addClassName("unread");
         this.tabOverflowButton.addClassName("unread");
-        if (this.isTabWrapped()) this.application.highlightChannelSelect("unread");
+        if (wrapped) this.application.highlightChannelSelect("unread");
       }
       if (message.highlight) {
         this.tab.addClassName("highlight");
-        if (this.isTabWrapped()) this.application.highlightChannelSelect("highlight");
+        if (wrapped) this.application.highlightChannelSelect("highlight");
+      }
+      if (message.window.type == "privmsg" && wrapped) {
+        this.application.highlightChannelSelect("highlight");
       }
     }
 

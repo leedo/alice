@@ -8,6 +8,7 @@ use Plack::Request;
 use Plack::Builder;
 use Plack::Middleware::Static;
 use Plack::Session::Store::File;
+use App::Alice::Request;
 use App::Alice::Stream::XHR;
 use App::Alice::Stream::WebSocket;
 use App::Alice::Commands;
@@ -46,19 +47,19 @@ my $url_handlers = [
   [ "stream"       => "setup_xhr_stream" ],
   [ "wsstream"     => "setup_ws_stream" ],
   [ ""             => "send_index" ],
-  [ "config"       => "send_config" ],
-  [ "prefs"        => "send_prefs" ],
+  [ "tabs"         => "tab_order" ],
+  [ "savetabsets"  => "save_tabsets" ],
   [ "serverconfig" => "server_config" ],
   [ "save"         => "save_config" ],
-  [ "tabs"         => "tab_order" ],
   [ "login"        => "login" ],
   [ "logout"       => "logout" ],
-  [ "view"         => "send_index" ],
+  [ "export"       => "export_config" ],
 ];
 
 sub url_handlers { return $url_handlers }
 
 my $ok = sub{ [200, ["Content-Type", "text/plain", "Content-Length", 2], ['ok']] };
+my $notfound = sub{ [404, ["Content-Type", "text/plain", "Content-Length", 9], ['not found']] };
 
 sub BUILD {
   my $self = shift;
@@ -83,35 +84,49 @@ sub _build_httpd {
       }
       enable "Static", path => qr{^/static/}, root => $self->config->assetdir;
       enable "WebSocket";
-      sub {$self->dispatch(shift)}
+      sub {
+        my $env = shift;
+        return sub {$self->dispatch($env, shift)}
+      }
     }
   );
   $self->httpd($httpd);
 }
 
 sub dispatch {
-  my ($self, $env) = @_;
-  my $req = Plack::Request->new($env);
+  my ($self, $env, $cb) = @_;
+
+  my $req = App::Alice::Request->new($env, $cb);
+  my $res = $req->new_response(200);
+
   if ($self->auth_enabled) {
     unless ($req->path eq "/login" or $self->is_logged_in($req)) {
-      my $res = $req->new_response;
-      if ($req->path eq "/") {
-        $res->redirect("/login");
-      } else {
-        $res->status(401);
-        $res->body("unauthorized");
-      }
-      return $res->finalize;
+      $self->auth_failed($req, $res);
+      return;
     }
   }
   for my $handler (@{$self->url_handlers}) {
     my $path = $handler->[0];
     if ($req->path_info =~ /^\/$path\/?$/) {
       my $method = $handler->[1];
-      return $self->$method($req);
+      $self->$method($req, $res);
+      return;
     }
   }
-  return $self->not_found($req);
+  $self->template($req, $res);
+}
+
+sub auth_failed {
+  my ($self, $req, $res) = @_;
+
+  if ($req->path eq "/") {
+    $res->redirect("/login");
+    $res->body("bai");
+  } else {
+    $res->status(401);
+    $res->body("unauthorized");
+  }
+  $res->send;
 }
 
 sub is_logged_in {
@@ -121,36 +136,47 @@ sub is_logged_in {
 }
 
 sub login {
-  my ($self, $req) = @_;
-  my $res = $req->new_response;
-  if (!$self->auth_enabled or $self->is_logged_in($req)) {
+  my ($self, $req, $res) = @_;
+
+  # no auth is required
+  if (!$self->auth_enabled) {
     $res->redirect("/");
-    return $res->finalize;
+    $res->send;
   }
+
+  # we have credentials
   elsif (my $user = $req->parameters->{username}
      and my $pass = $req->parameters->{password}) {
-    if ($self->authenticate($user, $pass)) {
-      $req->env->{"psgix.session"} = {
-        is_logged_in => 1,
-        username     => $self->app->config->auth->{user},
-        userid       => $self->app->user,
-      };
-      $res->redirect("/");
-      return $res->finalize;
-    }
-    $res->body($self->render("login", "bad username or password"));
+
+    $self->authenticate($user, $pass, sub {
+      my $success = shift;
+      if ($success) {
+        $req->env->{"psgix.session"} = {
+          is_logged_in => 1,
+          username     => $self->app->config->auth->{user},
+          userid       => $self->app->user,
+        };
+        $res->redirect("/");
+      }
+      else {
+        $req->env->{"psgix.session"}{is_logged_in} = 0;
+        $req->env->{"psgix.session.options"}{expire} = 1;
+        $res->body($self->render("login", "bad username or password"));
+      }
+      $res->send;
+    });
   }
+
+  # render the login page
   else {
     $res->body($self->render("login"));
+    $res->send;
   }
-  $res->status(200);
-  return $res->finalize;
 }
 
 sub logout {
-  my ($self, $req) = @_;
+  my ($self, $req, $res) = @_;
   $_->close for @{$self->app->streams};
-  my $res = $req->new_response;
   if (!$self->auth_enabled) {
     $res->redirect("/");
   } else {
@@ -158,7 +184,7 @@ sub logout {
     $req->env->{"psgix.session.options"}{expire} = 1;
     $res->redirect("/login");
   }
-  return $res->finalize;
+  $res->send;
 }
 
 sub shutdown {
@@ -167,56 +193,48 @@ sub shutdown {
 }
 
 sub setup_xhr_stream {
-  my ($self, $req) = @_;
+  my ($self, $req, $res) = @_;
   my $app = $self->app;
   $app->log(info => "opening new stream");
 
-  return sub {
-    my $respond = shift;
+  $res->headers([@App::Alice::Stream::XHR::headers]);
+  my $stream = App::Alice::Stream::XHR->new(
+    queue      => [ map({$_->join_action} $app->windows) ],
+    writer     => $res->writer,
+    start_time => $req->parameters->{t},
+    # android requires 4K updates to trigger loading event
+    min_bytes  => $req->user_agent =~ /android/i ? 4096 : 0,
+    on_error => sub { $app->purge_disconnects },
+  );
 
-    my $writer = $respond->([200, [@App::Alice::Stream::XHR::headers]]);
-    my $stream = App::Alice::Stream::XHR->new(
-      queue      => [ map({$_->join_action} $app->windows) ],
-      writer     => $writer,
-      start_time => $req->parameters->{t},
-      # android requires 4K updates to trigger loading event
-      min_bytes  => $req->user_agent =~ /android/i ? 4096 : 0,
-      on_error => sub { $app->purge_disconnects },
-    );
-
-    $app->add_stream($stream);
-    $app->update_stream($stream, $req->parameters);
-  }
+  $app->add_stream($stream);
+  $app->update_stream($stream, $req->parameters);
 }
 
 sub setup_ws_stream {
-  my ($self, $req) = @_;
+  my ($self, $req, $res) = @_;
   my $app = $self->app;
   $app->log(info => "opening new websocket stream");
 
-  return sub {
-    my $respond = shift;
-
-    if (my $fh = $req->env->{'websocket.impl'}->handshake) {
-      my $stream = App::Alice::Stream::WebSocket->new(
-        start_time => $req->parameters->{t} || time,
-        fh      => $fh,
-        on_read => sub { $app->handle_message(@_) },
-        on_error => sub { $app->purge_disconnects },
-      );
-      $stream->send([ map({$_->join_action} $app->windows) ]);
-      $app->add_stream($stream);
-      $app->update_stream($stream, $req->parameters);
-    }
-    else {
-      my $code = $req->env->{'websocket.impl'}->error_code;
-      $respond->([$code, ["Content-Type", "text/plain"], ["something broke"]]);
-    }
-  };
+  if (my $fh = $req->env->{'websocket.impl'}->handshake) {
+    my $stream = App::Alice::Stream::WebSocket->new(
+      start_time => $req->parameters->{t} || time,
+      fh      => $fh,
+      on_read => sub { $app->handle_message(@_) },
+      on_error => sub { $app->purge_disconnects },
+    );
+    $stream->send([ map({$_->join_action} $app->windows) ]);
+    $app->add_stream($stream);
+    $app->update_stream($stream, $req->parameters);
+  }
+  else {
+    my $code = $req->env->{'websocket.impl'}->error_code;
+    $res->send([$code, ["Content-Type", "text/plain"], ["something broke"]]);
+  }
 }
 
 sub handle_message {
-  my ($self, $req) = @_;
+  my ($self, $req, $res) = @_;
 
   $self->app->handle_message({
     msg    => $req->parameters->{msg},
@@ -224,43 +242,41 @@ sub handle_message {
     source => $req->parameters->{source}
   });
   
-  return $ok->();
+  $res->send( $ok->() );
 }
 
 sub send_index {
-  my ($self, $req) = @_;
+  my ($self, $req, $res) = @_;
   my $options = $self->merged_options($req);
   my $app = $self->app;
 
-  return sub {
-    my $respond = shift;
-    my $writer = $respond->([200, ["Content-type" => "text/html; charset=utf-8"]]);
-    my @windows = $app->sorted_windows;
-    @windows > 1 ? $windows[1]->{active} = 1 : $windows[0]->{active} = 1;
+  $res->headers(["Content-type" => "text/html; charset=utf-8"]);
+  my $writer = $res->writer;
+  my @windows = $app->sorted_windows;
+  @windows > 1 ? $windows[1]->{active} = 1 : $windows[0]->{active} = 1;
 
-    my @queue;
+  my @queue;
     
-    push @queue, sub {$app->render('index_head', $options, @windows)};
-    for my $window (@windows) {
-      push @queue, sub {$app->render('window_head', $window)};
-      push @queue, sub {$app->render('window_footer', $window)};
-    }
-    push @queue, sub {
-      my $html = $app->render('index_footer', @windows);
-      delete $_->{active} for @windows;
-      return $html;
-    };
-
-    my $idle_w; $idle_w = AE::idle sub {
-      if (my $cb = shift @queue) {
-        my $content = encode_utf8 $cb->();
-        $writer->write($content);
-      } else {
-        $writer->close;
-        undef $idle_w;
-      }
-    };
+  push @queue, sub {$app->render('index_head', $options, @windows)};
+  for my $window (@windows) {
+    push @queue, sub {$app->render('window_head', $window)};
+    push @queue, sub {$app->render('window_footer', $window)};
   }
+  push @queue, sub {
+    my $html = $app->render('index_footer', @windows);
+    delete $_->{active} for @windows;
+    return $html;
+  };
+
+  my $idle_w; $idle_w = AE::idle sub {
+    if (my $cb = shift @queue) {
+      my $content = encode_utf8 $cb->();
+      $writer->write($content);
+    } else {
+      $writer->close;
+      undef $idle_w;
+    }
+  };
 }
 
 sub merged_options {
@@ -275,26 +291,40 @@ sub merged_options {
   join "&", map {"$_=$options{$_}"} keys %options;
 }
 
-sub send_config {
-  my ($self, $req) = @_;
-  $self->app->log(info => "serving config");
-  my $output = $self->render('servers');
-  my $res = $req->new_response(200);
-  $res->body($output);
-  return $res->finalize;
+sub template {
+  my ($self, $req, $res) = @_;
+  my $path = $req->path;
+  $path =~ s/^\///;
+
+  eval {
+    my $body = $self->render($path);
+    $res->body($self->render($path));
+  };
+
+  $@ ? $notfound->() : $res->send;
 }
 
-sub send_prefs {
-  my ($self, $req) = @_;
-  $self->app->log(info => "serving prefs");
-  my $output = $self->render('prefs');
-  my $res = $req->new_response(200);
-  $res->body($output);
-  return $res->finalize;
+sub save_tabsets {
+  my ($self, $req, $res) = @_;
+  $self->app->log(info => "saving tabsets");
+
+  my $tabsets = {};
+
+  for my $set (keys %{ $req->parameters }) {
+    next if $set eq '_';
+    my $wins = [$req->parameters->get_all($set)];
+    $tabsets->{$set} = $wins->[0] eq 'empty' ? [] : $wins;
+  }
+
+  $self->app->config->tabsets($tabsets);
+  $self->app->config->write;
+
+  $res->body($self->render('tabset_menu'));
+  $res->send;
 }
 
 sub server_config {
-  my ($self, $req) = @_;
+  my ($self, $req, $res) = @_;
   $self->app->log(info => "serving blank server config");
   
   my $name = $req->parameters->{name};
@@ -302,10 +332,9 @@ sub server_config {
   my $config = $self->render('new_server', $name);
   my $listitem = $self->render('server_listitem', $name);
   
-  my $res = $req->new_response(200);
   $res->body(to_json({config => $config, listitem => $listitem}));
   $res->header("Cache-control" => "no-cache");
-  return $res->finalize;
+  $res->send;
 }
 
 #
@@ -313,7 +342,7 @@ sub server_config {
 #
 
 sub save_config {
-  my ($self, $req) = @_;
+  my ($self, $req, $res) = @_;
   $self->app->log(info => "saving config");
   
   my $new_config = {};
@@ -345,22 +374,15 @@ sub save_config {
     $self->app->format_info("config", "saved")
   );
 
-  return $ok->();
+  $res->send( $ok->() );
 }
 
 sub tab_order  {
-  my ($self, $req) = @_;
+  my ($self, $req, $res) = @_;
   $self->app->log(debug => "updating tab order");
   
   $self->app->tab_order([grep {defined $_} $req->parameters->get_all('tabs')]);
-  return $ok->();
-}
-
-sub not_found  {
-  my ($self, $req) = @_;
-  $self->app->log(debug => "sending 404 " . $req->path_info);
-  my $res = $req->new_response(404);
-  return $res->finalize;
+  $res->send( $ok->() );
 }
 
 sub auth_enabled {
@@ -369,13 +391,24 @@ sub auth_enabled {
 }
 
 sub authenticate {
-  my $self = shift;
-  $self->app->authenticate(@_);
+  my ($self, $user, $pass, $cb) = @_;
+  my $success = $self->app->authenticate($user, $pass);
+  $cb->($success);
 }
 
 sub render {
   my $self = shift;
   return $self->app->render(@_);
+}
+
+sub export_config {
+  my ($self, $req, $res) = @_;
+  $res->content_type("text/plain");
+  {
+    $res->body(to_json($self->app->config->serialized,
+      {utf8 => 1, pretty => 1}));
+  }
+  $res->send;
 }
 
 __PACKAGE__->meta->make_immutable;
