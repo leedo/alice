@@ -58,10 +58,8 @@ sub BUILD {
   # better way to get the AE handle?
   my $hdl = $self->writer->{handle};
   my $close = sub {
-    my (undef, $fatal, $msg) = @_;
-    $hdl->destroy;
-    undef $hdl;
     $self->close;
+    undef $hdl;
     $self->on_error->();
   };
 
@@ -113,7 +111,7 @@ sub ping {
 sub close {
   my $self = shift;
   $self->flush;
-  $self->writer->close if $self->writer;
+  $self->writer->close;
   $self->writer(undef);
   $self->timer(undef);
   $self->closed(1);

@@ -6,15 +6,16 @@ use warnings;
 use FindBin;
 
 BEGIN {
+  my $bin = $FindBin::Bin; 
+
   # running from source dir
-  if (-e "$FindBin::Bin/../lib/App/Alice") {
-    require lib;
-    lib->import("$FindBin::Bin/../lib");
+  if (-e "$bin/../Makefile.PL") {
+    eval "use lib '$bin/../lib'";
+
     # extlib present
-    if (-e "$FindBin::Bin/../extlib") {
-      lib->import("$FindBin::Bin/../extlib/lib/perl5");
-      require local::lib;
-      local::lib->import("$FindBin::Bin/../extlib");
+    if (-e "$bin/../extlib") {
+      eval "use lib '$bin/../extlib/lib/perl5'";
+      eval "use local::lib '$bin/../extlib'";
     }
   }
   require App::Alice;
