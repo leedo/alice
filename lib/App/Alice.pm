@@ -452,12 +452,11 @@ sub update_stream {
 sub handle_message {
   my ($self, $message) = @_;
 
-  my $msg  = $message->{msg};
-  utf8::decode($msg) unless utf8::is_utf8($msg);
-  $msg = html_to_irc($msg) if $message->{html};
-
   if (my $window = $self->get_window($message->{source})) {
-    for (split /\n/, $msg) {
+    utf8::decode($message->{msg}) unless utf8::is_utf8($message->{msg});
+    $message->{msg} = html_to_irc($message->{msg}) if $message->{html};
+
+    for (split /\n/, $message->{msg}) {
       eval {
         $self->commands->handle($self, $_, $window) if length $_;
       };
