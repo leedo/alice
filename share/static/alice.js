@@ -11514,6 +11514,12 @@ Alice.Input = Class.create({
   },
 
   send: function() {
+
+    if (this.getValue().length > 1024*2) {
+      alert("That message is way to long, dude.");
+      return;
+    }
+
     var success = this.application.connection.sendMessage(this.textarea.form);
     if (success) {
       this.history.push(this.getValue());
