@@ -136,7 +136,7 @@ Alice.Input = Class.create({
   send: function() {
 
     if (this.getValue().length > 1024*2) {
-      alert("That message is way to long, dude.");
+      alert("That message is way too long, dude.");
       return;
     }
 
