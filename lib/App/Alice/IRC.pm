@@ -157,21 +157,10 @@ sub broadcast {
   $self->app->broadcast(@_);
 }
 
-sub init_shutdown {
+sub shutdown {
   my ($self, $msg) = @_;
   $self->disabled(1);
-  if ($self->is_connected) {
-    $self->disconnect($msg);
-    return;
-  }
-  $self->shutdown;
-}
-
-sub shutdown {
-  my $self = shift;
-  $self->cl(undef);
-  $self->app->remove_irc($self->alias);
-  $self->app->shutdown if !$self->app->ircs;
+  $self->disconnect($msg);
 }
 
 sub log {
@@ -380,11 +369,6 @@ sub disconnected {
   
   $self->is_connected(0);
   $self->clear_nicks;
-  
-  if ($self->app->shutting_down and !$self->app->connected_ircs) {
-    $self->shutdown;
-    return;
-  }
   
   $self->reconnect(0) unless $self->disabled;
   

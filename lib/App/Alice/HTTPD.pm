@@ -147,6 +147,7 @@ sub login {
 
     $self->authenticate($user, $pass, sub {
       my $success = shift;
+      print STDERR $success;
       if ($success) {
         $req->env->{"psgix.session"} = {
           is_logged_in => 1,
