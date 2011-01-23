@@ -157,12 +157,6 @@ sub broadcast {
   $self->app->broadcast(@_);
 }
 
-sub shutdown {
-  my ($self, $msg) = @_;
-  $self->disabled(1);
-  $self->disconnect($msg);
-}
-
 sub log {
   my $messages = pop;
   $messages = [ $messages ] unless ref $messages eq "ARRAY";
