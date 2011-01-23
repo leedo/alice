@@ -42,12 +42,6 @@ sub remove_irc {$_[0]->_ircs([ grep { $_->alias ne $_[1] } $_[0]->ircs])}
 sub irc_aliases {map {$_->alias} $_[0]->ircs}
 sub connected_ircs {grep {$_->is_connected} $_[0]->ircs}
 
-has standalone => (
-  is      => 'ro',
-  isa     => 'Bool',
-  default => 1,
-);
-
 has httpd => (
   is      => 'rw',
   isa     => 'App::Alice::HTTPD',
@@ -546,11 +540,6 @@ about running and/or using alice please read the L<App::Alice::Readme>.
 =item App::Alice->new(%options)
 
 App::Alice's contructor takes these options:
-
-=item standalone => Boolean
-
-If this is false App::Alice will not create a AE::cv and wait. That means
-if you do not create your own the program will exit immediately.
 
 =item user => $username
 
