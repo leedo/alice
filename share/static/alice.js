@@ -10062,9 +10062,9 @@ Object.extend(Alice, {
 			  method: 'get',
 			  onSuccess: function (trans) {
 			    var data = trans.responseText.evalJSON();
-			    $$('#config_data div.setting').invoke('removeClassName',"active");
-			    $$('#servers li').invoke('removeClassName',"active");
-			    $('config_data').insert(data.config);
+			    $$('#config_data table').invoke('removeClassName',"active");
+			    $$('#connections li').invoke('removeClassName',"active");
+			    $('config_data').down('.config_body').insert(data.config);
 			    $('connections').insert(data.listitem);
 			  }
 		  });
@@ -10075,8 +10075,8 @@ Object.extend(Alice, {
 			if (alias && confirm("Are you sure you want to remove "+alias+"?")) {
 			  $("menu_"+alias).remove();
 			  $("setting_"+alias).remove();
-			  $("connections").down("li", 1).addClassName("active");
-			  $("config_data").down("div").addClassName("active");
+			  $("connections").down("li").addClassName("active");
+			  $("config_data").down("table").addClassName("active");
 			}
 	  },
 
@@ -11182,15 +11182,6 @@ Alice.Window = Class.create({
       }
       if (prev && prev.hasClassName("monospaced")) {
         prev.down('div.msg').setStyle({paddingBottom: '0px'});
-      }
-    }
-
-    if (message.avatar) {
-      if (alice.options.avatars == "show") {
-        li.down("a.nick").insert('<img src="'+message.avatar+'" />');
-      }
-      else {
-        li.removeClassName('avatar');
       }
     }
 
