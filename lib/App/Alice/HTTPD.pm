@@ -47,6 +47,7 @@ my $url_handlers = [
   [ "stream"       => "setup_xhr_stream" ],
   [ "wsstream"     => "setup_ws_stream" ],
   [ ""             => "send_index" ],
+  [ "safe"         => "send_safe_index" ],
   [ "tabs"         => "tab_order" ],
   [ "savetabsets"  => "save_tabsets" ],
   [ "serverconfig" => "server_config" ],
@@ -242,6 +243,13 @@ sub handle_message {
   $res->ok;
 }
 
+sub send_safe_index {
+  my ($self, $req, $res) = @_;
+  $req->parameters->{images} = "hide";
+  $req->parameters->{avatars} = "hide";
+  $self->send_index($req, $res);
+}
+
 sub send_index {
   my ($self, $req, $res) = @_;
   my $options = $self->merged_options($req);
@@ -282,6 +290,7 @@ sub merged_options {
   my $params = $req->parameters;
   my %options = (
    images => $req->parameters->{images} || $config->images,
+   avatars => $req->parameters->{avatars} || $config->avatars,
    debug  => $req->parameters->{debug}  || ($config->show_debug ? 'true' : 'false'),
    timeformat => $req->parameters->{timeformat} || $config->timeformat,
   );

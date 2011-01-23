@@ -394,8 +394,8 @@ ul.messages > li:not(.consecutive) {
   clear: both;
 }
 
-ul.messages li.highlight {
-  border-right: 5px solid $message_highlight;
+ul.messages li.highlight div.msg {
+  border-right: 3px solid $message_highlight;
 }
 
 .info ul.messages li.highlight,
@@ -470,13 +470,17 @@ ul.messages li.avatar:not(.consecutive) {
 
 div.left img {
   border: 1px solid $avatar_border;
-  display: block;
   max-width: 32px;
   max-height: 32px;
   float: right;
+  display: none;
 }
 
-div.left span.nickhint {
+li.avatar div.left img {
+  display: block;
+}
+
+ul.messages li.avatar span.nick {
   position: absolute;
   z-index: 801;
   right: 5px;
@@ -491,15 +495,13 @@ div.left span.nickhint {
 }
 
 div.timehint {
-  position: absolute;
   font-size: 10px;
-  right: 0px;
-  top: 1px;
+  float: right;
   padding: 6px 4px 2px 4px ;
   color: $timehint_color;
+  margin-top: 1px;
   opacity: 0;
   text-shadow: $timehint_shadow_color 0 0 3px;
-  background: $message_background;
 }
 
 .info ul.messages li.highlight div.timehint,
@@ -522,7 +524,7 @@ li.event div.msg {
   padding: 5px;
 }
 
-li.monospace div.msg {
+li.monospaced div.msg {
   padding: 8px 5px;
 }
 
@@ -538,11 +540,11 @@ ul.messages li:first-child div.msg {
 ul.messages li.avatar:not(.consecutive) div.msg {
   min-height: 35px;
 }
-ul.messages li.monospace.avatar:not(.consecutive) div.msg {
+ul.messages li.monospaced.avatar:not(.consecutive) div.msg {
   min-height: 24px;
 }
 
-ul.messages li.monospace {
+ul.messages li.monospaced {
   min-height: 0px;
 }
 
@@ -568,11 +570,11 @@ div.msg img {
   max-height: 300px;
 }
 
-ul.messages li.monospace + li.monospace.consecutive {
+ul.messages li.monospaced + li.monospaced.consecutive {
   padding-top: 0px;
 }
 
-ul.messages li.monospace div.msg {
+ul.messages li.monospaced div.msg {
   font-family: $font_family_monospace;
   font-size: 10px;
   line-height: 12px;
@@ -580,7 +582,7 @@ ul.messages li.monospace div.msg {
   white-space: pre-wrap;
 }
 
-li.monospace div.msg span[style*="bold"] {
+li.monospaced div.msg span[style*="bold"] {
   letter-spacing: -1px;
 }
 

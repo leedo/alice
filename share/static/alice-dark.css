@@ -344,8 +344,8 @@ ul.messages > li {
 ul.messages > li:not(.consecutive) {
   clear: both; }
 
-ul.messages li.highlight {
-  border-right: 5px solid #eb2222; }
+ul.messages li.highlight div.msg {
+  border-right: 3px solid #eb2222; }
 
 .info ul.messages li.highlight,
 ul.messages li.self {
@@ -407,12 +407,15 @@ ul.messages li.avatar:not(.consecutive) {
 
 div.left img {
   border: 1px solid black;
-  display: block;
   max-width: 32px;
   max-height: 32px;
-  float: right; }
+  float: right;
+  display: none; }
 
-div.left span.nickhint {
+li.avatar div.left img {
+  display: block; }
+
+ul.messages li.avatar span.nick {
   position: absolute;
   z-index: 801;
   right: 5px;
@@ -426,15 +429,13 @@ div.left span.nickhint {
   -webkit-transition: opacity 0.5s ease-in-out; }
 
 div.timehint {
-  position: absolute;
   font-size: 10px;
-  right: 0px;
-  top: 1px;
+  float: right;
   padding: 6px 4px 2px 4px;
   color: #cccccc;
+  margin-top: 1px;
   opacity: 0;
-  text-shadow: black 0 0 3px;
-  background: #222222; }
+  text-shadow: black 0 0 3px; }
 
 .info ul.messages li.highlight div.timehint,
 li.self div.timehint {
@@ -453,7 +454,7 @@ div.msg {
 li.event div.msg {
   padding: 5px; }
 
-li.monospace div.msg {
+li.monospaced div.msg {
   padding: 8px 5px; }
 
 li.event + li.message div.msg {
@@ -466,10 +467,10 @@ ul.messages li:first-child div.msg {
 ul.messages li.avatar:not(.consecutive) div.msg {
   min-height: 35px; }
 
-ul.messages li.monospace.avatar:not(.consecutive) div.msg {
+ul.messages li.monospaced.avatar:not(.consecutive) div.msg {
   min-height: 24px; }
 
-ul.messages li.monospace {
+ul.messages li.monospaced {
   min-height: 0px; }
 
 ul.messages li.message:last-child {
@@ -489,17 +490,17 @@ div.msg img {
   max-width: 300px;
   max-height: 300px; }
 
-ul.messages li.monospace + li.monospace.consecutive {
+ul.messages li.monospaced + li.monospaced.consecutive {
   padding-top: 0px; }
 
-ul.messages li.monospace div.msg {
+ul.messages li.monospaced div.msg {
   font-family: Monaco, monospace;
   font-size: 10px;
   line-height: 12px;
   word-wrap: normal;
   white-space: pre-wrap; }
 
-li.monospace div.msg span[style*="bold"] {
+li.monospaced div.msg span[style*="bold"] {
   letter-spacing: -1px; }
 
 ul.messages li.event {
