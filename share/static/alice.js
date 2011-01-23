@@ -10974,6 +10974,10 @@ Alice.Window = Class.create({
       li.previous().down('div.msg').setStyle({paddingBottom:'0px'});
     });
 
+    if (this.application.options.avatars != "show") {
+      this.messages.select('li.avatar').invoke("removeClassName", "avatar");
+    }
+
     this.messages.select('span.timestamp').each(function(elem) {
       var inner = elem.innerHTML.strip();
       if (inner.match(/^\d+$/)) {
@@ -11019,10 +11023,10 @@ Alice.Window = Class.create({
       if (li.hasClassName("consecutive")) {
         var stem = li.previous("li:not(.consecutive)");
         if (!stem) return;
-        nick = stem.down(".nickhint");
+        if (li.hasClassName("avatar")) nick = stem.down("span.nick");
         time = stem.down(".timehint");
       } else {
-        nick = li.down(".nickhint");
+        if (li.hasClassName("avatar")) nick = li.down("span.nick");
         time = li.down(".timehint");
       }
 
@@ -11058,7 +11062,7 @@ Alice.Window = Class.create({
 
   toggleNicks: function () {
     if (this.nicksVisible) {
-      this.messages.select("span.nickhint").each(function(span){
+      this.messages.select("li.avatar span.nick").each(function(span){
         span.style.webkitTransition = "opacity 0.1s ease-in";
         span.style.opacity = 0;
       });
@@ -11068,7 +11072,7 @@ Alice.Window = Class.create({
       });
     }
     else {
-      this.messages.select("span.nickhint").each(function(span){
+      this.messages.select("li.avatar span.nick").each(function(span){
         span.style.webkitTransition = "opacity 0.1s ease-in-out";
         span.style.opacity = 1;
       });
@@ -11184,12 +11188,15 @@ Alice.Window = Class.create({
         prev.down('div.msg').setStyle({paddingBottom: '0px'});
       }
     }
+    else if (this.application.options.avatars == "hide") {
+      li.removeClassName("avatar");
+    }
 
     if (message.event == "say") {
       var msg = li.down('div.msg');
       msg.innerHTML = this.application.applyFilters(msg.innerHTML);
 
-      var nick = li.down('span.nickhint');
+      var nick = li.down('span.nick');
       if (nick && this.nicksVisible) {
         nick.style.webkitTransition = 'none 0 linear';
         nick.style.opacity = 1;
@@ -11516,7 +11523,7 @@ Alice.Input = Class.create({
   send: function() {
 
     if (this.getValue().length > 1024*2) {
-      alert("That message is way to long, dude.");
+      alert("That message is way too long, dude.");
       return;
     }
 
