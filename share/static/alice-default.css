@@ -123,10 +123,10 @@ div.editor {
 div#input div.editor_toolbar {
   overflow: hidden;
   position: absolute;
-  right: -170px;
   padding-right: 8px;
   top: -3px;
-  width: 180px;
+  right: 0px;
+  width: 10px;
   height: 20px;
   -webkit-border-radius: 3px 0 0 3px;
   -moz-border-radius: 3px 0 0 3px;
@@ -134,7 +134,7 @@ div#input div.editor_toolbar {
   background: url(image/sprites.png) 0px -240px no-repeat black;
   z-index: 902;
   opacity: 0.2;
-  -webkit-transition-property: right;
+  -webkit-transition-property: width;
   -webkit-transition-duration: 0.3s; }
 
 div#input div.editor_toolbar button {
@@ -177,8 +177,8 @@ div#input div.editor_toolbar.visible:hover {
 div#input div.editor_toolbar.visible {
   background-color: rgba(0, 0, 0, 0.6);
   background-image: none;
-  right: -4px;
-  -webkit-transition-property: right;
+  width: 180px;
+  -webkit-transition-property: width;
   -webkit-transition-duration: 0.3s;
   opacity: 1; }
 
