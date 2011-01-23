@@ -7,7 +7,6 @@ use List::Util qw/shuffle/;
 my $history = App::Alice::Test::NullHistory->new;
 my $app = App::Alice->new(
   history => $history,
-  standalone => 0,
   path => 't/alice',
   file => "test_config",
   port => empty_port(),
