@@ -10,10 +10,19 @@
     <div class="left">
       <a href="javascript:alice.connection.requestWindow('<?= $msg->{nick} ?>','<?= $msg->{window}{id} ?>')" class="nick"<?= $msg->{source} ? " title=$msg->{source}" : "" ?>>
         <span class="nick"><span class="nickborder">&lt;</span><?= $msg->{nick} ?><span class="nickborder">&gt;</span></span>
-        <? if ($msg->{avatar}) { ?>
-          <img src="<?= $msg->{avatar} ?>" alt="<?= $msg->{nick} ?>" />
-        <?}?>
+
       </a>
     </div>
     <div class="msg"><?= $msg->{html} ?></div>
 </li>
+
+<? if ($msg->{avatar}) { ?>
+<script type="text/javascript">
+  if (alice.options.avatars == "show") {
+    $('<?= $msg->{msgid} ?>').down("a.nick").insert('<img src="<?= $msg->{avatar} ?>" alt="<?= $msg->{nick} ?>" />');
+  }
+  else {
+    $('<?= $msg->{msgid} ?>').removeClassName('avatar');
+  }
+</script>
+<?}?>

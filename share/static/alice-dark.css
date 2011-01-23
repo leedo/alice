@@ -410,9 +410,6 @@ div.left img {
   max-width: 32px;
   max-height: 32px;
   float: right;
-  display: none; }
-
-li.avatar div.left img {
   display: block; }
 
 ul.messages li.avatar span.nick {
