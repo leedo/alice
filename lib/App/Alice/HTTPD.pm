@@ -58,9 +58,6 @@ my $url_handlers = [
 
 sub url_handlers { return $url_handlers }
 
-my $ok = sub{ [200, ["Content-Type", "text/plain", "Content-Length", 2], ['ok']] };
-my $notfound = sub{ [404, ["Content-Type", "text/plain", "Content-Length", 9], ['not found']] };
-
 sub BUILD {
   my $self = shift;
   $self->httpd;
@@ -242,7 +239,7 @@ sub handle_message {
     source => $req->parameters->{source}
   });
   
-  $res->send( $ok->() );
+  $res->ok;
 }
 
 sub send_index {
@@ -301,7 +298,7 @@ sub template {
     $res->body($self->render($path));
   };
 
-  $@ ? $notfound->() : $res->send;
+  $@ ? $res->notfound : $res->send;
 }
 
 sub save_tabsets {
@@ -374,7 +371,7 @@ sub save_config {
     $self->app->format_info("config", "saved")
   );
 
-  $res->send( $ok->() );
+  $res->ok;
 }
 
 sub tab_order  {
@@ -382,7 +379,7 @@ sub tab_order  {
   $self->app->log(debug => "updating tab order");
   
   $self->app->tab_order([grep {defined $_} $req->parameters->get_all('tabs')]);
-  $res->send( $ok->() );
+  $res->ok;
 }
 
 sub auth_enabled {
