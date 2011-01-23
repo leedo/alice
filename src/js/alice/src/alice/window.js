@@ -84,10 +84,6 @@ Alice.Window = Class.create({
       li.previous().down('div.msg').setStyle({paddingBottom:'0px'});
     });
 
-    if (this.application.options.avatars != "show") {
-      this.messages.select('li.avatar').invoke("removeClassName", "avatar");
-    }
-
     // change timestamps from epoch to local time
     this.messages.select('span.timestamp').each(function(elem) {
       var inner = elem.innerHTML.strip();
@@ -297,12 +293,9 @@ Alice.Window = Class.create({
       if (prev && prev.hasClassName("avatar") && !prev.hasClassName("consecutive")) {
         prev.down('div.msg').setStyle({minHeight: '0px'});
       }
-      if (prev && prev.hasClassName("monospace")) {
+      if (prev && prev.hasClassName("monospaced")) {
         prev.down('div.msg').setStyle({paddingBottom: '0px'});
       }
-    }
-    else if (this.application.options.avatars == "hide") {
-      li.removeClassName("avatar");
     }
     
     if (message.event == "say") {
