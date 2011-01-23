@@ -23,11 +23,6 @@ use Encode;
 
 our $VERSION = '0.19';
 
-has condvar => (
-  is       => 'rw',
-  isa      => 'AnyEvent::CondVar'
-);
-
 has config => (
   is       => 'rw',
   isa      => 'App::Alice::Config',
@@ -166,8 +161,10 @@ has 'user' => (
 
 sub BUILDARGS {
   my ($class, %options) = @_;
-  my $self = {standalone => 1};
-  for (qw/standalone commands history template user httpd/) {
+
+  my $self = {};
+
+  for (qw/commands history template user httpd/) {
     if (exists $options{$_}) {
       $self->{$_} = $options{$_};
       delete $options{$_};
@@ -185,87 +182,62 @@ sub BUILDARGS {
 sub run {
   my $self = shift;
 
+  $self->commands;
+  $self->history;
+  $self->info_window;
+  $self->template;
+  $self->httpd;
+
   # wait for config to finish loading
   my $w; $w = AE::idle sub {
     return unless $self->config->{loaded};
     undef $w;
 
-    # initialize lazy stuff
-    $self->commands;
-    $self->history;
-    $self->info_window;
-    $self->template;
-    $self->httpd;
-
-    print STDERR "Location: http://".$self->config->http_address.":".$self->config->http_port."/\n"
-      if $self->standalone;
-
     $self->add_irc_server($_, $self->config->servers->{$_})
       for keys %{$self->config->servers};
   };
-  
-  if ($self->standalone) { 
-    $self->condvar(AnyEvent->condvar);
-    my @sigs;
-    for my $sig (qw/INT QUIT/) {
-      my $w = AnyEvent->signal(
-        signal => $sig,
-        cb     => sub {$self->init_shutdown},
-      );
-      push @sigs, $w;
-    }
-
-    my $args = $self->condvar->recv;
-    $self->_init_shutdown(@$args);
-  }
 }
 
 sub init_shutdown {
   my ($self, $cb, $msg) = @_;
-  $self->standalone ? $self->condvar->send([$cb, $msg]) : $self->_init_shutdown($cb, $msg);
-}
 
-sub _init_shutdown {
-  my ($self, $cb, $msg) = @_;
-
-  $self->condvar(AE::cv) if $self->standalone;
-
-  $self->{on_shutdown} = $cb;
   $self->shutting_down(1);
   $self->history(undef);
   $self->alert("Alice server is shutting down");
-  if ($self->connected_ircs) {
-    print STDERR "\nDisconnecting, please wait\n" if $self->standalone;
-    $_->init_shutdown($msg) for $self->connected_ircs;
 
-    $self->{shutdown_timer} = AE::timer 3, 0, sub{$self->shutdown};
+  my $shutdown = sub {
+    $self->shutdown;
+    $cb->() if $cb;
+  };
+
+  if ($self->connected_ircs) {
+    $_->shutdown($msg) for $self->connected_ircs;
+
+    my $w; $w = AE::idle sub {
+      if (!$self->connected_ircs) {
+        $shutdown->();
+        undef $w;
+      }
+    };
+
+    my $t; $t = AE::timer 3, 0, sub {
+      $shutdown->();
+      undef $w;
+      undef $t;
+    };
   }
   else {
-    print "\n";
-    $self->shutdown;
-  }
-
-  if ($self->standalone) {
-    $self->condvar->recv;
-    $self->_shutdown;
+    $shutdown->();
   }
 }
 
 sub shutdown {
-  my $self = shift;
-  $self->standalone ? $self->condvar->send : $self->_shutdown;
-}
-
-sub _shutdown {
   my $self = shift;
 
   $self->_ircs([]);
   $_->close for @{$self->streams};
   $self->streams([]);
   $self->httpd->shutdown;
-  
-  delete $self->{shutdown_timer} if $self->{shutdown_timer};
-  $self->{on_shutdown}->() if $self->{on_shutdown};
 }
 
 sub reload_commands {
