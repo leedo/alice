@@ -201,7 +201,7 @@ sub init_shutdown {
 
   $self->history(undef);
   $self->alert("Alice server is shutting down");
-  $_->shutdown($msg) for $self->connected_ircs;
+  $_->disconnect($msg) for $self->connected_ircs;
 
   my ($w, $t);
   my $shutdown = sub {
@@ -211,12 +211,7 @@ sub init_shutdown {
     undef $t;
   };
 
-  $w = AE::idle sub {
-    if (!$self->connected_ircs) {
-      $shutdown->();
-    }
-  };
-
+  $w = AE::idle sub {$shutdown->() unless $self->connected_ircs};
   $t = AE::timer 3, 0, $shutdown;
 }
 
