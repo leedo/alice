@@ -148,12 +148,6 @@ has 'info_window' => (
   }
 );
 
-has 'shutting_down' => (
-  is => 'rw',
-  default => 0,
-  isa => 'Bool',
-);
-
 has 'user' => (
   is => 'ro',
   default => $ENV{USER}
@@ -164,7 +158,7 @@ sub BUILDARGS {
 
   my $self = {};
 
-  for (qw/commands history template user httpd/) {
+  for (qw/logger commands history template user httpd/) {
     if (exists $options{$_}) {
       $self->{$_} = $options{$_};
       delete $options{$_};
@@ -182,53 +176,48 @@ sub BUILDARGS {
 sub run {
   my $self = shift;
 
+  # wait for config to finish loading
+  my $w; $w = AE::idle sub {
+    return unless $self->config->{loaded};
+    undef $w;
+    $self->init;
+  };
+}
+
+sub init {
+  my $self = shift;
   $self->commands;
   $self->history;
   $self->info_window;
   $self->template;
   $self->httpd;
 
-  # wait for config to finish loading
-  my $w; $w = AE::idle sub {
-    return unless $self->config->{loaded};
-    undef $w;
-
-    $self->add_irc_server($_, $self->config->servers->{$_})
-      for keys %{$self->config->servers};
-  };
+  $self->add_irc_server($_, $self->config->servers->{$_})
+    for keys %{$self->config->servers};
 }
 
 sub init_shutdown {
   my ($self, $cb, $msg) = @_;
 
-  $self->shutting_down(1);
   $self->history(undef);
   $self->alert("Alice server is shutting down");
+  $_->shutdown($msg) for $self->connected_ircs;
 
+  my ($w, $t);
   my $shutdown = sub {
     $self->shutdown;
     $cb->() if $cb;
+    undef $w;
+    undef $t;
   };
 
-  if ($self->connected_ircs) {
-    $_->shutdown($msg) for $self->connected_ircs;
-
-    my $w; $w = AE::idle sub {
-      if (!$self->connected_ircs) {
-        $shutdown->();
-        undef $w;
-      }
-    };
-
-    my $t; $t = AE::timer 3, 0, sub {
+  $w = AE::idle sub {
+    if (!$self->connected_ircs) {
       $shutdown->();
-      undef $w;
-      undef $t;
-    };
-  }
-  else {
-    $shutdown->();
-  }
+    }
+  };
+
+  $t = AE::timer 3, 0, $shutdown;
 }
 
 sub shutdown {
