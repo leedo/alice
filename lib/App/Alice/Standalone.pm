@@ -13,7 +13,6 @@ has cv => (
 after run => sub {
   my $self = shift;
 
-  print STDERR "Location: http://".$self->config->http_address.":".$self->config->http_port."/\n";
 
   $self->cv(AE::cv);
 
@@ -23,14 +22,19 @@ after run => sub {
   $self->init_shutdown(@$args);
 };
 
+after init => sub {
+  my $self = shift;
+  print STDERR "Location: http://".$self->config->http_address.":".$self->config->http_port."/\n";
+};
+
 around init_shutdown => sub {
   my $orig = shift;
   my $self = shift;
-  $self->cv(AE::cv);
 
-  print STDERR "\nDisconnecting, please wait\n" if $self->connected_ircs;
+  print STDERR ($self->connected_ircs ? "\nDisconnecting, please wait\n" : "\n");
   $self->$orig(@_);
 
+  $self->cv(AE::cv);
   $self->cv->recv;
   $self->shutdown;
 };
