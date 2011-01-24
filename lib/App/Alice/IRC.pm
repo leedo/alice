@@ -245,7 +245,6 @@ sub connected {
   if ($cl->{socket}) {
 
     $cl->{socket}->{rbuf_max} = 1024 * 10; # 10K max read buffer
-    $cl->{socket}->{wbuf_max} = 1024 * 10; # 10K max write buffer
 
     $self->{orig_on_read} = $cl->{socket}{on_read};
     $cl->{socket}->on_read(sub {

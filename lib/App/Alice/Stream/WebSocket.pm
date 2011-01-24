@@ -32,7 +32,6 @@ sub BUILD {
   my $h = AnyEvent::Handle->new(
     fh => $self->fh,
     rbuf_max => 1024 * 10,
-    wbuf_max => 1024 * 10,
   );
   
   $h->on_error(sub {
