@@ -260,6 +260,8 @@ body.blurred ul#tabs li div.hit_area {
 
 body.blurred ul#tabs li.active div.hit_area {
   border: 1px solid #111111;
+  -webkit-border-bottom-left-radius: 1px;
+  -webkit-border-bottom-right-radius: 1px;
   border-top: none; }
 
 ul#tabs li.active div.hit_area {

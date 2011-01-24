@@ -58,8 +58,8 @@ sub BUILD {
   # better way to get the AE handle?
   my $hdl = $self->writer->{handle};
 
-  $hdl->rbuf_max(1024 * 10);
-  $hdl->wbuf_max(1024 * 10);
+  $hdl->{rbuf_max} = 1024 * 10;
+  $hdl->{wbuf_max} = 1024 * 10;
 
   my $close = sub {
     $self->close;
