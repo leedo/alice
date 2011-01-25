@@ -395,7 +395,9 @@ Alice.Application = Class.create({
       elem.up('ul').select('li').invoke('removeClassName', 'selectedset');
       elem.up('li').addClassName('selectedset');
 
-      this.windows().each(function(win) {
+      this.windows().filter(function(win) {
+        return win.type != "privmsg";
+      }).each(function(win) {
         ids.indexOf(win.id) >= 0 ? win.show() : win.hide();
       });
 
