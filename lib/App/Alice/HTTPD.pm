@@ -67,28 +67,35 @@ sub BUILD {
 
 sub _build_httpd {
   my $self = shift;
-  my $httpd = Twiggy::Server->new(
-    host => $self->config->http_address,
-    port => $self->config->http_port,
-  );
-  $httpd->register_service(
-    builder {
-      if ($self->auth_enabled) {
-        mkdir $self->config->path."/sessions"
-          unless -d $self->config->path."/sessions";
-        enable "Session",
-          store => Plack::Session::Store::File->new(dir => $self->config->path),
-          expires => "24h";
+  my $httpd;
+
+  # eval in case server can't bind port
+  eval {
+    $httpd = Twiggy::Server->new(
+      host => $self->config->http_address,
+      port => $self->config->http_port,
+    );
+    $httpd->register_service(
+      builder {
+        if ($self->auth_enabled) {
+          mkdir $self->config->path."/sessions"
+            unless -d $self->config->path."/sessions";
+          enable "Session",
+            store => Plack::Session::Store::File->new(dir => $self->config->path),
+            expires => "24h";
+        }
+        enable "Static", path => qr{^/static/}, root => $self->config->assetdir;
+        enable "WebSocket";
+        sub {
+          my $env = shift;
+          return sub {$self->dispatch($env, shift)}
+        }
       }
-      enable "Static", path => qr{^/static/}, root => $self->config->assetdir;
-      enable "WebSocket";
-      sub {
-        my $env = shift;
-        return sub {$self->dispatch($env, shift)}
-      }
-    }
-  );
-  $self->httpd($httpd);
+    );
+  };
+
+  warn $@ if $@;
+  return $httpd;
 }
 
 sub dispatch {
