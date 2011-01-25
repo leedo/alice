@@ -438,7 +438,10 @@ sub ctcp_action {
   return unless $msg;
   utf8::decode($_) for ($nick, $msg, $channel);
   return if $self->app->is_ignore($nick);
-  if (my $window = $self->find_window($channel)) {
+
+  my $dest = ($channel eq $self->nick ? $nick : $channel);
+
+  if (my $window = $self->window($dest)) {
     my $text = "\x{2022} $msg";
     $self->app->store(nick => $nick, channel => $channel, body => $text);
     $self->broadcast($window->format_message($nick, $text));
