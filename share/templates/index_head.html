@@ -1,10 +1,10 @@
-? my ($app, $options, @windows) = @_;
+? my ($app, @windows) = @_;
 ? my $titlewin = @windows > 1 ? $windows[1] : $windows[0];
 <!DOCTYPE html>
 <html>
   <head>
     <title><?= $titlewin->title ?></title>
-    <script type="text/javascript" src="<?= $app->static_url("alice.js") ?>?<?= $options ?>"></script>
+    <script type="text/javascript" src="<?= $app->static_url("alice.js") ?>"></script>
     <link rel="shortcut icon" href="<?= $app->static_url("favicon.ico") ?>">
     <link type="text/css" rel="stylesheet" href="<?= $app->static_url("alice-".$app->config->style.".css") ?>" />
     <link rel="apple-touch-icon" href="<?= $app->static_url("image/alice.png") ?>" />

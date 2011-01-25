@@ -269,13 +269,13 @@ sub send_index {
 
   my @queue;
     
-  push @queue, sub {$app->render('index_head', $options, @windows)};
+  push @queue, sub {$app->render('index_head', @windows)};
   for my $window (@windows) {
     push @queue, sub {$app->render('window_head', $window)};
     push @queue, sub {$app->render('window_footer', $window)};
   }
   push @queue, sub {
-    my $html = $app->render('index_footer', @windows);
+    my $html = $app->render('index_footer', $options, @windows);
     delete $_->{active} for @windows;
     return $html;
   };
@@ -295,13 +295,13 @@ sub merged_options {
   my ($self, $req) = @_;
   my $config = $self->app->config;
   my $params = $req->parameters;
-  my %options = (
+  return {
    images => $req->parameters->{images} || $config->images,
    avatars => $req->parameters->{avatars} || $config->avatars,
    debug  => $req->parameters->{debug}  || ($config->show_debug ? 'true' : 'false'),
    timeformat => $req->parameters->{timeformat} || $config->timeformat,
-  );
-  join "&", map {"$_=$options{$_}"} keys %options;
+   image_prefix => $req->parameters->{image_prefix} || $config->image_prefix,
+  };
 }
 
 sub template {
