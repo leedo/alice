@@ -10127,6 +10127,7 @@ Element.addMethods({
 });
 Alice.Application = Class.create({
   initialize: function() {
+    this.options = {};
     this.isFocused = true;
     this.window_map = new Hash();
     this.previousFocus = 0;
@@ -11868,25 +11869,6 @@ if (window == window.parent) {
     var alice = new Alice.Application();
     window.alice = alice;
 
-    var options = {
-      images: 'show',
-      avatars: 'show',
-      timeformat: '12'
-    };
-
-    var js = /alice\.js\?(.*)?$/;
-    $$('script[src]').findAll(function(s) {
-      return s.src.match(js);
-    }).each(function(s) {
-      var params = s.src.match(js)[1];
-      params.split("&").each(function(o) {
-        var kv = o.split("=");
-        options[kv[0]] = kv[1];
-      });
-    });
-
-    alice.options = options;
-
     if (navigator.platform.match(/iphone/i)) {
       alice.options.images = "hide";
     }
@@ -11983,7 +11965,9 @@ if (window == window.parent) {
         if (alice.options.images == "show") {
           filtered = filtered.replace(
             /(<a[^>]*>)([^<]*\.(:?jpe?g|gif|png|bmp|svg)(:?\?v=0)?)<\/a>/gi,
-            "<div class=\"image\">$1<img src=\"http://i.usealice.org/$2\" onload=\"Alice.loadInlineImage(this)\" " +
+            "<div class=\"image\">$1<img src=\"" +
+            alice.options.image_prefix +
+            "$2\" onload=\"Alice.loadInlineImage(this)\" " +
             "alt=\"Loading Image...\" title=\"$2\" style=\"display:none\"/></a></div>");
         }
         return filtered;

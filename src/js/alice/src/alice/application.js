@@ -1,5 +1,6 @@
 Alice.Application = Class.create({
   initialize: function() {
+    this.options = {};
     this.isFocused = true;
     this.window_map = new Hash();
     this.previousFocus = 0;
