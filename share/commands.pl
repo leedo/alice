@@ -150,7 +150,7 @@ my $commands = [
         $irc->add_whois($nick => sub {
           $window->reply($_[0] ? $_[0] : "No such nick: $nick\n");
           if (my $avatar = $irc->nick_avatar($nick)) {
-            my $img = "<img src='$avatar' onload='alice.util.loadInlineImage(this)'>";
+            my $img = "<img src='$avatar' onload='Alice.loadInlineImage(this)'>";
             $window->reply(Text::MicroTemplate::encoded_string($img));
           }
         });
