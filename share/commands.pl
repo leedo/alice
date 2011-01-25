@@ -1,3 +1,4 @@
+require Text::MicroTemplate;
 my $SRVOPT = qr/(?:\-(\S+)\s+)?/;
 
 my $commands = [
@@ -148,6 +149,9 @@ my $commands = [
       if (my $irc = $self->determine_irc($app, $window, $network)) {
         $irc->add_whois($nick => sub {
           $window->reply($_[0] ? $_[0] : "No such nick: $nick\n");
+          if (my $avatar = $irc->nick_avatar($nick)) {
+            $window->reply(Text::MicroTemplate::encoded_string("<img src='$avatar'>"));
+          }
         });
       }
     },
