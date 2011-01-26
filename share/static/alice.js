@@ -10263,7 +10263,7 @@ Alice.Application = Class.create({
   },
 
   nth_window: function(n) {
-    var tab = $('tabs').down('li.visible', n);
+    var tab = $('tabs').down('li.visible:not(.info_tab)', n - 1);
     if (tab) {
       var m = tab.id.match(/([^_]+)_tab/);
       if (m) {

@@ -1,5 +1,6 @@
 ? my $app = shift;
 
+? my @windows = grep {$_->type ne "privmsg"} $app->sorted_windows;
 <div id="tabsets" class="config">
   <form onsubmit="Alice.tabsets.submit(Alice.tabsets.params()); return false;">
 
@@ -24,7 +25,7 @@
 
       <? for my $set ($app->tabsets) { ?>
         <ul>
-        <? for my $window (grep {$_->is_channel} $app->sorted_windows) { ?>
+        <? for my $window (@windows) { ?>
           <li>
             <input type="checkbox"<?= $set->includes($window->id) ? " checked" : "" ?> name="<?= $window->id ?>">
             <?= $window->title ?>
@@ -36,7 +37,7 @@
     </div>
 
     <ul id="empty_tabset" style="display:none">
-      <? for my $window ($app->sorted_windows) { ?>
+      <? for my $window (@windows) { ?>
         <li>
           <input type="checkbox" name="<?= $window->id ?>" />
           <?= $window->title ?>
