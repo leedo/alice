@@ -11517,15 +11517,18 @@ Alice.Input = Class.create({
   },
 
   send: function() {
+    var msg = this.getValue();
 
-    if (this.getValue().length > 1024*2) {
+    if (msg.length > 1024*2) {
       alert("That message is way too long, dude.");
       return;
     }
 
+    if (this.editor) this.textarea.value = msg;
+
     var success = this.application.connection.sendMessage(this.textarea.form);
     if (success) {
-      this.history.push(this.getValue());
+      this.history.push(msg);
       this.setValue("");
       if (this.editor) this.editor.update();
       this.index = -1;
@@ -11534,7 +11537,7 @@ Alice.Input = Class.create({
       this.focus(1);
     }
     else {
-      alert("Could not send message, not connected for alice");
+      alert("Could not send message, not connected!");
     }
   },
 
@@ -11571,9 +11574,6 @@ Alice.Input = Class.create({
   },
 
   resize: function() {
-    if (this.editor) {
-      this.textarea.setValue(this.editor.innerHTML);
-    }
     (function() {
       var height = this.getContentHeight();
       if (height == 0) {
