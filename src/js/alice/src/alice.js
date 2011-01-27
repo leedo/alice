@@ -122,7 +122,7 @@ if (window == window.parent) {
       },
       function (msg) {
         if (alice.options.images) {
-          var re = /https?:\/\/(?:www\.)?twitter\.com\/#!\/[^\/]+\/status\/(\d+)/i;
+          var re = /https?:\/\/(?:www\.)?twitter\.com\/(?:#!\/)?[^\/]+\/status\/(\d+)/i;
           msg.select("a").filter(function(a) {
             return re.match(a.href);
           }).each(function(a) {
