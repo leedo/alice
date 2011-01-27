@@ -123,6 +123,16 @@ if (window == window.parent) {
         var filtered = content;
         if (alice.options.images == "show") {
           filtered = filtered.replace(
+            /(<a[^>]*>)https?:\/\/(?:www\.)?twitter\.com\/#!\/[^\/]+\/status\/(\d+)/g,
+            "$1http://prettybrd.com/peebone/$2.png"
+          );
+        }
+        return filtered;
+      },
+      function (content) {
+        var filtered = content;
+        if (alice.options.images == "show") {
+          filtered = filtered.replace(
             /(<a[^>]*>)([^<]*\.(:?jpe?g|gif|png|bmp|svg)(:?\?v=0)?)<\/a>/gi,
             "<div class=\"image\">$1<img src=\"" + 
             alice.options.image_prefix + 
