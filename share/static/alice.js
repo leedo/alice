@@ -10312,10 +10312,8 @@ Alice.Application = Class.create({
     this.filters = this.filters.concat(list);
   },
 
-  applyFilters: function(content) {
-    return this.filters.inject(content, function(value, filter) {
-      return filter(value);
-    });
+  applyFilters: function(msg) {
+    return this.filters.each(function(f){ f(msg) });
   },
 
   nextWindow: function() {
@@ -10989,7 +10987,7 @@ Alice.Window = Class.create({
 
     setTimeout(function () {
       this.messages.select('li.message div.msg').each(function (msg) {
-        msg.innerHTML = this.application.applyFilters(msg.innerHTML);
+        this.application.applyFilters(msg);
       }.bind(this));
     }.bind(this), this.application.loadDelay);
 
@@ -11190,7 +11188,7 @@ Alice.Window = Class.create({
 
     if (message.event == "say") {
       var msg = li.down('div.msg');
-      msg.innerHTML = this.application.applyFilters(msg.innerHTML);
+      this.application.applyFilters(msg);
 
       var nick = li.down('span.nick');
       if (nick && this.nicksVisible) {
@@ -11952,35 +11950,38 @@ if (window == window.parent) {
 
 
     alice.addFilters([
-      function(content) {
-        var filtered = content;
-        filtered = filtered.replace(
-          /(<a href=\"(:?.*?\.(:?wav|mp3|ogg|aiff|m4a))")/gi,
-          "<img src=\"/static/image/play.png\" " +
-          "onclick=\"Alice.playAudio(this)\" class=\"audio\"/>$1");
-        return filtered;
+      function(msg) {
+        msg.select("a").filter(function(a) {
+          return a.href.match(/\.(?:wav|mp3|ogg|aiff|m4a)[^\/]*/);
+        }).each(function(a) {
+          var img = new Element("IMG", {"class": "audio", src: "/static/image/play.png"});
+          img.onclick = function(){ Alice.playAudio(img) };
+          a.insert({before: img})
+        });
       },
-      function (content) {
-        var filtered = content;
-        if (alice.options.images == "show") {
-          filtered = filtered.replace(
-            /(<a[^>]*>)https?:\/\/(?:www\.)?twitter\.com\/#!\/[^\/]+\/status\/(\d+)/g,
-            "$1http://prettybrd.com/peebone/$2.png"
-          );
+      function (msg) {
+        if (alice.options.images) {
+          var re = /https?:\/\/(?:www\.)?twitter\.com\/#!\/[^\/]+\/status\/(\d+)/i;
+          msg.select("a").filter(function(a) {
+            return re.match(a.href);
+          }).each(function(a) {
+            a.innerHTML = a.innerHTML.replace(re, "http://prettybrd.com/peebone/$1.png");
+          });
         }
-        return filtered;
       },
-      function (content) {
-        var filtered = content;
+      function (msg) {
         if (alice.options.images == "show") {
-          filtered = filtered.replace(
-            /(<a[^>]*>)([^<]*\.(:?jpe?g|gif|png|bmp|svg)(:?\?v=0)?)<\/a>/gi,
-            "<div class=\"image\">$1<img src=\"" +
-            alice.options.image_prefix +
-            "$2\" onload=\"Alice.loadInlineImage(this)\" " +
-            "alt=\"Loading Image...\" title=\"$2\" style=\"display:none\"/></a></div>");
+          var re = /\.(?:jpe?g|gif|png|bmp|svg)[^\/]*/i;
+          msg.select("a").filter(function(a) {
+            return re.match(a.innerHTML);
+          }).each(function(a) {
+            var div = new Element("DIV", {"class": "image"});
+            var img = new Element("IMG", {src: alice.options.image_prefix + a.innerHTML});
+            img.observe("load", function(){ Alice.loadInlineImage(img) });
+            div.insert(img);
+            a.update(div);
+          });
         }
-        return filtered;
       }
     ]);
   });
