@@ -590,7 +590,7 @@ sub nick_windows {
 sub irc_301 {
   my ($self, $cl, $msg) = @_;
 
-  my ($from, $awaymsg) = @{$msg->{params}};
+  my (undef, $from, $awaymsg) = @{$msg->{params}};
   utf8::decode($_) for ($from, $awaymsg);
 
   if (my $window = $self->find_window($from)) {
