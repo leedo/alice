@@ -186,10 +186,8 @@ Alice.Application = Class.create({
     this.filters = this.filters.concat(list);
   },
   
-  applyFilters: function(content) {
-    return this.filters.inject(content, function(value, filter) {
-      return filter(value);
-    });
+  applyFilters: function(msg) {
+    return this.filters.each(function(f){ f(msg) });
   },
   
   nextWindow: function() {

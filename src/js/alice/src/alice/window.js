@@ -98,7 +98,7 @@ Alice.Window = Class.create({
     // wait a second to load images, otherwise the browser will say "loading..."
     setTimeout(function () {
       this.messages.select('li.message div.msg').each(function (msg) {
-        msg.innerHTML = this.application.applyFilters(msg.innerHTML);
+        this.application.applyFilters(msg);
       }.bind(this));
     }.bind(this), this.application.loadDelay);
 
@@ -300,7 +300,7 @@ Alice.Window = Class.create({
     
     if (message.event == "say") {
       var msg = li.down('div.msg');
-      msg.innerHTML = this.application.applyFilters(msg.innerHTML);
+      this.application.applyFilters(msg);
       
       var nick = li.down('span.nick');
       if (nick && this.nicksVisible) {
