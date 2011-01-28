@@ -136,11 +136,13 @@ if (window == window.parent) {
           msg.select("a").filter(function(a) {
             return re.match(a.innerHTML);
           }).each(function(a) {
-            var div = new Element("DIV", {"class": "image"});
             var img = new Element("IMG", {src: alice.options.image_prefix + a.innerHTML});
             img.observe("load", function(){ Alice.loadInlineImage(img) });
-            div.insert(img);
-            a.update(div);
+            a.update(img);
+
+            var div = new Element("DIV", {"class": "image"});
+            a = a.replace(div);
+            div.insert(a);
           });
         }
       }
