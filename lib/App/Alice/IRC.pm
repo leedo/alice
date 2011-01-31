@@ -107,6 +107,7 @@ sub BUILD {
     channel_remove => sub{$self->multiple_left(@_)},
     channel_topic  => sub{$self->channel_topic(@_)},
     join           => sub{$self->_join(@_)},
+    invite         => sub{$self->invite(@_)},
     part           => sub{$self->part(@_)},
     nick_change    => sub{$self->nick_change(@_)},
     ctcp_action    => sub{$self->ctcp_action(@_)},
@@ -484,6 +485,19 @@ sub remove_channel {
   for my $info ($self->all_nick_info) {
     $info->[2] = [ grep {$_ ne $channel} @{$info->[2]} ]
   }
+}
+
+sub invite {
+  my ($self, $cl, $msg) = @_;
+
+  my (undef, $from, $channel) = @{$msg->{params}};
+  utf8::decode($_) for ($from, $channel);
+
+  $self->broadcast({
+    type => "action",
+    event => "announce",
+    body => "$from has invited you to $channel.",
+  });
 }
 
 sub _join {
