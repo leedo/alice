@@ -47,6 +47,7 @@ my $url_handlers = [
   [ "stream"       => "setup_xhr_stream" ],
   [ "wsstream"     => "setup_ws_stream" ],
   [ ""             => "send_index" ],
+  [ "safe"         => "send_safe_index" ],
   [ "tabs"         => "tab_order" ],
   [ "savetabsets"  => "save_tabsets" ],
   [ "serverconfig" => "server_config" ],
@@ -58,9 +59,6 @@ my $url_handlers = [
 
 sub url_handlers { return $url_handlers }
 
-my $ok = sub{ [200, ["Content-Type", "text/plain", "Content-Length", 2], ['ok']] };
-my $notfound = sub{ [404, ["Content-Type", "text/plain", "Content-Length", 9], ['not found']] };
-
 sub BUILD {
   my $self = shift;
   $self->httpd;
@@ -69,28 +67,35 @@ sub BUILD {
 
 sub _build_httpd {
   my $self = shift;
-  my $httpd = Twiggy::Server->new(
-    host => $self->config->http_address,
-    port => $self->config->http_port,
-  );
-  $httpd->register_service(
-    builder {
-      if ($self->auth_enabled) {
-        mkdir $self->config->path."/sessions"
-          unless -d $self->config->path."/sessions";
-        enable "Session",
-          store => Plack::Session::Store::File->new(dir => $self->config->path),
-          expires => "24h";
+  my $httpd;
+
+  # eval in case server can't bind port
+  eval {
+    $httpd = Twiggy::Server->new(
+      host => $self->config->http_address,
+      port => $self->config->http_port,
+    );
+    $httpd->register_service(
+      builder {
+        if ($self->auth_enabled) {
+          mkdir $self->config->path."/sessions"
+            unless -d $self->config->path."/sessions";
+          enable "Session",
+            store => Plack::Session::Store::File->new(dir => $self->config->path),
+            expires => "24h";
+        }
+        enable "Static", path => qr{^/static/}, root => $self->config->assetdir;
+        enable "WebSocket";
+        sub {
+          my $env = shift;
+          return sub {$self->dispatch($env, shift)}
+        }
       }
-      enable "Static", path => qr{^/static/}, root => $self->config->assetdir;
-      enable "WebSocket";
-      sub {
-        my $env = shift;
-        return sub {$self->dispatch($env, shift)}
-      }
-    }
-  );
-  $self->httpd($httpd);
+    );
+  };
+
+  warn $@ if $@;
+  return $httpd;
 }
 
 sub dispatch {
@@ -242,7 +247,14 @@ sub handle_message {
     source => $req->parameters->{source}
   });
   
-  $res->send( $ok->() );
+  $res->ok;
+}
+
+sub send_safe_index {
+  my ($self, $req, $res) = @_;
+  $req->parameters->{images} = "hide";
+  $req->parameters->{avatars} = "hide";
+  $self->send_index($req, $res);
 }
 
 sub send_index {
@@ -257,13 +269,13 @@ sub send_index {
 
   my @queue;
     
-  push @queue, sub {$app->render('index_head', $options, @windows)};
+  push @queue, sub {$app->render('index_head', @windows)};
   for my $window (@windows) {
     push @queue, sub {$app->render('window_head', $window)};
     push @queue, sub {$app->render('window_footer', $window)};
   }
   push @queue, sub {
-    my $html = $app->render('index_footer', @windows);
+    my $html = $app->render('index_footer', $options, @windows);
     delete $_->{active} for @windows;
     return $html;
   };
@@ -283,12 +295,13 @@ sub merged_options {
   my ($self, $req) = @_;
   my $config = $self->app->config;
   my $params = $req->parameters;
-  my %options = (
+  return {
    images => $req->parameters->{images} || $config->images,
+   avatars => $req->parameters->{avatars} || $config->avatars,
    debug  => $req->parameters->{debug}  || ($config->show_debug ? 'true' : 'false'),
    timeformat => $req->parameters->{timeformat} || $config->timeformat,
-  );
-  join "&", map {"$_=$options{$_}"} keys %options;
+   image_prefix => $req->parameters->{image_prefix} || $config->image_prefix,
+  };
 }
 
 sub template {
@@ -301,7 +314,7 @@ sub template {
     $res->body($self->render($path));
   };
 
-  $@ ? $notfound->() : $res->send;
+  $@ ? $res->notfound : $res->send;
 }
 
 sub save_tabsets {
@@ -374,7 +387,7 @@ sub save_config {
     $self->app->format_info("config", "saved")
   );
 
-  $res->send( $ok->() );
+  $res->ok;
 }
 
 sub tab_order  {
@@ -382,7 +395,7 @@ sub tab_order  {
   $self->app->log(debug => "updating tab order");
   
   $self->app->tab_order([grep {defined $_} $req->parameters->get_all('tabs')]);
-  $res->send( $ok->() );
+  $res->ok;
 }
 
 sub auth_enabled {

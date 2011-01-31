@@ -157,23 +157,6 @@ sub broadcast {
   $self->app->broadcast(@_);
 }
 
-sub init_shutdown {
-  my ($self, $msg) = @_;
-  $self->disabled(1);
-  if ($self->is_connected) {
-    $self->disconnect($msg);
-    return;
-  }
-  $self->shutdown;
-}
-
-sub shutdown {
-  my $self = shift;
-  $self->cl(undef);
-  $self->app->remove_irc($self->alias);
-  $self->app->shutdown if !$self->app->ircs;
-}
-
 sub log {
   my $messages = pop;
   $messages = [ $messages ] unless ref $messages eq "ARRAY";
@@ -260,6 +243,9 @@ sub connected {
   # kludge to work around broken MOTDs with an extra \015 in the
   # line ending (e.g. irc.omgwtfhax.net)
   if ($cl->{socket}) {
+
+    $cl->{socket}->{rbuf_max} = 1024 * 10; # 10K max read buffer
+
     $self->{orig_on_read} = $cl->{socket}{on_read};
     $cl->{socket}->on_read(sub {
       my ($hdl) = @_;
@@ -377,11 +363,6 @@ sub disconnected {
   $self->is_connected(0);
   $self->clear_nicks;
   
-  if ($self->app->shutting_down and !$self->app->connected_ircs) {
-    $self->shutdown;
-    return;
-  }
-  
   $self->reconnect(0) unless $self->disabled;
   
   if ($self->removed) {
@@ -457,7 +438,10 @@ sub ctcp_action {
   return unless $msg;
   utf8::decode($_) for ($nick, $msg, $channel);
   return if $self->app->is_ignore($nick);
-  if (my $window = $self->find_window($channel)) {
+
+  my $dest = ($channel eq $self->nick ? $nick : $channel);
+
+  if (my $window = $self->window($dest)) {
     my $text = "\x{2022} $msg";
     $self->app->store(nick => $nick, channel => $channel, body => $text);
     $self->broadcast($window->format_message($nick, $text));
@@ -606,7 +590,7 @@ sub nick_windows {
 sub irc_301 {
   my ($self, $cl, $msg) = @_;
 
-  my ($from, $awaymsg) = @{$msg->{params}};
+  my (undef, $from, $awaymsg) = @{$msg->{params}};
   utf8::decode($_) for ($from, $awaymsg);
 
   if (my $window = $self->find_window($from)) {

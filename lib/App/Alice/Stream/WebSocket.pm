@@ -29,7 +29,10 @@ has is_xhr => (
 sub BUILD {
   my $self = shift;
 
-  my $h = AnyEvent::Handle->new(fh => $self->fh);
+  my $h = AnyEvent::Handle->new(
+    fh => $self->fh,
+    rbuf_max => 1024 * 10,
+  );
   
   $h->on_error(sub {
     warn $_[2];

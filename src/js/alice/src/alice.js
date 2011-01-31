@@ -23,26 +23,6 @@ if (window == window.parent) {
     var alice = new Alice.Application();
     window.alice = alice;
 
-    // read in options from query string
-    var options = {
-      images: 'show',
-      avatars: 'show',
-      timeformat: '12' 
-    };
-
-    var js = /alice\.js\?(.*)?$/;
-    $$('script[src]').findAll(function(s) {
-      return s.src.match(js);
-    }).each(function(s) {
-      var params = s.src.match(js)[1];
-      params.split("&").each(function(o) {
-        var kv = o.split("=");
-        options[kv[0]] = kv[1];
-      });
-    });
-
-    alice.options = options;
-
     // don't load images on the iphone
     if (navigator.platform.match(/iphone/i)) {
       alice.options.images = "hide";
@@ -131,23 +111,40 @@ if (window == window.parent) {
     // setup default filters
 
     alice.addFilters([
-      function(content) {
-        var filtered = content;
-        filtered = filtered.replace(
-          /(<a href=\"(:?.*?\.(:?wav|mp3|ogg|aiff|m4a))")/gi,
-          "<img src=\"/static/image/play.png\" " +
-          "onclick=\"Alice.playAudio(this)\" class=\"audio\"/>$1");
-        return filtered;
+      function(msg) {
+        msg.select("a").filter(function(a) {
+          return a.href.match(/\.(?:wav|mp3|ogg|aiff|m4a)[^\/]*/);
+        }).each(function(a) {
+          var img = new Element("IMG", {"class": "audio", src: "/static/image/play.png"});
+          img.onclick = function(){ Alice.playAudio(img) };
+          a.insert({before: img})
+        });
       },
-      function (content) {
-        var filtered = content;
-        if (alice.options.images == "show") {
-          filtered = filtered.replace(
-            /(<a[^>]*>)([^<]*\.(:?jpe?g|gif|png|bmp|svg)(:?\?v=0)?)<\/a>/gi,
-            "<div class=\"image\">$1<img src=\"http://i.usealice.org/$2\" onload=\"Alice.loadInlineImage(this)\" " +
-            "alt=\"Loading Image...\" title=\"$2\" style=\"display:none\"/></a></div>");
+      function (msg) {
+        if (alice.options.images) {
+          var re = /https?:\/\/(?:www\.)?twitter\.com\/(?:#!\/)?[^\/]+\/status\/(\d+)/i;
+          msg.select("a").filter(function(a) {
+            return re.match(a.href);
+          }).each(function(a) {
+            a.innerHTML = a.innerHTML.replace(re, "http://prettybrd.com/peebone/$1.png");
+          });
         }
-        return filtered;
+      },
+      function (msg) {
+        if (alice.options.images == "show") {
+          var re = /\.(?:jpe?g|gif|png|bmp|svg)[^\/]*/i;
+          msg.select("a").filter(function(a) {
+            return re.match(a.innerHTML);
+          }).each(function(a) {
+            var img = new Element("IMG", {src: alice.options.image_prefix + a.innerHTML});
+            img.observe("load", function(){ Alice.loadInlineImage(img) });
+            a.update(img);
+
+            var div = new Element("DIV", {"class": "image"});
+            a = a.replace(div);
+            div.insert(a);
+          });
+        }
       }
     ]);
   });

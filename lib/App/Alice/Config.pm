@@ -118,6 +118,12 @@ has static_prefix => (
   default => '/static/',
 );
 
+has image_prefix => (
+  is      => 'rw',
+  isa     => 'Str',
+  default => 'https://static.usealice.org/i/',
+);
+
 has message_store => (
   is      => 'rw',
   isa     => 'Str',

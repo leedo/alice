@@ -10062,9 +10062,9 @@ Object.extend(Alice, {
 			  method: 'get',
 			  onSuccess: function (trans) {
 			    var data = trans.responseText.evalJSON();
-			    $$('#config_data div.setting').invoke('removeClassName',"active");
-			    $$('#servers li').invoke('removeClassName',"active");
-			    $('config_data').insert(data.config);
+			    $$('#config_data table').invoke('removeClassName',"active");
+			    $$('#connections li').invoke('removeClassName',"active");
+			    $('config_data').down('.config_body').insert(data.config);
 			    $('connections').insert(data.listitem);
 			  }
 		  });
@@ -10075,8 +10075,8 @@ Object.extend(Alice, {
 			if (alias && confirm("Are you sure you want to remove "+alias+"?")) {
 			  $("menu_"+alias).remove();
 			  $("setting_"+alias).remove();
-			  $("connections").down("li", 1).addClassName("active");
-			  $("config_data").down("div").addClassName("active");
+			  $("connections").down("li").addClassName("active");
+			  $("config_data").down("table").addClassName("active");
 			}
 	  },
 
@@ -10127,6 +10127,7 @@ Element.addMethods({
 });
 Alice.Application = Class.create({
   initialize: function() {
+    this.options = {};
     this.isFocused = true;
     this.window_map = new Hash();
     this.previousFocus = 0;
@@ -10262,7 +10263,7 @@ Alice.Application = Class.create({
   },
 
   nth_window: function(n) {
-    var tab = $('tabs').down('li.visible', n);
+    var tab = $('tabs').down('li.visible:not(.info_tab)', n - 1);
     if (tab) {
       var m = tab.id.match(/([^_]+)_tab/);
       if (m) {
@@ -10311,10 +10312,8 @@ Alice.Application = Class.create({
     this.filters = this.filters.concat(list);
   },
 
-  applyFilters: function(content) {
-    return this.filters.inject(content, function(value, filter) {
-      return filter(value);
-    });
+  applyFilters: function(msg) {
+    return this.filters.each(function(f){ f(msg) });
   },
 
   nextWindow: function() {
@@ -10521,7 +10520,9 @@ Alice.Application = Class.create({
       elem.up('ul').select('li').invoke('removeClassName', 'selectedset');
       elem.up('li').addClassName('selectedset');
 
-      this.windows().each(function(win) {
+      this.windows().filter(function(win) {
+        return win.type != "privmsg";
+      }).each(function(win) {
         ids.indexOf(win.id) >= 0 ? win.show() : win.hide();
       });
 
@@ -10986,7 +10987,7 @@ Alice.Window = Class.create({
 
     setTimeout(function () {
       this.messages.select('li.message div.msg').each(function (msg) {
-        msg.innerHTML = this.application.applyFilters(msg.innerHTML);
+        this.application.applyFilters(msg);
       }.bind(this));
     }.bind(this), this.application.loadDelay);
 
@@ -11019,10 +11020,10 @@ Alice.Window = Class.create({
       if (li.hasClassName("consecutive")) {
         var stem = li.previous("li:not(.consecutive)");
         if (!stem) return;
-        nick = stem.down(".nickhint");
+        if (li.hasClassName("avatar")) nick = stem.down("span.nick");
         time = stem.down(".timehint");
       } else {
-        nick = li.down(".nickhint");
+        if (li.hasClassName("avatar")) nick = li.down("span.nick");
         time = li.down(".timehint");
       }
 
@@ -11058,7 +11059,7 @@ Alice.Window = Class.create({
 
   toggleNicks: function () {
     if (this.nicksVisible) {
-      this.messages.select("span.nickhint").each(function(span){
+      this.messages.select("li.avatar span.nick").each(function(span){
         span.style.webkitTransition = "opacity 0.1s ease-in";
         span.style.opacity = 0;
       });
@@ -11068,7 +11069,7 @@ Alice.Window = Class.create({
       });
     }
     else {
-      this.messages.select("span.nickhint").each(function(span){
+      this.messages.select("li.avatar span.nick").each(function(span){
         span.style.webkitTransition = "opacity 0.1s ease-in-out";
         span.style.opacity = 1;
       });
@@ -11180,16 +11181,16 @@ Alice.Window = Class.create({
       if (prev && prev.hasClassName("avatar") && !prev.hasClassName("consecutive")) {
         prev.down('div.msg').setStyle({minHeight: '0px'});
       }
-      if (prev && prev.hasClassName("monospace")) {
+      if (prev && prev.hasClassName("monospaced")) {
         prev.down('div.msg').setStyle({paddingBottom: '0px'});
       }
     }
 
     if (message.event == "say") {
       var msg = li.down('div.msg');
-      msg.innerHTML = this.application.applyFilters(msg.innerHTML);
+      this.application.applyFilters(msg);
 
-      var nick = li.down('span.nickhint');
+      var nick = li.down('span.nick');
       if (nick && this.nicksVisible) {
         nick.style.webkitTransition = 'none 0 linear';
         nick.style.opacity = 1;
@@ -11514,9 +11515,18 @@ Alice.Input = Class.create({
   },
 
   send: function() {
+    var msg = this.getValue();
+
+    if (msg.length > 1024*2) {
+      alert("That message is way too long, dude.");
+      return;
+    }
+
+    if (this.editor) this.textarea.value = msg;
+
     var success = this.application.connection.sendMessage(this.textarea.form);
     if (success) {
-      this.history.push(this.getValue());
+      this.history.push(msg);
       this.setValue("");
       if (this.editor) this.editor.update();
       this.index = -1;
@@ -11525,7 +11535,7 @@ Alice.Input = Class.create({
       this.focus(1);
     }
     else {
-      alert("Could not send message, not connected for alice");
+      alert("Could not send message, not connected!");
     }
   },
 
@@ -11562,9 +11572,6 @@ Alice.Input = Class.create({
   },
 
   resize: function() {
-    if (this.editor) {
-      this.textarea.setValue(this.editor.innerHTML);
-    }
     (function() {
       var height = this.getContentHeight();
       if (height == 0) {
@@ -11860,25 +11867,6 @@ if (window == window.parent) {
     var alice = new Alice.Application();
     window.alice = alice;
 
-    var options = {
-      images: 'show',
-      avatars: 'show',
-      timeformat: '12'
-    };
-
-    var js = /alice\.js\?(.*)?$/;
-    $$('script[src]').findAll(function(s) {
-      return s.src.match(js);
-    }).each(function(s) {
-      var params = s.src.match(js)[1];
-      params.split("&").each(function(o) {
-        var kv = o.split("=");
-        options[kv[0]] = kv[1];
-      });
-    });
-
-    alice.options = options;
-
     if (navigator.platform.match(/iphone/i)) {
       alice.options.images = "hide";
     }
@@ -11962,23 +11950,40 @@ if (window == window.parent) {
 
 
     alice.addFilters([
-      function(content) {
-        var filtered = content;
-        filtered = filtered.replace(
-          /(<a href=\"(:?.*?\.(:?wav|mp3|ogg|aiff|m4a))")/gi,
-          "<img src=\"/static/image/play.png\" " +
-          "onclick=\"Alice.playAudio(this)\" class=\"audio\"/>$1");
-        return filtered;
+      function(msg) {
+        msg.select("a").filter(function(a) {
+          return a.href.match(/\.(?:wav|mp3|ogg|aiff|m4a)[^\/]*/);
+        }).each(function(a) {
+          var img = new Element("IMG", {"class": "audio", src: "/static/image/play.png"});
+          img.onclick = function(){ Alice.playAudio(img) };
+          a.insert({before: img})
+        });
       },
-      function (content) {
-        var filtered = content;
-        if (alice.options.images == "show") {
-          filtered = filtered.replace(
-            /(<a[^>]*>)([^<]*\.(:?jpe?g|gif|png|bmp|svg)(:?\?v=0)?)<\/a>/gi,
-            "<div class=\"image\">$1<img src=\"http://i.usealice.org/$2\" onload=\"Alice.loadInlineImage(this)\" " +
-            "alt=\"Loading Image...\" title=\"$2\" style=\"display:none\"/></a></div>");
+      function (msg) {
+        if (alice.options.images) {
+          var re = /https?:\/\/(?:www\.)?twitter\.com\/(?:#!\/)?[^\/]+\/status\/(\d+)/i;
+          msg.select("a").filter(function(a) {
+            return re.match(a.href);
+          }).each(function(a) {
+            a.innerHTML = a.innerHTML.replace(re, "http://prettybrd.com/peebone/$1.png");
+          });
         }
-        return filtered;
+      },
+      function (msg) {
+        if (alice.options.images == "show") {
+          var re = /\.(?:jpe?g|gif|png|bmp|svg)[^\/]*/i;
+          msg.select("a").filter(function(a) {
+            return re.match(a.innerHTML);
+          }).each(function(a) {
+            var img = new Element("IMG", {src: alice.options.image_prefix + a.innerHTML});
+            img.observe("load", function(){ Alice.loadInlineImage(img) });
+            a.update(img);
+
+            var div = new Element("DIV", {"class": "image"});
+            a = a.replace(div);
+            div.insert(a);
+          });
+        }
       }
     ]);
   });
