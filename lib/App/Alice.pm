@@ -23,11 +23,6 @@ use Encode;
 
 our $VERSION = '0.19';
 
-has condvar => (
-  is       => 'rw',
-  isa      => 'AnyEvent::CondVar'
-);
-
 has config => (
   is       => 'rw',
   isa      => 'App::Alice::Config',
@@ -46,12 +41,6 @@ sub get_irc {first {$_->alias eq $_[1]} $_[0]->ircs}
 sub remove_irc {$_[0]->_ircs([ grep { $_->alias ne $_[1] } $_[0]->ircs])}
 sub irc_aliases {map {$_->alias} $_[0]->ircs}
 sub connected_ircs {grep {$_->is_connected} $_[0]->ircs}
-
-has standalone => (
-  is      => 'ro',
-  isa     => 'Bool',
-  default => 1,
-);
 
 has httpd => (
   is      => 'rw',
@@ -153,12 +142,6 @@ has 'info_window' => (
   }
 );
 
-has 'shutting_down' => (
-  is => 'rw',
-  default => 0,
-  isa => 'Bool',
-);
-
 has 'user' => (
   is => 'ro',
   default => $ENV{USER}
@@ -166,8 +149,10 @@ has 'user' => (
 
 sub BUILDARGS {
   my ($class, %options) = @_;
-  my $self = {standalone => 1};
-  for (qw/standalone commands history template user httpd/) {
+
+  my $self = {};
+
+  for (qw/logger commands history template user httpd/) {
     if (exists $options{$_}) {
       $self->{$_} = $options{$_};
       delete $options{$_};
@@ -189,83 +174,48 @@ sub run {
   my $w; $w = AE::idle sub {
     return unless $self->config->{loaded};
     undef $w;
-
-    # initialize lazy stuff
-    $self->commands;
-    $self->history;
-    $self->info_window;
-    $self->template;
-    $self->httpd;
-
-    print STDERR "Location: http://".$self->config->http_address.":".$self->config->http_port."/\n"
-      if $self->standalone;
-
-    $self->add_irc_server($_, $self->config->servers->{$_})
-      for keys %{$self->config->servers};
+    $self->init;
   };
-  
-  if ($self->standalone) { 
-    $self->condvar(AnyEvent->condvar);
-    my @sigs;
-    for my $sig (qw/INT QUIT/) {
-      my $w = AnyEvent->signal(
-        signal => $sig,
-        cb     => sub {$self->init_shutdown},
-      );
-      push @sigs, $w;
-    }
+}
 
-    my $args = $self->condvar->recv;
-    $self->_init_shutdown(@$args);
-  }
+sub init {
+  my $self = shift;
+  $self->commands;
+  $self->history;
+  $self->info_window;
+  $self->template;
+  $self->httpd;
+
+  $self->add_irc_server($_, $self->config->servers->{$_})
+    for keys %{$self->config->servers};
 }
 
 sub init_shutdown {
   my ($self, $cb, $msg) = @_;
-  $self->standalone ? $self->condvar->send([$cb, $msg]) : $self->_init_shutdown($cb, $msg);
-}
 
-sub _init_shutdown {
-  my ($self, $cb, $msg) = @_;
-
-  $self->condvar(AE::cv) if $self->standalone;
-
-  $self->{on_shutdown} = $cb;
-  $self->shutting_down(1);
   $self->history(undef);
   $self->alert("Alice server is shutting down");
-  if ($self->connected_ircs) {
-    print STDERR "\nDisconnecting, please wait\n" if $self->standalone;
-    $_->init_shutdown($msg) for $self->connected_ircs;
+  $_->disconnect($msg) for $self->connected_ircs;
 
-    $self->{shutdown_timer} = AE::timer 3, 0, sub{$self->shutdown};
-  }
-  else {
-    print "\n";
+  my ($w, $t);
+  my $shutdown = sub {
     $self->shutdown;
-  }
+    $cb->() if $cb;
+    undef $w;
+    undef $t;
+  };
 
-  if ($self->standalone) {
-    $self->condvar->recv;
-    $self->_shutdown;
-  }
+  $w = AE::idle sub {$shutdown->() unless $self->connected_ircs};
+  $t = AE::timer 3, 0, $shutdown;
 }
 
 sub shutdown {
-  my $self = shift;
-  $self->standalone ? $self->condvar->send : $self->_shutdown;
-}
-
-sub _shutdown {
   my $self = shift;
 
   $self->_ircs([]);
   $_->close for @{$self->streams};
   $self->streams([]);
   $self->httpd->shutdown;
-  
-  delete $self->{shutdown_timer} if $self->{shutdown_timer};
-  $self->{on_shutdown}->() if $self->{on_shutdown};
 }
 
 sub reload_commands {
@@ -452,12 +402,11 @@ sub update_stream {
 sub handle_message {
   my ($self, $message) = @_;
 
-  my $msg  = $message->{msg};
-  utf8::decode($msg) unless utf8::is_utf8($msg);
-  $msg = html_to_irc($msg) if $message->{html};
-
   if (my $window = $self->get_window($message->{source})) {
-    for (split /\n/, $msg) {
+    utf8::decode($message->{msg}) unless utf8::is_utf8($message->{msg});
+    $message->{msg} = html_to_irc($message->{msg}) if $message->{html};
+
+    for (split /\n/, $message->{msg}) {
       eval {
         $self->commands->handle($self, $_, $window) if length $_;
       };
@@ -591,11 +540,6 @@ about running and/or using alice please read the L<App::Alice::Readme>.
 =item App::Alice->new(%options)
 
 App::Alice's contructor takes these options:
-
-=item standalone => Boolean
-
-If this is false App::Alice will not create a AE::cv and wait. That means
-if you do not create your own the program will exit immediately.
 
 =item user => $username
 

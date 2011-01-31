@@ -40,6 +40,16 @@ sub send {
   return $self->{cb}->($self->SUPER::finalize);
 }
 
+sub notfound {
+  my $self = shift;
+  return $self->{cb}->([404, ["Content-Type", "text/plain", "Content-Length", 9], ['not found']]);
+}
+
+sub ok {
+  my $self = shift;
+  return $self->{cb}->([200, ["Content-Type", "text/plain", "Content-Length", 2], ['ok']]);
+}
+
 sub writer {
   my $self = shift;
   my $response = $self->SUPER::finalize;

@@ -1,5 +1,6 @@
 Alice.Application = Class.create({
   initialize: function() {
+    this.options = {};
     this.isFocused = true;
     this.window_map = new Hash();
     this.previousFocus = 0;
@@ -136,7 +137,7 @@ Alice.Application = Class.create({
   },
 
   nth_window: function(n) {
-    var tab = $('tabs').down('li.visible', n);
+    var tab = $('tabs').down('li.visible:not(.info_tab)', n - 1);
     if (tab) {
       var m = tab.id.match(/([^_]+)_tab/);
       if (m) {
@@ -185,10 +186,8 @@ Alice.Application = Class.create({
     this.filters = this.filters.concat(list);
   },
   
-  applyFilters: function(content) {
-    return this.filters.inject(content, function(value, filter) {
-      return filter(value);
-    });
+  applyFilters: function(msg) {
+    return this.filters.each(function(f){ f(msg) });
   },
   
   nextWindow: function() {
@@ -395,7 +394,9 @@ Alice.Application = Class.create({
       elem.up('ul').select('li').invoke('removeClassName', 'selectedset');
       elem.up('li').addClassName('selectedset');
 
-      this.windows().each(function(win) {
+      this.windows().filter(function(win) {
+        return win.type != "privmsg";
+      }).each(function(win) {
         ids.indexOf(win.id) >= 0 ? win.show() : win.hide();
       });
 

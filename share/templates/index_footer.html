@@ -1,6 +1,8 @@
-? my ($app, @windows) = @_;
+? my ($app, $options, @windows) = @_;
         <script type="text/javascript">
           document.observe("dom:loaded", function () {
+            alice.options = <?= Text::MicroTemplate::encoded_string(JSON::encode_json $options) ?>;
+
             var orig_hash = window.location.hash;
             <? for my $window (@windows) { ?>
               alice.openWindow(
