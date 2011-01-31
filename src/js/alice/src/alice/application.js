@@ -61,6 +61,9 @@ Alice.Application = Class.create({
         win.lastNick = "";
       }
     },
+    announce: function (action) {
+      this.activeWindow().announce(action['body']);
+    },
     connect: function (action) {
       action.windows.each(function (win_info) {
         var win = this.getWindow(win_info.id);

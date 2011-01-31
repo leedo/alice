@@ -10187,6 +10187,9 @@ Alice.Application = Class.create({
         win.lastNick = "";
       }
     },
+    announce: function (action) {
+      this.activeWindow().announce(action['body']);
+    },
     connect: function (action) {
       action.windows.each(function (win_info) {
         var win = this.getWindow(win_info.id);
@@ -11151,6 +11154,13 @@ Alice.Window = Class.create({
   showAlert: function (message) {
     this.messages.insert(
       "<li class='event notice'><div class='msg'>"+message+"</div></li>"
+    );
+    this.scrollToBottom();
+  },
+
+  announce: function (message) {
+    this.messages.insert(
+      "<li class='message announce'><div class='msg'>"+message+"</div></li>"
     );
     this.scrollToBottom();
   },
