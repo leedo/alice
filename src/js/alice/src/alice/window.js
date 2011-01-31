@@ -266,6 +266,13 @@ Alice.Window = Class.create({
     this.scrollToBottom();
   },
 
+  announce: function (message) {
+    this.messages.insert(
+      "<li class='message announce'><div class='msg'>"+message+"</div></li>"
+    );
+    this.scrollToBottom();
+  },
+
   trimMessages: function() {
     this.messages.select("li").reverse().slice(this.messageLimit).invoke("remove");
   },
