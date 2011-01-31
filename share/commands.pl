@@ -310,17 +310,19 @@ my $commands = [
   },
   {
     name => 'invite',
-    re => qr{^/invite\s+(\S+)\s+(\S+)},
+    re => qr{^/invite\s+$SRVOPT(\S+)\s+(\S+)},
     eg => "/INVITE <nickname> <channel>",
     desc => "Invite a user to a channel you're in",
     code => sub {
-      my ($self, $app, $window, $nickname, $channel) = @_;
-      if($nickname and $channel){
-        $window->reply("Inviting $nickname to $channel");
-        $window->irc->send_srv(INVITE => $nickname, $channel);   
-      }
-      else {
-        $window->reply("Please specify both a nickname and a channel.");
+      my ($self, $app, $window, $channel, $nick, $network) = @_;
+      if (my $irc = $self->determine_irc($app, $window, $network)) {
+        if($nick and $channel){
+          $window->reply("Inviting $nick to $channel");
+          $irc->send_srv(INVITE => $nick, $channel);   
+        }
+        else {
+          $window->reply("Please specify both a nickname and a channel.");
+        }
       }
     },
   },
