@@ -216,6 +216,12 @@ Alice.Window = Class.create({
     this.element.redraw();
     this.setWindowHash();
     this.application.updateChannelSelect();
+
+    // remove fold class from last message
+    var last = this.messages.childElements().last();
+    if (last && last.hasClassName("fold"))
+      last.removeClassName("fold");
+
     return this;
   },
 
