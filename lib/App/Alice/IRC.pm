@@ -107,7 +107,6 @@ sub BUILD {
     channel_remove => sub{$self->multiple_left(@_)},
     channel_topic  => sub{$self->channel_topic(@_)},
     join           => sub{$self->_join(@_)},
-    invite         => sub{$self->invite(@_)},
     part           => sub{$self->part(@_)},
     nick_change    => sub{$self->nick_change(@_)},
     ctcp_action    => sub{$self->ctcp_action(@_)},
@@ -115,6 +114,7 @@ sub BUILD {
     privatemsg     => sub{$self->privatemsg(@_)},
     connect        => sub{$self->connected(@_)},
     disconnect     => sub{$self->disconnected(@_)},
+    irc_invite     => sub{$self->invite(@_)},
     irc_001        => sub{$self->log_message($_[1])},
     irc_301        => sub{$self->irc_301(@_)}, # AWAY message
     irc_305        => sub{$self->log_message($_[1])}, # AWAY
@@ -490,7 +490,7 @@ sub remove_channel {
 sub invite {
   my ($self, $cl, $msg) = @_;
 
-  my (undef, $from, $channel) = @{$msg->{params}};
+  my ($from, $channel) = @{$msg->{params}};
   utf8::decode($_) for ($from, $channel);
 
   $self->broadcast({
