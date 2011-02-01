@@ -132,7 +132,7 @@ if (window == window.parent) {
       },
       function (msg) {
         if (alice.options.images == "show") {
-          var re = /\.(?:jpe?g|gif|png|bmp|svg)[^\/]*/i;
+          var re = /^http[^\s]*\.(?:jpe?g|gif|png|bmp|svg)[^\/]*$/i;
           msg.select("a").filter(function(a) {
             return re.match(a.innerHTML);
           }).each(function(a) {
