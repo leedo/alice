@@ -360,6 +360,7 @@ Alice.Application = Class.create({
   },
 
   ready: function() {
+    this.activeWindow().focus();
     this.connection.connect();
   },
 
