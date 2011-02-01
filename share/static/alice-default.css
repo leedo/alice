@@ -447,6 +447,9 @@ div.msg {
   border-top: 1px solid #eeeeee;
   border-left: 1px solid #c1c1c1; }
 
+li.fold {
+  border-bottom: 1px solid #cccccc; }
+
 li.event div.msg {
   padding: 5px; }
 

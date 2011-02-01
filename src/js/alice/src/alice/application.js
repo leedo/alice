@@ -324,7 +324,7 @@ Alice.Application = Class.create({
       for (var i = 0; i < windows.length; i++) {
         var win = windows[i];
         if (win.hashtag == hash) {
-          win.focus();
+          if (!win.active) win.focus();
           return true;
         }
       }

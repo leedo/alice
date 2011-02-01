@@ -114,10 +114,18 @@ Alice.Window = Class.create({
   },
   
   unFocus: function() {
+    console.log("unfocusing " + this.title);
     this.active = false;
     this.element.removeClassName('active');
     this.tab.removeClassName('active');
     this.tabOverflowButton.selected = false;
+    this.addFold();
+  },
+
+  addFold: function() {
+    this.messages.select("li.fold").invoke("removeClassName", "fold");
+    var last = this.messages.childElements().last();
+    if (last) last.addClassName("fold");
   },
 
   showNick: function (e) {
@@ -197,7 +205,7 @@ Alice.Window = Class.create({
 
     document.title = this.title;
     this.application.previousFocus = this.application.activeWindow();
-    this.application.windows().invoke("unFocus");
+    this.application.previousFocus.unFocus();
     this.application.setSource(this.id);
     this.active = true;
     this.tab.addClassName('active');
