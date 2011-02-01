@@ -114,6 +114,7 @@ sub BUILD {
     privatemsg     => sub{$self->privatemsg(@_)},
     connect        => sub{$self->connected(@_)},
     disconnect     => sub{$self->disconnected(@_)},
+    irc_invite     => sub{$self->invite(@_)},
     irc_001        => sub{$self->log_message($_[1])},
     irc_301        => sub{$self->irc_301(@_)}, # AWAY message
     irc_305        => sub{$self->log_message($_[1])}, # AWAY
@@ -484,6 +485,19 @@ sub remove_channel {
   for my $info ($self->all_nick_info) {
     $info->[2] = [ grep {$_ ne $channel} @{$info->[2]} ]
   }
+}
+
+sub invite {
+  my ($self, $cl, $msg) = @_;
+
+  my ($from, $channel) = @{$msg->{params}};
+  utf8::decode($_) for ($from, $channel);
+
+  $self->broadcast({
+    type => "action",
+    event => "announce",
+    body => "$from has invited you to $channel.",
+  });
 }
 
 sub _join {

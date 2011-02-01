@@ -18,7 +18,7 @@ my $commands = [
       }
 
       $window->show($msg);
-      $window->irc->cl->send_long_message("utf8", 0, PRIVMSG => $window->title, $msg);
+      $window->irc->cl->send_long_message("utf8", 0, PRIVMSG => encode_utf8($window->title), $msg);
       $app->store(nick => $window->nick, channel => $window->title, body => $msg);
     },
   },
@@ -307,6 +307,24 @@ my $commands = [
 
       $app->set_away($message);
     }
+  },
+  {
+    name => 'invite',
+    re => qr{^/invite\s+$SRVOPT(\S+)\s+(\S+)},
+    eg => "/INVITE <nickname> <channel>",
+    desc => "Invite a user to a channel you're in",
+    code => sub {
+      my ($self, $app, $window, $channel, $nick, $network) = @_;
+      if (my $irc = $self->determine_irc($app, $window, $network)) {
+        if($nick and $channel){
+          $window->reply("Inviting $nick to $channel");
+          $irc->send_srv(INVITE => $nick, $channel);   
+        }
+        else {
+          $window->reply("Please specify both a nickname and a channel.");
+        }
+      }
+    },
   },
   {
     name => 'help',

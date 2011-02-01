@@ -118,6 +118,13 @@ Alice.Window = Class.create({
     this.element.removeClassName('active');
     this.tab.removeClassName('active');
     this.tabOverflowButton.selected = false;
+    this.addFold();
+  },
+
+  addFold: function() {
+    this.messages.select("li.fold").invoke("removeClassName", "fold");
+    var last = this.messages.childElements().last();
+    if (last) last.addClassName("fold");
   },
 
   showNick: function (e) {
@@ -197,7 +204,7 @@ Alice.Window = Class.create({
 
     document.title = this.title;
     this.application.previousFocus = this.application.activeWindow();
-    this.application.windows().invoke("unFocus");
+    this.application.previousFocus.unFocus();
     this.application.setSource(this.id);
     this.active = true;
     this.tab.addClassName('active');
@@ -209,6 +216,12 @@ Alice.Window = Class.create({
     this.element.redraw();
     this.setWindowHash();
     this.application.updateChannelSelect();
+
+    // remove fold class from last message
+    var last = this.messages.childElements().last();
+    if (last && last.hasClassName("fold"))
+      last.removeClassName("fold");
+
     return this;
   },
 
@@ -262,6 +275,13 @@ Alice.Window = Class.create({
   showAlert: function (message) {
     this.messages.insert(
       "<li class='event notice'><div class='msg'>"+message+"</div></li>"
+    );
+    this.scrollToBottom();
+  },
+
+  announce: function (message) {
+    this.messages.insert(
+      "<li class='message announce'><div class='msg'>"+message+"</div></li>"
     );
     this.scrollToBottom();
   },

@@ -518,6 +518,14 @@ div.msg {
   border-left: 1px solid $nick_column_border;
 }
 
+li.fold {
+  border-bottom: 1px solid $message_border_fold;
+}
+
+li.fold + li div.msg {
+  border-top: none !important;
+}
+
 li.event div.msg {
   padding: 5px;
 }
