@@ -1,5 +1,5 @@
-/*  Prototype JavaScript framework, version 1.6.1
- *  (c) 2005-2009 Sam Stephenson
+/*  Prototype JavaScript framework, version 1.7
+ *  (c) 2005-2010 Sam Stephenson
  *
  *  Prototype is freely distributable under the terms of an MIT-style license.
  *  For details, see the Prototype web site: http://www.prototypejs.org/
@@ -8,7 +8,7 @@
 
 var Prototype = {
 
-  Version: '1.6.1',
+  Version: '1.7',
 
   Browser: (function(){
     var ua = navigator.userAgent;
@@ -59,27 +59,6 @@ var Prototype = {
 
 if (Prototype.Browser.MobileSafari)
   Prototype.BrowserFeatures.SpecificElementExtensions = false;
-
-
-var Abstract = { };
-
-
-var Try = {
-  these: function() {
-    var returnValue;
-
-    for (var i = 0, length = arguments.length; i < length; i++) {
-      var lambda = arguments[i];
-      try {
-        returnValue = lambda();
-        break;
-      } catch (e) { }
-    }
-
-    return returnValue;
-  }
-};
-
 /* Based on Alex Arnell's inheritance implementation. */
 
 var Class = (function() {
@@ -166,10 +145,12 @@ var Class = (function() {
       NUMBER_TYPE = 'Number',
       STRING_TYPE = 'String',
       OBJECT_TYPE = 'Object',
+      FUNCTION_CLASS = '[object Function]',
       BOOLEAN_CLASS = '[object Boolean]',
       NUMBER_CLASS = '[object Number]',
       STRING_CLASS = '[object String]',
       ARRAY_CLASS = '[object Array]',
+      DATE_CLASS = '[object Date]',
       NATIVE_JSON_STRINGIFY_SUPPORT = window.JSON &&
         typeof JSON.stringify === 'function' &&
         JSON.stringify(0) === '0' &&
@@ -322,7 +303,7 @@ var Class = (function() {
   }
 
   function isFunction(object) {
-    return typeof object === "function";
+    return _toString.call(object) === FUNCTION_CLASS;
   }
 
   function isString(object) {
@@ -331,6 +312,10 @@ var Class = (function() {
 
   function isNumber(object) {
     return _toString.call(object) === NUMBER_CLASS;
+  }
+
+  function isDate(object) {
+    return _toString.call(object) === DATE_CLASS;
   }
 
   function isUndefined(object) {
@@ -352,6 +337,7 @@ var Class = (function() {
     isFunction:    isFunction,
     isString:      isString,
     isNumber:      isNumber,
+    isDate:        isDate,
     isUndefined:   isUndefined
   });
 })();
@@ -1079,9 +1065,10 @@ Array.from = $A;
       slice = arrayProto.slice,
       _each = arrayProto.forEach; // use native browser JS 1.6 implementation if available
 
-  function each(iterator) {
-    for (var i = 0, length = this.length; i < length; i++)
-      iterator(this[i]);
+  function each(iterator, context) {
+    for (var i = 0, length = this.length >>> 0; i < length; i++) {
+      if (i in this) iterator.call(context, this[i], i, this);
+    }
   }
   if (!_each) _each = each;
 
@@ -1287,8 +1274,14 @@ var Hash = Class.create(Enumerable, (function() {
       var key = encodeURIComponent(pair.key), values = pair.value;
 
       if (values && typeof values == 'object') {
-        if (Object.isArray(values))
-          return results.concat(values.map(toQueryPair.curry(key)));
+        if (Object.isArray(values)) {
+          var queryValues = [];
+          for (var i = 0, len = values.length, value; i < len; i++) {
+            value = values[i];
+            queryValues.push(toQueryPair(key, value));
+          }
+          return results.concat(queryValues);
+        }
       } else results.push(toQueryPair(key, values));
       return results;
     }).join('&');
@@ -1408,6 +1401,25 @@ var ObjectRange = Class.create(Enumerable, (function() {
 
 
 
+var Abstract = { };
+
+
+var Try = {
+  these: function() {
+    var returnValue;
+
+    for (var i = 0, length = arguments.length; i < length; i++) {
+      var lambda = arguments[i];
+      try {
+        returnValue = lambda();
+        break;
+      } catch (e) { }
+    }
+
+    return returnValue;
+  }
+};
+
 var Ajax = {
   getTransport: function() {
     return Try.these(
@@ -1468,9 +1480,7 @@ Ajax.Base = Class.create({
 
     this.options.method = this.options.method.toLowerCase();
 
-    if (Object.isString(this.options.parameters))
-      this.options.parameters = this.options.parameters.toQueryParams();
-    else if (Object.isHash(this.options.parameters))
+    if (Object.isHash(this.options.parameters))
       this.options.parameters = this.options.parameters.toObject();
   }
 });
@@ -1486,21 +1496,20 @@ Ajax.Request = Class.create(Ajax.Base, {
   request: function(url) {
     this.url = url;
     this.method = this.options.method;
-    var params = Object.clone(this.options.parameters);
+    var params = Object.isString(this.options.parameters) ?
+          this.options.parameters :
+          Object.toQueryString(this.options.parameters);
 
     if (!['get', 'post'].include(this.method)) {
-      params['_method'] = this.method;
+      params += (params ? '&' : '') + "_method=" + this.method;
       this.method = 'post';
     }
 
-    this.parameters = params;
-
-    if (params = Object.toQueryString(params)) {
-      if (this.method == 'get')
-        this.url += (this.url.include('?') ? '&' : '?') + params;
-      else if (/Konqueror|Safari|KHTML/.test(navigator.userAgent))
-        params += '&_=';
+    if (params && this.method === 'get') {
+      this.url += (this.url.include('?') ? '&' : '?') + params;
     }
+
+    this.parameters = params.toQueryParams();
 
     try {
       var response = new Ajax.Response(this);
@@ -1570,11 +1579,12 @@ Ajax.Request = Class.create(Ajax.Base, {
 
   success: function() {
     var status = this.getStatus();
-    return !status || (status >= 200 && status < 300);
+    return !status || (status >= 200 && status < 300) || status == 304;
   },
 
   getStatus: function() {
     try {
+      if (this.transport.status === 1223) return 204;
       return this.transport.status || 0;
     } catch (e) { return 0 }
   },
@@ -1849,6 +1859,11 @@ if (!Node.ELEMENT_NODE) {
 
 
 (function(global) {
+  function shouldUseCache(tagName, attributes) {
+    if (tagName === 'select') return false;
+    if ('type' in attributes) return false;
+    return true;
+  }
 
   var HAS_EXTENDED_CREATE_ELEMENT_SYNTAX = (function(){
     try {
@@ -1866,13 +1881,19 @@ if (!Node.ELEMENT_NODE) {
     attributes = attributes || { };
     tagName = tagName.toLowerCase();
     var cache = Element.cache;
+
     if (HAS_EXTENDED_CREATE_ELEMENT_SYNTAX && attributes.name) {
       tagName = '<' + tagName + ' name="' + attributes.name + '">';
       delete attributes.name;
       return Element.writeAttribute(document.createElement(tagName), attributes);
     }
+
     if (!cache[tagName]) cache[tagName] = Element.extend(document.createElement(tagName));
-    return Element.writeAttribute(cache[tagName].cloneNode(false), attributes);
+
+    var node = shouldUseCache(tagName, attributes) ?
+     cache[tagName].cloneNode(false) : document.createElement(tagName);
+
+    return Element.writeAttribute(node, attributes);
   };
 
   Object.extend(global.Element, element || { });
@@ -1882,6 +1903,15 @@ if (!Node.ELEMENT_NODE) {
 
 Element.idCounter = 1;
 Element.cache = { };
+
+Element._purgeElement = function(element) {
+  var uid = element._prototypeUID;
+  if (uid) {
+    Element.stopObserving(element);
+    element._prototypeUID = void 0;
+    delete Element.Storage[uid];
+  }
+}
 
 Element.Methods = {
   visible: function(element) {
@@ -1939,6 +1969,21 @@ Element.Methods = {
       }
     })();
 
+    var LINK_ELEMENT_INNERHTML_BUGGY = (function() {
+      try {
+        var el = document.createElement('div');
+        el.innerHTML = "<link>";
+        var isBuggy = (el.childNodes.length === 0);
+        el = null;
+        return isBuggy;
+      } catch(e) {
+        return true;
+      }
+    })();
+
+    var ANY_INNERHTML_BUGGY = SELECT_ELEMENT_INNERHTML_BUGGY ||
+     TABLE_ELEMENT_INNERHTML_BUGGY || LINK_ELEMENT_INNERHTML_BUGGY;
+
     var SCRIPT_ELEMENT_REJECTS_TEXTNODE_APPENDING = (function () {
       var s = document.createElement("script"),
           isBuggy = false;
@@ -1953,8 +1998,14 @@ Element.Methods = {
       return isBuggy;
     })();
 
+
     function update(element, content) {
       element = $(element);
+      var purgeElement = Element._purgeElement;
+
+      var descendants = element.getElementsByTagName('*'),
+       i = descendants.length;
+      while (i--) purgeElement(descendants[i]);
 
       if (content && content.toElement)
         content = content.toElement();
@@ -1971,7 +2022,7 @@ Element.Methods = {
         return element;
       }
 
-      if (SELECT_ELEMENT_INNERHTML_BUGGY || TABLE_ELEMENT_INNERHTML_BUGGY) {
+      if (ANY_INNERHTML_BUGGY) {
         if (tagName in Element._insertionTranslations.tags) {
           while (element.firstChild) {
             element.removeChild(element.firstChild);
@@ -1980,6 +2031,12 @@ Element.Methods = {
             .each(function(node) {
               element.appendChild(node)
             });
+        } else if (LINK_ELEMENT_INNERHTML_BUGGY && Object.isString(content) && content.indexOf('<link') > -1) {
+          while (element.firstChild) {
+            element.removeChild(element.firstChild);
+          }
+          var nodes = Element._getContentFromAnonymousElement(tagName, content.stripScripts(), true);
+          nodes.each(function(node) { element.appendChild(node) });
         }
         else {
           element.innerHTML = content.stripScripts();
@@ -2389,117 +2446,6 @@ Element.Methods = {
     return element;
   },
 
-  cumulativeOffset: function(element) {
-    var valueT = 0, valueL = 0;
-    if (element.parentNode) {
-      do {
-        valueT += element.offsetTop  || 0;
-        valueL += element.offsetLeft || 0;
-        element = element.offsetParent;
-      } while (element);
-    }
-    return Element._returnOffset(valueL, valueT);
-  },
-
-  positionedOffset: function(element) {
-    var valueT = 0, valueL = 0;
-    do {
-      valueT += element.offsetTop  || 0;
-      valueL += element.offsetLeft || 0;
-      element = element.offsetParent;
-      if (element) {
-        if (element.tagName.toUpperCase() == 'BODY') break;
-        var p = Element.getStyle(element, 'position');
-        if (p !== 'static') break;
-      }
-    } while (element);
-    return Element._returnOffset(valueL, valueT);
-  },
-
-  absolutize: function(element) {
-    element = $(element);
-    if (Element.getStyle(element, 'position') == 'absolute') return element;
-
-    var offsets = Element.positionedOffset(element),
-        top     = offsets[1],
-        left    = offsets[0],
-        width   = element.clientWidth,
-        height  = element.clientHeight;
-
-    element._originalLeft   = left - parseFloat(element.style.left  || 0);
-    element._originalTop    = top  - parseFloat(element.style.top || 0);
-    element._originalWidth  = element.style.width;
-    element._originalHeight = element.style.height;
-
-    element.style.position = 'absolute';
-    element.style.top    = top + 'px';
-    element.style.left   = left + 'px';
-    element.style.width  = width + 'px';
-    element.style.height = height + 'px';
-    return element;
-  },
-
-  relativize: function(element) {
-    element = $(element);
-    if (Element.getStyle(element, 'position') == 'relative') return element;
-
-    element.style.position = 'relative';
-    var top  = parseFloat(element.style.top  || 0) - (element._originalTop || 0),
-        left = parseFloat(element.style.left || 0) - (element._originalLeft || 0);
-
-    element.style.top    = top + 'px';
-    element.style.left   = left + 'px';
-    element.style.height = element._originalHeight;
-    element.style.width  = element._originalWidth;
-    return element;
-  },
-
-  cumulativeScrollOffset: function(element) {
-    var valueT = 0, valueL = 0;
-    do {
-      valueT += element.scrollTop  || 0;
-      valueL += element.scrollLeft || 0;
-      element = element.parentNode;
-    } while (element);
-    return Element._returnOffset(valueL, valueT);
-  },
-
-  getOffsetParent: function(element) {
-    if (element.offsetParent) return $(element.offsetParent);
-    if (element == document.body) return $(element);
-
-    while ((element = element.parentNode) && element != document.body)
-      if (Element.getStyle(element, 'position') != 'static')
-        return $(element);
-
-    return $(document.body);
-  },
-
-  viewportOffset: function(forElement) {
-    var valueT = 0,
-        valueL = 0,
-        element = forElement;
-
-    do {
-      valueT += element.offsetTop  || 0;
-      valueL += element.offsetLeft || 0;
-
-      if (element.offsetParent == document.body &&
-        Element.getStyle(element, 'position') == 'absolute') break;
-
-    } while (element = element.offsetParent);
-
-    element = forElement;
-    do {
-      if (!Prototype.Browser.Opera || (element.tagName && (element.tagName.toUpperCase() == 'BODY'))) {
-        valueT -= element.scrollTop  || 0;
-        valueL -= element.scrollLeft || 0;
-      }
-    } while (element = element.parentNode);
-
-    return Element._returnOffset(valueL, valueT);
-  },
-
   clonePosition: function(element, source) {
     var options = Object.extend({
       setLeft:    true,
@@ -2553,8 +2499,6 @@ if (Prototype.Browser.Opera) {
   Element.Methods.getStyle = Element.Methods.getStyle.wrap(
     function(proceed, element, style) {
       switch (style) {
-        case 'left': case 'top': case 'right': case 'bottom':
-          if (proceed(element, 'position') === 'static') return null;
         case 'height': case 'width':
           if (!Element.visible(element)) return null;
 
@@ -2590,37 +2534,6 @@ if (Prototype.Browser.Opera) {
 }
 
 else if (Prototype.Browser.IE) {
-  Element.Methods.getOffsetParent = Element.Methods.getOffsetParent.wrap(
-    function(proceed, element) {
-      element = $(element);
-      if (!element.parentNode) return $(document.body);
-      var position = element.getStyle('position');
-      if (position !== 'static') return proceed(element);
-      element.setStyle({ position: 'relative' });
-      var value = proceed(element);
-      element.setStyle({ position: position });
-      return value;
-    }
-  );
-
-  $w('positionedOffset viewportOffset').each(function(method) {
-    Element.Methods[method] = Element.Methods[method].wrap(
-      function(proceed, element) {
-        element = $(element);
-        if (!element.parentNode) return Element._returnOffset(0, 0);
-        var position = element.getStyle('position');
-        if (position !== 'static') return proceed(element);
-        var offsetParent = element.getOffsetParent();
-        if (offsetParent && offsetParent.getStyle('position') === 'fixed')
-          offsetParent.setStyle({ zoom: 1 });
-        element.setStyle({ position: 'relative' });
-        var value = proceed(element);
-        element.setStyle({ position: position });
-        return value;
-      }
-    );
-  });
-
   Element.Methods.getStyle = function(element, style) {
     element = $(element);
     style = (style == 'float' || style == 'cssFloat') ? 'styleFloat' : style.camelize();
@@ -2849,20 +2762,6 @@ else if (Prototype.Browser.WebKit) {
 
     return element;
   };
-
-  Element.Methods.cumulativeOffset = function(element) {
-    var valueT = 0, valueL = 0;
-    do {
-      valueT += element.offsetTop  || 0;
-      valueL += element.offsetLeft || 0;
-      if (element.offsetParent == document.body)
-        if (Element.getStyle(element, 'position') == 'absolute') break;
-
-      element = element.offsetParent;
-    } while (element);
-
-    return Element._returnOffset(valueL, valueT);
-  };
 }
 
 if ('outerHTML' in document.documentElement) {
@@ -2901,11 +2800,20 @@ Element._returnOffset = function(l, t) {
   return result;
 };
 
-Element._getContentFromAnonymousElement = function(tagName, html) {
+Element._getContentFromAnonymousElement = function(tagName, html, force) {
   var div = new Element('div'),
       t = Element._insertionTranslations.tags[tagName];
-  if (t) {
-    div.innerHTML = t[0] + html + t[1];
+
+  var workaround = false;
+  if (t) workaround = true;
+  else if (force) {
+    workaround = true;
+    t = ['', '', 0];
+  }
+
+  if (workaround) {
+    div.innerHTML = '&nbsp;' + t[0] + html + t[1];
+    div.removeChild(div.firstChild);
     for (var i = t[2]; i--; ) {
       div = div.firstChild;
     }
@@ -3064,7 +2972,8 @@ Element.addMethods = function(methods) {
       "FORM":     Object.clone(Form.Methods),
       "INPUT":    Object.clone(Form.Element.Methods),
       "SELECT":   Object.clone(Form.Element.Methods),
-      "TEXTAREA": Object.clone(Form.Element.Methods)
+      "TEXTAREA": Object.clone(Form.Element.Methods),
+      "BUTTON":   Object.clone(Form.Element.Methods)
     });
   }
 
@@ -3201,8 +3110,8 @@ Element.addMethods({
       uid = 0;
     } else {
       if (typeof element._prototypeUID === "undefined")
-        element._prototypeUID = [Element.Storage.UID++];
-      uid = element._prototypeUID[0];
+        element._prototypeUID = Element.Storage.UID++;
+      uid = element._prototypeUID;
     }
 
     if (!Element.Storage[uid])
@@ -3247,9 +3156,810 @@ Element.addMethods({
       }
     }
     return Element.extend(clone);
+  },
+
+  purge: function(element) {
+    if (!(element = $(element))) return;
+    var purgeElement = Element._purgeElement;
+
+    purgeElement(element);
+
+    var descendants = element.getElementsByTagName('*'),
+     i = descendants.length;
+
+    while (i--) purgeElement(descendants[i]);
+
+    return null;
   }
 });
-Prototype._original_property = window.Sizzle;
+
+(function() {
+
+  function toDecimal(pctString) {
+    var match = pctString.match(/^(\d+)%?$/i);
+    if (!match) return null;
+    return (Number(match[1]) / 100);
+  }
+
+  function getPixelValue(value, property, context) {
+    var element = null;
+    if (Object.isElement(value)) {
+      element = value;
+      value = element.getStyle(property);
+    }
+
+    if (value === null) {
+      return null;
+    }
+
+    if ((/^(?:-)?\d+(\.\d+)?(px)?$/i).test(value)) {
+      return window.parseFloat(value);
+    }
+
+    var isPercentage = value.include('%'), isViewport = (context === document.viewport);
+
+    if (/\d/.test(value) && element && element.runtimeStyle && !(isPercentage && isViewport)) {
+      var style = element.style.left, rStyle = element.runtimeStyle.left;
+      element.runtimeStyle.left = element.currentStyle.left;
+      element.style.left = value || 0;
+      value = element.style.pixelLeft;
+      element.style.left = style;
+      element.runtimeStyle.left = rStyle;
+
+      return value;
+    }
+
+    if (element && isPercentage) {
+      context = context || element.parentNode;
+      var decimal = toDecimal(value);
+      var whole = null;
+      var position = element.getStyle('position');
+
+      var isHorizontal = property.include('left') || property.include('right') ||
+       property.include('width');
+
+      var isVertical =  property.include('top') || property.include('bottom') ||
+        property.include('height');
+
+      if (context === document.viewport) {
+        if (isHorizontal) {
+          whole = document.viewport.getWidth();
+        } else if (isVertical) {
+          whole = document.viewport.getHeight();
+        }
+      } else {
+        if (isHorizontal) {
+          whole = $(context).measure('width');
+        } else if (isVertical) {
+          whole = $(context).measure('height');
+        }
+      }
+
+      return (whole === null) ? 0 : whole * decimal;
+    }
+
+    return 0;
+  }
+
+  function toCSSPixels(number) {
+    if (Object.isString(number) && number.endsWith('px')) {
+      return number;
+    }
+    return number + 'px';
+  }
+
+  function isDisplayed(element) {
+    var originalElement = element;
+    while (element && element.parentNode) {
+      var display = element.getStyle('display');
+      if (display === 'none') {
+        return false;
+      }
+      element = $(element.parentNode);
+    }
+    return true;
+  }
+
+  var hasLayout = Prototype.K;
+  if ('currentStyle' in document.documentElement) {
+    hasLayout = function(element) {
+      if (!element.currentStyle.hasLayout) {
+        element.style.zoom = 1;
+      }
+      return element;
+    };
+  }
+
+  function cssNameFor(key) {
+    if (key.include('border')) key = key + '-width';
+    return key.camelize();
+  }
+
+  Element.Layout = Class.create(Hash, {
+    initialize: function($super, element, preCompute) {
+      $super();
+      this.element = $(element);
+
+      Element.Layout.PROPERTIES.each( function(property) {
+        this._set(property, null);
+      }, this);
+
+      if (preCompute) {
+        this._preComputing = true;
+        this._begin();
+        Element.Layout.PROPERTIES.each( this._compute, this );
+        this._end();
+        this._preComputing = false;
+      }
+    },
+
+    _set: function(property, value) {
+      return Hash.prototype.set.call(this, property, value);
+    },
+
+    set: function(property, value) {
+      throw "Properties of Element.Layout are read-only.";
+    },
+
+    get: function($super, property) {
+      var value = $super(property);
+      return value === null ? this._compute(property) : value;
+    },
+
+    _begin: function() {
+      if (this._prepared) return;
+
+      var element = this.element;
+      if (isDisplayed(element)) {
+        this._prepared = true;
+        return;
+      }
+
+      var originalStyles = {
+        position:   element.style.position   || '',
+        width:      element.style.width      || '',
+        visibility: element.style.visibility || '',
+        display:    element.style.display    || ''
+      };
+
+      element.store('prototype_original_styles', originalStyles);
+
+      var position = element.getStyle('position'),
+       width = element.getStyle('width');
+
+      if (width === "0px" || width === null) {
+        element.style.display = 'block';
+        width = element.getStyle('width');
+      }
+
+      var context = (position === 'fixed') ? document.viewport :
+       element.parentNode;
+
+      element.setStyle({
+        position:   'absolute',
+        visibility: 'hidden',
+        display:    'block'
+      });
+
+      var positionedWidth = element.getStyle('width');
+
+      var newWidth;
+      if (width && (positionedWidth === width)) {
+        newWidth = getPixelValue(element, 'width', context);
+      } else if (position === 'absolute' || position === 'fixed') {
+        newWidth = getPixelValue(element, 'width', context);
+      } else {
+        var parent = element.parentNode, pLayout = $(parent).getLayout();
+
+        newWidth = pLayout.get('width') -
+         this.get('margin-left') -
+         this.get('border-left') -
+         this.get('padding-left') -
+         this.get('padding-right') -
+         this.get('border-right') -
+         this.get('margin-right');
+      }
+
+      element.setStyle({ width: newWidth + 'px' });
+
+      this._prepared = true;
+    },
+
+    _end: function() {
+      var element = this.element;
+      var originalStyles = element.retrieve('prototype_original_styles');
+      element.store('prototype_original_styles', null);
+      element.setStyle(originalStyles);
+      this._prepared = false;
+    },
+
+    _compute: function(property) {
+      var COMPUTATIONS = Element.Layout.COMPUTATIONS;
+      if (!(property in COMPUTATIONS)) {
+        throw "Property not found.";
+      }
+
+      return this._set(property, COMPUTATIONS[property].call(this, this.element));
+    },
+
+    toObject: function() {
+      var args = $A(arguments);
+      var keys = (args.length === 0) ? Element.Layout.PROPERTIES :
+       args.join(' ').split(' ');
+      var obj = {};
+      keys.each( function(key) {
+        if (!Element.Layout.PROPERTIES.include(key)) return;
+        var value = this.get(key);
+        if (value != null) obj[key] = value;
+      }, this);
+      return obj;
+    },
+
+    toHash: function() {
+      var obj = this.toObject.apply(this, arguments);
+      return new Hash(obj);
+    },
+
+    toCSS: function() {
+      var args = $A(arguments);
+      var keys = (args.length === 0) ? Element.Layout.PROPERTIES :
+       args.join(' ').split(' ');
+      var css = {};
+
+      keys.each( function(key) {
+        if (!Element.Layout.PROPERTIES.include(key)) return;
+        if (Element.Layout.COMPOSITE_PROPERTIES.include(key)) return;
+
+        var value = this.get(key);
+        if (value != null) css[cssNameFor(key)] = value + 'px';
+      }, this);
+      return css;
+    },
+
+    inspect: function() {
+      return "#<Element.Layout>";
+    }
+  });
+
+  Object.extend(Element.Layout, {
+    PROPERTIES: $w('height width top left right bottom border-left border-right border-top border-bottom padding-left padding-right padding-top padding-bottom margin-top margin-bottom margin-left margin-right padding-box-width padding-box-height border-box-width border-box-height margin-box-width margin-box-height'),
+
+    COMPOSITE_PROPERTIES: $w('padding-box-width padding-box-height margin-box-width margin-box-height border-box-width border-box-height'),
+
+    COMPUTATIONS: {
+      'height': function(element) {
+        if (!this._preComputing) this._begin();
+
+        var bHeight = this.get('border-box-height');
+        if (bHeight <= 0) {
+          if (!this._preComputing) this._end();
+          return 0;
+        }
+
+        var bTop = this.get('border-top'),
+         bBottom = this.get('border-bottom');
+
+        var pTop = this.get('padding-top'),
+         pBottom = this.get('padding-bottom');
+
+        if (!this._preComputing) this._end();
+
+        return bHeight - bTop - bBottom - pTop - pBottom;
+      },
+
+      'width': function(element) {
+        if (!this._preComputing) this._begin();
+
+        var bWidth = this.get('border-box-width');
+        if (bWidth <= 0) {
+          if (!this._preComputing) this._end();
+          return 0;
+        }
+
+        var bLeft = this.get('border-left'),
+         bRight = this.get('border-right');
+
+        var pLeft = this.get('padding-left'),
+         pRight = this.get('padding-right');
+
+        if (!this._preComputing) this._end();
+
+        return bWidth - bLeft - bRight - pLeft - pRight;
+      },
+
+      'padding-box-height': function(element) {
+        var height = this.get('height'),
+         pTop = this.get('padding-top'),
+         pBottom = this.get('padding-bottom');
+
+        return height + pTop + pBottom;
+      },
+
+      'padding-box-width': function(element) {
+        var width = this.get('width'),
+         pLeft = this.get('padding-left'),
+         pRight = this.get('padding-right');
+
+        return width + pLeft + pRight;
+      },
+
+      'border-box-height': function(element) {
+        if (!this._preComputing) this._begin();
+        var height = element.offsetHeight;
+        if (!this._preComputing) this._end();
+        return height;
+      },
+
+      'border-box-width': function(element) {
+        if (!this._preComputing) this._begin();
+        var width = element.offsetWidth;
+        if (!this._preComputing) this._end();
+        return width;
+      },
+
+      'margin-box-height': function(element) {
+        var bHeight = this.get('border-box-height'),
+         mTop = this.get('margin-top'),
+         mBottom = this.get('margin-bottom');
+
+        if (bHeight <= 0) return 0;
+
+        return bHeight + mTop + mBottom;
+      },
+
+      'margin-box-width': function(element) {
+        var bWidth = this.get('border-box-width'),
+         mLeft = this.get('margin-left'),
+         mRight = this.get('margin-right');
+
+        if (bWidth <= 0) return 0;
+
+        return bWidth + mLeft + mRight;
+      },
+
+      'top': function(element) {
+        var offset = element.positionedOffset();
+        return offset.top;
+      },
+
+      'bottom': function(element) {
+        var offset = element.positionedOffset(),
+         parent = element.getOffsetParent(),
+         pHeight = parent.measure('height');
+
+        var mHeight = this.get('border-box-height');
+
+        return pHeight - mHeight - offset.top;
+      },
+
+      'left': function(element) {
+        var offset = element.positionedOffset();
+        return offset.left;
+      },
+
+      'right': function(element) {
+        var offset = element.positionedOffset(),
+         parent = element.getOffsetParent(),
+         pWidth = parent.measure('width');
+
+        var mWidth = this.get('border-box-width');
+
+        return pWidth - mWidth - offset.left;
+      },
+
+      'padding-top': function(element) {
+        return getPixelValue(element, 'paddingTop');
+      },
+
+      'padding-bottom': function(element) {
+        return getPixelValue(element, 'paddingBottom');
+      },
+
+      'padding-left': function(element) {
+        return getPixelValue(element, 'paddingLeft');
+      },
+
+      'padding-right': function(element) {
+        return getPixelValue(element, 'paddingRight');
+      },
+
+      'border-top': function(element) {
+        return getPixelValue(element, 'borderTopWidth');
+      },
+
+      'border-bottom': function(element) {
+        return getPixelValue(element, 'borderBottomWidth');
+      },
+
+      'border-left': function(element) {
+        return getPixelValue(element, 'borderLeftWidth');
+      },
+
+      'border-right': function(element) {
+        return getPixelValue(element, 'borderRightWidth');
+      },
+
+      'margin-top': function(element) {
+        return getPixelValue(element, 'marginTop');
+      },
+
+      'margin-bottom': function(element) {
+        return getPixelValue(element, 'marginBottom');
+      },
+
+      'margin-left': function(element) {
+        return getPixelValue(element, 'marginLeft');
+      },
+
+      'margin-right': function(element) {
+        return getPixelValue(element, 'marginRight');
+      }
+    }
+  });
+
+  if ('getBoundingClientRect' in document.documentElement) {
+    Object.extend(Element.Layout.COMPUTATIONS, {
+      'right': function(element) {
+        var parent = hasLayout(element.getOffsetParent());
+        var rect = element.getBoundingClientRect(),
+         pRect = parent.getBoundingClientRect();
+
+        return (pRect.right - rect.right).round();
+      },
+
+      'bottom': function(element) {
+        var parent = hasLayout(element.getOffsetParent());
+        var rect = element.getBoundingClientRect(),
+         pRect = parent.getBoundingClientRect();
+
+        return (pRect.bottom - rect.bottom).round();
+      }
+    });
+  }
+
+  Element.Offset = Class.create({
+    initialize: function(left, top) {
+      this.left = left.round();
+      this.top  = top.round();
+
+      this[0] = this.left;
+      this[1] = this.top;
+    },
+
+    relativeTo: function(offset) {
+      return new Element.Offset(
+        this.left - offset.left,
+        this.top  - offset.top
+      );
+    },
+
+    inspect: function() {
+      return "#<Element.Offset left: #{left} top: #{top}>".interpolate(this);
+    },
+
+    toString: function() {
+      return "[#{left}, #{top}]".interpolate(this);
+    },
+
+    toArray: function() {
+      return [this.left, this.top];
+    }
+  });
+
+  function getLayout(element, preCompute) {
+    return new Element.Layout(element, preCompute);
+  }
+
+  function measure(element, property) {
+    return $(element).getLayout().get(property);
+  }
+
+  function getDimensions(element) {
+    element = $(element);
+    var display = Element.getStyle(element, 'display');
+
+    if (display && display !== 'none') {
+      return { width: element.offsetWidth, height: element.offsetHeight };
+    }
+
+    var style = element.style;
+    var originalStyles = {
+      visibility: style.visibility,
+      position:   style.position,
+      display:    style.display
+    };
+
+    var newStyles = {
+      visibility: 'hidden',
+      display:    'block'
+    };
+
+    if (originalStyles.position !== 'fixed')
+      newStyles.position = 'absolute';
+
+    Element.setStyle(element, newStyles);
+
+    var dimensions = {
+      width:  element.offsetWidth,
+      height: element.offsetHeight
+    };
+
+    Element.setStyle(element, originalStyles);
+
+    return dimensions;
+  }
+
+  function getOffsetParent(element) {
+    element = $(element);
+
+    if (isDocument(element) || isDetached(element) || isBody(element) || isHtml(element))
+      return $(document.body);
+
+    var isInline = (Element.getStyle(element, 'display') === 'inline');
+    if (!isInline && element.offsetParent) return $(element.offsetParent);
+
+    while ((element = element.parentNode) && element !== document.body) {
+      if (Element.getStyle(element, 'position') !== 'static') {
+        return isHtml(element) ? $(document.body) : $(element);
+      }
+    }
+
+    return $(document.body);
+  }
+
+
+  function cumulativeOffset(element) {
+    element = $(element);
+    var valueT = 0, valueL = 0;
+    if (element.parentNode) {
+      do {
+        valueT += element.offsetTop  || 0;
+        valueL += element.offsetLeft || 0;
+        element = element.offsetParent;
+      } while (element);
+    }
+    return new Element.Offset(valueL, valueT);
+  }
+
+  function positionedOffset(element) {
+    element = $(element);
+
+    var layout = element.getLayout();
+
+    var valueT = 0, valueL = 0;
+    do {
+      valueT += element.offsetTop  || 0;
+      valueL += element.offsetLeft || 0;
+      element = element.offsetParent;
+      if (element) {
+        if (isBody(element)) break;
+        var p = Element.getStyle(element, 'position');
+        if (p !== 'static') break;
+      }
+    } while (element);
+
+    valueL -= layout.get('margin-top');
+    valueT -= layout.get('margin-left');
+
+    return new Element.Offset(valueL, valueT);
+  }
+
+  function cumulativeScrollOffset(element) {
+    var valueT = 0, valueL = 0;
+    do {
+      valueT += element.scrollTop  || 0;
+      valueL += element.scrollLeft || 0;
+      element = element.parentNode;
+    } while (element);
+    return new Element.Offset(valueL, valueT);
+  }
+
+  function viewportOffset(forElement) {
+    element = $(element);
+    var valueT = 0, valueL = 0, docBody = document.body;
+
+    var element = forElement;
+    do {
+      valueT += element.offsetTop  || 0;
+      valueL += element.offsetLeft || 0;
+      if (element.offsetParent == docBody &&
+        Element.getStyle(element, 'position') == 'absolute') break;
+    } while (element = element.offsetParent);
+
+    element = forElement;
+    do {
+      if (element != docBody) {
+        valueT -= element.scrollTop  || 0;
+        valueL -= element.scrollLeft || 0;
+      }
+    } while (element = element.parentNode);
+    return new Element.Offset(valueL, valueT);
+  }
+
+  function absolutize(element) {
+    element = $(element);
+
+    if (Element.getStyle(element, 'position') === 'absolute') {
+      return element;
+    }
+
+    var offsetParent = getOffsetParent(element);
+    var eOffset = element.viewportOffset(),
+     pOffset = offsetParent.viewportOffset();
+
+    var offset = eOffset.relativeTo(pOffset);
+    var layout = element.getLayout();
+
+    element.store('prototype_absolutize_original_styles', {
+      left:   element.getStyle('left'),
+      top:    element.getStyle('top'),
+      width:  element.getStyle('width'),
+      height: element.getStyle('height')
+    });
+
+    element.setStyle({
+      position: 'absolute',
+      top:    offset.top + 'px',
+      left:   offset.left + 'px',
+      width:  layout.get('width') + 'px',
+      height: layout.get('height') + 'px'
+    });
+
+    return element;
+  }
+
+  function relativize(element) {
+    element = $(element);
+    if (Element.getStyle(element, 'position') === 'relative') {
+      return element;
+    }
+
+    var originalStyles =
+     element.retrieve('prototype_absolutize_original_styles');
+
+    if (originalStyles) element.setStyle(originalStyles);
+    return element;
+  }
+
+  if (Prototype.Browser.IE) {
+    getOffsetParent = getOffsetParent.wrap(
+      function(proceed, element) {
+        element = $(element);
+
+        if (isDocument(element) || isDetached(element) || isBody(element) || isHtml(element))
+          return $(document.body);
+
+        var position = element.getStyle('position');
+        if (position !== 'static') return proceed(element);
+
+        element.setStyle({ position: 'relative' });
+        var value = proceed(element);
+        element.setStyle({ position: position });
+        return value;
+      }
+    );
+
+    positionedOffset = positionedOffset.wrap(function(proceed, element) {
+      element = $(element);
+      if (!element.parentNode) return new Element.Offset(0, 0);
+      var position = element.getStyle('position');
+      if (position !== 'static') return proceed(element);
+
+      var offsetParent = element.getOffsetParent();
+      if (offsetParent && offsetParent.getStyle('position') === 'fixed')
+        hasLayout(offsetParent);
+
+      element.setStyle({ position: 'relative' });
+      var value = proceed(element);
+      element.setStyle({ position: position });
+      return value;
+    });
+  } else if (Prototype.Browser.Webkit) {
+    cumulativeOffset = function(element) {
+      element = $(element);
+      var valueT = 0, valueL = 0;
+      do {
+        valueT += element.offsetTop  || 0;
+        valueL += element.offsetLeft || 0;
+        if (element.offsetParent == document.body)
+          if (Element.getStyle(element, 'position') == 'absolute') break;
+
+        element = element.offsetParent;
+      } while (element);
+
+      return new Element.Offset(valueL, valueT);
+    };
+  }
+
+
+  Element.addMethods({
+    getLayout:              getLayout,
+    measure:                measure,
+    getDimensions:          getDimensions,
+    getOffsetParent:        getOffsetParent,
+    cumulativeOffset:       cumulativeOffset,
+    positionedOffset:       positionedOffset,
+    cumulativeScrollOffset: cumulativeScrollOffset,
+    viewportOffset:         viewportOffset,
+    absolutize:             absolutize,
+    relativize:             relativize
+  });
+
+  function isBody(element) {
+    return element.nodeName.toUpperCase() === 'BODY';
+  }
+
+  function isHtml(element) {
+    return element.nodeName.toUpperCase() === 'HTML';
+  }
+
+  function isDocument(element) {
+    return element.nodeType === Node.DOCUMENT_NODE;
+  }
+
+  function isDetached(element) {
+    return element !== document.body &&
+     !Element.descendantOf(element, document.body);
+  }
+
+  if ('getBoundingClientRect' in document.documentElement) {
+    Element.addMethods({
+      viewportOffset: function(element) {
+        element = $(element);
+        if (isDetached(element)) return new Element.Offset(0, 0);
+
+        var rect = element.getBoundingClientRect(),
+         docEl = document.documentElement;
+        return new Element.Offset(rect.left - docEl.clientLeft,
+         rect.top - docEl.clientTop);
+      }
+    });
+  }
+})();
+window.$$ = function() {
+  var expression = $A(arguments).join(', ');
+  return Prototype.Selector.select(expression, document);
+};
+
+Prototype.Selector = (function() {
+
+  function select() {
+    throw new Error('Method "Prototype.Selector.select" must be defined.');
+  }
+
+  function match() {
+    throw new Error('Method "Prototype.Selector.match" must be defined.');
+  }
+
+  function find(elements, expression, index) {
+    index = index || 0;
+    var match = Prototype.Selector.match, length = elements.length, matchIndex = 0, i;
+
+    for (i = 0; i < length; i++) {
+      if (match(elements[i], expression) && index == matchIndex++) {
+        return Element.extend(elements[i]);
+      }
+    }
+  }
+
+  function extendElements(elements) {
+    for (var i = 0, length = elements.length; i < length; i++) {
+      Element.extend(elements[i]);
+    }
+    return elements;
+  }
+
+
+  var K = Prototype.K;
+
+  return {
+    select: select,
+    match: match,
+    find: find,
+    extendElements: (Element.extend === K) ? K : extendElements,
+    extendElement: Element.extend
+  };
+})();
 /*!
  * Sizzle CSS Selector Engine - v1.0
  *  Copyright 2009, The Dojo Foundation
@@ -4228,668 +4938,26 @@ window.Sizzle = Sizzle;
 
 })();
 
-Prototype.Selector = (function(engine) {
-  function extend(elements) {
-    for (var i = 0, length = elements.length; i < length; i++) {
-      Element.extend(elements[i]);
-    }
-    return elements;
-  }
+Prototype._original_property = window.Sizzle;
+
+;(function(engine) {
+  var extendElements = Prototype.Selector.extendElements;
 
   function select(selector, scope) {
-    return extend(engine(selector, scope || document));
+    return extendElements(engine(selector, scope || document));
   }
 
   function match(element, selector) {
     return engine.matches(selector, [element]).length == 1;
   }
 
-  return {
-    engine:  engine,
-    select:  select,
-    match:   match
-  };
+  Prototype.Selector.engine = engine;
+  Prototype.Selector.select = select;
+  Prototype.Selector.match = match;
 })(Sizzle);
 
 window.Sizzle = Prototype._original_property;
 delete Prototype._original_property;
-
-(function() {
-
-  function toDecimal(pctString) {
-    var match = pctString.match(/^(\d+)%?$/i);
-    if (!match) return null;
-    return (Number(match[1]) / 100);
-  }
-
-  function getPixelValue(value, property) {
-    if (Object.isElement(value)) {
-      element = value;
-      value = element.getStyle(property);
-    }
-    if (value === null) {
-      return null;
-    }
-
-    if ((/^\d+(\.\d+)?(px)?$/i).test(value)) {
-      return window.parseFloat(value);
-    }
-
-    if (/\d/.test(value) && element.runtimeStyle) {
-      var style = element.style.left, rStyle = element.runtimeStyle.left;
-      element.runtimeStyle.left = element.currentStyle.left;
-      element.style.left = value || 0;
-      value = element.style.pixelLeft;
-      element.style.left = style;
-      element.runtimeStyle.left = rStyle;
-
-      return value;
-    }
-
-    if (value.include('%')) {
-      var decimal = toDecimal(value);
-      var whole;
-      if (property.include('left') || property.include('right') ||
-       property.include('width')) {
-        whole = $(element.parentNode).measure('width');
-      } else if (property.include('top') || property.include('bottom') ||
-       property.include('height')) {
-        whole = $(element.parentNode).measure('height');
-      }
-
-      return whole * decimal;
-    }
-
-    return 0;
-  }
-
-  function toCSSPixels(number) {
-    if (Object.isString(number) && number.endsWith('px')) {
-      return number;
-    }
-    return number + 'px';
-  }
-
-  function isDisplayed(element) {
-    var originalElement = element;
-    while (element && element.parentNode) {
-      var display = element.getStyle('display');
-      if (display === 'none') {
-        return false;
-      }
-      element = $(element.parentNode);
-    }
-    return true;
-  }
-
-  var hasLayout = Prototype.K;
-  if ('currentStyle' in document.documentElement) {
-    hasLayout = function(element) {
-      if (!element.currentStyle.hasLayout) {
-        element.style.zoom = 1;
-      }
-      return element;
-    };
-  }
-
-  function cssNameFor(key) {
-    if (key.includes('border')) return key + '-width';
-    return key;
-  }
-
-  Element.Layout = Class.create(Hash, {
-    initialize: function($super, element, preCompute) {
-      $super();
-      this.element = $(element);
-
-      Element.Layout.PROPERTIES.each( function(property) {
-        this._set(property, null);
-      }, this);
-
-      if (preCompute) {
-        this._preComputing = true;
-        this._begin();
-        Element.Layout.PROPERTIES.each( this._compute, this );
-        this._end();
-        this._preComputing = false;
-      }
-    },
-
-    _set: function(property, value) {
-      return Hash.prototype.set.call(this, property, value);
-    },
-
-    set: function(property, value) {
-      throw "Properties of Element.Layout are read-only.";
-    },
-
-    get: function($super, property) {
-      var value = $super(property);
-      return value === null ? this._compute(property) : value;
-    },
-
-    _begin: function() {
-      if (this._prepared) return;
-
-      var element = this.element;
-      if (isDisplayed(element)) {
-        this._prepared = true;
-        return;
-      }
-
-      var originalStyles = {
-        position:   element.style.position   || '',
-        width:      element.style.width      || '',
-        visibility: element.style.visibility || '',
-        display:    element.style.display    || ''
-      };
-
-      element.store('prototype_original_styles', originalStyles);
-
-      var position = element.getStyle('position'),
-       width = element.getStyle('width');
-
-      element.setStyle({
-        position:   'absolute',
-        visibility: 'hidden',
-        display:    'block'
-      });
-
-      var positionedWidth = element.getStyle('width');
-
-      var newWidth;
-      if (width && (positionedWidth === width)) {
-        newWidth = window.parseInt(width, 10);
-      } else if (width && (position === 'absolute' || position === 'fixed')) {
-        newWidth = window.parseInt(width, 10);
-      } else {
-        var parent = element.parentNode, pLayout = $(parent).getLayout();
-
-        newWidth = pLayout.get('width') -
-         this.get('margin-left') -
-         this.get('border-left') -
-         this.get('padding-left') -
-         this.get('padding-right') -
-         this.get('border-right') -
-         this.get('margin-right');
-      }
-
-      element.setStyle({ width: newWidth + 'px' });
-
-      this._prepared = true;
-    },
-
-    _end: function() {
-      var element = this.element;
-      var originalStyles = element.retrieve('prototype_original_styles');
-      element.store('prototype_original_styles', null);
-      element.setStyle(originalStyles);
-      this._prepared = false;
-    },
-
-    _compute: function(property) {
-      var COMPUTATIONS = Element.Layout.COMPUTATIONS;
-      if (!(property in COMPUTATIONS)) {
-        throw "Property not found.";
-      }
-      return this._set(property, COMPUTATIONS[property].call(this, this.element));
-    },
-
-    toCSS: function() {
-      var args = $A(arguments);
-      var keys = (args.length === 0) ? Element.Layout.PROPERTIES :
-       args.join(' ').split(' ');
-      var css = {};
-      keys.each( function(key) {
-        if (!Element.Layout.PROPERTIES.include(key)) return;
-        if (Element.Layout.COMPOSITE_PROPERTIES.include(key)) return;
-
-        var value = this.get(key);
-        if (value) css[cssNameFor(key)] = value + 'px';
-      });
-      return css;
-    },
-
-    inspect: function() {
-      return "#<Element.Layout>";
-    }
-  });
-
-  Object.extend(Element.Layout, {
-    PROPERTIES: $w('height width top left right bottom border-left border-right border-top border-bottom padding-left padding-right padding-top padding-bottom margin-top margin-bottom margin-left margin-right padding-box-width padding-box-height border-box-width border-box-height margin-box-width margin-box-height'),
-
-    COMPOSITE_PROPERTIES: $w('padding-box-width padding-box-height margin-box-width margin-box-height border-box-width border-box-height'),
-
-    COMPUTATIONS: {
-      'height': function(element) {
-        if (!this._preComputing) this._begin();
-
-        var bHeight = this.get('border-box-height');
-        if (bHeight <= 0) return 0;
-
-        var bTop = this.get('border-top'),
-         bBottom = this.get('border-bottom');
-
-        var pTop = this.get('padding-top'),
-         pBottom = this.get('padding-bottom');
-
-        if (!this._preComputing) this._end();
-
-        return bHeight - bTop - bBottom - pTop - pBottom;
-      },
-
-      'width': function(element) {
-        if (!this._preComputing) this._begin();
-
-        var bWidth = this.get('border-box-width');
-        if (bWidth <= 0) return 0;
-
-        var bLeft = this.get('border-left'),
-         bRight = this.get('border-right');
-
-        var pLeft = this.get('padding-left'),
-         pRight = this.get('padding-right');
-
-        if (!this._preComputing) this._end();
-
-        return bWidth - bLeft - bRight - pLeft - pRight;
-      },
-
-      'padding-box-height': function(element) {
-        var height = this.get('height'),
-         pTop = this.get('padding-top'),
-         pBottom = this.get('padding-bottom');
-
-        return height + pTop + pBottom;
-      },
-
-      'padding-box-width': function(element) {
-        var width = this.get('width'),
-         pLeft = this.get('padding-left'),
-         pRight = this.get('padding-right');
-
-        return width + pLeft + pRight;
-      },
-
-      'border-box-height': function(element) {
-        return element.offsetHeight;
-      },
-
-      'border-box-width': function(element) {
-        return element.offsetWidth;
-      },
-
-      'margin-box-height': function(element) {
-        var bHeight = this.get('border-box-height'),
-         mTop = this.get('margin-top'),
-         mBottom = this.get('margin-bottom');
-
-        if (bHeight <= 0) return 0;
-
-        return bHeight + mTop + mBottom;
-      },
-
-      'margin-box-width': function(element) {
-        var bWidth = this.get('border-box-width'),
-         mLeft = this.get('margin-left'),
-         mRight = this.get('margin-right');
-
-        if (bWidth <= 0) return 0;
-
-        return bWidth + mLeft + mRight;
-      },
-
-      'top': function(element) {
-        var offset = element.positionedOffset();
-        return offset.top;
-      },
-
-      'bottom': function(element) {
-        var offset = element.positionedOffset(),
-         parent = element.getOffsetParent(),
-         pHeight = parent.measure('height');
-
-        var mHeight = this.get('border-box-height');
-
-        return pHeight - mHeight - offset.top;
-      },
-
-      'left': function(element) {
-        var offset = element.positionedOffset();
-        return offset.left;
-      },
-
-      'right': function(element) {
-        var offset = element.positionedOffset(),
-         parent = element.getOffsetParent(),
-         pWidth = parent.measure('width');
-
-        var mWidth = this.get('border-box-width');
-
-        return pWidth - mWidth - offset.left;
-      },
-
-      'padding-top': function(element) {
-        return getPixelValue(element, 'paddingTop');
-      },
-
-      'padding-bottom': function(element) {
-        return getPixelValue(element, 'paddingBottom');
-      },
-
-      'padding-left': function(element) {
-        return getPixelValue(element, 'paddingLeft');
-      },
-
-      'padding-right': function(element) {
-        return getPixelValue(element, 'paddingRight');
-      },
-
-      'border-top': function(element) {
-        return Object.isNumber(element.clientTop) ? element.clientTop :
-         getPixelValue(element, 'borderTopWidth');
-      },
-
-      'border-bottom': function(element) {
-        return Object.isNumber(element.clientBottom) ? element.clientBottom :
-         getPixelValue(element, 'borderBottomWidth');
-      },
-
-      'border-left': function(element) {
-        return Object.isNumber(element.clientLeft) ? element.clientLeft :
-         getPixelValue(element, 'borderLeftWidth');
-      },
-
-      'border-right': function(element) {
-        return Object.isNumber(element.clientRight) ? element.clientRight :
-         getPixelValue(element, 'borderRightWidth');
-      },
-
-      'margin-top': function(element) {
-        return getPixelValue(element, 'marginTop');
-      },
-
-      'margin-bottom': function(element) {
-        return getPixelValue(element, 'marginBottom');
-      },
-
-      'margin-left': function(element) {
-        return getPixelValue(element, 'marginLeft');
-      },
-
-      'margin-right': function(element) {
-        return getPixelValue(element, 'marginRight');
-      }
-    }
-  });
-
-  if ('getBoundingClientRect' in document.documentElement) {
-    Object.extend(Element.Layout.COMPUTATIONS, {
-      'right': function(element) {
-        var parent = hasLayout(element.getOffsetParent());
-        var rect = element.getBoundingClientRect(),
-         pRect = parent.getBoundingClientRect();
-
-        return (pRect.right - rect.right).round();
-      },
-
-      'bottom': function(element) {
-        var parent = hasLayout(element.getOffsetParent());
-        var rect = element.getBoundingClientRect(),
-         pRect = parent.getBoundingClientRect();
-
-        return (pRect.bottom - rect.bottom).round();
-      }
-    });
-  }
-
-  Element.Offset = Class.create({
-    initialize: function(left, top) {
-      this.left = left.round();
-      this.top  = top.round();
-
-      this[0] = this.left;
-      this[1] = this.top;
-    },
-
-    relativeTo: function(offset) {
-      return new Element.Offset(
-        this.left - offset.left,
-        this.top  - offset.top
-      );
-    },
-
-    inspect: function() {
-      return "#<Element.Offset left: #{left} top: #{top}>".interpolate(this);
-    },
-
-    toString: function() {
-      return "[#{left}, #{top}]".interpolate(this);
-    },
-
-    toArray: function() {
-      return [this.left, this.top];
-    }
-  });
-
-  function getLayout(element, preCompute) {
-    return new Element.Layout(element, preCompute);
-  }
-
-  function measure(element, property) {
-    return $(element).getLayout().get(property);
-  }
-
-  function getDimensions(element) {
-    var layout = $(element).getLayout();
-    return {
-      width:  layout.get('width'),
-      height: layout.get('height')
-    };
-  }
-
-  function getOffsetParent(element) {
-    if (element.offsetParent) return $(element.offsetParent);
-    if (element === document.body) return $(element);
-
-    while ((element = element.parentNode) && element !== document.body) {
-      if (Element.getStyle(element, 'position') !== 'static') {
-        return (element.nodeName === 'HTML') ? $(document.body) : $(element);
-      }
-    }
-
-    return $(document.body);
-  }
-
-
-  function cumulativeOffset(element) {
-    var valueT = 0, valueL = 0;
-    do {
-      valueT += element.offsetTop  || 0;
-      valueL += element.offsetLeft || 0;
-      element = element.offsetParent;
-    } while (element);
-    return new Element.Offset(valueL, valueT);
-  }
-
-  function positionedOffset(element) {
-    var layout = element.getLayout();
-
-    var valueT = 0, valueL = 0;
-    do {
-      valueT += element.offsetTop  || 0;
-      valueL += element.offsetLeft || 0;
-      element = element.offsetParent;
-      if (element) {
-        if (isBody(element)) break;
-        var p = Element.getStyle(element, 'position');
-        if (p !== 'static') break;
-      }
-    } while (element);
-
-    valueL -= layout.get('margin-top');
-    valueT -= layout.get('margin-left');
-
-    return new Element.Offset(valueL, valueT);
-  }
-
-  function cumulativeScrollOffset(element) {
-    var valueT = 0, valueL = 0;
-    do {
-      valueT += element.scrollTop  || 0;
-      valueL += element.scrollLeft || 0;
-      element = element.parentNode;
-    } while (element);
-    return new Element.Offset(valueL, valueT);
-  }
-
-  function viewportOffset(forElement) {
-    var valueT = 0, valueL = 0, docBody = document.body;
-
-    var element = forElement;
-    do {
-      valueT += element.offsetTop  || 0;
-      valueL += element.offsetLeft || 0;
-      if (element.offsetParent == docBody &&
-        Element.getStyle(element, 'position') == 'absolute') break;
-    } while (element = element.offsetParent);
-
-    element = forElement;
-    do {
-      if (element != docBody) {
-        valueT -= element.scrollTop  || 0;
-        valueL -= element.scrollLeft || 0;
-      }
-    } while (element = element.parentNode);
-    return new Element.Offset(valueL, valueT);
-  }
-
-  function absolutize(element) {
-    element = $(element);
-
-    if (Element.getStyle(element, 'position') === 'absolute') {
-      return element;
-    }
-
-    var offsetParent = getOffsetParent(element);
-    var eOffset = element.viewportOffset(), pOffset =
-     offsetParent.viewportOffset();
-
-    var offset = eOffset.relativeTo(pOffset);
-    var layout = element.get('layout');
-
-    element.store('prototype_absolutize_original_styles', {
-      left:   element.getStyle('left'),
-      top:    element.getStyle('top'),
-      width:  element.getStyle('width'),
-      height: element.getStyle('height')
-    });
-
-    element.setStyle({
-      position: 'absolute',
-      top:    offset.top + 'px',
-      left:   offset.left + 'px',
-      width:  layout.get('width') + 'px',
-      height: layout.get('height') + 'px'
-    });
-
-    return element;
-  }
-
-  function relativize(element) {
-    element = $(element);
-    if (Element.getStyle(element, 'position') === 'relative') {
-      return element;
-    }
-
-    var originalStyles =
-     element.retrieve('prototype_absolutize_original_styles');
-
-    if (originalStyles) element.setStyle(originalStyles);
-    return element;
-  }
-
-  Element.addMethods({
-    getLayout:              getLayout,
-    measure:                measure,
-    getDimensions:          getDimensions,
-    getOffsetParent:        getOffsetParent,
-    cumulativeOffset:       cumulativeOffset,
-    positionedOffset:       positionedOffset,
-    cumulativeScrollOffset: cumulativeScrollOffset,
-    viewportOffset:         viewportOffset,
-    absolutize:             absolutize,
-    relativize:             relativize
-  });
-
-  function isBody(element) {
-    return element.nodeName.toUpperCase() === 'BODY';
-  }
-
-  if ('getBoundingClientRect' in document.documentElement) {
-    Element.addMethods({
-      viewportOffset: function(element) {
-        element = $(element);
-        var rect  = element.getBoundingClientRect(),
-         docEl = document.documentElement;
-        return new Element.Offset(rect.left - docEl.clientLeft,
-         rect.top - docEl.clientTop);
-      },
-
-      cumulativeOffset: function(element) {
-        element = $(element);
-        var docOffset = $(document.documentElement).viewportOffset(),
-          elementOffset = element.viewportOffset();
-        return elementOffset.relativeTo(docOffset);
-      },
-
-      positionedOffset: function(element) {
-        element = $(element);
-        var parent = element.getOffsetParent();
-
-        if (element.offsetParent &&
-         element.offsetParent.nodeName.toUpperCase() === 'HTML') {
-          return positionedOffset(element);
-        }
-
-        var eOffset = element.viewportOffset(),
-         pOffset = isBody(parent) ? viewportOffset(parent) :
-          parent.viewportOffset();
-        var retOffset = eOffset.relativeTo(pOffset);
-
-        var layout = element.getLayout();
-        var top  = retOffset.top  - layout.get('margin-top');
-        var left = retOffset.left - layout.get('margin-left');
-
-        return new Element.Offset(left, top);
-      }
-    });
-  }
-})();
-window.$$ = function() {
-  var expression = $A(arguments).join(', ');
-  return Prototype.Selector.select(expression, document);
-};
-
-
-
-
-
-
-
-if (!Prototype.Selector.find) {
-  Prototype.Selector.find = function(elements, expression, index) {
-    if (Object.isUndefined(index)) index = 0;
-    var match = Prototype.Selector.match, length = elements.length, matchIndex = 0, i;
-
-    for (i = 0; i < length; i++) {
-      if (match(elements[i], expression) && index == matchIndex++) {
-        return Element.extend(elements[i]);
-      }
-    }
-  }
-}
-
 
 var Form = {
   reset: function(form) {
@@ -4901,24 +4969,34 @@ var Form = {
   serializeElements: function(elements, options) {
     if (typeof options != 'object') options = { hash: !!options };
     else if (Object.isUndefined(options.hash)) options.hash = true;
-    var key, value, submitted = false, submit = options.submit;
+    var key, value, submitted = false, submit = options.submit, accumulator, initial;
 
-    var data = elements.inject({ }, function(result, element) {
+    if (options.hash) {
+      initial = {};
+      accumulator = function(result, key, value) {
+        if (key in result) {
+          if (!Object.isArray(result[key])) result[key] = [result[key]];
+          result[key].push(value);
+        } else result[key] = value;
+        return result;
+      };
+    } else {
+      initial = '';
+      accumulator = function(result, key, value) {
+        return result + (result ? '&' : '') + encodeURIComponent(key) + '=' + encodeURIComponent(value);
+      }
+    }
+
+    return elements.inject(initial, function(result, element) {
       if (!element.disabled && element.name) {
         key = element.name; value = $(element).getValue();
         if (value != null && element.type != 'file' && (element.type != 'submit' || (!submitted &&
             submit !== false && (!submit || key == submit) && (submitted = true)))) {
-          if (key in result) {
-            if (!Object.isArray(result[key])) result[key] = [result[key]];
-            result[key].push(value);
-          }
-          else result[key] = value;
+          result = accumulator(result, key, value);
         }
       }
       return result;
     });
-
-    return options.hash ? data : Object.toQueryString(data);
   }
 };
 
@@ -4985,7 +5063,8 @@ Form.Methods = {
 
   focusFirstElement: function(form) {
     form = $(form);
-    form.findFirstElement().activate();
+    var element = form.findFirstElement();
+    if (element) element.activate();
     return form;
   },
 
@@ -5092,67 +5171,77 @@ var $F = Form.Element.Methods.getValue;
 
 /*--------------------------------------------------------------------------*/
 
-Form.Element.Serializers = {
-  input: function(element, value) {
+Form.Element.Serializers = (function() {
+  function input(element, value) {
     switch (element.type.toLowerCase()) {
       case 'checkbox':
       case 'radio':
-        return Form.Element.Serializers.inputSelector(element, value);
+        return inputSelector(element, value);
       default:
-        return Form.Element.Serializers.textarea(element, value);
+        return valueSelector(element, value);
     }
-  },
+  }
 
-  inputSelector: function(element, value) {
-    if (Object.isUndefined(value)) return element.checked ? element.value : null;
+  function inputSelector(element, value) {
+    if (Object.isUndefined(value))
+      return element.checked ? element.value : null;
     else element.checked = !!value;
-  },
+  }
 
-  textarea: function(element, value) {
+  function valueSelector(element, value) {
     if (Object.isUndefined(value)) return element.value;
     else element.value = value;
-  },
+  }
 
-  select: function(element, value) {
+  function select(element, value) {
     if (Object.isUndefined(value))
-      return this[element.type == 'select-one' ?
-        'selectOne' : 'selectMany'](element);
-    else {
-      var opt, currentValue, single = !Object.isArray(value);
-      for (var i = 0, length = element.length; i < length; i++) {
-        opt = element.options[i];
-        currentValue = this.optionValue(opt);
-        if (single) {
-          if (currentValue == value) {
-            opt.selected = true;
-            return;
-          }
+      return (element.type === 'select-one' ? selectOne : selectMany)(element);
+
+    var opt, currentValue, single = !Object.isArray(value);
+    for (var i = 0, length = element.length; i < length; i++) {
+      opt = element.options[i];
+      currentValue = this.optionValue(opt);
+      if (single) {
+        if (currentValue == value) {
+          opt.selected = true;
+          return;
         }
-        else opt.selected = value.include(currentValue);
       }
+      else opt.selected = value.include(currentValue);
     }
-  },
+  }
 
-  selectOne: function(element) {
+  function selectOne(element) {
     var index = element.selectedIndex;
-    return index >= 0 ? this.optionValue(element.options[index]) : null;
-  },
+    return index >= 0 ? optionValue(element.options[index]) : null;
+  }
 
-  selectMany: function(element) {
+  function selectMany(element) {
     var values, length = element.length;
     if (!length) return null;
 
     for (var i = 0, values = []; i < length; i++) {
       var opt = element.options[i];
-      if (opt.selected) values.push(this.optionValue(opt));
+      if (opt.selected) values.push(optionValue(opt));
     }
     return values;
-  },
-
-  optionValue: function(opt) {
-    return Element.extend(opt).hasAttribute('value') ? opt.value : opt.text;
   }
-};
+
+  function optionValue(opt) {
+    return Element.hasAttribute(opt, 'value') ? opt.value : opt.text;
+  }
+
+  return {
+    input:         input,
+    inputSelector: inputSelector,
+    textarea:      valueSelector,
+    select:        select,
+    selectOne:     selectOne,
+    selectMany:    selectMany,
+    optionValue:   optionValue,
+    button:        valueSelector
+  };
+})();
 
 /*--------------------------------------------------------------------------*/
 
@@ -5263,24 +5352,53 @@ Form.EventObserver = Class.create(Abstract.EventObserver, {
   var MOUSEENTER_MOUSELEAVE_EVENTS_SUPPORTED = 'onmouseenter' in docEl
     && 'onmouseleave' in docEl;
 
+
+
+  var isIELegacyEvent = function(event) { return false; };
+
+  if (window.attachEvent) {
+    if (window.addEventListener) {
+      isIELegacyEvent = function(event) {
+        return !(event instanceof window.Event);
+      };
+    } else {
+      isIELegacyEvent = function(event) { return true; };
+    }
+  }
+
   var _isButton;
-  if (Prototype.Browser.IE) {
-    var buttonMap = { 0: 1, 1: 4, 2: 2 };
-    _isButton = function(event, code) {
-      return event.button === buttonMap[code];
-    };
-  } else if (Prototype.Browser.WebKit) {
-    _isButton = function(event, code) {
-      switch (code) {
-        case 0: return event.which == 1 && !event.metaKey;
-        case 1: return event.which == 1 && event.metaKey;
-        default: return false;
+
+  function _isButtonForDOMEvents(event, code) {
+    return event.which ? (event.which === code + 1) : (event.button === code);
+  }
+
+  var legacyButtonMap = { 0: 1, 1: 4, 2: 2 };
+  function _isButtonForLegacyEvents(event, code) {
+    return event.button === legacyButtonMap[code];
+  }
+
+  function _isButtonForWebKit(event, code) {
+    switch (code) {
+      case 0: return event.which == 1 && !event.metaKey;
+      case 1: return event.which == 2 || (event.which == 1 && event.metaKey);
+      case 2: return event.which == 3;
+      default: return false;
+    }
+  }
+
+  if (window.attachEvent) {
+    if (!window.addEventListener) {
+      _isButton = _isButtonForLegacyEvents;
+    } else {
+      _isButton = function(event, code) {
+        return isIELegacyEvent(event) ? _isButtonForLegacyEvents(event, code) :
+         _isButtonForDOMEvents(event, code);
       }
-    };
+    }
+  } else if (Prototype.Browser.WebKit) {
+    _isButton = _isButtonForWebKit;
   } else {
-    _isButton = function(event, code) {
-      return event.which ? (event.which === code + 1) : (event.button === code);
-    };
+    _isButton = _isButtonForDOMEvents;
   }
 
   function isLeftClick(event)   { return _isButton(event, 0) }
@@ -5310,9 +5428,10 @@ Form.EventObserver = Class.create(Abstract.EventObserver, {
 
   function findElement(event, expression) {
     var element = Event.element(event);
+
     if (!expression) return element;
     while (element) {
-      if (Prototype.Selector.match(element, expression)) {
+      if (Object.isElement(element) && Prototype.Selector.match(element, expression)) {
         return Element.extend(element);
       }
       element = element.parentNode;
@@ -5350,49 +5469,59 @@ Form.EventObserver = Class.create(Abstract.EventObserver, {
     event.stopped = true;
   }
 
-  Event.Methods = {
-    isLeftClick: isLeftClick,
-    isMiddleClick: isMiddleClick,
-    isRightClick: isRightClick,
 
-    element: element,
+  Event.Methods = {
+    isLeftClick:   isLeftClick,
+    isMiddleClick: isMiddleClick,
+    isRightClick:  isRightClick,
+
+    element:     element,
     findElement: findElement,
 
-    pointer: pointer,
+    pointer:  pointer,
     pointerX: pointerX,
     pointerY: pointerY,
 
     stop: stop
   };
 
-
   var methods = Object.keys(Event.Methods).inject({ }, function(m, name) {
     m[name] = Event.Methods[name].methodize();
     return m;
   });
 
-  if (Prototype.Browser.IE) {
+  if (window.attachEvent) {
     function _relatedTarget(event) {
       var element;
       switch (event.type) {
-        case 'mouseover': element = event.fromElement; break;
-        case 'mouseout':  element = event.toElement;   break;
-        default: return null;
+        case 'mouseover':
+        case 'mouseenter':
+          element = event.fromElement;
+          break;
+        case 'mouseout':
+        case 'mouseleave':
+          element = event.toElement;
+          break;
+        default:
+          return null;
       }
       return Element.extend(element);
     }
 
-    Object.extend(methods, {
+    var additionalMethods = {
       stopPropagation: function() { this.cancelBubble = true },
       preventDefault:  function() { this.returnValue = false },
       inspect: function() { return '[object Event]' }
-    });
+    };
 
     Event.extend = function(event, element) {
       if (!event) return false;
-      if (event._extendedByPrototype) return event;
 
+      if (!isIELegacyEvent(event)) return event;
+
+      if (event._extendedByPrototype) return event;
       event._extendedByPrototype = Prototype.emptyFunction;
+
       var pointer = Event.pointer(event);
 
       Object.extend(event, {
@@ -5402,12 +5531,18 @@ Form.EventObserver = Class.create(Abstract.EventObserver, {
         pageY:  pointer.y
       });
 
-      return Object.extend(event, methods);
+      Object.extend(event, methods);
+      Object.extend(event, additionalMethods);
+
+      return event;
     };
   } else {
+    Event.extend = Prototype.K;
+  }
+
+  if (window.addEventListener) {
     Event.prototype = window.Event.prototype || document.createEvent('HTMLEvents').__proto__;
     Object.extend(Event.prototype, methods);
-    Event.extend = Prototype.K;
   }
 
   function _createResponder(element, eventName, handler) {
@@ -5506,7 +5641,7 @@ Form.EventObserver = Class.create(Abstract.EventObserver, {
         element.addEventListener("dataavailable", responder, false);
       else {
         element.attachEvent("ondataavailable", responder);
-        element.attachEvent("onfilterchange", responder);
+        element.attachEvent("onlosecapture", responder);
       }
     } else {
       var actualEventName = _getDOMEventName(eventName);
@@ -5544,7 +5679,13 @@ Form.EventObserver = Class.create(Abstract.EventObserver, {
       return element;
     }
 
-    var responder = responders.find( function(r) { return r.handler === handler; });
+    var i = responders.length, responder;
+    while (i--) {
+      if (responders[i].handler === handler) {
+        responder = responders[i];
+        break;
+      }
+    }
     if (!responder) return element;
 
     if (eventName.include(':')) {
@@ -5552,7 +5693,7 @@ Form.EventObserver = Class.create(Abstract.EventObserver, {
         element.removeEventListener("dataavailable", responder, false);
       else {
         element.detachEvent("ondataavailable", responder);
-        element.detachEvent("onfilterchange",  responder);
+        element.detachEvent("onlosecapture", responder);
       }
     } else {
       var actualEventName = _getDOMEventName(eventName);
@@ -5579,10 +5720,10 @@ Form.EventObserver = Class.create(Abstract.EventObserver, {
     var event;
     if (document.createEvent) {
       event = document.createEvent('HTMLEvents');
-      event.initEvent('dataavailable', true, true);
+      event.initEvent('dataavailable', bubble, true);
     } else {
       event = document.createEventObject();
-      event.eventType = bubble ? 'ondataavailable' : 'onfilterchange';
+      event.eventType = bubble ? 'ondataavailable' : 'onlosecapture';
     }
 
     event.eventName = eventName;
@@ -5616,9 +5757,8 @@ Form.EventObserver = Class.create(Abstract.EventObserver, {
     },
 
     handleEvent: function(event) {
-      var element = this.selector ? event.findElement(this.selector) :
-       this.element;
-      if (element) this.callback.call(element, event, element);
+      var element = Event.findElement(event, this.selector);
+      if (element) this.callback.call(this.element, event, element);
     }
   });
 
@@ -5706,8 +5846,8 @@ Form.EventObserver = Class.create(Abstract.EventObserver, {
   Event.observe(window, 'load', fireContentLoadedEvent);
 })();
 
-Element.addMethods();
 
+Element.addMethods();
 /*------------------------------- DEPRECATED -------------------------------*/
 
 Hash.toQueryString = Object.toQueryString;
@@ -7406,7 +7546,7 @@ var Draggable = Class.create({
       if (this.options.scroll == window) {
         with(this._getWindowScroll(this.options.scroll)) { p = [ left, top, left+width, top+height ]; }
       } else {
-        p = Position.page(this.options.scroll);
+        p = Position.page(this.options.scroll).toArray();
         p[0] += this.options.scroll.scrollLeft + Position.deltaX;
         p[1] += this.options.scroll.scrollTop + Position.deltaY;
         p.push(p[0]+this.options.scroll.offsetWidth);
@@ -10187,6 +10327,9 @@ Alice.Application = Class.create({
         win.lastNick = "";
       }
     },
+    announce: function (action) {
+      this.activeWindow().announce(action['body']);
+    },
     connect: function (action) {
       action.windows.each(function (win_info) {
         var win = this.getWindow(win_info.id);
@@ -10447,7 +10590,7 @@ Alice.Application = Class.create({
       for (var i = 0; i < windows.length; i++) {
         var win = windows[i];
         if (win.hashtag == hash) {
-          win.focus();
+          if (!win.active) win.focus();
           return true;
         }
       }
@@ -10709,7 +10852,7 @@ Alice.Connection.WebSocket = Class.create(Alice.Connection, {
 
     var params = form;
     if (form.nodeName && form.nodeName == "FORM") {
-      params = form.serialize(true);
+      params = Form.serialize(form, true);
     }
 
     this.request.send(Object.toJSON(params));
@@ -10843,7 +10986,7 @@ Alice.Connection.XHR = Class.create(Alice.Connection, {
 
     var params;
     if (form.nodeName && form.nodeName == "FORM") {
-      params = form.serialize();
+      params = Form.serialize(form);
     }
     else {
       params = form;
@@ -11007,6 +11150,13 @@ Alice.Window = Class.create({
     this.element.removeClassName('active');
     this.tab.removeClassName('active');
     this.tabOverflowButton.selected = false;
+    this.addFold();
+  },
+
+  addFold: function() {
+    this.messages.select("li.fold").invoke("removeClassName", "fold");
+    var last = this.messages.childElements().last();
+    if (last) last.addClassName("fold");
   },
 
   showNick: function (e) {
@@ -11086,7 +11236,7 @@ Alice.Window = Class.create({
 
     document.title = this.title;
     this.application.previousFocus = this.application.activeWindow();
-    this.application.windows().invoke("unFocus");
+    this.application.previousFocus.unFocus();
     this.application.setSource(this.id);
     this.active = true;
     this.tab.addClassName('active');
@@ -11098,6 +11248,11 @@ Alice.Window = Class.create({
     this.element.redraw();
     this.setWindowHash();
     this.application.updateChannelSelect();
+
+    var last = this.messages.childElements().last();
+    if (last && last.hasClassName("fold"))
+      last.removeClassName("fold");
+
     return this;
   },
 
@@ -11151,6 +11306,13 @@ Alice.Window = Class.create({
   showAlert: function (message) {
     this.messages.insert(
       "<li class='event notice'><div class='msg'>"+message+"</div></li>"
+    );
+    this.scrollToBottom();
+  },
+
+  announce: function (message) {
+    this.messages.insert(
+      "<li class='message announce'><div class='msg'>"+message+"</div></li>"
     );
     this.scrollToBottom();
   },
@@ -11971,14 +12133,14 @@ if (window == window.parent) {
       },
       function (msg) {
         if (alice.options.images == "show") {
-          var re = /\.(?:jpe?g|gif|png|bmp|svg)[^\/]*/i;
+          var re = /^http[^\s]*\.(?:jpe?g|gif|png|bmp|svg)[^\/]*$/i;
           msg.select("a").filter(function(a) {
             return re.match(a.innerHTML);
           }).each(function(a) {
+            if(a.innerHTML.indexOf('nsfw') !== -1) return;
             var img = new Element("IMG", {src: alice.options.image_prefix + a.innerHTML});
             img.observe("load", function(){ Alice.loadInlineImage(img) });
             a.update(img);
-
             var div = new Element("DIV", {"class": "image"});
             a = a.replace(div);
             div.insert(a);

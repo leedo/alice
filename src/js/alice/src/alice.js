@@ -132,14 +132,14 @@ if (window == window.parent) {
       },
       function (msg) {
         if (alice.options.images == "show") {
-          var re = /\.(?:jpe?g|gif|png|bmp|svg)[^\/]*/i;
+          var re = /^http[^\s]*\.(?:jpe?g|gif|png|bmp|svg)[^\/]*$/i;
           msg.select("a").filter(function(a) {
             return re.match(a.innerHTML);
           }).each(function(a) {
+            if(a.innerHTML.indexOf('nsfw') !== -1) return;
             var img = new Element("IMG", {src: alice.options.image_prefix + a.innerHTML});
             img.observe("load", function(){ Alice.loadInlineImage(img) });
             a.update(img);
-
             var div = new Element("DIV", {"class": "image"});
             a = a.replace(div);
             div.insert(a);
