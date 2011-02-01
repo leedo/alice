@@ -114,7 +114,6 @@ Alice.Window = Class.create({
   },
   
   unFocus: function() {
-    console.log("unfocusing " + this.title);
     this.active = false;
     this.element.removeClassName('active');
     this.tab.removeClassName('active');
