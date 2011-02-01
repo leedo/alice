@@ -93,7 +93,7 @@ Alice.Connection.XHR = Class.create(Alice.Connection, {
 
     var params;
     if (form.nodeName && form.nodeName == "FORM") {
-      params = form.serialize();
+      params = Form.serialize(form);
     }
     else {
       params = form;

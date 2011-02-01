@@ -10852,7 +10852,7 @@ Alice.Connection.WebSocket = Class.create(Alice.Connection, {
 
     var params = form;
     if (form.nodeName && form.nodeName == "FORM") {
-      params = form.serialize(true);
+      params = Form.serialize(form, true);
     }
 
     this.request.send(Object.toJSON(params));
@@ -10986,7 +10986,7 @@ Alice.Connection.XHR = Class.create(Alice.Connection, {
 
     var params;
     if (form.nodeName && form.nodeName == "FORM") {
-      params = form.serialize();
+      params = Form.serialize(form);
     }
     else {
       params = form;
