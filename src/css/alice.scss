@@ -564,6 +564,7 @@ ul.messages li.consecutive div.msg {
 
 ul.messages li + li.consecutive div.msg {
   padding-top: 0px;
+  padding-bottom: 0px;
 }
 
 div.msg a {
@@ -578,7 +579,6 @@ div.msg img {
 
 ul.messages li.monospaced + li.monospaced.consecutive {
   padding-top: 0px;
-  padding-bottom: 0px;
 }
 
 ul.messages li.monospaced div.msg {
