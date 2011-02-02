@@ -22,7 +22,7 @@
     if (document.loaded) {
       $('<?= $msg->{msgid} ?>').down("a.nick").insert('<img src="<?= $msg->{avatar} ?>" alt="<?= $msg->{nick} ?>" />');
     } else {
-      document.observe("dom:loaded", sub {
+      document.observe("dom:loaded", function() {
         $('<?= $msg->{msgid} ?>').down("a.nick").insert('<img src="<?= $msg->{avatar} ?>" alt="<?= $msg->{nick} ?>" />');
       });
     }
