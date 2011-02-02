@@ -460,7 +460,7 @@ li.event div.msg {
   padding: 5px; }
 
 li.monospaced div.msg {
-  padding: 8px 5px; }
+  padding: 5px; }
 
 li.event + li.message div.msg {
   border-top: 1px solid transparent; }
@@ -496,7 +496,8 @@ div.msg img {
   max-height: 300px; }
 
 ul.messages li.monospaced + li.monospaced.consecutive {
-  padding-top: 0px; }
+  padding-top: 0px;
+  padding-bottom: 0px; }
 
 ul.messages li.monospaced div.msg {
   font-family: Monaco, monospace;
