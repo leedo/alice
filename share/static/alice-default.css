@@ -493,15 +493,15 @@ div.msg img {
   max-height: 300px; }
 
 ul.messages li.monospaced + li.monospaced.consecutive {
-  padding-top: 0px;
-  padding-bottom: 0px; }
+  padding-top: 0px; }
 
 ul.messages li.monospaced div.msg {
   font-family: Monaco, monospace;
   font-size: 10px;
   line-height: 12px;
   word-wrap: normal;
-  white-space: pre-wrap; }
+  white-space: pre-wrap;
+  padding-bottom: 0px; }
 
 li.monospaced div.msg span[style*="bold"] {
   letter-spacing: -1px; }
