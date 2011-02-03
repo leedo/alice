@@ -219,8 +219,8 @@ Alice.Window = Class.create({
 
     // remove fold class from last message
     var last = this.messages.childElements().last();
-    if (last && last.hasClassName("fold"))
-      last.removeClassName("fold");
+    if (last && last.childElements().last().hasClassName("fold"))
+      last.childElements().last().removeClassName("fold");
 
     return this;
   },
