@@ -122,9 +122,9 @@ Alice.Window = Class.create({
   },
 
   addFold: function() {
-    this.messages.select("li.fold").invoke("removeClassName", "fold");
+    this.messages.select("li.message div.msg.fold").invoke("removeClassName", "fold");
     var last = this.messages.childElements().last();
-    if (last) last.addClassName("fold");
+    if (last) last.childElements().last().addClassName("fold");
   },
 
   showNick: function (e) {
