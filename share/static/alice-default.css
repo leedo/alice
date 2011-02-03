@@ -450,8 +450,10 @@ div.msg {
 div.msg span {
   white-space: pre-wrap; }
 
-div.msg.fold {
-  border-bottom: 1px solid #cccccc;
+li.fold {
+  border-bottom: 1px solid #cccccc; }
+
+li.fold + li div.msg {
   border-top: none !important; }
 
 li.event div.msg {

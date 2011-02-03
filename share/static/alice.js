@@ -11155,9 +11155,9 @@ Alice.Window = Class.create({
   },
 
   addFold: function() {
-    this.messages.select("li.message div.msg.fold").invoke("removeClassName", "fold");
+    this.messages.select("li.fold").invoke("removeClassName", "fold");
     var last = this.messages.childElements().last();
-    if (last) last.childElements().last().addClassName("fold");
+    if (last) last.addClassName("fold");
   },
 
   showNick: function (e) {
@@ -11251,8 +11251,8 @@ Alice.Window = Class.create({
     this.application.updateChannelSelect();
 
     var last = this.messages.childElements().last();
-    if (last && last.childElements().last().hasClassName("fold"))
-      last.childElements().last().removeClassName("fold");
+    if (last && last.hasClassName("fold"))
+      last.removeClassName("fold");
 
     return this;
   },
