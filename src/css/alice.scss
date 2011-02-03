@@ -512,11 +512,14 @@ div.msg {
   min-height: 1.2em;
   padding: 3px 5px;
   word-wrap: break-word;
-  white-space: pre-wrap;
   -khtml-line-break: after-white-space;
   -khtml-nbsp-mode: space;
   border-top: 1px solid $message_border;
   border-left: 1px solid $nick_column_border;
+}
+
+div.msg span {
+  white-space: pre-wrap;
 }
 
 li.fold {
