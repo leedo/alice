@@ -11059,6 +11059,7 @@ Alice.Window = Class.create({
     this.messageLimit = this.application.isMobile ? 50 : 200;
     this.msgid = 0;
     this.visible = true;
+    this.lastnotify = 0;
 
     this.setupEvents();
     this.setupTopic();
@@ -11374,9 +11375,14 @@ Alice.Window = Class.create({
       this.displayTopic(message.body.escapeHTML());
     }
 
-    if (!this.application.isFocused && message.highlight && message.window.title != "info") {
+    if (!this.application.isFocused && message.window.title != "info" &&
+        (message.highlight || this.type == "privmsg") ) {
       message.body = li.down(".msg").innerHTML.stripTags();
-      Alice.growlNotify(message);
+      var time = (new Date()).getTime();
+      if (time - this.lastnotify > 5000) {
+        this.lastnotify = time;
+        Alice.growlNotify(message);
+      }
       this.application.addMissed();
     }
 
