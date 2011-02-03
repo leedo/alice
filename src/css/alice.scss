@@ -518,6 +518,10 @@ div.msg {
   border-left: 1px solid $nick_column_border;
 }
 
+div.msg span {
+  white-space: pre-wrap;
+}
+
 li.fold {
   border-bottom: 1px solid $message_border_fold;
 }
@@ -531,7 +535,7 @@ li.event div.msg {
 }
 
 li.monospaced div.msg {
-  padding: 8px 5px;
+  padding: 5px;
 }
 
 li.event + li.message div.msg {
@@ -586,6 +590,7 @@ ul.messages li.monospaced div.msg {
   line-height: 12px;
   word-wrap: normal;
   white-space: pre-wrap;
+  padding-bottom: 0px;
 }
 
 li.monospaced div.msg span[style*="bold"] {
