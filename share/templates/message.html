@@ -3,7 +3,7 @@
 ?   grep {$msg->{$_}} qw/highlight self consecutive monospaced avatar/,
 ? );
 
-<li class="message <?= $classes ?>" id="<?= $msg->{msgid} ?>">
+<li class="message <?= $classes ?>" id="msg-<?= $msg->{msgid} ?>">
     <? if (!$msg->{consecutive} and $msg->{timestamp}) { ?>
     <div class="timehint"><span class="timestamp"><?= $msg->{timestamp} ?></span></div>
     <? } ?>
@@ -20,15 +20,15 @@
 <script type="text/javascript">
   if (alice.options.avatars == "show") {
     if (document.loaded) {
-      $('<?= $msg->{msgid} ?>').down("a.nick").insert('<img src="<?= $msg->{avatar} ?>" alt="<?= $msg->{nick} ?>" />');
+      $('msg-<?= $msg->{msgid} ?>').down("a.nick").insert('<img src="<?= $msg->{avatar} ?>" alt="<?= $msg->{nick} ?>" />');
     } else {
       document.observe("dom:loaded", function() {
-        $('<?= $msg->{msgid} ?>').down("a.nick").insert('<img src="<?= $msg->{avatar} ?>" alt="<?= $msg->{nick} ?>" />');
+        $('msg-<?= $msg->{msgid} ?>').down("a.nick").insert('<img src="<?= $msg->{avatar} ?>" alt="<?= $msg->{nick} ?>" />');
       });
     }
   }
   else {
-    $('<?= $msg->{msgid} ?>').removeClassName('avatar');
+    $('msg-<?= $msg->{msgid} ?>').removeClassName('avatar');
   }
 </script>
 <?}?>
