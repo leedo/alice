@@ -450,6 +450,9 @@ div.msg {
   border-top: 1px solid #111111;
   border-left: 1px solid black; }
 
+div.msg span {
+  white-space: pre-wrap; }
+
 li.fold {
   border-bottom: 1px solid #333333; }
 
@@ -460,7 +463,7 @@ li.event div.msg {
   padding: 5px; }
 
 li.monospaced div.msg {
-  padding: 8px 5px; }
+  padding: 5px; }
 
 li.event + li.message div.msg {
   border-top: 1px solid transparent; }
@@ -503,7 +506,8 @@ ul.messages li.monospaced div.msg {
   font-size: 10px;
   line-height: 12px;
   word-wrap: normal;
-  white-space: pre-wrap; }
+  white-space: pre-wrap;
+  padding-bottom: 0px; }
 
 li.monospaced div.msg span[style*="bold"] {
   letter-spacing: -1px; }
