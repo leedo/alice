@@ -18,17 +18,22 @@
 
 <? if ($msg->{avatar}) { ?>
 <script type="text/javascript">
+  var cb;
+
   if (alice.options.avatars == "show") {
-    if (document.loaded) {
-      $('msg-<?= $msg->{msgid} ?>').down("a.nick").insert('<img src="<?= $msg->{avatar} ?>" alt="<?= $msg->{nick} ?>" />');
-    } else {
-      document.observe("dom:loaded", function() {
-        $('msg-<?= $msg->{msgid} ?>').down("a.nick").insert('<img src="<?= $msg->{avatar} ?>" alt="<?= $msg->{nick} ?>" />');
-      });
-    }
+    cb = function () {
+      var msg = $('msg-<?= $msg->{msgid} ?>')
+      if (!msg) return;
+      msg.down("a.nick").insert('<img src="<?= $msg->{avatar} ?>" alt="<?= $msg->{nick} ?>" />');
+    };
   }
   else {
-    $('msg-<?= $msg->{msgid} ?>').removeClassName('avatar');
+    cb = function () {
+      var msg = $('msg-<?= $msg->{msgid} ?>');
+      if (msg) msg.removeClassName('avatar');
+    };
   }
+
+  document.loaded ? cb() : document.observe("dom:loaded", cb);
 </script>
 <?}?>
