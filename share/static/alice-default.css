@@ -442,6 +442,7 @@ div.msg {
   min-height: 1.2em;
   padding: 3px 5px;
   word-wrap: break-word;
+  white-space: pre-wrap;
   -khtml-line-break: after-white-space;
   -khtml-nbsp-mode: space;
   border-top: 1px solid #eeeeee;
