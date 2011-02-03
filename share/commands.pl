@@ -4,7 +4,7 @@ my $SRVOPT = qr/(?:\-(\S+)\s+)?/;
 my $commands = [
   {
     name => 'say',
-    re => qr{^([^/].*)}s,
+    re => qr{^(?:/(?:say)?\s+(.*)|([^/].*))}s,
     code => sub {
       my ($self, $app, $window, $msg) = @_;
 
