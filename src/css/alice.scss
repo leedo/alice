@@ -522,8 +522,11 @@ div.msg span {
   white-space: pre-wrap;
 }
 
-div.msg.fold {
+li.fold {
   border-bottom: 1px solid $message_border_fold;
+}
+
+li.fold + li div.msg {
   border-top: none !important;
 }
 
