@@ -93,8 +93,10 @@ my $commands = [
     re => qr{^/create\s+(\S+)},
     code => sub  {
       my ($self, $app, $window, $name) = @_;
-      my $new_window = $app->find_or_create_window($name, $window->irc);
-      $app->broadcast($new_window->join_action);
+      if (my $irc = $window->irc) {
+        my $new_window = $app->find_or_create_window($name, $irc);
+        $app->broadcast($new_window->join_action);
+      }
     },
   },
   {
