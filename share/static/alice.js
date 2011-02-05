@@ -11139,7 +11139,7 @@ Alice.Window = Class.create({
     var last = this.messages.down("li:last-child");
     if (last && last.id) {
       this.application.log("setting "+this.title+" msgid to "+last.id);
-      this.msgid = last.id;
+      this.msgid = last.id.replace("msg-", "");
     }
   },
 
