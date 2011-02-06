@@ -12117,6 +12117,17 @@ if (window == window.parent) {
       });
     }
 
+    var oembeds = [
+      {
+        re: /http:\/\/.*\.flickr.com\/.*\//i,
+        service: 'http://www.flickr.com/services/oembed',
+      },
+      {
+        re: /http:\/\/www\.youtube\.com\/watch.*/i,
+        service: 'http://www.youtube.com/oembed',
+      }
+    ];
+
 
     alice.addFilters([
       function(msg) {
@@ -12129,7 +12140,7 @@ if (window == window.parent) {
         });
       },
       function (msg) {
-        if (alice.options.images) {
+        if (alice.options.images == "show") {
           var re = /https?:\/\/(?:www\.)?twitter\.com\/(?:#!\/)?[^\/]+\/status\/(\d+)/i;
           msg.select("a").filter(function(a) {
             return re.match(a.href);
@@ -12153,7 +12164,26 @@ if (window == window.parent) {
             div.insert(a);
           });
         }
-      }
+      },
+      function (msg) {
+        if (alice.options.images == "show") {
+          msg.select("a").each(function(a) {
+            var oembed = oembeds.find(function(oembed) {
+              if (oembed.re.match(a.href)) return oembed;
+            });
+            if (oembed) {
+              new Ajax.Request('http://localhost:5000', {
+                method: "get",
+                parameters: {url: a.href},
+                onSuccess: function(transport) {
+                  console.log(transport);
+                  a.replace(transport.responseText);
+                }
+              });
+            }
+          })
+        }
+      },
     ]);
   });
 }
