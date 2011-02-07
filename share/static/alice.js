@@ -10276,9 +10276,10 @@ Alice.Application = Class.create({
     this.filters = [];
     this.keyboard = new Alice.Keyboard(this);
 
-    this.isPhone = window.navigator.platform.match(/(android|iphone)/i) ? 1 : 0;
+    this.isPhone = window.navigator.userAgent.match(/(android|iphone)/i) ? true : false;
     this.isMobile = this.isPhone || Prototype.Browser.MobileSafari || Prototype.Browser.Gecko;
     this.loadDelay = this.isMobile ? 3000 : 1000;
+    if (window.navigator.standalone) this.loadDelay = 0;
 
     this.input = new Alice.Input(this, "msg");
     this.submit = $("submit");
