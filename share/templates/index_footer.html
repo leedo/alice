@@ -2,6 +2,7 @@
         <script type="text/javascript">
           document.observe("dom:loaded", function () {
             alice.options = <?= Text::MicroTemplate::encoded_string(JSON::encode_json $options) ?>;
+            alice.options.images = alice.isPhone ? "hide" : "show";
 
             var orig_hash = window.location.hash;
             <? for my $window (@windows) { ?>
