@@ -81,7 +81,7 @@ sub _build_httpd {
           mkdir $self->config->path."/sessions"
             unless -d $self->config->path."/sessions";
           enable "Session",
-            store => Plack::Session::Store::File->new(dir => $self->config->path),
+            store => Plack::Session::Store::File->new(dir => $self->config->path."/sessions"),
             expires => "24h";
         }
         enable "Static", path => qr{^/static/}, root => $self->config->assetdir;
