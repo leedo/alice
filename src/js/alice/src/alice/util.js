@@ -343,15 +343,14 @@ Object.extend(Alice, {
 	  },
 
     submit: function(form) {
-      $$('#servers .channelselect').each(function(select) {
-        $A(select.options).each(function(option) {
-          option.selected = true;
-        });
+      var params = form.serialize(true);
+      form.select(".channelselect").each(function(select) {
+        params[select.name] = $A(select.options).map(function(opt){return opt.value});
       });
 
       new Ajax.Request('/save', {
         method: 'post',
-        parameters: form.serialize(),
+        parameters: params,
         onSuccess: function(){Alice.connections.remove()}
       });
 
