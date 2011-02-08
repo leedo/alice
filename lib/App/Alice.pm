@@ -83,6 +83,7 @@ has history => (
 
 sub store {
   my ($self, @args) = @_;
+  return unless $self->config->logging;
   my $idle_w; $idle_w = AE::idle sub {
     $self->history->store(
       @args,
@@ -181,7 +182,7 @@ sub run {
 sub init {
   my $self = shift;
   $self->commands;
-  $self->history;
+  $self->history if $self->config->logging;
   $self->info_window;
   $self->template;
   $self->httpd;
