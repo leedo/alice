@@ -35,9 +35,13 @@ Object.extend(Alice, {
   },
 
   growlNotify: function(message) {
+    var subject = message.window.title;
+    if (message.window.type != "privmsg") {
+      subject += ": " + message.nick;
+    }
     if (window.fluid) {
       window.fluid.showGrowlNotification({
-        title: message.window.title + ": " + message.nick,
+        title: subject, 
         description: message.body.unescapeHTML(),
         priority: 1, 
         sticky: false,
@@ -48,7 +52,7 @@ Object.extend(Alice, {
       if (window.webkitNotifications.checkPermission() == 0) {
         var popup = window.webkitNotifications.createNotification(
           "http://static.usealice.org/image/alice.png",
-          message.window.title + ": " + message.nick,
+          subject,
           message.body.unescapeHTML()
         );
 
