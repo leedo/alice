@@ -12120,11 +12120,13 @@ if (window == window.parent) {
     var oembeds = [
       {
         re: /http:\/\/.*\.flickr.com\/.*\//i,
-        service: 'http://www.flickr.com/services/oembed',
+        api: 'http://www.flickr.com/services/oembed',
+        param: 'jsoncallback',
       },
       {
         re: /http:\/\/www\.youtube\.com\/watch.*/i,
-        service: 'http://www.youtube.com/oembed',
+        api: 'http://www.youtube.com/oembed',
+        param: 'callback',
       }
     ];
 
@@ -12172,18 +12174,24 @@ if (window == window.parent) {
               if (oembed.re.match(a.href)) return oembed;
             });
             if (oembed) {
-              new Ajax.Request('http://localhost:5000', {
-                method: "get",
-                parameters: {url: a.href},
-                onSuccess: function(transport) {
-                  console.log(transport);
-                  a.replace(transport.responseText);
-                }
-              });
+              var params = {
+                url: a.href,
+                format: 'json'
+              };
+              params[oembed.param] = "insertOembed";
+              var src = oembed.api+"?"+Object.toQueryString(params);
+
+              var script = new Element('script', {src: src});
+              a.replace(script);
             }
           })
         }
       },
     ]);
   });
+  window.insertOembed = function (data) {
+    if (!data || data.html) return;
+    var scripts = document.getElementsByTagName( 'script' );
+    var script = scripts[ scripts.length - 1];
+  };
 }
