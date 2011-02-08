@@ -135,6 +135,12 @@ has callback => (
   isa     => 'CodeRef',
 );
 
+has enable_logging => (
+  is      => 'rw',
+  isa     => 'Bool',
+  default => 1,
+);
+
 sub ignores {@{$_[0]->ignore}}
 sub add_ignore {push @{shift->ignore}, @_}
 
@@ -174,11 +180,20 @@ sub load {
 
 sub read_commandline_args {
   my $self = shift;
-  my ($port, $debug, $address);
-  GetOptions("port=i" => \$port, "debug" => \$debug, "address=s" => \$address);
+  my ($port, $debug, $address, $nologs);
+  GetOptions("port=i" => \$port, "debug" => \$debug, "address=s" => \$address, "disable-logging" => \$nologs);
   $self->commandline->{port} = $port if $port and $port =~ /\d+/;
   $self->commandline->{debug} = 1 if $debug;
   $self->commandline->{address} = $address if $address;
+  $self->commandline->{disable_logging} = 1 if $nologs;
+}
+
+sub logging {
+  my $self = shift;
+  if ($self->commandline->{disable_logging}) {
+    return 0;
+  }
+  return $self->enable_logging;
 }
 
 sub http_port {
