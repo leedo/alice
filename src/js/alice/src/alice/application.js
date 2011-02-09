@@ -21,6 +21,39 @@ Alice.Application = Class.create({
 
     // setup UI elements in initial state
     this.makeSortable();
+    
+    this.oembeds = [
+      /http:\/\/.*\.flickr.com\/.*/i,
+      /http:\/\/www\.youtube\.com\/watch.*/i,
+      /http:\/\/www\.amazon\.com\/.*/i,
+      /http:\/\/.*\.wikipedia.org\/wiki\/.*/i,
+      /http:\/\/.*\.twitpic\.com\/.*/i,
+      /http:\/\/www\.hulu\.com\/watch\/*/i
+    ];
+    this.jsonp_callbacks = {};
+  },
+
+  addOembedCallback: function(id) {
+    this.jsonp_callbacks[id] = function (data) {
+      if (!data || !data.html) return;
+      var a = $(id);
+      a.update(data.title + " from " + data.provider_name);
+      var container = new Element("div", {"class": "oembed_container"});
+      var div = new Element("div", {"class": "oembed"});
+      var toggle = new Element("img", {src: "/static/image/image-x-generic.png", "class":"oembed_toggle"});
+      toggle.observe("click", function(e) {
+        e.stop();
+        var state = container.style.display;
+        container.style.display = state == "block" ? "none" : "block";
+      });
+
+      div.insert(data.html);
+      container.insert(div);
+      container.insert("<div class='oembed_clearfix'></div>");
+      a.insert({after: container});
+      a.insert({after: toggle});
+    };
+    return "alice.jsonp_callbacks['"+id+"']";
   },
   
   actionHandlers: {

@@ -107,19 +107,6 @@ if (window == window.parent) {
         }
       });
     }
-    
-    var oembeds = [
-      {
-        re: /http:\/\/.*\.flickr.com\/.*\//i,
-        api: 'http://www.flickr.com/services/oembed',
-        param: 'jsoncallback',
-      },
-      {
-        re: /http:\/\/www\.youtube\.com\/watch.*/i,
-        api: 'http://www.youtube.com/oembed',
-        param: 'callback',
-      }
-    ];
 
     // setup default filters
 
@@ -162,29 +149,23 @@ if (window == window.parent) {
       function (msg) {
         if (alice.options.images == "show") {
           msg.select("a").each(function(a) {
-            var oembed = oembeds.find(function(oembed) {
-              if (oembed.re.match(a.href)) return oembed;
+            var oembed = alice.oembeds.find(function(oembed) {
+              if (oembed.match(a.href)) return oembed;
             });
             if (oembed) {
+              var callback = alice.addOembedCallback(a.identify());
               var params = {
                 url: a.href,
-                format: 'json'
+                format: 'json',
+                callback: callback
               };
-              params[oembed.param] = "insertOembed";
-              var src = oembed.api+"?"+Object.toQueryString(params);
-
+              var src = "http://oohembed.com/oohembed/?"+Object.toQueryString(params);
               var script = new Element('script', {src: src});
-              a.replace(script);
+              a.insert(script);
             }
           })
         }
       },
     ]);
   });
-  window.insertOembed = function (data) {
-    if (!data || data.html) return;
-    var scripts = document.getElementsByTagName( 'script' );
-    var script = scripts[ scripts.length - 1];
-    //script.insert({before: data.html});
-  };
 }
