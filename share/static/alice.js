@@ -10293,12 +10293,15 @@ Alice.Application = Class.create({
     this.makeSortable();
 
     this.oembeds = [
-      /http:\/\/.*\.flickr.com\/.*/i,
-      /http:\/\/www\.youtube\.com\/watch.*/i,
-      /http:\/\/www\.amazon\.com\/.*/i,
-      /http:\/\/.*\.wikipedia.org\/wiki\/.*/i,
-      /http:\/\/.*\.twitpic\.com\/.*/i,
-      /http:\/\/www\.hulu\.com\/watch\/*/i
+      [/http:\/\/.*\.flickr.com\/.*/i],
+      [/http:\/\/www\.youtube\.com\/watch.*/i],
+      [/http:\/\/www\.amazon\.com\/.*/i],
+      [/http:\/\/.*\.wikipedia.org\/wiki\/.*/i],
+      [/http:\/\/.*\.twitpic\.com\/.*/i],
+      [/http:\/\/www\.hulu\.com\/watch\/*/i],
+      [/http:\/\/(:?www\.)?vimeo\.com\/.*/i],
+      [/http:\/\/(:?www\.)?vimeo\.com\/groups\/.*\/videos\/.*/i],
+      [/https?:\/\/gist\.github\.com\/.*/i, "https://github.com/api/oembed"]
     ];
     this.jsonp_callbacks = {};
   },
@@ -10306,6 +10309,7 @@ Alice.Application = Class.create({
   addOembedCallback: function(id, win) {
     this.jsonp_callbacks[id] = function (data) {
       delete this.jsonp_callbacks[id];
+      console.log(data);
       if (!data || !data.html) return;
       var a = $(id);
       a.update(data.title + " from " + data.provider_name);
@@ -12212,8 +12216,8 @@ if (window == window.parent) {
       function (msg, win) {
         if (alice.options.images == "show") {
           msg.select("a").each(function(a) {
-            var oembed = alice.oembeds.find(function(oembed) {
-              if (oembed.match(a.href)) return oembed;
+            var oembed = alice.oembeds.find(function(service) {
+              return service[0].match(a.href);
             });
             if (oembed) {
               var callback = alice.addOembedCallback(a.identify(), win);
@@ -12222,7 +12226,7 @@ if (window == window.parent) {
                 format: 'json',
                 callback: callback
               };
-              var src = "http://oohembed.com/oohembed/?"+Object.toQueryString(params);
+              var src = (oembed[1] || "http://oohembed.com/oohembed/")+ "?"+Object.toQueryString(params);
               var script = new Element('script', {src: src});
               a.insert(script);
             }

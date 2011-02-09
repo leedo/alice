@@ -1168,3 +1168,219 @@ li.dropdown li.submenu:hover {
 
 li.dropdown > ul li.submenu:hover ul {
   display: block; }
+
+div.msg div.oembed {
+  white-space: normal; }
+
+div.msg div.oembed pre {
+  margin: 0; }
+
+div.msg div.oembed .line_numbers {
+  background-color: #ececec;
+  color: #aaa;
+  padding: 1em .5em;
+  border-right: 1px solid #ddd;
+  text-align: right; }
+
+div.msg div.oembed .line_numbers span, .file .data .line_numbers a {
+  color: #aaa;
+  cursor: pointer; }
+
+div.msg div.oembed pre, code {
+  font: 12px Monaco,"Courier New","DejaVu Sans Mono","Bitstream Vera Sans Mono",monospace; }
+
+div.msg div.oembed .highlight {
+  background: #fff; }
+
+div.msg div.oembed .highlight .c {
+  color: #998;
+  font-style: italic; }
+
+div.msg div.oembed .highlight .err {
+  color: #a61717;
+  background-color: #e3d2d2; }
+
+div.msg div.oembed .highlight .k {
+  font-weight: bold; }
+
+div.msg div.oembed .highlight .o {
+  font-weight: bold; }
+
+div.msg div.oembed .highlight .cm {
+  color: #998;
+  font-style: italic; }
+
+div.msg div.oembed .highlight .cp {
+  color: #999;
+  font-weight: bold; }
+
+div.msg div.oembed .highlight .c1 {
+  color: #998;
+  font-style: italic; }
+
+div.msg div.oembed .highlight .cs {
+  color: #999;
+  font-weight: bold;
+  font-style: italic; }
+
+div.msg div.oembed .highlight .gd {
+  color: #000;
+  background-color: #fdd; }
+
+div.msg div.oembed .highlight .gd .x {
+  color: #000;
+  background-color: #faa; }
+
+div.msg div.oembed .highlight .ge {
+  font-style: italic; }
+
+div.msg div.oembed .highlight .gr {
+  color: #a00; }
+
+div.msg div.oembed .highlight .gh {
+  color: #999; }
+
+div.msg div.oembed .highlight .gi {
+  color: #000;
+  background-color: #dfd; }
+
+div.msg div.oembed .highlight .gi .x {
+  color: #000;
+  background-color: #afa; }
+
+div.msg div.oembed .highlight .go {
+  color: #888; }
+
+div.msg div.oembed .highlight .gp {
+  color: #555; }
+
+div.msg div.oembed .highlight .gs {
+  font-weight: bold; }
+
+div.msg div.oembed .highlight .gu {
+  color: #800080;
+  font-weight: bold; }
+
+div.msg div.oembed .highlight .gt {
+  color: #a00; }
+
+div.msg div.oembed .highlight .kc {
+  font-weight: bold; }
+
+div.msg div.oembed .highlight .kd {
+  font-weight: bold; }
+
+div.msg div.oembed .highlight .kp {
+  font-weight: bold; }
+
+div.msg div.oembed .highlight .kr {
+  font-weight: bold; }
+
+div.msg div.oembed .highlight .kt {
+  color: #458;
+  font-weight: bold; }
+
+div.msg div.oembed .highlight .m {
+  color: #099; }
+
+div.msg div.oembed .highlight .s {
+  color: #d14; }
+
+div.msg div.oembed .highlight .na {
+  color: #008080; }
+
+div.msg div.oembed .highlight .nb {
+  color: #0086B3; }
+
+div.msg div.oembed .highlight .nc {
+  color: #458;
+  font-weight: bold; }
+
+div.msg div.oembed .highlight .no {
+  color: #008080; }
+
+div.msg div.oembed .highlight .ni {
+  color: #800080; }
+
+div.msg div.oembed .highlight .ne {
+  color: #900;
+  font-weight: bold; }
+
+div.msg div.oembed .highlight .nf {
+  color: #900;
+  font-weight: bold; }
+
+div.msg div.oembed .highlight .nn {
+  color: #555; }
+
+div.msg div.oembed .highlight .nt {
+  color: #000080; }
+
+div.msg div.oembed .highlight .nv {
+  color: #008080; }
+
+div.msg div.oembed .highlight .ow {
+  font-weight: bold; }
+
+div.msg div.oembed .highlight .w {
+  color: #bbb; }
+
+div.msg div.oembed .highlight .mf {
+  color: #099; }
+
+div.msg div.oembed .highlight .mh {
+  color: #099; }
+
+div.msg div.oembed .highlight .mi {
+  color: #099; }
+
+div.msg div.oembed .highlight .mo {
+  color: #099; }
+
+div.msg div.oembed .highlight .sb {
+  color: #d14; }
+
+div.msg div.oembed .highlight .sc {
+  color: #d14; }
+
+div.msg div.oembed .highlight .sd {
+  color: #d14; }
+
+div.msg div.oembed .highlight .s2 {
+  color: #d14; }
+
+div.msg div.oembed .highlight .se {
+  color: #d14; }
+
+div.msg div.oembed .highlight .sh {
+  color: #d14; }
+
+div.msg div.oembed .highlight .si {
+  color: #d14; }
+
+div.msg div.oembed .highlight .sx {
+  color: #d14; }
+
+div.msg div.oembed .highlight .sr {
+  color: #009926; }
+
+div.msg div.oembed .highlight .s1 {
+  color: #d14; }
+
+div.msg div.oembed .highlight .ss {
+  color: #990073; }
+
+div.msg div.oembed .highlight .bp {
+  color: #999; }
+
+div.msg div.oembed .highlight .vc {
+  color: #008080; }
+
+div.msg div.oembed .highlight .vg {
+  color: #008080; }
+
+div.msg div.oembed .highlight .vi {
+  color: #008080; }
+
+div.msg div.oembed .highlight .il {
+  color: #099; }
