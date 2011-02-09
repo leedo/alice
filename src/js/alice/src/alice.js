@@ -168,7 +168,7 @@ if (window == window.parent) {
             type: "rich",
             html: "<iframe src='"+a.href+".pibb'></iframe>"
           };
-          alice.insertOembedContent(a, data);
+          alice.insertOembedContent(a, data, win);
         });
       },
       function (msg, win) {

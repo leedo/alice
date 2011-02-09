@@ -40,12 +40,12 @@ Alice.Application = Class.create({
     this.jsonp_callbacks[id] = function (data) {
       delete this.jsonp_callbacks[id];
       if (!data || !data.html) return;
-      this.insertOembedContent($(id), data);
+      this.insertOembedContent($(id), data, win);
     }.bind(this);
     return "alice.jsonp_callbacks['"+id+"']";
   },
 
-  insertOembedContent: function(a, data) {
+  insertOembedContent: function(a, data, win) {
     a.update(data.title + " from " + data.provider_name);
     var container = new Element("div", {"class": "oembed_container"});
     var div = new Element("div", {"class": "oembed"});
