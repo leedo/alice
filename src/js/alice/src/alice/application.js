@@ -36,6 +36,7 @@ Alice.Application = Class.create({
 
   addOembedCallback: function(id) {
     this.jsonp_callbacks[id] = function (data) {
+      delete this.jsonp_callbacks[id];
       if (!data || !data.html) return;
       var a = $(id);
       a.update(data.title + " from " + data.provider_name);
