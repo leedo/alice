@@ -12196,7 +12196,7 @@ if (window == window.parent) {
           msg.select("a").filter(function(a) {
             return regexes.twitter.match(a.href);
           }).each(function(a) {
-            a.innerHTML = a.innerHTML.replace(re, "http://prettybrd.com/peebone/$1.png");
+            a.innerHTML = a.innerHTML.replace(regexes.twitter, "http://prettybrd.com/peebone/$1.png");
           });
         }
       },
