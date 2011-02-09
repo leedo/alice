@@ -34,7 +34,7 @@ Alice.Application = Class.create({
     this.jsonp_callbacks = {};
   },
 
-  addOembedCallback: function(id) {
+  addOembedCallback: function(id, win) {
     this.jsonp_callbacks[id] = function (data) {
       delete this.jsonp_callbacks[id];
       if (!data || !data.html) return;
@@ -46,7 +46,13 @@ Alice.Application = Class.create({
       toggle.observe("click", function(e) {
         e.stop();
         var state = container.style.display;
-        container.style.display = state == "block" ? "none" : "block";
+        if (state != "block") {
+          container.style.display = "block";
+          win.scrollToBottom();
+        }
+        else {
+          container.style.display = "none";
+        }
       });
 
       div.insert(data.html);
@@ -54,7 +60,7 @@ Alice.Application = Class.create({
       container.insert("<div class='oembed_clearfix'></div>");
       a.insert({after: container});
       a.insert({after: toggle});
-    };
+    }.bind(this);
     return "alice.jsonp_callbacks['"+id+"']";
   },
   
@@ -224,8 +230,8 @@ Alice.Application = Class.create({
     this.filters = this.filters.concat(list);
   },
   
-  applyFilters: function(msg) {
-    return this.filters.each(function(f){ f(msg) });
+  applyFilters: function(msg, win) {
+    return this.filters.each(function(f){ f(msg, win) });
   },
   
   nextWindow: function() {

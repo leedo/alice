@@ -110,8 +110,17 @@ if (window == window.parent) {
 
     // setup default filters
 
+    var url_re = /\b(https?:\/\/(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'".,<>?«»“”‘’]))/g;
+    var twitter_re = /https?:\/\/(?:www\.)?twitter\.com\/(?:#!\/)?[^\/]+\/status\/(\d+)/i;
+    var img_re = /^http[^\s]*\.(?:jpe?g|gif|png|bmp|svg)[^\/]*$/i;
+
     alice.addFilters([
-      function(msg) {
+      function(msg, win) {
+        msg.innerHTML = msg.innerHTML.replace(
+          url_re, '<a href="$1" target="_blank" rel="noreferrer">$1</a>'
+        );
+      },
+      function(msg, win) {
         msg.select("a").filter(function(a) {
           return a.href.match(/\.(?:wav|mp3|ogg|aiff|m4a)[^\/]*/);
         }).each(function(a) {
@@ -120,21 +129,19 @@ if (window == window.parent) {
           a.insert({before: img})
         });
       },
-      function (msg) {
+      function (msg, win) {
         if (alice.options.images == "show") {
-          var re = /https?:\/\/(?:www\.)?twitter\.com\/(?:#!\/)?[^\/]+\/status\/(\d+)/i;
           msg.select("a").filter(function(a) {
-            return re.match(a.href);
+            return twitter_re.match(a.href);
           }).each(function(a) {
             a.innerHTML = a.innerHTML.replace(re, "http://prettybrd.com/peebone/$1.png");
           });
         }
       },
-      function (msg) {
+      function (msg, win) {
         if (alice.options.images == "show") {
-          var re = /^http[^\s]*\.(?:jpe?g|gif|png|bmp|svg)[^\/]*$/i;
           msg.select("a").filter(function(a) {
-            return re.match(a.innerHTML);
+            return img_re.match(a.innerHTML);
           }).each(function(a) {
             if(a.innerHTML.indexOf('nsfw') !== -1) return;
             var img = new Element("IMG", {src: alice.options.image_prefix + a.innerHTML});
@@ -146,14 +153,14 @@ if (window == window.parent) {
           });
         }
       },
-      function (msg) {
+      function (msg, win) {
         if (alice.options.images == "show") {
           msg.select("a").each(function(a) {
             var oembed = alice.oembeds.find(function(oembed) {
               if (oembed.match(a.href)) return oembed;
             });
             if (oembed) {
-              var callback = alice.addOembedCallback(a.identify());
+              var callback = alice.addOembedCallback(a.identify(), win);
               var params = {
                 url: a.href,
                 format: 'json',

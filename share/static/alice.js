@@ -10303,8 +10303,9 @@ Alice.Application = Class.create({
     this.jsonp_callbacks = {};
   },
 
-  addOembedCallback: function(id) {
+  addOembedCallback: function(id, win) {
     this.jsonp_callbacks[id] = function (data) {
+      delete this.jsonp_callbacks[id];
       if (!data || !data.html) return;
       var a = $(id);
       a.update(data.title + " from " + data.provider_name);
@@ -10314,7 +10315,13 @@ Alice.Application = Class.create({
       toggle.observe("click", function(e) {
         e.stop();
         var state = container.style.display;
-        container.style.display = state == "block" ? "none" : "block";
+        if (state != "block") {
+          container.style.display = "block";
+          win.scrollToBottom();
+        }
+        else {
+          container.style.display = "none";
+        }
       });
 
       div.insert(data.html);
@@ -10322,7 +10329,7 @@ Alice.Application = Class.create({
       container.insert("<div class='oembed_clearfix'></div>");
       a.insert({after: container});
       a.insert({after: toggle});
-    };
+    }.bind(this);
     return "alice.jsonp_callbacks['"+id+"']";
   },
 
@@ -10492,8 +10499,8 @@ Alice.Application = Class.create({
     this.filters = this.filters.concat(list);
   },
 
-  applyFilters: function(msg) {
-    return this.filters.each(function(f){ f(msg) });
+  applyFilters: function(msg, win) {
+    return this.filters.each(function(f){ f(msg, win) });
   },
 
   nextWindow: function() {
@@ -11169,7 +11176,7 @@ Alice.Window = Class.create({
 
     setTimeout(function () {
       this.messages.select('li.message div.msg').each(function (msg) {
-        this.application.applyFilters(msg);
+        this.application.applyFilters(msg, this);
       }.bind(this));
     }.bind(this), this.application.loadDelay);
 
@@ -11389,7 +11396,7 @@ Alice.Window = Class.create({
 
     if (message.event == "say") {
       var msg = li.down('div.msg');
-      this.application.applyFilters(msg);
+      this.application.applyFilters(msg, this);
 
       var nick = li.down('span.nick');
       if (nick && this.nicksVisible) {
@@ -12155,8 +12162,17 @@ if (window == window.parent) {
     }
 
 
+    var url_re = /\b(https?:\/\/(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'".,<>?«»“”‘’]))/g;
+    var twitter_re = /https?:\/\/(?:www\.)?twitter\.com\/(?:#!\/)?[^\/]+\/status\/(\d+)/i;
+    var img_re = /^http[^\s]*\.(?:jpe?g|gif|png|bmp|svg)[^\/]*$/i;
+
     alice.addFilters([
-      function(msg) {
+      function(msg, win) {
+        msg.innerHTML = msg.innerHTML.replace(
+          url_re, '<a href="$1" target="_blank" rel="noreferrer">$1</a>'
+        );
+      },
+      function(msg, win) {
         msg.select("a").filter(function(a) {
           return a.href.match(/\.(?:wav|mp3|ogg|aiff|m4a)[^\/]*/);
         }).each(function(a) {
@@ -12165,21 +12181,19 @@ if (window == window.parent) {
           a.insert({before: img})
         });
       },
-      function (msg) {
+      function (msg, win) {
         if (alice.options.images == "show") {
-          var re = /https?:\/\/(?:www\.)?twitter\.com\/(?:#!\/)?[^\/]+\/status\/(\d+)/i;
           msg.select("a").filter(function(a) {
-            return re.match(a.href);
+            return twitter_re.match(a.href);
           }).each(function(a) {
             a.innerHTML = a.innerHTML.replace(re, "http://prettybrd.com/peebone/$1.png");
           });
         }
       },
-      function (msg) {
+      function (msg, win) {
         if (alice.options.images == "show") {
-          var re = /^http[^\s]*\.(?:jpe?g|gif|png|bmp|svg)[^\/]*$/i;
           msg.select("a").filter(function(a) {
-            return re.match(a.innerHTML);
+            return img_re.match(a.innerHTML);
           }).each(function(a) {
             if(a.innerHTML.indexOf('nsfw') !== -1) return;
             var img = new Element("IMG", {src: alice.options.image_prefix + a.innerHTML});
@@ -12191,14 +12205,14 @@ if (window == window.parent) {
           });
         }
       },
-      function (msg) {
+      function (msg, win) {
         if (alice.options.images == "show") {
           msg.select("a").each(function(a) {
             var oembed = alice.oembeds.find(function(oembed) {
               if (oembed.match(a.href)) return oembed;
             });
             if (oembed) {
-              var callback = alice.addOembedCallback(a.identify());
+              var callback = alice.addOembedCallback(a.identify(), win);
               var params = {
                 url: a.href,
                 format: 'json',

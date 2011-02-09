@@ -161,7 +161,6 @@ sub format_event {
   };
 
   my $html = $self->render("event", $message);
-  make_links_clickable(\$html);
   $message->{html} = $html;
 
   $self->buffer->add($message);
@@ -175,7 +174,6 @@ sub format_message {
   my $monospace = $self->app->is_monospace_nick($nick);
   # pass the inverse => italic option if this is NOT monospace
   my $html = irc_to_html($body, classes => 1, ($monospace ? () : (invert => "italic")));
-  make_links_clickable(\$html);
 
   my $own_nick = $self->nick;
   my $message = {
@@ -239,11 +237,6 @@ sub nick_table {
     return encoded_string($self->render("avatargrid", $self));
   }
   return _format_nick_table($self->all_nicks);
-}
-
-sub make_links_clickable {
-  my $html = shift;
-  $$html =~ s/$url_regex/<a href="$1" target="_blank" rel="noreferrer">$1<\/a>/gi;
 }
 
 sub _format_nick_table {
