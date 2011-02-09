@@ -12162,19 +12162,23 @@ if (window == window.parent) {
     }
 
 
-    var url_re = /\b(https?:\/\/(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'".,<>?«»“”‘’]))/g;
-    var twitter_re = /https?:\/\/(?:www\.)?twitter\.com\/(?:#!\/)?[^\/]+\/status\/(\d+)/i;
-    var img_re = /^http[^\s]*\.(?:jpe?g|gif|png|bmp|svg)[^\/]*$/i;
+    var regexes = {
+      url: /\b(https?:\/\/(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'".,<>?«»“”‘’]))/g,
+      twitter: /https?:\/\/(?:www\.)?twitter\.com\/(?:#!\/)?[^\/]+\/status\/(\d+)/i,
+      img: /^http[^\s]*\.(?:jpe?g|gif|png|bmp|svg)[^\/]*$/i,
+      audio: /^http[^\s]*\.(?:wav|mp3|ogg|aiff|m4a)[^\/]*$/i
+    }
+
 
     alice.addFilters([
       function(msg, win) {
         msg.innerHTML = msg.innerHTML.replace(
-          url_re, '<a href="$1" target="_blank" rel="noreferrer">$1</a>'
+          regexes.url, '<a href="$1" target="_blank" rel="noreferrer">$1</a>'
         );
       },
       function(msg, win) {
         msg.select("a").filter(function(a) {
-          return a.href.match(/\.(?:wav|mp3|ogg|aiff|m4a)[^\/]*/);
+          return regexes.audio.match(a.href);
         }).each(function(a) {
           var img = new Element("IMG", {"class": "audio", src: "/static/image/play.png"});
           img.onclick = function(){ Alice.playAudio(img) };
@@ -12184,7 +12188,7 @@ if (window == window.parent) {
       function (msg, win) {
         if (alice.options.images == "show") {
           msg.select("a").filter(function(a) {
-            return twitter_re.match(a.href);
+            return regexes.twitter.match(a.href);
           }).each(function(a) {
             a.innerHTML = a.innerHTML.replace(re, "http://prettybrd.com/peebone/$1.png");
           });
@@ -12193,7 +12197,7 @@ if (window == window.parent) {
       function (msg, win) {
         if (alice.options.images == "show") {
           msg.select("a").filter(function(a) {
-            return img_re.match(a.innerHTML);
+            return regexes.img.match(a.innerHTML);
           }).each(function(a) {
             if(a.innerHTML.indexOf('nsfw') !== -1) return;
             var img = new Element("IMG", {src: alice.options.image_prefix + a.innerHTML});
