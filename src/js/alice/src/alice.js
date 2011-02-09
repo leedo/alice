@@ -107,7 +107,7 @@ if (window == window.parent) {
         }
       });
     }
-    
+
     // setup default filters
 
     alice.addFilters([
@@ -121,7 +121,7 @@ if (window == window.parent) {
         });
       },
       function (msg) {
-        if (alice.options.images) {
+        if (alice.options.images == "show") {
           var re = /https?:\/\/(?:www\.)?twitter\.com\/(?:#!\/)?[^\/]+\/status\/(\d+)/i;
           msg.select("a").filter(function(a) {
             return re.match(a.href);
@@ -145,7 +145,27 @@ if (window == window.parent) {
             div.insert(a);
           });
         }
-      }
+      },
+      function (msg) {
+        if (alice.options.images == "show") {
+          msg.select("a").each(function(a) {
+            var oembed = alice.oembeds.find(function(oembed) {
+              if (oembed.match(a.href)) return oembed;
+            });
+            if (oembed) {
+              var callback = alice.addOembedCallback(a.identify());
+              var params = {
+                url: a.href,
+                format: 'json',
+                callback: callback
+              };
+              var src = "http://oohembed.com/oohembed/?"+Object.toQueryString(params);
+              var script = new Element('script', {src: src});
+              a.insert(script);
+            }
+          })
+        }
+      },
     ]);
   });
 }
