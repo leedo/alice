@@ -518,6 +518,31 @@ div.msg {
   border-left: 1px solid $nick_column_border;
 }
 
+div.msg div.oembed {
+  background: $message_nick_column_background;
+  border: 1px solid $nick_column_border;
+  float: left;
+  margin: 5px;
+  font-size: 0.8em;
+  padding: 5px 10px;
+}
+
+div.oembed_clearfix {
+  clear: both;
+}
+
+div.oembed_container {
+  display: none;
+}
+
+img.oembed_toggle {
+  cursor: pointer;
+  padding: 0 4px;
+  width: 16px;
+  height: 16px;
+  margin-bottom: -3px;
+}
+
 div.msg span {
   white-space: pre-wrap;
 }

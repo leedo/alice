@@ -450,6 +450,27 @@ div.msg {
   border-top: 1px solid #111111;
   border-left: 1px solid black; }
 
+div.msg div.oembed {
+  background: #111111;
+  border: 1px solid black;
+  float: left;
+  margin: 5px;
+  font-size: 0.8em;
+  padding: 5px 10px; }
+
+div.oembed_clearfix {
+  clear: both; }
+
+div.oembed_container {
+  display: none; }
+
+img.oembed_toggle {
+  cursor: pointer;
+  padding: 0 4px;
+  width: 16px;
+  height: 16px;
+  margin-bottom: -3px; }
+
 div.msg span {
   white-space: pre-wrap; }
 
