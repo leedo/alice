@@ -24,12 +24,15 @@ Alice.Application = Class.create({
     this.makeSortable();
     
     this.oembeds = [
-      /http:\/\/.*\.flickr.com\/.*/i,
-      /http:\/\/www\.youtube\.com\/watch.*/i,
-      /http:\/\/www\.amazon\.com\/.*/i,
-      /http:\/\/.*\.wikipedia.org\/wiki\/.*/i,
-      /http:\/\/.*\.twitpic\.com\/.*/i,
-      /http:\/\/www\.hulu\.com\/watch\/*/i
+      [/http:\/\/.*\.flickr.com\/.*/i],
+      [/http:\/\/www\.youtube\.com\/watch.*/i],
+      [/http:\/\/www\.amazon\.com\/.*/i],
+      [/http:\/\/.*\.wikipedia.org\/wiki\/.*/i],
+      [/http:\/\/.*\.twitpic\.com\/.*/i],
+      [/http:\/\/www\.hulu\.com\/watch\/*/i],
+      [/http:\/\/(:?www\.)?vimeo\.com\/.*/i],
+      [/http:\/\/(:?www\.)?vimeo\.com\/groups\/.*\/videos\/.*/i],
+      [/https?:\/\/gist\.github\.com\/.*/i, "https://github.com/api/oembed"]
     ];
     this.jsonp_callbacks = {};
   },
@@ -37,6 +40,7 @@ Alice.Application = Class.create({
   addOembedCallback: function(id, win) {
     this.jsonp_callbacks[id] = function (data) {
       delete this.jsonp_callbacks[id];
+      console.log(data);
       if (!data || !data.html) return;
       var a = $(id);
       a.update(data.title + " from " + data.provider_name);

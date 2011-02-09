@@ -160,8 +160,8 @@ if (window == window.parent) {
       function (msg, win) {
         if (alice.options.images == "show") {
           msg.select("a").each(function(a) {
-            var oembed = alice.oembeds.find(function(oembed) {
-              if (oembed.match(a.href)) return oembed;
+            var oembed = alice.oembeds.find(function(service) {
+              return service[0].match(a.href);
             });
             if (oembed) {
               var callback = alice.addOembedCallback(a.identify(), win);
@@ -170,7 +170,7 @@ if (window == window.parent) {
                 format: 'json',
                 callback: callback
               };
-              var src = "http://oohembed.com/oohembed/?"+Object.toQueryString(params);
+              var src = (oembed[1] || "http://oohembed.com/oohembed/")+ "?"+Object.toQueryString(params);
               var script = new Element('script', {src: src});
               a.insert(script);
             }
