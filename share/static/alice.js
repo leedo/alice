@@ -10301,7 +10301,6 @@ Alice.Application = Class.create({
       [/http:\/\/www\.hulu\.com\/watch\/*/i],
       [/http:\/\/(:?www\.)?vimeo\.com\/.*/i],
       [/http:\/\/(:?www\.)?vimeo\.com\/groups\/.*\/videos\/.*/i],
-      [/https?:\/\/gist\.github\.com\/.*/i, "https://github.com/api/oembed"]
     ];
     this.jsonp_callbacks = {};
   },
@@ -10309,32 +10308,34 @@ Alice.Application = Class.create({
   addOembedCallback: function(id, win) {
     this.jsonp_callbacks[id] = function (data) {
       delete this.jsonp_callbacks[id];
-      console.log(data);
       if (!data || !data.html) return;
-      var a = $(id);
-      a.update(data.title + " from " + data.provider_name);
-      var container = new Element("div", {"class": "oembed_container"});
-      var div = new Element("div", {"class": "oembed"});
-      var toggle = new Element("img", {src: "/static/image/image-x-generic.png", "class":"oembed_toggle"});
-      toggle.observe("click", function(e) {
-        e.stop();
-        var state = container.style.display;
-        if (state != "block") {
-          container.style.display = "block";
-          win.scrollToBottom();
-        }
-        else {
-          container.style.display = "none";
-        }
-      });
-
-      div.insert(data.html);
-      container.insert(div);
-      container.insert("<div class='oembed_clearfix'></div>");
-      a.insert({after: container});
-      a.insert({after: toggle});
+      this.insertOembedContent($(id), data);
     }.bind(this);
     return "alice.jsonp_callbacks['"+id+"']";
+  },
+
+  insertOembedContent: function(a, data) {
+    a.update(data.title + " from " + data.provider_name);
+    var container = new Element("div", {"class": "oembed_container"});
+    var div = new Element("div", {"class": "oembed"});
+    var toggle = new Element("img", {src: "/static/image/image-x-generic.png", "class":"oembed_toggle"});
+    toggle.observe("click", function(e) {
+      e.stop();
+      var state = container.style.display;
+      if (state != "block") {
+        container.style.display = "block";
+        win.scrollToBottom();
+      }
+      else {
+        container.style.display = "none";
+      }
+    });
+
+    div.insert(data.html);
+    container.insert(div);
+    container.insert("<div class='oembed_clearfix'></div>");
+    a.insert({after: container});
+    a.insert({after: toggle});
   },
 
   actionHandlers: {
@@ -12170,8 +12171,9 @@ if (window == window.parent) {
       url: /\b(https?:\/\/(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'".,<>?«»“”‘’]))/g,
       twitter: /https?:\/\/(?:www\.)?twitter\.com\/(?:#!\/)?[^\/]+\/status\/(\d+)/i,
       img: /^http[^\s]*\.(?:jpe?g|gif|png|bmp|svg)[^\/]*$/i,
-      audio: /^http[^\s]*\.(?:wav|mp3|ogg|aiff|m4a)[^\/]*$/i
-    }
+      audio: /^http[^\s]*\.(?:wav|mp3|ogg|aiff|m4a)[^\/]*$/i,
+      gist: /^https?:\/\/gist\.github\.com\/[^\/]*$/i
+    };
 
 
     alice.addFilters([
@@ -12212,6 +12214,19 @@ if (window == window.parent) {
             div.insert(a);
           });
         }
+      },
+      function (msg, win) {
+        msg.select("a").filter(function(a) {
+          return regexes.gist.match(a.href);
+        }).each(function(a) {
+          var data = {
+            provider_name: "gist.github.org",
+            title: a.href.match(/[^\/]*$/),
+            type: "rich",
+            html: "<iframe src='"+a.href+".pibb'></iframe>"
+          };
+          alice.insertOembedContent(a, data);
+        });
       },
       function (msg, win) {
         if (alice.options.images == "show") {

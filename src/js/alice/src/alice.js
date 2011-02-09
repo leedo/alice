@@ -114,8 +114,9 @@ if (window == window.parent) {
       url: /\b(https?:\/\/(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'".,<>?«»“”‘’]))/g,
       twitter: /https?:\/\/(?:www\.)?twitter\.com\/(?:#!\/)?[^\/]+\/status\/(\d+)/i,
       img: /^http[^\s]*\.(?:jpe?g|gif|png|bmp|svg)[^\/]*$/i,
-      audio: /^http[^\s]*\.(?:wav|mp3|ogg|aiff|m4a)[^\/]*$/i
-    }
+      audio: /^http[^\s]*\.(?:wav|mp3|ogg|aiff|m4a)[^\/]*$/i,
+      gist: /^https?:\/\/gist\.github\.com\/[^\/]*$/i
+    };
     
 
     alice.addFilters([
@@ -156,6 +157,19 @@ if (window == window.parent) {
             div.insert(a);
           });
         }
+      },
+      function (msg, win) {
+        msg.select("a").filter(function(a) {
+          return regexes.gist.match(a.href);
+        }).each(function(a) {
+          var data = {
+            provider_name: "gist.github.org",
+            title: a.href.match(/[^\/]*$/),
+            type: "rich",
+            html: "<iframe src='"+a.href+".pibb'></iframe>"
+          };
+          alice.insertOembedContent(a, data);
+        });
       },
       function (msg, win) {
         if (alice.options.images == "show") {
