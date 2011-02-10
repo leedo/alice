@@ -461,11 +461,9 @@ div.oembed_clearfix {
 div.oembed_container {
   display: none; }
 
-a.external {
-  padding: 0 4px;
-  width: 16px;
-  height: 16px;
-  margin-bottom: -3px; }
+a.external img {
+  padding: 0 2px;
+  margin-bottom: -2px; }
 
 div.oembed iframe {
   min-height: 250px;
