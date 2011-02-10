@@ -544,8 +544,7 @@ img.oembed_toggle {
 }
 
 div.oembed iframe {
-  width: 700px;
-  height: 200px;
+  min-height: 250px;
   font-size: 0.8em;
   border: none;
   margin: 0;
