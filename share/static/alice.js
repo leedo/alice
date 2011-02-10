@@ -10315,7 +10315,7 @@ Alice.Application = Class.create({
   },
 
   insertOembedContent: function(a, data, win) {
-    a.update(data.title + " from " + data.provider_name);
+    a.update(data.title);
     var container = new Element("div", {"class": "oembed_container"});
     var div = new Element("div", {"class": "oembed"});
     a.observe("click", function(e) {
@@ -10334,7 +10334,7 @@ Alice.Application = Class.create({
     container.insert(div);
     container.insert("<div class='oembed_clearfix'></div>");
     a.insert({after: container});
-    a.insert({after: '<a href="'+a.href+'" class="external"><img src="/static/image/external.png" /></a>'});
+    a.insert({after: ' <em>on <a href="'+a.href+'" class="external">'+data.provider_name+'<img src="/static/image/external.png" /></a></em>'});
   },
 
   actionHandlers: {
