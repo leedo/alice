@@ -461,8 +461,7 @@ div.oembed_clearfix {
 div.oembed_container {
   display: none; }
 
-img.oembed_toggle {
-  cursor: pointer;
+a.external {
   padding: 0 4px;
   width: 16px;
   height: 16px;
