@@ -10318,8 +10318,7 @@ Alice.Application = Class.create({
     a.update(data.title + " from " + data.provider_name);
     var container = new Element("div", {"class": "oembed_container"});
     var div = new Element("div", {"class": "oembed"});
-    var toggle = new Element("img", {src: "/static/image/image-x-generic.png", "class":"oembed_toggle"});
-    toggle.observe("click", function(e) {
+    a.observe("click", function(e) {
       e.stop();
       var state = container.style.display;
       if (state != "block") {
@@ -10335,7 +10334,7 @@ Alice.Application = Class.create({
     container.insert(div);
     container.insert("<div class='oembed_clearfix'></div>");
     a.insert({after: container});
-    a.insert({after: toggle});
+    a.insert({after: '<a href="'+a.href+'" class="external"><img src="/static/image/external.png" /></a>'});
   },
 
   actionHandlers: {
