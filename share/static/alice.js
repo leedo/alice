@@ -10278,6 +10278,7 @@ Alice.Application = Class.create({
     this.connection = window.WebSocket ? new Alice.Connection.WebSocket(this) : new Alice.Connection.XHR(this);
     this.filters = [];
     this.keyboard = new Alice.Keyboard(this);
+    this.supportsTouch = 'createTouch' in document;
 
     this.isPhone = window.navigator.userAgent.match(/(android|iphone)/i) ? true : false;
     this.isMobile = this.isPhone || Prototype.Browser.MobileSafari || Prototype.Browser.Gecko;
@@ -11132,7 +11133,8 @@ Alice.Window = Class.create({
   setupTopic: function() {
     if (this.topic) {
       var orig_height = this.topic.getStyle("height");
-      this.topic.observe("click", function(e) {
+      this.topic.observe(this.application.supportsTouch ? "touchstart" : "click", function(e) {
+        if (this.application.supportsTouch) e.stop();
         if (this.topic.getStyle("height") == orig_height) {
           this.topic.setStyle({height: "auto"});
         } else {
@@ -11144,6 +11146,27 @@ Alice.Window = Class.create({
   },
 
   setupEvents: function() {
+    this.application.supportsTouch ? this.setupTouchEvents() : this.setupMouseEvents();
+  },
+
+  setupTouchEvents: function() {
+    this.messages.observe("touchstart", function (e) {
+      if (e.findElement('li')) e.stop();
+      this.showNick(e);
+    }.bind(this));
+    this.tab.observe("touchstart", function (e) {
+      e.stop();
+      if (!this.active) this.focus();
+    }.bind(this));
+    this.tabButton.observe("touchstart", function(e) {
+      if (this.active) {
+        e.stop();
+        confirm("Are you sure you want to close this tab?") && this.close()
+      }
+    }.bind(this));
+  },
+
+  setupMouseEvents: function() {
     this.tab.observe("mousedown", function(e) {
       if (!this.active) {this.focus(); this.focusing = true}
     }.bind(this));
@@ -12092,7 +12115,7 @@ if (window == window.parent) {
     $('helpclose').observe("click", function () { $('help').hide(); });
 
     $$('li.dropdown').each(function (li) {
-      li.observe("click", function (e) {
+      li.observe(alice.supportsTouch ? "touchstart" : "mousedown", function (e) {
         var element = e.element();
         if (element.hasClassName("dropdown")) {
           if (li.hasClassName("open")) {
@@ -12107,7 +12130,7 @@ if (window == window.parent) {
       });
     });
 
-    document.observe("click", function (e) {
+    document.observe(alice.supportsTouch ? "touchstart" : "mousedown", function (e) {
       $$('li.dropdown.open').invoke("removeClassName", "open");
     });
 

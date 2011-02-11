@@ -33,7 +33,7 @@ if (window == window.parent) {
     $('helpclose').observe("click", function () { $('help').hide(); });
 
     $$('li.dropdown').each(function (li) {
-      li.observe("click", function (e) {
+      li.observe(alice.supportsTouch ? "touchstart" : "mousedown", function (e) {
         var element = e.element();
         if (element.hasClassName("dropdown")) {
           if (li.hasClassName("open")) {
@@ -48,7 +48,7 @@ if (window == window.parent) {
       });
     });
 
-    document.observe("click", function (e) {
+    document.observe(alice.supportsTouch ? "touchstart" : "mousedown", function (e) {
       $$('li.dropdown.open').invoke("removeClassName", "open");
     });
 

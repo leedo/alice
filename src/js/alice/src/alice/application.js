@@ -8,6 +8,7 @@ Alice.Application = Class.create({
     this.connection = window.WebSocket ? new Alice.Connection.WebSocket(this) : new Alice.Connection.XHR(this);
     this.filters = [];
     this.keyboard = new Alice.Keyboard(this);
+    this.supportsTouch = 'createTouch' in document;
 
     this.isPhone = window.navigator.userAgent.match(/(android|iphone)/i) ? true : false;
     this.isMobile = this.isPhone || Prototype.Browser.MobileSafari || Prototype.Browser.Gecko;
