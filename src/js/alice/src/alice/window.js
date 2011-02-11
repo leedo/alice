@@ -64,7 +64,6 @@ Alice.Window = Class.create({
 
   setupTouchEvents: function() {
     this.messages.observe("touchstart", function (e) {
-      if (e.findElement('li')) e.stop();
       this.showNick(e);
     }.bind(this));
     this.tab.observe("touchstart", function (e) {
