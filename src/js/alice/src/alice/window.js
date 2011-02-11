@@ -224,18 +224,18 @@ Alice.Window = Class.create({
   focus: function(event) {
     if (!this.application.currentSetContains(this)) return;
 
-    document.title = this.title;
     this.application.previousFocus = this.application.activeWindow();
     this.application.previousFocus.unFocus();
-    this.application.setSource(this.id);
     this.active = true;
+
     this.tab.addClassName('active');
     this.element.addClassName('active');
-    this.tabOverflowButton.selected = true;
-    this.markRead();
-    this.scrollToBottom(true);
 
+    this.scrollToBottom(true);
     this.element.redraw();
+
+    this.application.setSource(this.id);
+    this.markRead();
     this.setWindowHash();
     this.application.updateChannelSelect();
 
@@ -243,6 +243,8 @@ Alice.Window = Class.create({
     var last = this.messages.childElements().last();
     if (last && last.hasClassName("fold"))
       last.removeClassName("fold");
+
+    document.title = this.title;
 
     return this;
   },

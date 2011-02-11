@@ -11306,24 +11306,26 @@ Alice.Window = Class.create({
   focus: function(event) {
     if (!this.application.currentSetContains(this)) return;
 
-    document.title = this.title;
     this.application.previousFocus = this.application.activeWindow();
     this.application.previousFocus.unFocus();
-    this.application.setSource(this.id);
     this.active = true;
+
     this.tab.addClassName('active');
     this.element.addClassName('active');
-    this.tabOverflowButton.selected = true;
-    this.markRead();
-    this.scrollToBottom(true);
 
+    this.scrollToBottom(true);
     this.element.redraw();
+
+    this.application.setSource(this.id);
+    this.markRead();
     this.setWindowHash();
     this.application.updateChannelSelect();
 
     var last = this.messages.childElements().last();
     if (last && last.hasClassName("fold"))
       last.removeClassName("fold");
+
+    document.title = this.title;
 
     return this;
   },
@@ -11883,6 +11885,8 @@ Alice.Keyboard = Class.create({
   initialize: function(application) {
     this.application = application;
     this.isMac = navigator.platform.match(/mac/i);
+    this.lastCycle = 0;
+    this.cycleDelay = 300;
     this.enable();
 
     this.shortcut("Cmd+C", { propagate: true });
@@ -11925,6 +11929,15 @@ Alice.Keyboard = Class.create({
         delete this.activeWindow;
       }
     }.bind(this), options);
+  },
+
+  delayed: function() {
+    var now = (new Date()).getTime();
+    if (now - this.lastCycle > this.cycleDelay) {
+      this.lastCycle = now;
+      return true;
+    }
+    return false;
   },
 
   onNumeric: function(event, number) {
@@ -11970,11 +11983,13 @@ Alice.Keyboard = Class.create({
   },
 
   onCmdB: function() {
-    this.application.previousWindow();
+    if (this.delayed())
+      this.application.previousWindow();
   },
 
   onCmdF: function() {
-    this.application.nextWindow();
+    if (this.delayed())
+      this.application.nextWindow();
   },
 
   onOptUp: function() {
