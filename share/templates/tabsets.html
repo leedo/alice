@@ -1,5 +1,4 @@
 ? my $app = shift;
-? use Encode;
 
 ? my @windows = grep {$_->type ne "privmsg"} $app->sorted_windows;
 <div id="tabsets" class="config">
@@ -29,7 +28,7 @@
         <? for my $window (@windows) { ?>
           <li>
             <input type="checkbox"<?= $set->includes($window->id) ? " checked" : "" ?> name="<?= $window->id ?>">
-            <?= encode_utf8($window->title) ?>
+            <?= $window->title ?>
           </li>
         <? } ?>
         </ul>
@@ -41,7 +40,7 @@
       <? for my $window (@windows) { ?>
         <li>
           <input type="checkbox" name="<?= $window->id ?>" />
-          <?= encode_utf8($window->title) ?>
+          <?= $window->title ?>
         </li>
       <? } ?>
     </ul>
