@@ -454,6 +454,7 @@ li.event div.msg {
 ul.messages li.avatar div.left {
   padding-bottom: 3px;
   padding-top: 3px;
+  -webkit-transform: translate3d(0, 0, 0);
 }
 
 li.event div.left {
@@ -490,6 +491,7 @@ ul.messages li.avatar span.nick {
   text-shadow: rgba( 0, 0, 0, 1 ) 0 1px 1px;
   opacity: 0;
   -webkit-transition: opacity 0.5s ease-in-out;
+  -webkit-transform: translate3d(0, 0, 0);
 }
 
 div.timehint {
@@ -500,6 +502,7 @@ div.timehint {
   margin-top: 1px;
   opacity: 0;
   text-shadow: $timehint_shadow_color 0 0 3px;
+  -webkit-transform: translate3d(0, 0, 0);
 }
 
 .info ul.messages li.highlight div.timehint,
