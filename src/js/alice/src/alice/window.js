@@ -46,7 +46,8 @@ Alice.Window = Class.create({
     // setup topic expanding on click (if it is multiline)
     if (this.topic) {
       var orig_height = this.topic.getStyle("height");
-      this.topic.observe("click", function(e) {
+      this.topic.observe(this.application.supportsTouch ? "touchstart" : "click", function(e) {
+        if (this.application.supportsTouch) e.stop();
         if (this.topic.getStyle("height") == orig_height) {
           this.topic.setStyle({height: "auto"});
         } else {
@@ -58,6 +59,27 @@ Alice.Window = Class.create({
   },
 
   setupEvents: function() {
+    this.application.supportsTouch ? this.setupTouchEvents() : this.setupMouseEvents();
+  },
+
+  setupTouchEvents: function() {
+    this.messages.observe("touchstart", function (e) {
+      if (e.findElement('li')) e.stop();
+      this.showNick(e);
+    }.bind(this));
+    this.tab.observe("touchstart", function (e) {
+      e.stop();
+      if (!this.active) this.focus();
+    }.bind(this));
+    this.tabButton.observe("touchstart", function(e) {
+      if (this.active) {
+        e.stop();
+        confirm("Are you sure you want to close this tab?") && this.close()
+      }
+    }.bind(this));
+  },
+
+  setupMouseEvents: function() {
     // huge mess of click logic to get the right behavior.
     // (e.g. clicking on unfocused (x) button does not close tab)
     this.tab.observe("mousedown", function(e) {
