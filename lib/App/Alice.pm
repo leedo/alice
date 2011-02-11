@@ -369,16 +369,16 @@ sub ping {
 }
 
 sub update_stream {
-  my ($self, $stream, $params) = @_;
+  my ($self, $stream, $req) = @_;
 
-  my $min = $params->{msgid} || 0;
-  my $limit = $params->{limit} || 100;
+  my $min = $req->param('msgid') || 0;
+  my $limit = $req->param('limit') || 100;
 
   $self->log(debug => "sending stream update");
 
   my @windows = $self->windows;
 
-  if (my $id = $params->{tab}) {
+  if (my $id = $req->param('tab')) {
     if (my $active = $self->get_window($id)) {
       @windows = grep {$_->id ne $id} @windows;
       unshift @windows, $active;
@@ -432,7 +432,7 @@ sub purge_disconnects {
 
 sub render {
   my ($self, $template, @data) = @_;
-  return $self->template->render_file("$template.html", $self, @data)->as_string;
+  $self->template->render_file("$template.html", $self, @data)->as_string;
 }
 
 sub is_highlight {

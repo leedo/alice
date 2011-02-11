@@ -150,8 +150,8 @@ sub login {
   }
 
   # we have credentials
-  elsif (my $user = $req->parameters->{username}
-     and my $pass = $req->parameters->{password}) {
+  elsif (my $user = $req->param('username')
+     and my $pass = $req->param('password')) {
 
     $self->authenticate($user, $pass, sub {
       my $success = shift;
@@ -206,14 +206,14 @@ sub setup_xhr_stream {
   my $stream = App::Alice::Stream::XHR->new(
     queue      => [ map({$_->join_action} $app->windows) ],
     writer     => $res->writer,
-    start_time => $req->parameters->{t},
+    start_time => $req->param('t'),
     # android requires 4K updates to trigger loading event
     min_bytes  => $req->user_agent =~ /android/i ? 4096 : 0,
     on_error => sub { $app->purge_disconnects },
   );
 
   $app->add_stream($stream);
-  $app->update_stream($stream, $req->parameters);
+  $app->update_stream($stream, $req);
 }
 
 sub setup_ws_stream {
@@ -223,14 +223,14 @@ sub setup_ws_stream {
 
   if (my $fh = $req->env->{'websocket.impl'}->handshake) {
     my $stream = App::Alice::Stream::WebSocket->new(
-      start_time => $req->parameters->{t} || time,
+      start_time => $req->param('t') || time,
       fh      => $fh,
       on_read => sub { $app->handle_message(@_) },
       on_error => sub { $app->purge_disconnects },
     );
     $stream->send([ map({$_->join_action} $app->windows) ]);
     $app->add_stream($stream);
-    $app->update_stream($stream, $req->parameters);
+    $app->update_stream($stream, $req);
   }
   else {
     my $code = $req->env->{'websocket.impl'}->error_code;
@@ -242,9 +242,9 @@ sub handle_message {
   my ($self, $req, $res) = @_;
 
   $self->app->handle_message({
-    msg    => $req->parameters->{msg},
-    html   => $req->parameters->{html},
-    source => $req->parameters->{source}
+    msg    => $req->param('msg'),
+    html   => $req->param('html'),
+    source => $req->param('source')
   });
   
   $res->ok;
@@ -252,8 +252,8 @@ sub handle_message {
 
 sub send_safe_index {
   my ($self, $req, $res) = @_;
-  $req->parameters->{images} = "hide";
-  $req->parameters->{avatars} = "hide";
+  $req->param('images') = "hide";
+  $req->param('avatars') = "hide";
   $self->send_index($req, $res);
 }
 
@@ -294,13 +294,12 @@ sub send_index {
 sub merged_options {
   my ($self, $req) = @_;
   my $config = $self->app->config;
-  my $params = $req->parameters;
   return {
-   images => $req->parameters->{images} || $config->images,
-   avatars => $req->parameters->{avatars} || $config->avatars,
-   debug  => $req->parameters->{debug}  || ($config->show_debug ? 'true' : 'false'),
-   timeformat => $req->parameters->{timeformat} || $config->timeformat,
-   image_prefix => $req->parameters->{image_prefix} || $config->image_prefix,
+   images => $req->param('images') || $config->images,
+   avatars => $req->param('avatars') || $config->avatars,
+   debug  => $req->param('debug')  || ($config->show_debug ? 'true' : 'false'),
+   timeformat => $req->param('timeformat') || $config->timeformat,
+   image_prefix => $req->param('image_prefix') || $config->image_prefix,
   };
 }
 
@@ -323,9 +322,9 @@ sub save_tabsets {
 
   my $tabsets = {};
 
-  for my $set (keys %{ $req->parameters }) {
+  for my $set ($req->param) {
     next if $set eq '_';
-    my $wins = [$req->parameters->get_all($set)];
+    my $wins = [$req->param($set)];
     $tabsets->{$set} = $wins->[0] eq 'empty' ? [] : $wins;
   }
 
@@ -340,7 +339,7 @@ sub server_config {
   my ($self, $req, $res) = @_;
   $self->app->log(info => "serving blank server config");
   
-  my $name = $req->parameters->{name};
+  my $name = $req->param('name');
   $name =~ s/\s+//g;
   my $config = $self->render('new_server', $name);
   my $listitem = $self->render('server_listitem', $name);
@@ -359,25 +358,25 @@ sub save_config {
   $self->app->log(info => "saving config");
   
   my $new_config = {};
-  if ($req->parameters->{has_servers}) {
+  if ($req->param('has_servers')) {
     $new_config->{servers} = {};
   }
   else {
-    $new_config->{$_} = [$req->parameters->get_all($_)] for qw/highlights monospace_nicks/;
+    $new_config->{$_} = [$req->param($_)] for qw/highlights monospace_nicks/;
   }
 
-  for my $name (keys %{$req->parameters}) {
-    next unless $req->parameters->{$name};
+  for my $name ($req->param) {
+    next unless $req->param($name);
     next if $name =~ /^(?:has_servers|highlights|monospace_nicks)$/;
     if ($name =~ /^(.+?)_(.+)/ and exists $new_config->{servers}) {
       if ($2 eq "channels" or $2 eq "on_connect") {
-        $new_config->{servers}{$1}{$2} = [$req->parameters->get_all($name)];
+        $new_config->{servers}{$1}{$2} = [$req->param($name)];
       } else {
-        $new_config->{servers}{$1}{$2} = $req->parameters->{$name};
+        $new_config->{servers}{$1}{$2} = $req->param($name);
       }
     }
     else {
-      $new_config->{$name} = $req->parameters->{$name};
+      $new_config->{$name} = $req->param($name);
     }
   }
 
@@ -394,7 +393,7 @@ sub tab_order  {
   my ($self, $req, $res) = @_;
   $self->app->log(debug => "updating tab order");
   
-  $self->app->tab_order([grep {defined $_} $req->parameters->get_all('tabs')]);
+  $self->app->tab_order([grep {defined $_} $req->param('tabs')]);
   $res->ok;
 }
 

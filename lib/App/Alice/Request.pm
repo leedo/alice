@@ -1,6 +1,7 @@
 package App::Alice::Request;
 
 use parent 'Plack::Request';
+use Encode;
 
 sub new {
   my($class, $env, $cb) = @_;
@@ -18,8 +19,19 @@ sub new_response {
   App::Alice::Response->new($self->{cb}, @_);
 }
 
+sub param {
+  my $self = shift;
+  if (wantarray) {
+    return map {decode($self->content_encoding || "utf8", $_)} $self->SUPER::param(@_);
+  }
+  else {
+    return decode($self->content_encoding || "utf8", $self->SUPER::param(@_));
+  }
+}
+
 package App::Alice::Response;
 use parent 'Plack::Response';
+use Encode;
 
 sub new {
   my($class, $cb, $rc, $headers, $content) = @_;
@@ -37,7 +49,9 @@ sub new {
 
 sub send {
   my $self = shift;
-  return $self->{cb}->($self->SUPER::finalize);
+  my $res = $self->SUPER::finalize;
+  $res->[2] = [map encode("utf8", $_), @{$res->[2]}];
+  return $self->{cb}->($res);
 }
 
 sub notfound {
