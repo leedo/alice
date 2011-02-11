@@ -11931,15 +11931,6 @@ Alice.Keyboard = Class.create({
     }.bind(this), options);
   },
 
-  delayed: function() {
-    var now = (new Date()).getTime();
-    if (now - this.lastCycle > this.cycleDelay) {
-      this.lastCycle = now;
-      return true;
-    }
-    return false;
-  },
-
   onNumeric: function(event, number) {
     var win = this.application.nth_window(number);
     if (win) win.focus();
@@ -11983,13 +11974,11 @@ Alice.Keyboard = Class.create({
   },
 
   onCmdB: function() {
-    if (this.delayed())
-      this.application.previousWindow();
+    this.application.previousWindow();
   },
 
   onCmdF: function() {
-    if (this.delayed())
-      this.application.nextWindow();
+    this.application.nextWindow();
   },
 
   onOptUp: function() {
