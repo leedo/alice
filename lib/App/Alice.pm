@@ -404,7 +404,6 @@ sub handle_message {
   my ($self, $message) = @_;
 
   if (my $window = $self->get_window($message->{source})) {
-    utf8::decode($message->{msg}) unless utf8::is_utf8($message->{msg});
     $message->{msg} = html_to_irc($message->{msg}) if $message->{html};
 
     for (split /\n/, $message->{msg}) {

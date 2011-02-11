@@ -241,10 +241,14 @@ sub setup_ws_stream {
 sub handle_message {
   my ($self, $req, $res) = @_;
 
+  my $msg = $req->param('msg');
+  my $html = $req->param('html');
+  my $source = $req->param('source');
+
   $self->app->handle_message({
-    msg    => $req->param('msg'),
-    html   => $req->param('html'),
-    source => $req->param('source')
+    msg    => defined $msg ? $msg : "",
+    html   => defined $html ? $html : "",
+    source => defined $source ? $source : "",
   });
   
   $res->ok;
