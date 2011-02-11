@@ -2,6 +2,8 @@ Alice.Keyboard = Class.create({
   initialize: function(application) {
     this.application = application;
     this.isMac = navigator.platform.match(/mac/i);
+    this.lastCycle = 0;
+    this.cycleDelay = 300;
     this.enable();
     
     this.shortcut("Cmd+C", { propagate: true });
@@ -47,6 +49,15 @@ Alice.Keyboard = Class.create({
     }.bind(this), options);
   },
 
+  delayed: function() {
+    var now = (new Date()).getTime();
+    if (now - this.lastCycle > this.cycleDelay) {
+      this.lastCycle = now;
+      return true;
+    }
+    return false;
+  },
+
   onNumeric: function(event, number) {
     var win = this.application.nth_window(number);
     if (win) win.focus();
@@ -90,11 +101,13 @@ Alice.Keyboard = Class.create({
   },
   
   onCmdB: function() {
-    this.application.previousWindow();
+    if (this.delayed())
+      this.application.previousWindow();
   },
   
   onCmdF: function() {
-    this.application.nextWindow();
+    if (this.delayed())
+      this.application.nextWindow();
   },
   
   onOptUp: function() {
