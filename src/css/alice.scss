@@ -1249,7 +1249,7 @@ li.dropdown.open > ul {
   display: block;
 }
 
-li.dropdown > ul > li a {
+li.dropdown li {
   display: block;
   padding: 4px 5px;
   text-decoration: none;
@@ -1261,6 +1261,7 @@ li.dropdown li {
 }
 
 li.dropdown li a:hover {
+  color: $default_text;
   text-shadow: none;
 }
 

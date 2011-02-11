@@ -438,11 +438,11 @@ Alice.Application = Class.create({
   showSet: function(name) {
     var ids = this.tabsets[name];
     if (ids) {
-      var elem = $('tabset_menu').select('li a').find(function(li) {
+      var elem = $('tabset_menu').select('li').find(function(li) {
         return li.innerHTML.strip() == name;
       });
       elem.up('ul').select('li').invoke('removeClassName', 'selectedset');
-      elem.up('li').addClassName('selectedset');
+      elem.addClassName('selectedset');
 
       this.windows().filter(function(win) {
         return win.type != "privmsg";
@@ -469,7 +469,7 @@ Alice.Application = Class.create({
 
   clearSet: function(elem) {
     elem.up('ul').select('li').invoke('removeClassName', 'selectedset');
-    elem.up('li').addClassName('selectedset');
+    elem.addClassName('selectedset');
     this.windows().invoke("show");
     this.selectSet('');
   },

@@ -48,7 +48,8 @@ if (window == window.parent) {
       });
     });
 
-    document.observe(alice.supportsTouch ? "touchstart" : "mousedown", function (e) {
+    document.observe(alice.supportsTouch ? "touchend" : "mouseup", function (e) {
+      if (e.findElement('li.dropdown')) return;
       $$('li.dropdown.open').invoke("removeClassName", "open");
     });
 
