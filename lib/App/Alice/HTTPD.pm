@@ -256,8 +256,8 @@ sub handle_message {
 
 sub send_safe_index {
   my ($self, $req, $res) = @_;
-  $req->param('images') = "hide";
-  $req->param('avatars') = "hide";
+  $req->parameters->{images} = "hide";
+  $req->parameters->{avatars} = "hide";
   $self->send_index($req, $res);
 }
 
