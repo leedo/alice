@@ -231,7 +231,9 @@ ul#tabs li {
   float: left;
   margin: 0;
   margin-left: -1px;
-  color: white; }
+  color: white;
+  -webkit-font-smoothing: antialiased;
+  -webkit-transform: translate3d(0, 0, 0); }
 
 ul#tabs li.hidden {
   display: none; }

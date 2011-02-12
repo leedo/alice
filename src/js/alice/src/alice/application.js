@@ -30,7 +30,7 @@ Alice.Application = Class.create({
       [/http:\/\/www\.amazon\.com\/.*/i],
       [/http:\/\/.*\.wikipedia.org\/wiki\/.*/i],
       [/http:\/\/.*\.twitpic\.com\/.*/i],
-      [/http:\/\/www\.hulu\.com\/watch\/*/i],
+      [/http:\/\/www\.hulu\.com\/watch\/.*/i],
       [/http:\/\/(:?www\.)?vimeo\.com\/.*/i],
       [/http:\/\/(:?www\.)?vimeo\.com\/groups\/.*\/videos\/.*/i],
     ];

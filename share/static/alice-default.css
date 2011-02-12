@@ -228,7 +228,9 @@ ul#tabs li {
   float: left;
   margin: 0;
   margin-left: -1px;
-  color: #333333; }
+  color: #222222;
+  -webkit-font-smoothing: antialiased;
+  -webkit-transform: translate3d(0, 0, 0); }
 
 ul#tabs li.hidden {
   display: none; }
@@ -1008,7 +1010,7 @@ div.config div.sidebar li.disconnected {
   color: #777777; }
 
 div.config div.sidebar li.connected {
-  color: #333333; }
+  color: #222222; }
 
 /* auto-generated css classes for irc->html */
 .bold {
@@ -1148,7 +1150,7 @@ li.dropdown li {
   display: block;
   padding: 4px 5px;
   text-decoration: none;
-  color: #333333; }
+  color: #222222; }
 
 li.dropdown li {
   cursor: pointer; }
