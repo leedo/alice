@@ -5,6 +5,7 @@ Alice.Application = Class.create({
     this.window_map = new Hash();
     this.previousFocus = 0;
     this.selectedSet = '';
+    this.tabs = $('tabs');
     this.connection = window.WebSocket ? new Alice.Connection.WebSocket(this) : new Alice.Connection.XHR(this);
     this.filters = [];
     this.keyboard = new Alice.Keyboard(this);
@@ -141,7 +142,7 @@ Alice.Application = Class.create({
         this.previousWindow();
       }
       else if (action.window_number.match(/^\d+$/)) {
-        var tab = $('tabs').down('li', action.window_number);
+        var tab = this.tabs.down('li', action.window_number);
         if (tab) {
           var window_id = tab.id.replace('_tab','');
           this.getWindow(window_id).focus();
@@ -186,7 +187,7 @@ Alice.Application = Class.create({
   },
 
   nth_window: function(n) {
-    var tab = $('tabs').down('li.visible:not(.info_tab)', n - 1);
+    var tab = this.tabs.down('.visible:not(.info_tab)', n - 1);
     if (tab) {
       var m = tab.id.match(/([^_]+)_tab/);
       if (m) {
@@ -243,8 +244,7 @@ Alice.Application = Class.create({
     var active = this.activeWindow();
 
     var nextTab = active.tab.next('.visible');
-    if (!nextTab)
-      nextTab = $$('ul#tabs li.visible').first();
+    if (!nextTab) nextTab = this.tabs.down('.visible');
     if (!nextTab) return;
 
     var id = nextTab.id.replace('_tab','');
@@ -256,7 +256,9 @@ Alice.Application = Class.create({
   nextUnreadWindow: function() {
     var active = this.activeWindow();
     var tabs = active.tab.nextSiblings().concat(active.tab.previousSiblings().reverse());
-    var unread = tabs.find(function(tab) {return tab.hasClassName("unread")});
+    var unread = tabs.find(function(tab) {
+      return tab.hasClassName("unread") && tab.hasClassName("visible")
+    });
 
     if (unread) {
       var id = unread.id.replace("_tab","");
@@ -277,8 +279,7 @@ Alice.Application = Class.create({
     var active = this.activeWindow();
 
     var previousTab = this.activeWindow().tab.previous('.visible');
-    if (!previousTab)
-      previousTab = $$('ul#tabs li.visible').last();
+    if (!previousTab) previousTab = this.tabs.select('.visible').last();
     if (!previousTab) return;
 
     var id = previousTab.id.replace('_tab','');
