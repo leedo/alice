@@ -26,14 +26,14 @@ Alice.Application = Class.create({
     this.makeSortable();
     
     this.oembeds = [
-      [/http:\/\/.*\.flickr.com\/.*/i],
-      [/http:\/\/www\.youtube\.com\/watch.*/i],
-      [/http:\/\/www\.amazon\.com\/.*/i],
-      [/http:\/\/.*\.wikipedia.org\/wiki\/.*/i],
-      [/http:\/\/.*\.twitpic\.com\/.*/i],
-      [/http:\/\/www\.hulu\.com\/watch\/.*/i],
-      [/http:\/\/(:?www\.)?vimeo\.com\/.*/i],
-      [/http:\/\/(:?www\.)?vimeo\.com\/groups\/.*\/videos\/.*/i],
+      [/https?:\/\/.*\.flickr.com\/.*/i],
+      [/https?:\/\/www\.youtube\.com\/watch.*/i],
+      [/https?:\/\/www\.amazon\.com\/.*/i],
+      [/https?:\/\/.*\.wikipedia.org\/wiki\/.*/i],
+      [/https?:\/\/.*\.twitpic\.com\/.*/i],
+      [/https?:\/\/www\.hulu\.com\/watch\/.*/i],
+      [/https?:\/\/(:?www\.)?vimeo\.com\/.*/i],
+      [/https?:\/\/(:?www\.)?vimeo\.com\/groups\/.*\/videos\/.*/i],
     ];
     this.jsonp_callbacks = {};
   },
@@ -67,7 +67,7 @@ Alice.Application = Class.create({
     container.insert(div);
     container.insert("<div class='oembed_clearfix'></div>");
     a.insert({after: container});
-    a.insert({after: ' <em>on <a href="'+a.href+'" class="external">'+data.provider_name+'<img src="/static/image/external.png" /></a></em>'});
+    a.insert({after: ' <em>on <a href="'+a.href+'" class="external" target="_blank">'+data.provider_name+'<img src="/static/image/external.png" /></a></em>'});
   },
   
   actionHandlers: {
