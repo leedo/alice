@@ -394,7 +394,8 @@ li.event div.msg {
 ul.messages li.avatar div.left {
   padding-bottom: 3px;
   padding-top: 3px;
-  -webkit-transform: translate3d(0, 0, 0); }
+  -webkit-transform: translate3d(0, 0, 0);
+  -webkit-font-smoothing: antialiased; }
 
 li.event div.left {
   padding: 5px 0;
@@ -426,7 +427,8 @@ ul.messages li.avatar span.nick {
   text-shadow: black 0 1px 1px;
   opacity: 0;
   -webkit-transition: opacity 0.5s ease-in-out;
-  -webkit-transform: translate3d(0, 0, 0); }
+  -webkit-transform: translate3d(0, 0, 0);
+  -webkit-font-smoothing: antialiased; }
 
 div.timehint {
   font-size: 10px;
@@ -436,7 +438,8 @@ div.timehint {
   margin-top: 1px;
   opacity: 0;
   text-shadow: white 0 0 3px;
-  -webkit-transform: translate3d(0, 0, 0); }
+  -webkit-transform: translate3d(0, 0, 0);
+  -webkit-font-smoothing: antialiased; }
 
 .info ul.messages li.highlight div.timehint,
 li.self div.timehint {
