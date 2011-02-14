@@ -12146,8 +12146,11 @@ if (window == window.parent) {
     };
 
     window.onresize = function () {
-      if (alice.activeWindow()) {
-        alice.activeWindow().scrollToBottom();
+      if (!window.resizeDelayed) {
+        var win = alice.activeWindow();
+        if (win) win.scrollToBottom();
+        window.resizeDelayed = true;
+        setTimeout(function () {delete window.resizeDelayed}, 1000);
       }
     };
 
