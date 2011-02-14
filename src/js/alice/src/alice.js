@@ -119,7 +119,7 @@ if (window == window.parent) {
       twitter: /https?:\/\/(?:www\.)?twitter\.com\/(?:#!\/)?[^\/]+\/status\/(\d+)/i,
       img: /^http[^\s]*\.(?:jpe?g|gif|png|bmp|svg)[^\/]*$/i,
       audio: /^http[^\s]*\.(?:wav|mp3|ogg|aiff|m4a)[^\/]*$/i,
-      gist: /^https?:\/\/gist\.github\.com\/[^\/]*$/i
+      gist: /^https?:\/\/gist\.github\.com\/\d+$/i
     };
     
 
