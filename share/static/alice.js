@@ -10297,12 +10297,12 @@ Alice.Application = Class.create({
     this.oembeds = [
       [/https?:\/\/.*\.flickr.com\/.*/i],
       [/https?:\/\/www\.youtube\.com\/watch.*/i],
-      [/https?:\/\/www\.amazon\.com\/.*/i],
       [/https?:\/\/.*\.wikipedia.org\/wiki\/.*/i],
       [/https?:\/\/.*\.twitpic\.com\/.*/i],
       [/https?:\/\/www\.hulu\.com\/watch\/.*/i],
       [/https?:\/\/(:?www\.)?vimeo\.com\/.*/i],
       [/https?:\/\/(:?www\.)?vimeo\.com\/groups\/.*\/videos\/.*/i],
+      [/https?:\/\/.*\.funnyordie\.com\/videos\/.*/i]
     ];
     this.jsonp_callbacks = {};
   },
@@ -10322,7 +10322,7 @@ Alice.Application = Class.create({
   },
 
   insertOembedContent: function(a, data, win) {
-    a.update(data.title);
+    if (data.title) a.update(data.title);
     var container = new Element("div", {"class": "oembed_container"});
     var div = new Element("div", {"class": "oembed"});
     a.observe("click", function(e) {
