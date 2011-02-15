@@ -10310,7 +10310,12 @@ Alice.Application = Class.create({
   addOembedCallback: function(id, win) {
     this.jsonp_callbacks[id] = function (data) {
       delete this.jsonp_callbacks[id];
-      if (!data || !data.html) return;
+      if (!data) return;
+      if (!data.html && data.type == "photo")
+        data.html = "<a href=\""+data.url+"\" target=\"_blank\">"
+                  + "<img src=\""+alice.options.image_prefix+data.url+"\">"
+                  + "</a>";
+      if (!data.html) return;
       this.insertOembedContent($(id), data, win);
     }.bind(this);
     return "alice.jsonp_callbacks['"+id+"']";
