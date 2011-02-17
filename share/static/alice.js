@@ -10511,7 +10511,11 @@ Alice.Application = Class.create({
   },
 
   applyFilters: function(msg, win) {
-    return this.filters.each(function(f){ f(msg, win) });
+    if (msg.hasClassName("filtered")) return;
+    this.filters.each(function(f){
+      f(msg, win);
+      msg.addClassName("filtered");
+    });
   },
 
   nextWindow: function() {
