@@ -224,15 +224,15 @@ Alice.Window = Class.create({
   focus: function(event) {
     if (!this.application.currentSetContains(this)) return;
 
-    this.application.previousFocus = this.application.activeWindow();
-    this.application.previousFocus.unFocus();
-    this.active = true;
-
-    this.tab.addClassName('active');
     this.element.addClassName('active');
+    this.messages.scrollTop = this.messages.scrollHeight;
+    this.tab.addClassName('active');
 
-    this.scrollToBottom(true);
-    this.element.redraw();
+    this.application.previousFocus = this.application.activeWindow();
+    if (this != this.application.previousFocus)
+      this.application.previousFocus.unFocus();
+
+    this.active = true;
 
     this.application.setSource(this.id);
     this.markRead();
