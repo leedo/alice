@@ -11209,7 +11209,7 @@ Alice.Window = Class.create({
       }
     });
 
-    if (this.active) this.scrollToBottom(true);
+    this.scrollToBottom(true);
 
     setTimeout(function () {
       this.messages.select('li.message div.msg').each(function (msg) {
@@ -11464,8 +11464,8 @@ Alice.Window = Class.create({
     if (message.nicks && message.nicks.length)
       this.nicks = message.nicks;
 
-    if (this.element.hasClassName('active'))
-      this.scrollToBottom();
+    this.scrollToBottom();
+
     else if (this.title != "info") {
       var wrapped = this.isTabWrapped();
       if (message.event == "say" && !message.self) {

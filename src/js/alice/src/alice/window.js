@@ -98,7 +98,7 @@ Alice.Window = Class.create({
       }
     });
 
-    if (this.active) this.scrollToBottom(true);
+    this.scrollToBottom(true);
 
     // wait a second to load images, otherwise the browser will say "loading..."
     setTimeout(function () {
@@ -357,8 +357,8 @@ Alice.Window = Class.create({
       this.nicks = message.nicks;
     
     // scroll to bottom or highlight the tab
-    if (this.element.hasClassName('active'))
-      this.scrollToBottom();
+    this.scrollToBottom();
+
     else if (this.title != "info") {
       var wrapped = this.isTabWrapped();
       if (message.event == "say" && !message.self) {
