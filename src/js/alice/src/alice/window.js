@@ -1,5 +1,5 @@
 Alice.Window = Class.create({
-  initialize: function(application, element, title, active, hashtag, type) {
+  initialize: function(application, element, title, active, hashtag, type, topic) {
     this.application = application;
     
     this.element = $(element);
@@ -8,10 +8,10 @@ Alice.Window = Class.create({
     this.hashtag = hashtag;
     this.id = this.element.identify();
     this.active = active;
+    this.topic = topic.escapeHTML();
     this.tab = $(this.id + "_tab");
     this.tabButton = $(this.id + "_tab_button");
     this.tabOverflowButton = $(this.id + "_tab_overflow");
-    this.topic = this.element.down(".topic");
     this.messages = this.element.down('.messages');
     this.nicksVisible = false;
     this.visibleNick = "";
@@ -23,7 +23,6 @@ Alice.Window = Class.create({
     this.lastnotify = 0;
     
     this.setupEvents();
-    this.setupTopic();
   },
 
   hide: function() {
@@ -40,22 +39,6 @@ Alice.Window = Class.create({
     this.tab.addClassName('visible');
     this.tab.removeClassName('hidden');
     this.visible = true;
-  },
-
-  setupTopic: function() {
-    // setup topic expanding on click (if it is multiline)
-    if (this.topic) {
-      var orig_height = this.topic.getStyle("height");
-      this.topic.observe(this.application.supportsTouch ? "touchstart" : "click", function(e) {
-        if (this.application.supportsTouch) e.stop();
-        if (this.topic.getStyle("height") == orig_height) {
-          this.topic.setStyle({height: "auto"});
-        } else {
-          this.topic.setStyle({height: orig_height});
-        }
-      }.bind(this));
-      this.makeTopicClickable();
-    }
   },
 
   setupEvents: function() {
@@ -225,7 +208,6 @@ Alice.Window = Class.create({
     if (!this.application.currentSetContains(this)) return;
 
     this.element.addClassName('active');
-    this.messages.scrollTop = this.messages.scrollHeight;
     this.tab.addClassName('active');
 
     this.application.previousFocus = this.application.activeWindow();
@@ -244,6 +226,7 @@ Alice.Window = Class.create({
     if (last && last.hasClassName("fold"))
       last.removeClassName("fold");
 
+    this.application.displayTopic(this.topic);
     document.title = this.title;
 
     return this;
@@ -279,16 +262,6 @@ Alice.Window = Class.create({
     this.tabOverflowButton.remove();
   },
   
-  displayTopic: function(topic) {
-    this.topic.update(topic);
-    this.makeTopicClickable();
-  },
-
-  makeTopicClickable: function() {
-    if (!this.topic) return;
-    this.topic.innerHTML = this.topic.innerHTML.replace(/(https?:\/\/[^\s]+)/ig, '<a href="$1" target="_blank" rel="noreferrer">$1</a>');
-  },
-  
   showHappyAlert: function (message) {
     this.messages.insert(
       "<li class='event happynotice'><div class='msg'>"+message+"</div></li>"
@@ -320,6 +293,7 @@ Alice.Window = Class.create({
     this.setupMessages();
     if (chunk.nicks && chunk.nicks.length)
       this.nicks = chunk.nicks;
+    this.element.scrollTop = this.messages.scrollHeight;
   },
 
   addMessage: function(message) {
@@ -364,7 +338,8 @@ Alice.Window = Class.create({
       }
     }
     else if (message.event == "topic") {
-      this.displayTopic(message.body.escapeHTML());
+      this.topic = message.body.escapeHTML();
+      this.application.displayTopic(this.topic);
     }
     
     if (!this.application.isFocused && message.window.title != "info" &&
@@ -416,13 +391,12 @@ Alice.Window = Class.create({
       var lastmsg = this.messages.down('li:last-child');
       if (!lastmsg) return;
       var msgheight = lastmsg.offsetHeight; 
-      bottom = this.messages.scrollTop + this.element.offsetHeight;
-      height = this.messages.scrollHeight;
+      bottom = this.element.scrollTop + this.element.offsetHeight;
+      height = this.element.scrollHeight;
     }
 
     if (force || bottom + msgheight + 100 >= height) {
-      this.messages.scrollTop = this.messages.scrollHeight;
-      this.element.redraw();
+      this.element.scrollTop = this.element.scrollHeight;
     }
   },
 

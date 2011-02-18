@@ -95,6 +95,7 @@ sub serialized {
     is_channel => $self->is_channel,
     type       => $self->type,
     hashtag    => $self->hashtag,
+    topic      => $self->topic->{string} || "no topic set",
   };
 }
 

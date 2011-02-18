@@ -6,6 +6,7 @@ Alice.Application = Class.create({
     this.previousFocus = 0;
     this.selectedSet = '';
     this.tabs = $('tabs');
+    this.topic = $('topic');
     this.connection = window.WebSocket ? new Alice.Connection.WebSocket(this) : new Alice.Connection.XHR(this);
     this.filters = [];
     this.keyboard = new Alice.Keyboard(this);
@@ -24,6 +25,7 @@ Alice.Application = Class.create({
 
     // setup UI elements in initial state
     this.makeSortable();
+    this.setupTopic();
     
     this.oembeds = [
       [/https?:\/\/.*\.flickr.com\/.*/i],
@@ -80,7 +82,7 @@ Alice.Application = Class.create({
       var win = this.getWindow(action['window'].id);
       if (!win) {
         this.insertWindow(action['window'].id, action.html);
-        win = this.openWindow(action['window'].id, action['window'].title, false, action['window'].hashtag, action['window'].type);
+        win = this.openWindow(action['window'].id, action['window'].title, false, action['window'].hashtag, action['window'].type, action['window'].topic);
         if (this.selectedSet && !this.currentSetContains(win)) {
           if (confirm("You joined "+win.title+" which is not in the '"+this.selectedSet+"' set. Do you want to add it?")) {
             this.tabsets[this.selectedSet].push(win.id);
@@ -201,8 +203,8 @@ Alice.Application = Class.create({
     }
   },
   
-  openWindow: function(element, title, active, hashtag, type) {
-    var win = new Alice.Window(this, element, title, active, hashtag, type);
+  openWindow: function(element, title, active, hashtag, type, topic) {
+    var win = new Alice.Window(this, element, title, active, hashtag, type, topic);
     this.addWindow(win);
     return win;
   },
@@ -490,6 +492,21 @@ Alice.Application = Class.create({
       return (this.tabsets[set].indexOf(win.id) >= 0);
     }
     return true;
+  },
+
+  displayTopic: function(new_topic) {
+    this.topic.update(new_topic || "no topic set");
+    this.filters[0](this.topic);
+  },
+
+  setupTopic: function() {
+    this.topic.observe(this.supportsTouch ? "touchstart" : "click", function(e) {
+      if (this.supportsTouch) e.stop();
+      if (this.topic.getStyle("height") != "auto") {
+        this.topic.setStyle({height: "auto"});
+      } else {
+        this.topic.setStyle({height: "1.2em"});
+      }
+    }.bind(this));
   }
- 
 });

@@ -1,8 +1,10 @@
 div.window.active {
-  display: block; }
+  -webkit-transform: translate3d(0, 0, 0);
+  -moz-transform: translateX(0); }
 
 div.window {
-  display: none; }
+  -webkit-transform: translate3d(-5000px, 0, 0);
+  -moz-transform: translateX(-5000px); }
 
 input[type="hidden"] {
   display: none; }
@@ -70,11 +72,14 @@ a:hover {
 
 div.window {
   position: absolute;
-  top: 0px;
+  top: 17px;
   left: 0px;
   right: 0px;
   bottom: 51px;
-  background: white; }
+  background: white;
+  position: absolute;
+  overflow-x: hidden;
+  overflow-y: auto; }
 
 div#input {
   background: #efefef;
@@ -305,7 +310,7 @@ ul#controls > li {
 ul#controls > li:hover {
   background-color: #cccccc; }
 
-div.topic {
+div#topic {
   position: absolute;
   top: 0px;
   left: 0px;
@@ -318,23 +323,14 @@ div.topic {
   padding: 1px 0;
   height: 1.2em;
   overflow: hidden;
-  z-index: 901; }
-
-div.topic {
+  z-index: 901;
   text-decoration: none; }
 
 ul.messages {
   list-style: none;
   margin: 0;
   padding: 3px 0;
-  margin: 0;
-  position: absolute;
-  overflow-x: hidden;
-  overflow-y: auto;
-  top: 17px;
-  bottom: 0px;
-  right: 0px;
-  left: 0px; }
+  margin: 0; }
 
 ul.messages > li {
   font-size: 13px;
@@ -787,10 +783,6 @@ div.color_picker div.toggle span#bg.active {
 
   div.window {
     bottom: 30px; }
-
-  div.topic {
-    height: 1.2em;
-    overflow: hidden; }
 
   ul#tabs {
     display: none; }
