@@ -356,6 +356,8 @@ Alice.Window = Class.create({
     if (message.nicks && message.nicks.length)
       this.nicks = message.nicks;
     
+    this.scrollToBottom();
+
     // highlight the tab
     if (!this.active && this.title != "info") {
       var wrapped = this.isTabWrapped();
