@@ -31,6 +31,7 @@ before init_shutdown => sub {
 
 after shutdown => sub {
   my $self = shift;
+  $self->httpd->shutdown;
   $self->cv->send;
 };
 
