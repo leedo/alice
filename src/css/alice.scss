@@ -462,7 +462,7 @@ li.event div.left {
 
 li.event div.left span.timestamp {
   opacity: 0;
-  -webkit-transition: opacity 0.1s ease-in-out;
+  //-webkit-transition: opacity 0.1s ease-in-out;
 }
 
 ul.messages li.avatar:not(.consecutive) {
@@ -488,7 +488,7 @@ ul.messages li.avatar span.nick {
   color: #fff;
   text-shadow: rgba( 0, 0, 0, 1 ) 0 1px 1px;
   opacity: 0;
-  -webkit-transition: opacity 0.5s ease-in-out;
+  //-webkit-transition: opacity 0.5s ease-in-out;
   -webkit-transform: translate3d(0, 0, 0);
   -webkit-font-smoothing: antialiased;
 }
