@@ -11464,9 +11464,7 @@ Alice.Window = Class.create({
     if (message.nicks && message.nicks.length)
       this.nicks = message.nicks;
 
-    this.scrollToBottom();
-
-    else if (this.title != "info") {
+    if (!this.active && this.title != "info") {
       var wrapped = this.isTabWrapped();
       if (message.event == "say" && !message.self) {
         this.tab.addClassName("unread");
