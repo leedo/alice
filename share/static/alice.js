@@ -10277,7 +10277,7 @@ Alice.Application = Class.create({
     this.selectedSet = '';
     this.tabs = $('tabs');
     this.topic = $('topic');
-    this.topic_height = this.topic.getStyle("height");
+    this.topic_height = this.topic.getHeight();
     this.connection = window.WebSocket ? new Alice.Connection.WebSocket(this) : new Alice.Connection.XHR(this);
     this.filters = [];
     this.keyboard = new Alice.Keyboard(this);
@@ -10772,7 +10772,7 @@ Alice.Application = Class.create({
   setupTopic: function() {
     this.topic.observe(this.supportsTouch ? "touchstart" : "click", function(e) {
       if (this.supportsTouch) e.stop();
-      if (this.topic.getStyle("height") == this.topic_height) {
+      if (this.topic.getHeight() == this.topic_height) {
         this.topic.setStyle({height: "auto"});
       } else {
         this.topic.setStyle({height: this.topic_height});

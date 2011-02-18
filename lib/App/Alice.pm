@@ -216,7 +216,6 @@ sub shutdown {
   $self->_ircs([]);
   $_->close for @{$self->streams};
   $self->streams([]);
-  $self->httpd->shutdown;
 }
 
 sub reload_commands {
