@@ -1,9 +1,11 @@
 div.window.active {
-  display: block;
+  -webkit-transform: translate3d(0,0,0);
+  -moz-transform: translateX(0);
 }
 
 div.window {
-  display: none;
+  -webkit-transform: translate3d(-5000px,0,0);
+  -moz-transform: translateX(-5000px);
 }
 
 input[type="hidden"] {
@@ -87,11 +89,14 @@ a:hover {
 
 div.window {
   position:absolute;
-  top: 0px;
+  top: 17px;
   left: 0px;
   right: 0px;
   bottom: 51px;
   background: $message_background;
+  position: absolute;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 div#input {
@@ -353,7 +358,7 @@ ul#controls > li:hover {
   background-color: $tab_background_hover;
 }
 
-div.topic {
+div#topic {
   position: absolute;
   top: 0px;
   left: 0px;
@@ -367,9 +372,6 @@ div.topic {
   height: 1.2em;
   overflow: hidden;
   z-index: 901;
-}
-
-div.topic {
   text-decoration: none;
 }
 
@@ -378,13 +380,6 @@ ul.messages {
   margin: 0;
   padding: 3px 0;
   margin: 0;
-  position: absolute;
-  overflow-x: hidden;
-  overflow-y: auto;
-  top: 17px;
-  bottom: 0px;
-  right: 0px;
-  left: 0px;
 }
 
 ul.messages > li {
@@ -916,11 +911,6 @@ div.color_picker div.toggle span#bg.active {
 
   div.window {
     bottom: 30px;
-  }
-
-  div.topic {
-    height: 1.2em;
-    overflow: hidden;
   }
 
   ul#tabs {

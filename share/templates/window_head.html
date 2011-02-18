@@ -1,11 +1,4 @@
 ? my ($app, $window) = @_;
 
 <div class="window<?= $window->{active} ? " active" : "" ?> <?= $window->type ?>" id="<?= $window->id ?>">
-  <div class="topic" id="<?= $window->id ?>_topic">
-    <? if ($window->type eq "channel") { ?>
-      <?= $window->topic->{string} ?>
-    <? } else { ?>
-     <?= $window->title ?> 
-    <? } ?>
-  </div>
   <ul class="messages" id="<?= $window->id ?>_messages">
