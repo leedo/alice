@@ -247,8 +247,8 @@ Alice.Application = Class.create({
     if (msg.hasClassName("filtered")) return;
     this.filters.each(function(f){
       f(msg, win);
-      msg.addClassName("filtered");
     });
+    msg.addClassName("filtered");
   },
   
   nextWindow: function() {
