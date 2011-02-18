@@ -1,21 +1,6 @@
 tr.input, div.msg {
   -webkit-font-smoothing: antialiased; }
 
-div.window.active {
-  display: block; }
-
-div.window {
-  display: none; }
-
-div#windows.fast div.window {
-  -webkit-transform: translate3d(-5000px, 0, 0);
-  -moz-transform: translateX(-5000px);
-  display: block; }
-
-div#windows.fast div.window.active {
-  -webkit-transform: translate3d(0, 0, 0);
-  -moz-transform: translateX(0); }
-
 input[type="hidden"] {
   display: none; }
 
@@ -83,13 +68,26 @@ a:hover {
 div.window {
   position: absolute;
   top: 17px;
-  left: 0px;
-  right: 0px;
+  left: -5000px;
+  right: 5000px;
   bottom: 51px;
   background: #222222;
   position: absolute;
   overflow-x: hidden;
   overflow-y: auto; }
+
+div.window.active {
+  left: 0px;
+  right: 0px; }
+
+div#windows.fast div.window {
+  -webkit-transform: translate3d(-5000px, 0, 0);
+  -moz-transform: translateX(-5000px);
+  display: block; }
+
+div#windows.fast div.window.active {
+  -webkit-transform: translate3d(0, 0, 0);
+  -moz-transform: translateX(0); }
 
 div#input {
   background: #333333;
