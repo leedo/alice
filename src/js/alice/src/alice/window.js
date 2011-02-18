@@ -209,6 +209,7 @@ Alice.Window = Class.create({
 
     this.element.addClassName('active');
     this.tab.addClassName('active');
+    this.scrollToBottom(true);
 
     this.application.previousFocus = this.application.activeWindow();
     if (this != this.application.previousFocus)

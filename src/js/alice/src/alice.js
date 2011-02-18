@@ -24,8 +24,12 @@ if (window == window.parent) {
     window.alice = alice;
 
     // don't load images on the iphone
-    if (navigator.platform.match(/iphone/i)) {
+    if (alice.isPhone) {
       alice.options.images = "hide";
+    }
+
+    if (window.navigator.userAgent.match(/(chrome|firefox)/i)) {
+      $('windows').addClassName('fast');
     }
 
     // connect close botton for help 
