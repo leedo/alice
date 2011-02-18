@@ -11123,7 +11123,7 @@ Alice.Window = Class.create({
     this.hashtag = hashtag;
     this.id = this.element.identify();
     this.active = active;
-    this.topic = topic.escapeHTML();
+    this.topic = topic;
     this.tab = $(this.id + "_tab");
     this.tabButton = $(this.id + "_tab_button");
     this.tabOverflowButton = $(this.id + "_tab_overflow");
@@ -11264,20 +11264,16 @@ Alice.Window = Class.create({
         this.visibleNickTimeout = setTimeout(function(nick, time) {
           if (nick) {
             nick.style.opacity = 1;
-            nick.style.webkitTransition = "opacity 0.1s ease-in-out";
           }
           if (time) {
-            time.style.webkitTransition = "opacity 0.1s ease-in-out";
             time.style.opacity = 1;
           }
           setTimeout(function(){
             if (this.nicksVisible) return;
             if (nick) {
-              nick.style.webkitTransition = "opacity 0.25s ease-in";
               nick.style.opacity = 0;
             }
             if (time) {
-              time.style.webkitTransition = "opacity 0.25s ease-in";
               time.style.opacity = 0;
             }
           }.bind(this, nick, time) , 1000);
@@ -11293,21 +11289,17 @@ Alice.Window = Class.create({
   toggleNicks: function () {
     if (this.nicksVisible) {
       this.messages.select("li.avatar span.nick").each(function(span){
-        span.style.webkitTransition = "opacity 0.1s ease-in";
         span.style.opacity = 0;
       });
       this.messages.select("div.timehint").each(function(span){
-        span.style.webkitTransition = "opacity 0.1s ease-in";
         span.style.opacity = 0;
       });
     }
     else {
       this.messages.select("li.avatar span.nick").each(function(span){
-        span.style.webkitTransition = "opacity 0.1s ease-in-out";
         span.style.opacity = 1;
       });
       this.messages.select("div.timehint").each(function(span){
-        span.style.webkitTransition = "opacity 0.1s ease-in-out";
         span.style.opacity = 1;
       });
     }
@@ -11430,12 +11422,10 @@ Alice.Window = Class.create({
 
       var nick = li.down('span.nick');
       if (nick && this.nicksVisible) {
-        nick.style.webkitTransition = 'none 0 linear';
         nick.style.opacity = 1;
       }
       var time = li.down('div.timehint');
       if (time && this.nicksVisible) {
-        time.style.webkitTransition = 'none 0 linear';
         time.style.opacity = 1;
       }
 
