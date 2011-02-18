@@ -11312,6 +11312,7 @@ Alice.Window = Class.create({
 
     this.element.addClassName('active');
     this.tab.addClassName('active');
+    this.scrollToBottom(true);
 
     this.application.previousFocus = this.application.activeWindow();
     if (this != this.application.previousFocus)
@@ -12103,8 +12104,12 @@ if (window == window.parent) {
     var alice = new Alice.Application();
     window.alice = alice;
 
-    if (navigator.platform.match(/iphone/i)) {
+    if (alice.isPhone) {
       alice.options.images = "hide";
+    }
+
+    if (window.navigator.userAgent.match(/(chrome|firefox)/i)) {
+      $('windows').addClassName('fast');
     }
 
 

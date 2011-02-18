@@ -2,12 +2,19 @@ tr.input, div.msg {
   -webkit-font-smoothing: antialiased; }
 
 div.window.active {
-  -webkit-transform: translate3d(0, 0, 0);
-  -moz-transform: translateX(0); }
+  display: block; }
 
 div.window {
+  display: none; }
+
+div#windows.fast div.window {
   -webkit-transform: translate3d(-5000px, 0, 0);
-  -moz-transform: translateX(-5000px); }
+  -moz-transform: translateX(-5000px);
+  display: block; }
+
+div#windows.fast div.window.active {
+  -webkit-transform: translate3d(0, 0, 0);
+  -moz-transform: translateX(0); }
 
 input[type="hidden"] {
   display: none; }
