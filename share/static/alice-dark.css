@@ -237,8 +237,7 @@ ul#tabs li {
   margin: 0;
   margin-left: -1px;
   color: white;
-  -webkit-font-smoothing: antialiased;
-  -webkit-transform: translate3d(0, 0, 0); }
+  -webkit-font-smoothing: antialiased; }
 
 ul#tabs li.hidden {
   display: none; }
@@ -393,7 +392,6 @@ li.event div.msg {
 ul.messages li.avatar div.left {
   padding-bottom: 3px;
   padding-top: 3px;
-  -webkit-transform: translate3d(0, 0, 0);
   -webkit-font-smoothing: antialiased; }
 
 li.event div.left {
@@ -424,7 +422,6 @@ ul.messages li.avatar span.nick {
   color: #fff;
   text-shadow: black 0 1px 1px;
   opacity: 0;
-  -webkit-transform: translate3d(0, 0, 0);
   -webkit-font-smoothing: antialiased; }
 
 div.timehint {
@@ -435,7 +432,6 @@ div.timehint {
   margin-top: 1px;
   opacity: 0;
   text-shadow: black 0 0 3px;
-  -webkit-transform: translate3d(0, 0, 0);
   -webkit-font-smoothing: antialiased; }
 
 .info ul.messages li.highlight div.timehint,
