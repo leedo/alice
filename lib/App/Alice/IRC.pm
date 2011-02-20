@@ -350,6 +350,8 @@ sub disconnected {
   return if $reason eq "reconnect requested.";
   $self->log(info => "disconnected: $reason");
   
+  $_->disable for grep {$_->is_channel} $self->windows;
+  
   $self->broadcast(map {
     $_->format_event("disconnect", $self->nick, $self->config->{host})
   } $self->windows);
@@ -360,7 +362,7 @@ sub disconnected {
     session => $self->alias,
     windows => [map {$_->serialized} $self->windows],
   });
-  
+
   $self->is_connected(0);
   $self->clear_nicks;
   
@@ -511,6 +513,7 @@ sub _join {
     # self->window uses find_or_create, so we don't create
     # duplicate windows here
     my $window = $self->window($channel);
+    $window->disabled(0);
 
     $self->broadcast($window->join_action);
 

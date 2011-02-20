@@ -27,6 +27,7 @@ Alice.Application = Class.create({
     // setup UI elements in initial state
     this.makeSortable();
     this.setupTopic();
+    this.setupMenus();
     
     this.oembeds = [
       [/https?:\/\/.*\.flickr.com\/.*/i],
@@ -83,7 +84,7 @@ Alice.Application = Class.create({
       var win = this.getWindow(action['window'].id);
       if (!win) {
         this.insertWindow(action['window'].id, action.html);
-        win = this.openWindow(action['window'].id, action['window'].title, false, action['window'].hashtag, action['window'].type, action['window'].topic);
+        win = this.openWindow(action['window'].id, action['window'].title, action['window'].hashtag, action['window'].type, action['window'].topic);
         if (this.selectedSet && !this.currentSetContains(win)) {
           if (confirm("You joined "+win.title+" which is not in the '"+this.selectedSet+"' set. Do you want to add it?")) {
             this.tabsets[this.selectedSet].push(win.id);
@@ -94,8 +95,6 @@ Alice.Application = Class.create({
             win.hide();
           }
         }
-      } else {
-        win.enable();
       }
       win.nicks = action.nicks;
     },
@@ -204,8 +203,8 @@ Alice.Application = Class.create({
     }
   },
   
-  openWindow: function(element, title, active, hashtag, type, topic) {
-    var win = new Alice.Window(this, element, title, active, hashtag, type, topic);
+  openWindow: function(element, title, hashtag, type, topic) {
+    var win = new Alice.Window(this, element, title, hashtag, type, topic);
     this.addWindow(win);
     return win;
   },
@@ -236,6 +235,9 @@ Alice.Application = Class.create({
     var windows = this.windows();
     for (var i=0; i < windows.length; i++) {
       if (windows[i].active) return windows[i];
+    }
+    for (var i=0; i < windows.length; i++) {
+      if (windows[i].type != "info") return windows[i];
     }
     if (windows[0]) return windows[0];
   },
@@ -419,8 +421,11 @@ Alice.Application = Class.create({
   },
 
   ready: function() {
-    this.activeWindow().focus();
+    this.focusHash() || alice.activeWindow().focus();
     this.connection.connect();
+
+    // required due to browser weirdness with scrolltobottom on initial focus
+    setTimeout(function(){alice.activeWindow().scrollToBottom(true)}, 1);
   },
 
   log: function () {
@@ -509,5 +514,57 @@ Alice.Application = Class.create({
         this.topic.setStyle({height: this.topic_height});
       }
     }.bind(this));
+  },
+
+  setupMenus: function() {
+    var click = this.supportsTouch ? "touchend" : "mouseup";
+
+    $('config_menu').observe(click, function(e) {
+      var li = e.findElement("li.dropdown li");
+      if (li) {
+        switch(li.innerHTML) {
+          case "Help":
+            this.toggleHelp();
+            break;
+          case "Preferences":
+            this.togglePrefs();
+            break;
+          case "Connections":
+            this.toggleConfig();
+            break;
+          case "Logout":
+            window.location = "/logout";
+            break;
+        }
+        e.stop();
+        $$('li.dropdown.open').invoke("removeClassName", "open");
+      }
+    }.bind(this));
+
+    $('tab_menu').observe(click, function(e) {
+      var li = e.findElement("li.dropdown li");
+      if (!li) return;
+
+      if (li && li.getAttribute("rel")) {
+        var win = this.getWindow(li.getAttribute("rel"));
+        if (win) win.focus();
+      }
+      else if (li.innerHTML.match(/^Sets/)) {
+        e.stop();
+        return;
+      }
+      else if (li.innerHTML == "All tabs") {
+        this.clearSet(li);
+      }
+      else if (li.innerHTML == "Edit") {
+        this.toggleTabsets();
+      }
+      else if (this.tabsets[li.innerHTML]) {
+        this.showSet(li.innerHTML);
+      }
+      e.stop();
+      $$('li.dropdown.open').invoke("removeClassName", "open");
+    }.bind(this));
   }
+
 });

@@ -1,5 +1,5 @@
 Alice.Window = Class.create({
-  initialize: function(application, element, title, active, hashtag, type, topic) {
+  initialize: function(application, element, title, hashtag, type, topic) {
     this.application = application;
     
     this.element = $(element);
@@ -7,7 +7,7 @@ Alice.Window = Class.create({
     this.type = type;
     this.hashtag = hashtag;
     this.id = this.element.identify();
-    this.active = active;
+    this.active = false;
     this.topic = topic;
     this.tab = $(this.id + "_tab");
     this.tabButton = $(this.id + "_tab_button");

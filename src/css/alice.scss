@@ -745,6 +745,7 @@ li.info_tab div.tab_button {
   background: url(image/sprites.png) 0px 0px no-repeat;
 }
 
+ul#tabs li.disabled.channel_tab div.tab_button:hover,
 ul#tabs li.active div.tab_button:hover {
   background: url(image/sprites.png) 1px -260px no-repeat;
 }

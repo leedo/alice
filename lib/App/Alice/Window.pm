@@ -50,6 +50,12 @@ has _irc => (
   weak_ref => 1,
 );
 
+has disabled => (
+  is       => 'rw',
+  isa      => 'Bool',
+  default  => 0,
+);
+
 has app => (
   is      => 'ro',
   isa     => 'App::Alice',
@@ -66,6 +72,11 @@ sub BUILDARGS {
   $args->{_irc} = $args->{irc};
   delete $args->{irc};
   return $args;
+}
+
+sub disable {
+  my $self = shift;
+  $self->disabled(1);
 }
 
 sub sort_name {

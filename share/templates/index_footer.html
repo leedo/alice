@@ -2,79 +2,26 @@
         <script type="text/javascript">
           document.observe("dom:loaded", function () {
             alice.options = <?= Text::MicroTemplate::encoded_string(JSON::encode_json $options) ?>;
-            //alice.options.images = alice.isPhone ? "hide" : "show";
-
-            var orig_hash = window.location.hash;
-            <? for my $window (@windows) { ?>
-              alice.openWindow(
-                '<?= $window->id ?>',
-                '<?= $window->title ?>',
-                <?= $window->{active} ? "true" : "false" ?>,
-                '<?= $window->hashtag ?>',
-                '<?= $window->type ?>',
-                '<?= $window->topic->{string} ?>'
-              );
-            <? } ?>
+            alice.options.images = alice.isPhone ? "hide" : "show";
 
             <? my $tabsets = {map {$_->name => $_->windows } $app->tabsets}; ?>
             alice.tabsets = <?= Text::MicroTemplate::encoded_string(JSON::encode_json $tabsets) ?>;
 
-            alice.focusHash(orig_hash) || alice.activeWindow().focus();
+            <? for my $window (@windows) { ?>
+            alice.openWindow(
+              '<?= $window->id ?>',
+              '<?= $window->title ?>',
+              '<?= $window->hashtag ?>',
+              '<?= $window->type ?>',
+              '<?= $window->topic->{string} ?>'
+            );
+            <? } ?>
+
             alice.ready();
-            // required due to browser weirdness with scrolltobottom on initial focus
-            setTimeout(function(){alice.activeWindow().scrollToBottom(true)}, 1);
 
             <? if (!$app->connected_ircs) { ?>
             alice.toggleConfig();
             <? } ?>
-
-            var click = alice.supportsTouch ? "touchend" : "mouseup";
-            $('config_menu').observe(click, function(e) {
-              var li = e.findElement("li.dropdown li");
-              if (li) {
-                switch(li.innerHTML) {
-                  case "Help":
-                    alice.toggleHelp();
-                    break;
-                  case "Preferences":
-                    alice.togglePrefs();
-                    break;
-                  case "Connections":
-                    alice.toggleConfig();
-                    break;
-                  case "Logout":
-                    window.location = "/logout";
-                    break;
-                }
-                e.stop();
-                $$('li.dropdown.open').invoke("removeClassName", "open");
-              }
-            });
-            $('tab_menu').observe(click, function(e) {
-              var li = e.findElement("li.dropdown li");
-              if (!li) return;
-
-              if (li && li.getAttribute("rel")) {
-                var win = alice.getWindow(li.getAttribute("rel"));
-                if (win) win.focus();
-              }
-              else if (li.innerHTML.match(/^Sets/)) {
-                e.stop();
-                return;
-              }
-              else if (li.innerHTML == "All tabs") {
-                alice.clearSet(li);
-              }
-              else if (li.innerHTML == "Edit") {
-                alice.toggleTabsets();
-              }
-              else if (alice.tabsets[li.innerHTML]) {
-                alice.showSet(li.innerHTML);
-              }
-
-              e.stop();
-              $$('li.dropdown.open').invoke("removeClassName", "open");
-            });
           });
         </script>
       </div>
