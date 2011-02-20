@@ -269,7 +269,6 @@ sub send_index {
   $res->headers(["Content-type" => "text/html; charset=utf-8"]);
   my $writer = $res->writer;
   my @windows = $app->sorted_windows;
-  @windows > 1 ? $windows[1]->{active} = 1 : $windows[0]->{active} = 1;
 
   my @queue;
     
@@ -280,7 +279,6 @@ sub send_index {
   }
   push @queue, sub {
     my $html = $app->render('index_footer', $options, @windows);
-    delete $_->{active} for @windows;
     return $html;
   };
 

@@ -106,9 +106,8 @@ my $commands = [
     desc => "Leaves and closes the focused window.",
     code => sub  {
       my ($self, $app, $window) = @_;
-      $window->is_channel ?
-        $window->irc->send_srv(PART => $window->title) :
-        $app->close_window($window);
+      $app->close_window($window);
+      $window->irc->send_srv(PART => $window->title) if $window->is_channel and !$window->disabled;
     },
   },
   {

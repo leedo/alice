@@ -273,7 +273,7 @@ Object.extend(Alice, {
 		  $(alias + "_connection").innerHTML = "connect";
 		  $(alias + "_connection").onclick = function (e) {
 		    e.stop();
-		    serverConnection(alias, "connect");
+		    Alice.connections.serverConnection(alias, "connect");
 		  };
 		},
 
@@ -283,7 +283,7 @@ Object.extend(Alice, {
 		  $(alias + "_connection").innerHTML = "disconnect";
 		  $(alias + "_connection").onclick = function (e) {
 		    e.stop();
-		    serverConnection(alias, "disconnect");
+		    Alice.connections.serverConnection(alias, "disconnect");
 		  };
 		},
 
