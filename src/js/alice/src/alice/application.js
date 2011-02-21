@@ -84,7 +84,7 @@ Alice.Application = Class.create({
       var win = this.getWindow(action['window'].id);
       if (!win) {
         this.insertWindow(action['window'].id, action.html);
-        win = this.openWindow(action['window'].id, action['window'].title, action['window'].hashtag, action['window'].type, action['window'].topic);
+        win = this.openWindow(action['window']);
         if (this.selectedSet && !this.currentSetContains(win)) {
           if (confirm("You joined "+win.title+" which is not in the '"+this.selectedSet+"' set. Do you want to add it?")) {
             this.tabsets[this.selectedSet].push(win.id);
@@ -203,8 +203,8 @@ Alice.Application = Class.create({
     }
   },
   
-  openWindow: function(element, title, hashtag, type, topic) {
-    var win = new Alice.Window(this, element, title, hashtag, type, topic);
+  openWindow: function(serialized) {
+    var win = new Alice.Window(this, serialized);
     this.addWindow(win);
     return win;
   },

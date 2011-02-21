@@ -2,18 +2,14 @@
         <script type="text/javascript">
           document.observe("dom:loaded", function () {
             alice.options = <?= Text::MicroTemplate::encoded_string(JSON::encode_json $options) ?>;
-            alice.options.images = alice.isPhone ? "hide" : "show";
 
             <? my $tabsets = {map {$_->name => $_->windows } $app->tabsets}; ?>
             alice.tabsets = <?= Text::MicroTemplate::encoded_string(JSON::encode_json $tabsets) ?>;
 
             <? for my $window (@windows) { ?>
+            ;
             alice.openWindow(
-              '<?= $window->id ?>',
-              '<?= $window->title ?>',
-              '<?= $window->hashtag ?>',
-              '<?= $window->type ?>',
-              '<?= $window->topic->{string} ?>'
+              <?= Text::MicroTemplate::encoded_string(JSON::encode_json $window->serialized) ?>
             );
             <? } ?>
 
