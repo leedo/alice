@@ -10353,7 +10353,7 @@ Alice.Application = Class.create({
       var win = this.getWindow(action['window'].id);
       if (!win) {
         this.insertWindow(action['window'].id, action.html);
-        win = this.openWindow(action['window'].id, action['window'].title, action['window'].hashtag, action['window'].type, action['window'].topic);
+        win = this.openWindow(action['window']);
         if (this.selectedSet && !this.currentSetContains(win)) {
           if (confirm("You joined "+win.title+" which is not in the '"+this.selectedSet+"' set. Do you want to add it?")) {
             this.tabsets[this.selectedSet].push(win.id);
@@ -10472,8 +10472,8 @@ Alice.Application = Class.create({
     }
   },
 
-  openWindow: function(element, title, hashtag, type, topic) {
-    var win = new Alice.Window(this, element, title, hashtag, type, topic);
+  openWindow: function(serialized) {
+    var win = new Alice.Window(this, serialized);
     this.addWindow(win);
     return win;
   },
@@ -11171,16 +11171,16 @@ Alice.Connection.XHR = Class.create(Alice.Connection, {
 
 });
 Alice.Window = Class.create({
-  initialize: function(application, element, title, hashtag, type, topic) {
+  initialize: function(application, serialized) {
     this.application = application;
 
-    this.element = $(element);
-    this.title = title;
-    this.type = type;
-    this.hashtag = hashtag;
+    this.element = $(serialized['id']);
+    this.title = serialized['title'];
+    this.type = serialized['type'];
+    this.hashtag = serialized['hashtag'];
     this.id = this.element.identify();
     this.active = false;
-    this.topic = topic;
+    this.topic = serialized['topic'];
     this.tab = $(this.id + "_tab");
     this.tabButton = $(this.id + "_tab_button");
     this.tabOverflowButton = $(this.id + "_tab_overflow");

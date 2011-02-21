@@ -1,14 +1,14 @@
 Alice.Window = Class.create({
-  initialize: function(application, element, title, hashtag, type, topic) {
+  initialize: function(application, serialized) {
     this.application = application;
     
-    this.element = $(element);
-    this.title = title;
-    this.type = type;
-    this.hashtag = hashtag;
+    this.element = $(serialized['id']);
+    this.title = serialized['title'];
+    this.type = serialized['type'];
+    this.hashtag = serialized['hashtag'];
     this.id = this.element.identify();
     this.active = false;
-    this.topic = topic;
+    this.topic = serialized['topic'];
     this.tab = $(this.id + "_tab");
     this.tabButton = $(this.id + "_tab_button");
     this.tabOverflowButton = $(this.id + "_tab_overflow");
