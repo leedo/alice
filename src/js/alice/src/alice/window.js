@@ -236,7 +236,7 @@ Alice.Window = Class.create({
   setWindowHash: function () {
     var new_hash = this.application.selectedSet + this.hashtag;
     if (new_hash != window.location.hash) {
-      window.location.hash = new_hash;
+      window.location.hash = encodeURI(new_hash);
       window.location = window.location.toString();
     }
   },

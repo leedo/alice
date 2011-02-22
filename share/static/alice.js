@@ -10317,7 +10317,7 @@ Alice.Application = Class.create({
       if (!data) return;
       if (!data.html && data.type == "photo")
         data.html = "<a href=\""+data.url+"\" target=\"_blank\">"
-                  + "<img src=\""+alice.options.image_prefix+data.url+"\">"
+                  + "<img src=\""+this.options.image_prefix+data.url+"\">"
                   + "</a>";
       if (!data.html) return;
       this.insertOembedContent($(id), data, win);
@@ -10634,7 +10634,7 @@ Alice.Application = Class.create({
   focusHash: function(hash) {
     if (!hash) hash = window.location.hash;
     if (hash) {
-      hash = decodeURIComponent(hash);
+      hash = decodeURI(hash);
       hash = hash.replace(/^#/, "");
 
       if (hash.substr(0,1) != "/") {
@@ -10690,10 +10690,10 @@ Alice.Application = Class.create({
   },
 
   ready: function() {
-    this.focusHash() || alice.activeWindow().focus();
+    this.focusHash() || this.activeWindow().focus();
     this.connection.connect();
 
-    setTimeout(function(){alice.activeWindow().scrollToBottom(true)}, 1);
+    setTimeout(function(){this.activeWindow().scrollToBottom(true)}.bind(this), 1);
   },
 
   log: function () {
@@ -11394,7 +11394,7 @@ Alice.Window = Class.create({
   setWindowHash: function () {
     var new_hash = this.application.selectedSet + this.hashtag;
     if (new_hash != window.location.hash) {
-      window.location.hash = new_hash;
+      window.location.hash = encodeURI(new_hash);
       window.location = window.location.toString();
     }
   },
