@@ -1,15 +1,15 @@
 ? my ($app, $options, @windows) = @_;
         <script type="text/javascript">
           document.observe("dom:loaded", function () {
-            alice.options = <?= Text::MicroTemplate::encoded_string(JSON::encode_json $options) ?>;
+            alice.options = <?= Text::MicroTemplate::encoded_string(JSON::to_json $options, {ascii => 1}) ?>;
 
             <? my $tabsets = {map {$_->name => $_->windows } $app->tabsets}; ?>
-            alice.tabsets = <?= Text::MicroTemplate::encoded_string(JSON::encode_json $tabsets) ?>;
+            alice.tabsets = <?= Text::MicroTemplate::encoded_string(JSON::to_json $tabsets, {ascii => 1}) ?>;
 
             <? for my $window (@windows) { ?>
             ;
             alice.openWindow(
-              <?= Text::MicroTemplate::encoded_string(JSON::encode_json $window->serialized) ?>
+              <?= Text::MicroTemplate::encoded_string(JSON::to_json $window->serialized, {ascii => 1}) ?>
             );
             <? } ?>
 
