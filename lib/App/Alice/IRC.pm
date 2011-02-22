@@ -2,6 +2,7 @@ package App::Alice::IRC;
 
 use AnyEvent;
 use AnyEvent::IRC::Client;
+use IRC::Formatting::HTML qw/irc_to_html/;
 use List::Util qw/min first/;
 use List::MoreUtils qw/uniq none any/;
 use Digest::MD5 qw/md5_hex/;
@@ -572,6 +573,7 @@ sub channel_topic {
   my ($self, $cl, $channel, $topic, $nick) = @_;
   utf8::decode($_) for ($channel, $nick, $topic);
   if (my $window = $self->find_window($channel)) {
+    $topic = irc_to_html($topic);
     $window->topic({string => $topic, author => $nick, time => time});
     $self->broadcast($window->format_event("topic", $nick, $topic));
   }

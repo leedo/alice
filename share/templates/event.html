@@ -4,7 +4,7 @@
     <div class="msg">
 
 ? if ($msg->{event} eq "topic") {
-    Topic changed to "<?= $msg->{body} ?>"
+    Topic changed to "<?= Text::MicroTemplate::encoded_string($msg->{body}) ?>"
 ?   if ($msg->{nick}) {
       by <a href="javascript:alice.connection.requestWindow('<?= $msg->{nick} ?>','<?= $msg->{window}->{id} ?>')" class="nick"><?= $msg->{nick} ?></a>
 ?   }
