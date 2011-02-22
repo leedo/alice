@@ -48,7 +48,7 @@ Alice.Application = Class.create({
       if (!data) return;
       if (!data.html && data.type == "photo")
         data.html = "<a href=\""+data.url+"\" target=\"_blank\">"
-                  + "<img src=\""+alice.options.image_prefix+data.url+"\">"
+                  + "<img src=\""+this.options.image_prefix+data.url+"\">"
                   + "</a>";
       if (!data.html) return;
       this.insertOembedContent($(id), data, win);
@@ -421,11 +421,11 @@ Alice.Application = Class.create({
   },
 
   ready: function() {
-    this.focusHash() || alice.activeWindow().focus();
+    this.focusHash() || this.activeWindow().focus();
     this.connection.connect();
 
     // required due to browser weirdness with scrolltobottom on initial focus
-    setTimeout(function(){alice.activeWindow().scrollToBottom(true)}, 1);
+    setTimeout(function(){this.activeWindow().scrollToBottom(true)}.bind(this), 1);
   },
 
   log: function () {
