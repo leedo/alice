@@ -10769,7 +10769,7 @@ Alice.Application = Class.create({
   },
 
   displayTopic: function(new_topic) {
-    this.topic.update(new_topic || "no topic set");
+    this.topic.update(new_topic.escapeHTML() || "no topic set");
     this.filters[0](this.topic);
   },
 
@@ -11494,7 +11494,7 @@ Alice.Window = Class.create({
       }
     }
     else if (message.event == "topic") {
-      this.topic = message.body.escapeHTML();
+      this.topic = message.body;
       this.application.displayTopic(this.topic);
     }
 

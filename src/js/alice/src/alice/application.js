@@ -501,7 +501,7 @@ Alice.Application = Class.create({
   },
 
   displayTopic: function(new_topic) {
-    this.topic.update(new_topic || "no topic set");
+    this.topic.update(new_topic.escapeHTML() || "no topic set");
     this.filters[0](this.topic);
   },
 

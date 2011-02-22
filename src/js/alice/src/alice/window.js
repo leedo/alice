@@ -339,7 +339,7 @@ Alice.Window = Class.create({
       }
     }
     else if (message.event == "topic") {
-      this.topic = message.body.escapeHTML();
+      this.topic = message.body;
       this.application.displayTopic(this.topic);
     }
     
