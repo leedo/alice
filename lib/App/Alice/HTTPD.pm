@@ -143,6 +143,8 @@ sub is_logged_in {
 sub login {
   my ($self, $req, $res) = @_;
 
+  my $app = $self->app;
+
   # no auth is required
   if (!$self->auth_enabled) {
     $res->redirect("/");
@@ -158,8 +160,8 @@ sub login {
       if ($success) {
         $req->env->{"psgix.session"} = {
           is_logged_in => 1,
-          username     => $self->app->config->auth->{user},
-          userid       => $self->app->user,
+          username     => $user,
+          userid       => $app->user,
         };
         $res->redirect("/");
       }
