@@ -3,6 +3,12 @@
           document.observe("dom:loaded", function () {
             alice.options = <?= Text::MicroTemplate::encoded_string(JSON::to_json $options, {ascii => 1}) ?>;
 
+            // disable inline media and avatars on phones
+            if (alice.isPhone) {
+              alice.options.images = "hide";
+              alice.options.avatars = "hide";
+            }
+
             <? my $tabsets = {map {$_->name => $_->windows } $app->tabsets}; ?>
             alice.tabsets = <?= Text::MicroTemplate::encoded_string(JSON::to_json $tabsets, {ascii => 1}) ?>;
 

@@ -167,19 +167,21 @@ if (window == window.parent) {
         }
       },
       function (msg, win) {
-        msg.select("a").filter(function(a) {
-          return regexes.gist.match(a.href);
-        }).each(function(a) {
-          var iframe = new Element('iframe', {src: a.href+".pibb"});
-          iframe.setStyle({width: (msg.getWidth() - 50)+"px"});
-          var data = {
-            provider_name: "gist.github.org",
-            title: a.href.match(/[^\/]*$/),
-            type: "rich",
-            html: iframe
-          };
-          alice.insertOembedContent(a, data, win);
-        });
+        if (alice.options.images == "show") {
+          msg.select("a").filter(function(a) {
+            return regexes.gist.match(a.href);
+          }).each(function(a) {
+            var iframe = new Element('iframe', {src: a.href+".pibb"});
+            iframe.setStyle({width: (msg.getWidth() - 50)+"px"});
+            var data = {
+              provider_name: "gist.github.org",
+              title: a.href.match(/[^\/]*$/),
+              type: "rich",
+              html: iframe
+            };
+            alice.insertOembedContent(a, data, win);
+          });
+        }
       },
       function (msg, win) {
         if (alice.options.images == "show") {
