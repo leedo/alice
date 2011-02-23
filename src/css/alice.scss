@@ -274,7 +274,6 @@ ul#tabs li {
   margin: 0;
   margin-left: -1px;
   color: $tab_text;
-  -webkit-font-smoothing: antialiased;
 }
 
 ul#tabs li.hidden {
@@ -456,8 +455,6 @@ li.event div.msg {
 ul.messages li.avatar div.left {
   padding-bottom: 3px;
   padding-top: 3px;
-  //-webkit-transform: translate3d(0, 0, 0);
-  -webkit-font-smoothing: antialiased;
 }
 
 li.event div.left {
@@ -493,21 +490,15 @@ ul.messages li.avatar span.nick {
   color: #fff;
   text-shadow: rgba( 0, 0, 0, 1 ) 0 1px 1px;
   opacity: 0;
-  //-webkit-transition: opacity 0.5s ease-in-out;
-  //-webkit-transform: translate3d(0, 0, 0);
-  -webkit-font-smoothing: antialiased;
 }
 
 div.timehint {
   font-size: 10px;
   float: right;
-  padding: 6px 4px 2px 4px ;
+  padding: 5px 5px 0px 5px;
   color: $timehint_color;
   margin-top: 1px;
   opacity: 0;
-  text-shadow: $timehint_shadow_color 0 0 3px;
-  //-webkit-transform: translate3d(0, 0, 0);
-  -webkit-font-smoothing: antialiased;
 }
 
 .info ul.messages li.highlight div.timehint,

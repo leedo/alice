@@ -241,8 +241,7 @@ ul#tabs li {
   float: left;
   margin: 0;
   margin-left: -1px;
-  color: white;
-  -webkit-font-smoothing: antialiased; }
+  color: white; }
 
 ul#tabs li.hidden {
   display: none; }
@@ -396,8 +395,7 @@ li.event div.msg {
 
 ul.messages li.avatar div.left {
   padding-bottom: 3px;
-  padding-top: 3px;
-  -webkit-font-smoothing: antialiased; }
+  padding-top: 3px; }
 
 li.event div.left {
   padding: 5px 0;
@@ -426,18 +424,15 @@ ul.messages li.avatar span.nick {
   background: rgba(0, 0, 0, 0.5);
   color: #fff;
   text-shadow: black 0 1px 1px;
-  opacity: 0;
-  -webkit-font-smoothing: antialiased; }
+  opacity: 0; }
 
 div.timehint {
   font-size: 10px;
   float: right;
-  padding: 6px 4px 2px 4px;
+  padding: 5px 5px 0px 5px;
   color: #cccccc;
   margin-top: 1px;
-  opacity: 0;
-  text-shadow: black 0 0 3px;
-  -webkit-font-smoothing: antialiased; }
+  opacity: 0; }
 
 .info ul.messages li.highlight div.timehint,
 li.self div.timehint {
