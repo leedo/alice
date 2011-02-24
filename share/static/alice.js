@@ -11254,7 +11254,7 @@ Alice.Window = Class.create({
       li.previous().down('div.msg').setStyle({minHeight:'0px'});
     });
 
-    this.messages.select('li.monospace + li.monospace.consecutive').each(function(li) {
+    this.messages.select('li.monospaced + li.monospaced.consecutive').each(function(li) {
       li.previous().down('div.msg').setStyle({paddingBottom:'0px'});
     });
 
