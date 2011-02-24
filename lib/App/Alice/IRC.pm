@@ -2,12 +2,12 @@ package App::Alice::IRC;
 
 use AnyEvent;
 use AnyEvent::IRC::Client;
+use AnyEvent::IRC::Util qw/split_prefix/;
 use IRC::Formatting::HTML qw/irc_to_html/;
 use List::Util qw/min first/;
 use List::MoreUtils qw/uniq none any/;
 use Digest::MD5 qw/md5_hex/;
 use Any::Moose;
-use utf8;
 use Encode;
 
 my $email_re = qr/([^<\s]+@[^\s>]+\.[^\s>]+)/;
@@ -15,28 +15,26 @@ my $image_re = qr/(https?:\/\/\S+(?:jpe?g|png|gif))/i;
 
 {
   no warnings;
-  *AnyEvent::IRC::Client::split_unicode_string = \&split_unicode_string;
+
+  my $orig_read = \&AnyEvent::IRC::Connection::_feed_irc_data;
+  *AnyEvent::IRC::Connection::_feed_irc_data = sub {
+    my ($self, $line) = @_;
+    $orig_read->($self, decode("utf8", $line));
+  };
+
+  *AnyEvent::IRC::Connection::mk_msg = \&mk_msg;
+  *AnyEvent::IRC::Client::mk_msg = \&mk_msg;
 }
 
 has 'cl' => (
   is      => 'rw',
-  default => sub {AnyEvent::IRC::Client->new},
+  default => sub {AnyEvent::IRC::Client->new(send_initial_whois => 1)},
 );
 
 has 'alias' => (
   isa      => 'Str',
   is       => 'ro',
   required => 1,
-);
-
-has 'nick_cached' => (
-  isa      => 'Str',
-  is       => 'rw',
-  lazy     => 1,
-  default  => sub {
-    my $self = shift;
-    return $self->config->{nick} || "";
-  },
 );
 
 sub config {
@@ -69,25 +67,15 @@ has [qw/is_connected disabled removed/] => (
   default => 0,
 );
 
-has _nicks => (
-  is        => 'rw',
-  isa       => 'ArrayRef[ArrayRef]',
-  default   => sub {[]},
-);
-
-sub nicks {@{$_[0]->_nicks}}
-sub all_nicks {[map {$_->[0]} @{$_[0]->_nicks}]}
-sub add_nick {push @{$_[0]->_nicks}, $_[1]}
-sub remove_nick {my $n = lc $_[1]; $_[0]->_nicks([grep {lc $_->[0] ne $n} $_[0]->nicks])}
-sub get_nick_info {my $n = lc $_[1]; first {lc $_->[0] eq $n} $_[0]->nicks}
-sub includes_nick {my $n = lc $_[1]; any {lc $_->[0] eq $n} $_[0]->nicks}
-sub all_nick_info {$_[0]->nicks}
-sub clear_nicks {$_[0]->_nicks([])}
-sub set_nick_info {$_[0]->remove_nick($_[1]); $_[0]->add_nick($_[2]);}
-
 has whois => (
   is        => 'rw',
   isa       => 'HashRef[CodeRef]',
+  default   => sub {{}},
+);
+
+has avatars => (
+  is        => 'rw',
+  isa       => 'HashRef',
   default   => sub {{}},
 );
 
@@ -104,7 +92,6 @@ sub BUILD {
   $self->disabled(1) unless $self->config->{autoconnect};
   $self->cl->reg_cb(
     registered     => sub{$self->registered($_)},
-    channel_add    => sub{$self->channel_add(@_)},
     channel_remove => sub{$self->multiple_left(@_)},
     channel_topic  => sub{$self->channel_topic(@_)},
     join           => sub{$self->_join(@_)},
@@ -145,13 +132,29 @@ sub BUILD {
 }
 
 sub send_srv {
+  my $self = shift;
+  $self->cl->send_srv(@_);
+}
+
+sub send_long_line {
   my ($self, $cmd, @params) = @_;
-  $self->cl->send_srv($cmd => map {encode_utf8($_)} @params);
+  my $msg = pop @params;
+  my $ident = $self->cl->nick_ident($self->cl->nick);
+  my $init_len = length mk_msg($ident, $cmd, @params, " ");
+
+  my $max_len = 500; # give 10 bytes extra margin
+  my $line_len = $max_len - $init_len;
+
+  # split up the multiple lines in the message:
+  my @lines = split /\n/, $msg;
+  @lines = map split_unicode_string ("utf-8", $_, $line_len), @lines;
+
+  $self->cl->send_srv($cmd => @params, $_) for @lines;
 }
 
 sub send_raw {
-  my ($self, $cmd) = @_;
-  $self->cl->send_raw(encode_utf8($cmd));
+  my $self = shift;
+  $self->cl->send_raw(encode "utf8", $_[0]);
 }
 
 sub broadcast {
@@ -196,12 +199,12 @@ sub find_window {
 
 sub nick {
   my $self = shift;
-  my $nick = $self->cl->nick;
-  if ($nick and $nick ne "") {
-    $self->nick_cached($nick);
-    return $nick;
-  }
-  return $self->nick_cached || "Failure";
+  my $nick = $self->cl->nick || $self->config->{nick} || "";
+}
+
+sub nick_avatar {
+  my $self = shift;
+  return $self->avatars->{$_[0]} || "";
 }
 
 sub windows {
@@ -213,7 +216,7 @@ sub windows {
 
 sub channels {
   my $self = shift;
-  return map {$_->title} grep {$_->is_channel} $self->windows;
+  return keys %{$self->cl->channel_list};
 }
 
 sub connect {
@@ -365,7 +368,6 @@ sub disconnected {
   });
 
   $self->is_connected(0);
-  $self->clear_nicks;
   
   $self->reconnect(0) unless $self->disabled;
   
@@ -401,36 +403,32 @@ sub remove {
 
 sub publicmsg {
   my ($self, $cl, $channel, $msg) = @_;
-  utf8::decode($channel);
 
   if (my $window = $self->find_window($channel)) {
-    my $nick = (split '!', $msg->{prefix})[0];
+    my ($nick) = split_prefix($msg->{prefix});
     my $text = $msg->{params}[1];
-    utf8::decode($_) for ($text, $nick);
 
     return if $self->app->is_ignore($nick);
 
     $self->app->store(nick => $nick, channel => $channel, body => $text);
-    $self->broadcast($window->format_message($nick, $text)); 
+    $self->broadcast($window->format_message($nick, $text, $self->avatars->{$nick})); 
   }
 }
 
 sub privatemsg {
   my ($self, $cl, $nick, $msg) = @_;
   my $text = $msg->{params}[1];
-  utf8::decode($_) for ($nick, $text);
 
   if ($msg->{command} eq "PRIVMSG") {
-    my $from = (split /!/, $msg->{prefix})[0];
-    utf8::decode($from);
+    my ($from) = split_prefix($msg->{prefix});
 
     return if $self->app->is_ignore($from);
 
     my $window = $self->window($from);
 
     $self->app->store(nick => $from, channel => $from, body => $text);
-    $self->broadcast($window->format_message($from, $text)); 
-    $self->send_srv(WHO => $from) unless $self->includes_nick($from);
+    $self->broadcast($window->format_message($from, $text, $self->avatars->{$from})); 
+    $self->send_srv(WHO => $from) unless $self->nick_ident($from);
   }
   elsif ($msg->{command} eq "NOTICE") {
     $self->log(debug => $text);
@@ -440,7 +438,6 @@ sub privatemsg {
 sub ctcp_action {
   my ($self, $cl, $nick, $channel, $msg, $type) = @_;
   return unless $msg;
-  utf8::decode($_) for ($nick, $msg, $channel);
   return if $self->app->is_ignore($nick);
 
   my $dest = ($channel eq $self->nick ? $nick : $channel);
@@ -448,53 +445,22 @@ sub ctcp_action {
   if (my $window = $self->window($dest)) {
     my $text = "\x{2022} $msg";
     $self->app->store(nick => $nick, channel => $channel, body => $text);
-    $self->broadcast($window->format_message($nick, $text));
+    $self->broadcast($window->format_message($nick, $text, $self->avatars->{$nick}));
   }
 }
 
 sub nick_change {
   my ($self, $cl, $old_nick, $new_nick, $is_self) = @_;
-  utf8::decode($_) for ($old_nick, $new_nick);
-  $self->nick_cached($new_nick) if $is_self;
-  $self->rename_nick($old_nick, $new_nick);
   $self->broadcast(
     map  {$_->format_event("nick", $old_nick, $new_nick)}
     $self->nick_windows($new_nick)
   );
 }
 
-sub add_nick_channel {
-  my ($self, $nick, $channel) = @_;
-
-  if (my $info = $self->get_nick_info($nick)) {
-    $info->[2] = [uniq @{$info->[2]}, $channel];
-  }
-  else {
-    $self->add_nick([$nick, "", [$channel]]);
-  }
-}
-
-sub remove_nick_channel {
-  my ($self, $nick, $channel) = @_;
-
-  if (my $info = $self->get_nick_info($nick)) {
-    $info->[2] = [ grep {$_ ne $channel} @{$info->[2]} ];
-    $self->remove_nick($nick) unless @{$info->[2]};
-  }
-}
-
-sub remove_channel {
-  my ($self, $channel) = @_;
-  for my $info ($self->all_nick_info) {
-    $info->[2] = [ grep {$_ ne $channel} @{$info->[2]} ]
-  }
-}
-
 sub invite {
   my ($self, $cl, $msg) = @_;
 
   my ($from, $channel) = @{$msg->{params}};
-  utf8::decode($_) for ($from, $channel);
 
   $self->broadcast({
     type => "action",
@@ -505,9 +471,6 @@ sub invite {
 
 sub _join {
   my ($self, $cl, $nick, $channel, $is_self) = @_;
-  utf8::decode($_) for ($nick, $channel);
-
-  $self->add_nick_channel($nick, $channel);
 
   if ($is_self) {
 
@@ -528,50 +491,24 @@ sub _join {
   }
 }
 
-sub channel_add {
-  my ($self, $cl, $msg, $channel, @nicks) = @_;
-  utf8::decode($_) for (@nicks, $channel);
-
-  return unless $self->find_window($channel);
-
-  $self->add_nick_channel($_, $channel) for @nicks;
-}
-
 sub part {
   my ($self, $cl, $nick, $channel, $is_self, $msg) = @_;
-  utf8::decode($_) for ($channel, $nick, $msg);
 
   if ($is_self and my $window = $self->find_window($channel)) {
     $self->log(debug => "leaving $channel");
     $self->app->close_window($window);
-
-    $self->remove_channel($channel);
   }
 }
 
 sub multiple_left {
   my ($self, $cl, $msg, $channel, @nicks) = @_;
-  utf8::decode($_) for ($channel, @nicks);
-  
-  return if !@nicks or grep {$_ eq $self->nick} @nicks;
-  
   if (my $window = $self->find_window($channel)) {
-    my $body;
-    if ($msg->{command} and $msg->{command} eq "PART") {
-      $self->remove_nick_channel($_, $channel) for @nicks;
-    }
-    else {
-      $self->remove_nicks(@nicks);
-      $body = $msg->{params}[0];
-      utf8::decode($body);
-    }
-    $self->broadcast(map {$window->format_event("left", $_, $body)} @nicks);
+    $self->broadcast(map {$window->format_event("left", $_, $msg->{params}[0])} @nicks);
   }
 }
 
 sub channel_topic {
   my ($self, $cl, $channel, $topic, $nick) = @_;
-  utf8::decode($_) for ($channel, $nick, $topic);
   if (my $window = $self->find_window($channel)) {
     $topic = irc_to_html($topic);
     $window->topic({string => $topic, author => $nick, time => time});
@@ -581,18 +518,12 @@ sub channel_topic {
 
 sub channel_nicks {
   my ($self, $channel) = @_;
-  return
-    map {$_->[0]}
-    grep {any {$_ eq $channel} @{$_->[2]}}
-    $self->all_nick_info;
+  return keys %{$self->cl->channel_list($channel) || {}};
 }
 
 sub nick_channels {
   my ($self, $nick) = @_;
-  if (my $info = $self->get_nick_info($nick)) {
-    return @{$info->[2]};
-  }
-  return ();
+  grep {any {$nick eq $_} $self->channel_nicks($_)} $self->channels;
 }
 
 sub nick_windows {
@@ -610,7 +541,6 @@ sub irc_301 {
   my ($self, $cl, $msg) = @_;
 
   my (undef, $from, $awaymsg) = @{$msg->{params}};
-  utf8::decode($_) for ($from, $awaymsg);
 
   if (my $window = $self->find_window($from)) {
     $awaymsg = "$from is away ($awaymsg)";
@@ -625,11 +555,22 @@ sub irc_319 {
   shift @{$msg->{params}} if $msg->{params}[0] eq $self->nick;
 
   my ($nick, $channels) = @{$msg->{params}};
-  utf8::decode($_) for ($nick, $channels);
 
   if (my $whois = $self->whois->{lc $nick}) {
     $whois->{info} .= "\nchannels: $channels";
   }
+}
+
+sub irc_352 {
+  my ($self, $cl, $msg) = @_;
+
+  # ignore the first param if it is our own nick, some servers include it
+  shift @{$msg->{params}} if $msg->{params}[0] eq $self->nick;
+  
+  my (undef, undef, undef, undef, $nick, undef, @real) = @{$msg->{params}};
+  my $real = join "", @real;
+  $real =~ s/^[0-9*] //;
+  $self->avatars->{$nick} = $real;
 }
 
 sub irc_311 {
@@ -642,7 +583,7 @@ sub irc_311 {
   shift @{$msg->{params}} if scalar @{$msg->{params}} > 5;
 
   my ($nick, $user, $address, undef, $real) = @{$msg->{params}};
-  utf8::decode($_) for ($nick, $user, $address, $real);
+  $self->avatars->{$nick} = $real;
 
   if (my $whois = $self->whois->{lc $nick}) {
     $whois->{info} .= "nick: $nick"
@@ -659,7 +600,6 @@ sub irc_312 {
   shift @{$msg->{params}} if $msg->{params}[0] eq $self->nick;
 
   my ($nick, $server) = @{$msg->{params}};
-  utf8::decode($_) for ($nick, $server);
 
   if (my $whois = $self->whois->{lc $nick}) {
     $whois->{info} .= "\nserver: $server";
@@ -673,7 +613,6 @@ sub irc_318 {
   shift @{$msg->{params}} if $msg->{params}[0] eq $self->nick;
 
   my $nick = $msg->{params}[0];
-  utf8::decode($nick);
 
   if (my $whois = $self->whois->{lc $nick}) {
     $whois->{cb}->($whois->{info});
@@ -681,37 +620,8 @@ sub irc_318 {
   }
 }
 
-sub irc_352 {
-  my ($self, $cl, $msg) = @_;
-  
-  # ignore the first param if it is our own nick, some servers include it
-  shift @{$msg->{params}} if $msg->{params}[0] eq $self->nick;
-
-  my ($channel, undef, undef, undef, $nick, undef, @real) = @{$msg->{params}};
-  my $real = join "", @real;
-  $real =~ s/^[0-9*] //;
-  utf8::decode($_) for ($channel, $nick, $real);
-
-  my $info = [$nick, $real, [$channel]];
-  
-  if (my $prev_info = $self->get_nick_info($nick)) {
-    $info->[2] = [ uniq @{$prev_info->[2]}, $channel ];
-
-    if ($real ne $prev_info->[1]) {
-      for (grep {$_->previous_nick eq $nick} $self->windows) {
-        $_->reset_previous_nick;
-      }
-    }
-  }
-
-  $info->[4] = $self->realname_avatar($real);
-  
-  $self->set_nick_info($nick, $info);
-}
-
 sub irc_366 {
   my ($self, $cl, $msg) = @_;
-  utf8::decode($msg->{params}[1]);
   if (my $window = $self->find_window($msg->{params}[1])) {
     $self->broadcast($window->nicks_action);
   }
@@ -719,7 +629,6 @@ sub irc_366 {
 
 sub irc_401 {
   my ($self, $cl, $msg) = @_;
-  utf8::decode($msg->{params}[1]);
   if (my $window = $self->find_window($msg->{params}[1])) {
     $self->broadcast($window->format_announcement("No such nick."));
   }
@@ -727,29 +636,6 @@ sub irc_401 {
   if ($self->whois->{$msg->{params}[1]}) {
     $self->whois->{$msg->{params}[1]}{cb}->();
     delete $self->whois->{$msg->{params}[1]};
-  }
-}
-
-sub rename_nick {
-  my ($self, $nick, $new_nick) = @_;
-  if (my $info = $self->get_nick_info($nick)) {
-    $info->[0] = $new_nick;
-  }
-}
-
-sub remove_nicks {
-  my ($self, @nicks) = @_;
-  return unless @nicks;
-
-  $self->_nicks([
-    grep {my $n = $_->[0]; none {$n eq $_} @nicks} $self->nicks
-  ]);
-}
-
-sub nick_avatar {
-  my ($self, $nick) = @_;
-  if (my $info = $self->get_nick_info($nick)) {
-    return $info->[4];
   }
 }
 
@@ -770,15 +656,11 @@ sub realname_avatar {
 
 sub update_realname {
   my ($self, $realname) = @_;
-  my $nick = $self->nick_cached;
   $self->send_srv(REALNAME => $realname);
 
-  if (my $info = $self->get_nick_info($nick)) { 
-    $info->[1] = $realname;
-    $info->[4] = $self->realname_avatar($realname);
-  }
+  $self->avatars->{$self->nick} = $self->realname_avatar($realname);
 
-  for (grep {$_->previous_nick eq $nick} $self->windows) {
+  for (grep {$_->previous_nick eq $self->nick} $self->windows) {
     $_->reset_previous_nick;
   }
 }
@@ -816,7 +698,11 @@ sub split_unicode_string {
 
   push @lines, $cur_out if length ($cur_out);
   return @lines;
-};
+}
+
+sub mk_msg {
+  encode "utf8", AnyEvent::IRC::Util::mk_msg(@_);
+}
 
 __PACKAGE__->meta->make_immutable;
 1;

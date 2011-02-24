@@ -22,10 +22,10 @@ sub new_response {
 sub param {
   my $self = shift;
   if (wantarray) {
-    return map {decode($self->content_encoding || "utf8", $_)} $self->SUPER::param(@_);
+    return map {decode("utf8", $_)} $self->SUPER::param(@_);
   }
   else {
-    return decode($self->content_encoding || "utf8", $self->SUPER::param(@_));
+    return decode("utf8", $self->SUPER::param(@_));
   }
 }
 
