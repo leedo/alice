@@ -486,7 +486,7 @@ sub _join {
     $self->send_srv("WHO" => $channel) if $cl->isupport("UHNAMES");
   }
   elsif (my $window = $self->find_window($channel)) {
-    $self->send_srv("WHO" => $nick);
+    $self->send_srv("WHO" => $nick) unless $self->cl->nick_ident($nick);
     $self->broadcast($window->format_event("joined", $nick));
   }
 }
@@ -504,10 +504,6 @@ sub multiple_left {
   my ($self, $cl, $msg, $channel, @nicks) = @_;
   if (my $window = $self->find_window($channel)) {
     $self->broadcast(map {$window->format_event("left", $_, $msg->{params}[0])} @nicks);
-
-    for my $nick (@nicks) {
-      delete $self->avatars->{$nick} unless $self->nick_channels($nick);
-    }
   }
 }
 
