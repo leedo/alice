@@ -18,7 +18,8 @@ my $commands = [
       }
 
       $window->show($msg);
-      $window->irc->cl->send_long_message("utf8", 0, PRIVMSG => encode_utf8($window->title), $msg);
+
+      $window->irc->send_long_line(PRIVMSG => $window->title, $msg);
       $app->store(nick => $window->nick, channel => $window->title, body => $msg);
     },
   },
