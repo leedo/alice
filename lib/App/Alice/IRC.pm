@@ -411,7 +411,7 @@ sub publicmsg {
     return if $self->app->is_ignore($nick);
 
     $self->app->store(nick => $nick, channel => $channel, body => $text);
-    $self->broadcast($window->format_message($nick, $text, $self->avatars->{$nick})); 
+    $self->broadcast($window->format_message($nick, $text)); 
   }
 }
 
@@ -427,7 +427,7 @@ sub privatemsg {
     my $window = $self->window($from);
 
     $self->app->store(nick => $from, channel => $from, body => $text);
-    $self->broadcast($window->format_message($from, $text, $self->avatars->{$from})); 
+    $self->broadcast($window->format_message($from, $text)); 
     $self->send_srv(WHO => $from) unless $self->nick_ident($from);
   }
   elsif ($msg->{command} eq "NOTICE") {
@@ -445,7 +445,7 @@ sub ctcp_action {
   if (my $window = $self->window($dest)) {
     my $text = "\x{2022} $msg";
     $self->app->store(nick => $nick, channel => $channel, body => $text);
-    $self->broadcast($window->format_message($nick, $text, $self->avatars->{$nick}));
+    $self->broadcast($window->format_message($nick, $text));
   }
 }
 
@@ -504,6 +504,10 @@ sub multiple_left {
   my ($self, $cl, $msg, $channel, @nicks) = @_;
   if (my $window = $self->find_window($channel)) {
     $self->broadcast(map {$window->format_event("left", $_, $msg->{params}[0])} @nicks);
+
+    for my $nick (@nicks) {
+      delete $self->avatars->{$nick} unless $self->nick_channels($nick);
+    }
   }
 }
 

@@ -180,7 +180,7 @@ sub format_event {
 }
 
 sub format_message {
-  my ($self, $nick, $body, $avatar) = @_;
+  my ($self, $nick, $body) = @_;
 
   my $monospace = $self->app->is_monospace_nick($nick);
   # pass the inverse => italic option if this is NOT monospace
@@ -191,7 +191,7 @@ sub format_message {
     type      => "message",
     event     => "say",
     nick      => $nick,
-    avatar    => $avatar,
+    avatar    => $self->irc->nick_avatar($nick),
     window    => $self->serialized,
     html      => encoded_string($html),
     self      => $own_nick eq $nick,
