@@ -486,7 +486,7 @@ li.event div.msg {
   padding: 5px; }
 
 li.monospaced div.msg {
-  padding: 5px; }
+  padding: 7px 5px; }
 
 li.event + li.message div.msg {
   border-top: 1px solid transparent; }
@@ -529,8 +529,7 @@ ul.messages li.monospaced div.msg {
   font-size: 10px;
   line-height: 12px;
   word-wrap: normal;
-  white-space: pre-wrap;
-  padding-bottom: 0px; }
+  white-space: pre-wrap; }
 
 li.monospaced div.msg span[style*="bold"] {
   letter-spacing: -1px; }

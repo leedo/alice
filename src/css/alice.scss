@@ -564,7 +564,7 @@ li.event div.msg {
 }
 
 li.monospaced div.msg {
-  padding: 5px;
+  padding: 7px 5px;
 }
 
 li.event + li.message div.msg {
@@ -619,7 +619,6 @@ ul.messages li.monospaced div.msg {
   line-height: 12px;
   word-wrap: normal;
   white-space: pre-wrap;
-  padding-bottom: 0px;
 }
 
 li.monospaced div.msg span[style*="bold"] {
