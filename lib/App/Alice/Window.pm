@@ -114,7 +114,7 @@ sub render {shift->app->render(@_)}
 
 sub nick {
   my $self = shift;
-  decode_utf8($self->irc->nick) unless utf8::is_utf8($self->irc->nick);
+  return $self->irc->nick;
 }
 
 sub all_nicks {
