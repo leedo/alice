@@ -428,7 +428,7 @@ sub privatemsg {
 
     $self->app->store(nick => $from, channel => $from, body => $text);
     $self->broadcast($window->format_message($from, $text)); 
-    $self->send_srv(WHO => $from) unless $self->nick_ident($from);
+    $self->send_srv(WHO => $from) unless $self->nick_avatar($from);
   }
   elsif ($msg->{command} eq "NOTICE") {
     $self->log(debug => $text);
@@ -486,7 +486,7 @@ sub _join {
     $self->send_srv("WHO" => $channel) if $cl->isupport("UHNAMES");
   }
   elsif (my $window = $self->find_window($channel)) {
-    $self->send_srv("WHO" => $nick) unless $self->cl->nick_ident($nick);
+    $self->send_srv("WHO" => $nick) unless $self->nick_avatar($nick);
     $self->broadcast($window->format_event("joined", $nick));
   }
 }
@@ -570,7 +570,9 @@ sub irc_352 {
   my (undef, undef, undef, undef, $nick, undef, @real) = @{$msg->{params}};
   my $real = join "", @real;
   $real =~ s/^[0-9*] //;
-  $self->avatars->{$nick} = $real;
+  if (my $avatar = $self->realname_avatar($real)) {
+    $self->avatars->{$nick} = $avatar;
+  }
 }
 
 sub irc_311 {
@@ -583,7 +585,10 @@ sub irc_311 {
   shift @{$msg->{params}} if scalar @{$msg->{params}} > 5;
 
   my ($nick, $user, $address, undef, $real) = @{$msg->{params}};
-  $self->avatars->{$nick} = $real;
+
+  if (my $avatar = $self->realname_avatar($real)) {
+    $self->avatars->{$nick} = $avatar;
+  }
 
   if (my $whois = $self->whois->{lc $nick}) {
     $whois->{info} .= "nick: $nick"
