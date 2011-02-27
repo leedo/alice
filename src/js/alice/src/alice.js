@@ -59,7 +59,10 @@ if (window == window.parent) {
         alice.input.focus();
     };
     
-    var resize_complete = function(){$('windows').removeClassName("resizing")};
+    var resize_complete = function(){
+      $('windows').removeClassName("resizing");
+      delete window.resizing;
+    };
 
     window.onresize = function () {
       if (window.resizing) clearTimeout(window.resizing);
