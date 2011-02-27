@@ -11483,7 +11483,7 @@ Alice.Window = Class.create({
       if (this.active) this.application.displayTopic(this.topic);
     }
 
-    if (!this.application.isFocused && message.window.title != "info" &&
+    if (!this.application.isFocused && !message.self &&
         (message.highlight || this.type == "privmsg") ) {
       message.body = li.down(".msg").innerHTML.stripTags();
       var time = (new Date()).getTime();
