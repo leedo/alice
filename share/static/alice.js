@@ -9953,22 +9953,7 @@ Object.extend(Alice, {
   },
 
   loadInlineImage: function(image) {
-    var maxWidth = arguments.callee.maxWidth || 300;
-    var maxHeight = arguments.callee.maxHeight || 300;
-    image.style.visibility = 'hidden';
-    if (image.height > image.width && image.height > maxHeight) {
-      image.style.width = 'auto';
-      image.style.height = maxHeight + 'px';
-    }
-    else if (image.width > maxWidth) {
-      image.style.height = 'auto';
-      image.style.width = maxWidth + 'px';
-    }
-    else {
-      image.style.height = 'auto';
-    }
     image.style.display = 'inline';
-    image.style.visibility = 'visible';
     setTimeout(function () {
       var elem = image.up(".window");
       elem.scrollTop = elem.scrollHeight;
