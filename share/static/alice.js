@@ -12164,11 +12164,6 @@ if (window == window.parent) {
       alice.options.images = "hide";
     }
 
-    if (window.navigator.userAgent.match(/(chrome|firefox)/i)) {
-      $('windows').addClassName('fast');
-    }
-
-
     $('helpclose').observe("click", function () { $('help').hide(); });
 
     $$('li.dropdown').each(function (li) {

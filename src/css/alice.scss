@@ -79,10 +79,12 @@ a:hover {
 
 div.window {
   position:absolute;
+  width: 500px;
   top: 17px;
-  left: -5000px;
-  right: 5000px;
+  right: -500px;
+  left: auto;
   bottom: 51px;
+  visibility: hidden;
   background: $message_background;
   position: absolute;
   overflow-x: hidden;
@@ -92,17 +94,8 @@ div.window {
 div.window.active {
   left: 0px;
   right: 0px;
-}
-
-div#windows.fast div.window {
-  -webkit-transform: translate3d(-5000px,0,0);
-  -moz-transform: translateX(-5000px);
-  display: block;
-}
-
-div#windows.fast div.window.active {
-  -webkit-transform: translate3d(0,0,0);
-  -moz-transform: translateX(0);
+  width: auto;
+  visibility: visible;
 }
 
 div#input {
