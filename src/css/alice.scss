@@ -79,10 +79,10 @@ a:hover {
 
 div.window {
   position:absolute;
-  width: 500px;
-  height: 500px;
-  right: -500px;
-  left: auto;
+  top: 17px;
+  bottom: 51px;
+  right: 100%;
+  left: -100%;
   visibility: hidden;
   background: $message_background;
   position: absolute;
@@ -90,13 +90,27 @@ div.window {
   overflow-y: auto;
 }
 
+div#windows.resizing div.window {
+  top: 0px;
+  left: -500px;
+  width: 500px;
+  height: 500px;
+  right: auto;
+  bottom: auto;
+}
+
+div#windows.resizing div.window.active {
+  left: 0px;
+  right: 0px;
+  bottom: 51px;
+  top: 17px;
+  height: auto;
+  width: auto;
+}
+
 div.window.active {
   left: 0px;
   right: 0px;
-  top: 17px;
-  bottom: 51px;
-  height: auto;
-  width: auto;
   visibility: visible;
 }
 

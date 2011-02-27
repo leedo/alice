@@ -59,13 +59,12 @@ if (window == window.parent) {
         alice.input.focus();
     };
     
+    var resize_complete = function(){$('windows').removeClassName("resizing")};
+
     window.onresize = function () {
-      if (!window.resizeDelayed) {
-        var win = alice.activeWindow();
-        if (win) win.scrollToBottom();
-        window.resizeDelayed = true;
-        setTimeout(function () {delete window.resizeDelayed}, 500);
-      }
+      if (window.resizing) clearTimeout(window.resizing);
+      else $('windows').addClassName("resizing");
+      window.resizing = setTimeout(resize_complete, 1000);
     };
     
     window.onfocus = function () {
