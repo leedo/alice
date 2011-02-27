@@ -8,7 +8,9 @@ our $dsn = ["dbi:SQLite:dbname=share/buffer.db", "", ""];
 our $dbi = AnyEvent::DBI->new(@$dsn);
 $dbi->exec("DELETE FROM window_buffer", sub {});
 
-my ($insert_t, @insert, $trim_t, %trim);
+our $INSERT = [];
+our $TRIM = {};
+my ($insert_t, $trim_t);
 
 has id => (
   is => 'ro',
@@ -33,8 +35,8 @@ sub add {
 
   # collect inserts for one second
 
-  push @insert, [$self->{id}, $message->{msgid}, encode_json($message)];
-  $trim{$self->{id}} = 1;
+  push @$INSERT, [$self->{id}, $message->{msgid}, encode_json($message)];
+  $TRIM->{$self->{id}} = 1;
 
   if (!$insert_t) {
     $insert_t = AE::timer 1, 0, \&_handle_insert;
@@ -42,9 +44,8 @@ sub add {
 }
 
 sub _handle_insert {
-
   my $idle_w; $idle_w = AE::idle sub {
-    if (my $row = shift @insert) {
+    if (my $row = shift @$INSERT) {
       $dbi->exec("INSERT INTO window_buffer (window_id, msgid, message) VALUES (?,?,?)", @$row, sub{});
     }
     else {
@@ -59,8 +60,8 @@ sub _handle_insert {
 }
 
 sub _handle_trim {
-  my @trim = keys %trim;
-  %trim = ();
+  my @trim = keys %$TRIM;
+  %TRIM = {};
 
   my $idle_w; $idle_w = AE::idle sub {
     if (my $window_id = shift @trim) {
