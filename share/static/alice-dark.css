@@ -68,10 +68,9 @@ a:hover {
 div.window {
   position: absolute;
   width: 500px;
-  top: 17px;
+  height: 500px;
   right: -500px;
   left: auto;
-  bottom: 51px;
   visibility: hidden;
   background: #222222;
   position: absolute;
@@ -81,6 +80,9 @@ div.window {
 div.window.active {
   left: 0px;
   right: 0px;
+  top: 17px;
+  bottom: 51px;
+  height: auto;
   width: auto;
   visibility: visible; }
 
