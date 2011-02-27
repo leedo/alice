@@ -596,10 +596,10 @@ div.msg a {
   word-break: break-all;
 }
 
-div.msg img {
+div.msg div.image img {
   border: none;
-  max-width: 300px;
   max-height: 300px;
+  display: none;
 }
 
 ul.messages li.monospaced + li.monospaced.consecutive {
