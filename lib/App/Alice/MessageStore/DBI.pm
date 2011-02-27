@@ -61,7 +61,7 @@ sub _handle_insert {
 
 sub _handle_trim {
   my @trim = keys %$TRIM;
-  %TRIM = {};
+  $TRIM = {};
 
   my $idle_w; $idle_w = AE::idle sub {
     if (my $window_id = shift @trim) {
