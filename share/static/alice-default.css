@@ -522,9 +522,13 @@ ul.messages li + li.consecutive div.msg {
 div.msg a {
   word-break: break-all; }
 
+div.image {
+  position: relative; }
+
 div.msg div.image img {
   border: none;
   max-height: 300px;
+  max-width: 100%;
   display: none; }
 
 ul.messages li.monospaced + li.monospaced.consecutive {
