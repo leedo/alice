@@ -12021,7 +12021,7 @@ Alice.Keyboard = Class.create({
   },
 
   onOptDown: function() {
-    this.applicaction.input.nextCommand();
+    this.application.input.nextCommand();
   },
 
   onEnter: function() {
