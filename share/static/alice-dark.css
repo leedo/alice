@@ -417,7 +417,6 @@ ul.messages li.avatar:not(.consecutive) {
   z-index: 800; }
 
 div.left img {
-  border: 1px solid black;
   max-width: 32px;
   max-height: 32px;
   float: right;
