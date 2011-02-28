@@ -97,6 +97,14 @@ sub is_channel {$_[0]->type eq "channel"}
 sub irc {$_[0]->_irc}
 sub session {$_[0]->_irc->alias}
 
+sub topic_string {
+  my $self = shift;
+  if ($self->is_channel) {
+    return $self->topic->{string} || "no topic set";
+  }
+  return $self->title;
+}
+
 sub serialized {
   my ($self) = @_;
   return {
@@ -106,7 +114,7 @@ sub serialized {
     is_channel => $self->is_channel,
     type       => $self->type,
     hashtag    => $self->hashtag,
-    topic      => $self->topic->{string} || "no topic set",
+    topic      => $self->topic_string,
   };
 }
 
