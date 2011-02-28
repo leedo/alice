@@ -377,12 +377,12 @@ div#topic {
   left: 0px;
   right: 0px;
   background: $topic_background;
-  font-size: 11px;
   text-align: center;
   border-top: $topic_border_top;
   border-bottom: $topic_border_bottom;
   padding: 1px 0;
-  height: 1.2em;
+  font-size: 11px;
+  height: 14px;
   overflow: hidden;
   z-index: 901;
   text-decoration: none;
