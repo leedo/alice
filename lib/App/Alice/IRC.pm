@@ -517,8 +517,16 @@ sub channel_topic {
 }
 
 sub channel_nicks {
-  my ($self, $channel) = @_;
-  return keys %{$self->cl->channel_list($channel) || {}};
+  my ($self, $channel, $mode) = @_;
+  my $nicks = $self->cl->channel_list($channel);
+  return map {
+    my $nick = $_;
+    if ($mode) {
+      my ($m) = (keys %{$nicks->{$nick}});
+      $nick = ($self->cl->map_mode_to_prefix($m) || "").$nick;
+    }
+    $nick;
+  } keys %$nicks;
 }
 
 sub nick_channels {
