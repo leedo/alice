@@ -226,8 +226,6 @@ sub format_message {
 
 sub format_announcement {
   my ($self, $msg) = @_;
-  $msg = decode_utf8($msg) unless utf8::is_utf8($msg)
-          or ref $msg eq "Text::MicroTemplate::EncodedString";
   my $message = {
     type    => "message",
     event   => "announce",
