@@ -520,13 +520,25 @@ sub channel_nicks {
   my ($self, $channel, $mode) = @_;
   my $nicks = $self->cl->channel_list($channel);
   return map {
-    my $nick = $_;
-    if ($mode) {
-      my ($m) = (keys %{$nicks->{$nick}});
-      $nick = ($self->cl->map_mode_to_prefix($m) || "").$nick;
-    }
-    $nick;
+    $mode ? $self->_nick_with_prefix($_, $nicks->{$_}) : $_;
   } keys %$nicks;
+}
+
+sub nick_with_prefix {
+  my ($self, $nick, $channel) = @_;
+  my $modes = $self->cl->nick_modes($nick, $channel);
+  return $self->_nick_with_prefix($nick, $modes);
+}
+
+sub _nick_with_prefix {
+  my ($self, $nick, $modes) = @_;
+  for my $mode (keys %$modes) {
+    if (my $prefix = $self->cl->map_mode_to_prefix($mode)) {
+      $nick = $prefix.$nick;
+      last;
+    }
+  }
+  return $nick;
 }
 
 sub nick_channels {
