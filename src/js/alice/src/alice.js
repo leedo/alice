@@ -23,11 +23,6 @@ if (window == window.parent) {
     var alice = new Alice.Application();
     window.alice = alice;
 
-    // don't load images on the iphone
-    if (alice.isPhone) {
-      alice.options.images = "hide";
-    }
-
     // connect close botton for help 
     $('helpclose').observe("click", function () { $('help').hide(); });
 

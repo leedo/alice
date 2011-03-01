@@ -12145,10 +12145,6 @@ if (window == window.parent) {
     var alice = new Alice.Application();
     window.alice = alice;
 
-    if (alice.isPhone) {
-      alice.options.images = "hide";
-    }
-
     $('helpclose').observe("click", function () { $('help').hide(); });
 
     $$('li.dropdown').each(function (li) {
