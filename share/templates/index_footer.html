@@ -13,7 +13,6 @@
             alice.tabsets = <?= Text::MicroTemplate::encoded_string(JSON::to_json $tabsets, {ascii => 1}) ?>;
 
             <? for my $window (@windows) { ?>
-            ;
             alice.openWindow(
               <?= Text::MicroTemplate::encoded_string(JSON::to_json $window->serialized, {ascii => 1}) ?>
             );
