@@ -126,10 +126,10 @@ sub nick {
 }
 
 sub all_nicks {
-  my $self = shift;
+  my ($self, $modes) = @_;
 
   return $self->is_channel ?
-         [ $self->irc->channel_nicks($self->title) ]
+         [ $self->irc->channel_nicks($self->title, $modes) ]
        : [ $self->title, $self->nick ];
 }
 
@@ -255,7 +255,7 @@ sub nick_table {
   if ($avatars) {
     return encoded_string($self->render("avatargrid", $self));
   }
-  return _format_nick_table($self->all_nicks);
+  return _format_nick_table($self->all_nicks(1));
 }
 
 sub _format_nick_table {
