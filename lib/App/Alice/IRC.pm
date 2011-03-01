@@ -520,25 +520,22 @@ sub channel_nicks {
   my ($self, $channel, $mode) = @_;
   my $nicks = $self->cl->channel_list($channel);
   return map {
-    $mode ? $self->_nick_with_prefix($_, $nicks->{$_}) : $_;
+    $mode ? $self->prefix_from_modes($_, $nicks->{$_}).$_ : $_;
   } keys %$nicks;
 }
 
 sub nick_with_prefix {
   my ($self, $nick, $channel) = @_;
-  my $modes = $self->cl->nick_modes($nick, $channel);
-  return $self->_nick_with_prefix($nick, $modes);
 }
 
-sub _nick_with_prefix {
+sub prefix_from_modes {
   my ($self, $nick, $modes) = @_;
   for my $mode (keys %$modes) {
     if (my $prefix = $self->cl->map_mode_to_prefix($mode)) {
-      $nick = $prefix.$nick;
-      last;
+      return $prefix;
     }
   }
-  return $nick;
+  return "";
 }
 
 sub nick_channels {
@@ -577,7 +574,11 @@ sub irc_319 {
   my ($nick, $channels) = @{$msg->{params}};
 
   if (my $whois = $self->whois->{lc $nick}) {
-    $whois->{info} .= "\nchannels: $channels";
+    $whois->{info} .= "\nchannels: " .
+    join " ", map {
+      my $modes = $self->cl->nick_modes($nick, $_);
+      $self->prefix_from_modes($nick, $modes) . $_;
+    } split /\s+/, $channels;
   }
 }
 
