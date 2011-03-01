@@ -79,7 +79,7 @@ a:hover {
 
 div.window {
   position:absolute;
-  top: 17px;
+  top: 18px;
   bottom: 51px;
   right: 100%;
   left: -100%;
@@ -1300,4 +1300,34 @@ li.dropdown li.submenu:hover {
 
 li.dropdown > ul li.submenu:hover ul {
   display: block;
+}
+
+div#windows ::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+
+div#windows ::-webkit-scrollbar-button:start:decrement,
+div#windows ::-webkit-scrollbar-button:end:increment {
+  display: block;
+  height: 0;
+  background-color: transparent;
+}
+div#windows ::-webkit-scrollbar-track-piece {
+  background-color: $message_nick_column_background;
+  -webkit-border-radius: 0;
+  -webkit-border-bottom-right-radius: 8px;
+  -webkit-border-bottom-left-radius: 8px;
+}
+
+div#windows ::-webkit-scrollbar-thumb:vertical {
+  height: 50px;
+  background-color: $tab_border_active;
+  -webkit-border-radius: 8px;
+}
+
+div#windows ::-webkit-scrollbar-thumb:horizontal {
+  width: 50px;
+  background-color: $tab_border_active;
+  -webkit-border-radius: 8px;
 }
