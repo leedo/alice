@@ -100,7 +100,7 @@ sub session {$_[0]->_irc->alias}
 sub topic_string {
   my $self = shift;
   if ($self->is_channel) {
-    return $self->topic->{string} || "no topic set";
+    return $self->topic->{string} || $self->title . ": no topic set";
   }
   return $self->title;
 }
