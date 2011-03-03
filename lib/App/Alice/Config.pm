@@ -158,6 +158,10 @@ sub load {
     $self->read_commandline_args;
     $self->merge($config);
     $self->callback->();
+
+    my $class = "App::Alice::MessageStore::".$self->message_store;
+    eval "require $class";
+
     delete $self->{callback};
     $self->{loaded} = 1;
   };
