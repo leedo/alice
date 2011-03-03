@@ -167,70 +167,37 @@ div.editor {
 div#input div.editor_toolbar {
   overflow: hidden;
   position: absolute;
-  padding-right: 8px;
-  top: -3px;
+  top: -4px;
   right: 0px;
-  width: 10px;
-  height: 20px;
-  -webkit-border-radius: 3px 0 0 3px;
-  -moz-border-radius: 3px 0 0 3px;
-  border-radius: 3px 0 0 3px;
-  background: url(image/sprites.png) 0px -240px no-repeat #000;
+  width: 65px;
+  bottom: -3px;
   z-index: 902;
-  opacity: 0.2;
-  -webkit-transition-property: width;
-  -webkit-transition-duration: 0.3s;
+  background: $tab_background_active;
+  border-left: 1px solid $textentry_border;
 }
 
 div#input div.editor_toolbar button {
-  visibility: hidden;
   display: block;
   float: left;
-  color: $textentry_toolbar_button_color;
-  line-height: 10px;
-  font-size: 11px;
+  color: $tab_text_blurred;
+  line-height: 12px;
+  font-size: 12px;
   margin: 0;
-  padding: 4px 3px 5px 3px;
+  padding: 5px 4px;
   text-align: center;
   background: none;
   cursor: pointer;
   border: none;
 }
 
-div#input div.editor_toolbar button:hover {
-  color: $textentry_toolbar_button_hover_color;
-}
-
 div#input div.editor_toolbar button.selected {
-  color: yellow;
+  color: $tab_text;
 }
 
 .bold {font-weight: bold;}
 .italic {font-style: italic;}
 .underline {text-decoration: underline;}
 
-
-div#input div.editor_toolbar:hover {
-  opacity: 0.4;
-  cursor: pointer;
-}
-div#input div.editor_toolbar.visible:hover {
-  opacity: 1;
-  cursor: inherit;
-}
-
-div#input div.editor_toolbar.visible {
-  background-color: $textentry_toolbar_background;
-  background-image: none;
-  width: 180px;
-  -webkit-transition-property: width;
-  -webkit-transition-duration: 0.3s;
-  opacity: 1;
-}
-
-div#input div.editor_toolbar.visible button{
-  visibility: visible;
-}
 
 div.editor div,
 div.editor p,
@@ -855,8 +822,8 @@ div#help dd {
 }
 div.color_picker {
   position: absolute;
-  right: 25px;
-  bottom: 50px;
+  right: 10px;
+  bottom: 51px;
   width: 80px;
   border-bottom: none;
   margin: 0;
