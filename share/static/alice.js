@@ -11555,34 +11555,44 @@ Alice.Toolbar = Class.create(WysiHat.Toolbar, {
   }
 });
 
-Alice.Toolbar.ButtonSet = WysiHat.Toolbar.ButtonSets.Basic.concat(
-  [
-    {
-      label: "Colors",
-      handler: function (editor, button, toolbar) {
-        var cb = function (color, fg) {
-          fg ? editor.colorSelection(color) : editor.backgroundColorSelection(color)
-        };
-        if (toolbar.picker) {
-          toolbar.picker.remove();
-          toolbar.picker = undefined;
-        } else {
-          toolbar.picker = new Alice.Colorpicker(button, cb);
-        }
-      }
-    },
-    {
-      label: "&raquo;",
-      handler: function (editor, button, toolbar) {
-        button.up("div.editor_toolbar").removeClassName("visible");
-        if (toolbar.picker) {
-          toolbar.picker.remove();
-          toolbar.picker = undefined;
-        }
+Alice.Toolbar.ButtonSet = [
+  {
+    label: "b",
+    name: "bold",
+    handler: function (editor, button, toolbar) {
+      editor.boldSelection();
+    }
+  },
+  {
+    label: "i",
+    name: "italic",
+    handler: function (editor, button, toolbar) {
+      editor.italicSelection();
+    }
+  },
+  {
+    label: "u",
+    name: "underline",
+    handler: function (editor, button, toolbar) {
+      editor.underlineSelection();
+    }
+  },
+  {
+    label: "c",
+    name: "colors",
+    handler: function (editor, button, toolbar) {
+      var cb = function (color, fg) {
+        fg ? editor.colorSelection(color) : editor.backgroundColorSelection(color)
+      };
+      if (toolbar.picker) {
+        toolbar.picker.remove();
+        toolbar.picker = undefined;
+      } else {
+        toolbar.picker = new Alice.Colorpicker(button, cb);
       }
     }
-  ]
-);
+  },
+];
 
 Alice.Colorpicker = Class.create({
   initialize: function(button, callback) {
