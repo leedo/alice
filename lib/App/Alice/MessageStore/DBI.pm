@@ -1,12 +1,20 @@
 package App::Alice::MessageStore::DBI;
 
+use App::Alice::MessageBuffer;
 use AnyEvent::DBI;
+use DBI;
 use Any::Moose;
 use JSON;
 
 our $dsn = ["dbi:SQLite:dbname=share/buffer.db", "", ""];
 our $dbi = AnyEvent::DBI->new(@$dsn);
-$dbi->exec("DELETE FROM window_buffer", sub {});
+
+{
+  # block to get the min msgid
+  my $dbh = DBI->connect(@$dsn);
+  my $row = $dbh->selectrow_arrayref("SELECT msgid FROM window_buffer ORDER BY msgid DESC LIMIT 1");
+  $App::Alice::MessageBuffer::MSGID = $row->[0] + 1 if $row;
+}
 
 our $INSERT = [];
 our $TRIM = {};
@@ -26,7 +34,7 @@ sub messages {
   my ($self, $limit, $msgid, $cb) = @_;
   $dbi->exec(
     "SELECT message FROM window_buffer WHERE window_id=? AND msgid > ? ORDER BY msgid DESC LIMIT ?",
-    $self->{id}, $msgid, $limit, sub { $cb->([map {decode_json $_->[0]} reverse @{$_[1]}]) }
+    $self->id, $msgid, $limit, sub { $cb->([map {decode_json $_->[0]} reverse @{$_[1]}]) }
   );
 }
 

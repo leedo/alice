@@ -2,7 +2,7 @@ package App::Alice::MessageBuffer;
 
 use Any::Moose;
 
-my $msgid = 1;
+our $MSGID = 1;
 
 has previous_nick => (
   is => 'rw',
@@ -27,15 +27,20 @@ has store => (
     my $self = shift;
     my $class = "App::Alice::MessageStore::".$self->store_class;
     my $id = $self->id;
-    my $store = eval "use $class; $class->new(id => '$id');";
+    my $store = $class->new(id => $id);
     die $@ if $@;
     return $store;
   }
 );
 
+sub BUILD {
+  my $self = shift;
+  $self->store;
+}
+
 sub next_msgid {
   my $self = shift;
-  return $msgid++;
+  return $MSGID++;
 }
 
 sub clear {
@@ -57,9 +62,9 @@ sub messages {
   my ($self, $limit, $min, $cb) = @_;
 
   $min = 0 unless $min > 0;
-  $min = $msgid if $min > $msgid;
+  $min = $MSGID if $min > $MSGID;
 
-  $limit = $msgid - $min if $min + $limit > $msgid;
+  $limit = $MSGID - $min if $min + $limit > $MSGID;
   $limit = 0 if $limit < 0;
 
   return $self->store->messages($limit, $min, $cb);

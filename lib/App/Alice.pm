@@ -10,6 +10,7 @@ use App::Alice::Config;
 use App::Alice::Logger;
 use App::Alice::History;
 use App::Alice::Tabset;
+use App::Alice::MessageBuffer;
 use Any::Moose;
 use File::Copy;
 use Digest::MD5 qw/md5_hex/;
