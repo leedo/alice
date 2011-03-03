@@ -33,11 +33,6 @@ has store => (
   }
 );
 
-sub BUILD {
-  my $self = shift;
-  $self->store;
-}
-
 sub next_msgid {
   my $self = shift;
   return $MSGID++;
