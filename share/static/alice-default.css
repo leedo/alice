@@ -437,6 +437,7 @@ div.timehint {
   padding: 5px 5px 0px 5px;
   color: #555555;
   margin-top: 1px;
+  margin-right: 3px;
   opacity: 0; }
 
 .info ul.messages li.highlight div.timehint,
