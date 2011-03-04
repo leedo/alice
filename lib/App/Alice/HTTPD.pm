@@ -143,8 +143,6 @@ sub is_logged_in {
 sub login {
   my ($self, $req, $res) = @_;
 
-  my $app = $self->app;
-
   # no auth is required
   if (!$self->auth_enabled) {
     $res->redirect("/");
@@ -156,8 +154,8 @@ sub login {
      and my $pass = $req->param('password')) {
 
     $self->authenticate($user, $pass, sub {
-      my $success = shift;
-      if ($success) {
+      my $app = shift;
+      if ($app) {
         $req->env->{"psgix.session"} = {
           is_logged_in => 1,
           username     => $user,
@@ -409,7 +407,7 @@ sub auth_enabled {
 sub authenticate {
   my ($self, $user, $pass, $cb) = @_;
   my $success = $self->app->authenticate($user, $pass);
-  $cb->($success);
+  $cb->($success ? $self->app : ());
 }
 
 sub render {
