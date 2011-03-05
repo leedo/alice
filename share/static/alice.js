@@ -11571,6 +11571,28 @@ Object.extend(Alice.Toolbar, {
 
 Alice.Toolbar.ButtonSet = [
   {
+    label: "",
+    name: "colors",
+    query: Alice.Toolbar.updateColors,
+    handler: function (editor, button, toolbar) {
+      var cb = function (color, fg) {
+        if (fg) {
+          button.setStyle({"border-color": color})
+          editor.colorSelection(color);
+        } else {
+          button.setStyle({"background-color": color});
+          editor.backgroundColorSelection(color);
+        }
+      };
+      if (toolbar.picker) {
+        toolbar.picker.remove();
+        toolbar.picker = undefined;
+      } else {
+        toolbar.picker = new Alice.Colorpicker(button, cb);
+      }
+    }
+  },
+  {
     label: "b",
     name: "bold",
     handler: function (editor, button, toolbar) {
@@ -11596,29 +11618,7 @@ Alice.Toolbar.ButtonSet = [
 
       editor.underlineSelection();
     }
-  },
-  {
-    label: "",
-    name: "colors",
-    query: Alice.Toolbar.updateColors,
-    handler: function (editor, button, toolbar) {
-      var cb = function (color, fg) {
-        if (fg) {
-          button.setStyle({"border-color": color})
-          editor.colorSelection(color);
-        } else {
-          button.setStyle({"background-color": color});
-          editor.backgroundColorSelection(color);
-        }
-      };
-      if (toolbar.picker) {
-        toolbar.picker.remove();
-        toolbar.picker = undefined;
-      } else {
-        toolbar.picker = new Alice.Colorpicker(button, cb);
-      }
-    }
-  },
+  }
 ];
 
 Alice.Colorpicker = Class.create({
