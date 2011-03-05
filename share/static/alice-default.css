@@ -125,7 +125,7 @@ div#input div.editor,
 div#input textarea {
   line-height: 1.2em;
   min-height: 1.2em;
-  width: 100%;
+  display: block;
   padding: 3px 0;
   border: none;
   margin: 0;
@@ -135,7 +135,11 @@ div#input textarea {
   resize: none;
   font-family: "Lucida Grande", Helvetica, sans-serif; }
 
-div.editor {
+div#input textarea {
+  width: 100%; }
+
+div#input div.editor {
+  margin-right: 66px;
   white-space: pre-wrap;
   -khtml-nbsp-mode: space; }
 

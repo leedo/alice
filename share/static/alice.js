@@ -11588,6 +11588,12 @@ Alice.Toolbar.ButtonSet = [
     label: "u",
     name: "underline",
     handler: function (editor, button, toolbar) {
+      var elem = toolbar.element.down(".underline");
+      if (elem.hasClassName("selected"))
+       elem.removeClassName("selected");
+      else
+       elem.addClassName("selected");
+
       editor.underlineSelection();
     }
   },
@@ -11597,7 +11603,13 @@ Alice.Toolbar.ButtonSet = [
     query: Alice.Toolbar.updateColors,
     handler: function (editor, button, toolbar) {
       var cb = function (color, fg) {
-        fg ? editor.colorSelection(color) : editor.backgroundColorSelection(color)
+        if (fg) {
+          button.setStyle({"border-color": color})
+          editor.colorSelection(color);
+        } else {
+          button.setStyle({"background-color": color});
+          editor.backgroundColorSelection(color);
+        }
       };
       if (toolbar.picker) {
         toolbar.picker.remove();
@@ -11631,6 +11643,7 @@ Alice.Colorpicker = Class.create({
 
     button.up('#container').insert(elem);
     elem.observe("mousedown", this.clicked.bind(this));
+    elem.observe("mouseup", function(e) {e.stop()});
 
     this.button = button;
     this.elem = elem;
@@ -11640,6 +11653,8 @@ Alice.Colorpicker = Class.create({
 
   clicked: function(e) {
     e.stop();
+
+    alice.input.focus();
 
     var box = e.findElement("span.color");
     if (box) {
@@ -11695,7 +11710,6 @@ Alice.Input = Class.create({
       this.editor.observe("keydown", function(){this.cancelNextFocus()}.bind(this));
       this.editor.observe("keyup", this.updateRange.bind(this));
       this.editor.observe("mouseup", this.updateRange.bind(this));
-      this.toolbar.element.observe("mouseup", this.updateRange.bind(this));
       this.editor.observe("paste", this.pasteHandler.bind(this));
 
       this.toolbar.element.on("mouseup","button",function(){
@@ -11902,7 +11916,6 @@ Alice.Input = Class.create({
   },
 
   updateRange: function (e) {
-    console.log("updating range");
     var selection = window.getSelection();
     if (selection.rangeCount > 0) {
       var range = selection.getRangeAt(0);

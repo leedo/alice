@@ -20,7 +20,6 @@ Alice.Input = Class.create({
       this.editor.observe("keydown", function(){this.cancelNextFocus()}.bind(this));
       this.editor.observe("keyup", this.updateRange.bind(this));
       this.editor.observe("mouseup", this.updateRange.bind(this));
-      this.toolbar.element.observe("mouseup", this.updateRange.bind(this));
       this.editor.observe("paste", this.pasteHandler.bind(this));
 
       this.toolbar.element.on("mouseup","button",function(){
@@ -229,7 +228,6 @@ Alice.Input = Class.create({
   },
 
   updateRange: function (e) {
-    console.log("updating range");
     var selection = window.getSelection();
     if (selection.rangeCount > 0) {
       var range = selection.getRangeAt(0);
