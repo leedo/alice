@@ -11304,20 +11304,13 @@ Alice.Window = Class.create({
 
       if (nick || time) {
         this.visibleNickTimeout = setTimeout(function(nick, time) {
-          if (nick) {
-            nick.style.opacity = 1;
-          }
-          if (time) {
-            time.style.opacity = 1;
-          }
+          if (nick) nick.style.opacity = 1;
+          if (time) time.style.opacity = 1;
+
           setTimeout(function(){
             if (this.nicksVisible) return;
-            if (nick) {
-              nick.style.opacity = 0;
-            }
-            if (time) {
-              time.style.opacity = 0;
-            }
+            if (nick) nick.style.opacity = 0;
+            if (time) time.style.opacity = 0;
           }.bind(this, nick, time) , 1000);
         }.bind(this, nick, time), 500);
       }
@@ -11464,13 +11457,10 @@ Alice.Window = Class.create({
       this.application.applyFilters(msg, this);
 
       var nick = li.down('span.nick');
-      if (nick && this.nicksVisible) {
-        nick.style.opacity = 1;
-      }
+      if (nick && this.nicksVisible) nick.style.opacity = 1;
+
       var time = li.down('div.timehint');
-      if (time && this.nicksVisible) {
-        time.style.opacity = 1;
-      }
+      if (time && this.nicksVisible) time.style.opacity = 1;
 
       if (message.consecutive) {
         var avatar = li.previous(".avatar:not(.consecutive)");
