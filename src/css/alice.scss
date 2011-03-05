@@ -174,7 +174,7 @@ div#input div.editor_toolbar {
   position: absolute;
   top: -4px;
   right: 0px;
-  width: 65px;
+  width: 70px;
   bottom: -3px;
   z-index: 902;
   background: $tab_background_active;
@@ -200,8 +200,7 @@ div#input div.editor_toolbar button.colors {
   width: 14px;
   height: 14px;
   border: 2px solid $default_text;
-  margin-top: 5px;
-  margin-left: 5px;
+  margin: 5px;
   padding: 0;
 }
 
@@ -837,7 +836,7 @@ div#help dd {
 }
 div.color_picker {
   position: absolute;
-  right: 10px;
+  right: 52px;
   bottom: 51px;
   width: 80px;
   border-bottom: none;
