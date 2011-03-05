@@ -10,11 +10,6 @@ Alice.Input = Class.create({
       this.element = this.editor;
       this.toolbar = new Alice.Toolbar(this.element)
       this.toolbar.addButtonSet(Alice.Toolbar.ButtonSet);
-      this.toolbar.element.observe("click", function(e) {
-        if (this.toolbar.element.hasClassName("visible")) return;
-        this.toolbar.element.addClassName("visible");
-        this.focus();
-      }.bind(this));
       var input = new Element("input", {type: "hidden", name: "html", value: 1});
       this.textarea.form.appendChild(input);
 
@@ -25,6 +20,7 @@ Alice.Input = Class.create({
       this.editor.observe("keydown", function(){this.cancelNextFocus()}.bind(this));
       this.editor.observe("keyup", this.updateRange.bind(this));
       this.editor.observe("mouseup", this.updateRange.bind(this));
+      this.toolbar.element.observe("mouseup", this.updateRange.bind(this));
       this.editor.observe("paste", this.pasteHandler.bind(this));
 
       this.toolbar.element.on("mouseup","button",function(){
@@ -39,6 +35,7 @@ Alice.Input = Class.create({
     this.buffer = "";
     this.completion = false;
     this.focused = false;
+    this.focus();
     
     this.element.observe("keypress", this.onKeyPress.bind(this));
     this.element.observe("blur", this.onBlur.bind(this));
@@ -232,6 +229,7 @@ Alice.Input = Class.create({
   },
 
   updateRange: function (e) {
+    console.log("updating range");
     var selection = window.getSelection();
     if (selection.rangeCount > 0) {
       var range = selection.getRangeAt(0);
