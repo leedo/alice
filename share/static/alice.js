@@ -10114,7 +10114,7 @@ Object.extend(Alice, {
         options.monospace_nicks.push(option.value);
       });
 
-      ["style", "timeformat"].each(function(pref) {
+      ["style", "timeformat", "quitmsg"].each(function(pref) {
         options[pref] = $(pref).value;
       });
 
