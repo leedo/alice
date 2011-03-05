@@ -156,7 +156,8 @@ div#input div.editor_toolbar {
 div#input div.editor_toolbar button {
   display: block;
   float: left;
-  color: #cccccc;
+  color: #222222;
+  text-shadow: -1px -1px 0px #fff;
   line-height: 12px;
   font-size: 12px;
   margin: 0;
@@ -165,6 +166,14 @@ div#input div.editor_toolbar button {
   background: none;
   cursor: pointer;
   border: none; }
+
+div#input div.editor_toolbar button.colors {
+  width: 14px;
+  height: 14px;
+  border: 2px solid white;
+  margin-top: 5px;
+  margin-left: 5px;
+  padding: 0; }
 
 div#input div.editor_toolbar button.selected {
   color: white; }

@@ -22,6 +22,20 @@ Alice.Toolbar = Class.create(WysiHat.Toolbar, {
 
       event.stop();
     }.bind(this));
+  },
+});
+
+Object.extend(Alice.Toolbar, {
+  updateColors: function (editor) {
+    var range = alice.input.range || editor;
+    if (range) {
+      var node = range.getNode();
+      var fg = node.getStyle("color");
+      var bg = node.getStyle("background-color");
+      var button = alice.input.toolbar.element.down("button.colors");
+      button.setStyle({"border-color": fg, "background-color": bg});
+    }
+    return 1;
   }
 });
 
@@ -48,8 +62,9 @@ Alice.Toolbar.ButtonSet = [
     }
   },
   {
-    label: "c",
+    label: "",
     name: "colors",
+    query: Alice.Toolbar.updateColors,
     handler: function (editor, button, toolbar) {
       var cb = function (color, fg) {
         fg ? editor.colorSelection(color) : editor.backgroundColorSelection(color)
@@ -87,6 +102,7 @@ Alice.Colorpicker = Class.create({
     button.up('#container').insert(elem);
     elem.observe("mousedown", this.clicked.bind(this));
 
+    this.button = button;
     this.elem = elem;
     this.cb = callback;
     this.fg = true;
@@ -105,6 +121,7 @@ Alice.Colorpicker = Class.create({
     if (e.findElement("span#fg")) {
       this.elem.down("#bg").removeClassName("active");
       this.elem.down("#fg").addClassName("active");
+
       this.fg = true;
       return;
     }
