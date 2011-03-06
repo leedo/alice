@@ -12261,7 +12261,8 @@ if (window == window.parent) {
       twitter: /https?:\/\/(?:www\.)?twitter\.com\/(?:#!\/)?[^\/]+\/status\/(\d+)/i,
       img: /^http[^\s]*\.(?:jpe?g|gif|png|bmp|svg)[^\/]*$/i,
       audio: /^http[^\s]*\.(?:wav|mp3|ogg|aiff|m4a)[^\/]*$/i,
-      gist: /^https?:\/\/gist\.github\.com\/[0-9a-fA-F]+$/i
+      gist: /^https?:\/\/gist\.github\.com\/[0-9a-fA-F]+$/i,
+      channel: /([\b>\s])(#[\w\d]+)([\b<\s])/
     };
 
 
@@ -12269,6 +12270,12 @@ if (window == window.parent) {
       function(msg, win) {
         msg.innerHTML = msg.innerHTML.replace(
           regexes.url, '<a href="$1" target="_blank" rel="noreferrer">$1</a>'
+        );
+      },
+      function(msg, win) {
+        if (win.type == "info") return;
+        msg.innerHTML = msg.innerHTML.replace(
+          regexes.channel, '$1<a class="channel" href="javascript:alice.connection.requestWindow(\'$2\', \'' + win.id + '\')">$2</a>$3'
         );
       },
       function(msg, win) {
