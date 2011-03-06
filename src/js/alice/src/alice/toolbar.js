@@ -10,7 +10,9 @@ Alice.Toolbar = Class.create(WysiHat.Toolbar, {
     return button;
   },
   observeButtonClick: function(element, handler) {
-    element.on('click', function(event) {
+    element.on('click', function(e) {e.stop()});
+    element.on('mouseup', function(event) {
+      alice.input.focus();
 
       // pass in the button and toolbar in addition
       // to the default editor parameter
@@ -123,8 +125,6 @@ Alice.Colorpicker = Class.create({
 
   clicked: function(e) {
     e.stop();
-
-    alice.input.focus();
 
     var box = e.findElement("span.color");
     if (box) {

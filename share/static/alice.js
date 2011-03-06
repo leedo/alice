@@ -11544,7 +11544,9 @@ Alice.Toolbar = Class.create(WysiHat.Toolbar, {
     return button;
   },
   observeButtonClick: function(element, handler) {
-    element.on('click', function(event) {
+    element.on('click', function(e) {e.stop()});
+    element.on('mouseup', function(event) {
+      alice.input.focus();
 
       handler(this.editor, element, this);
 
@@ -11653,8 +11655,6 @@ Alice.Colorpicker = Class.create({
 
   clicked: function(e) {
     e.stop();
-
-    alice.input.focus();
 
     var box = e.findElement("span.color");
     if (box) {
