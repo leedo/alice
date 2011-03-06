@@ -77,6 +77,11 @@ a:hover {
   text-shadow: $link_hover_shadow;
 }
 
+a.channel {
+  color: $default_text;
+  text-decoration: none;
+}
+
 div.window {
   position:absolute;
   top: 18px;
