@@ -129,7 +129,7 @@ if (window == window.parent) {
       function(msg, win) {
         if (win.type == "info") return;
         msg.innerHTML = msg.innerHTML.replace(
-          regexes.channel, '$1<a class="channel" href="javascript:alice.connection.requestWindow(\'$2\', \'' + win.id + '\')">$2</a>$3'
+          regexes.channel, '$1<a class="channel" href="javascript:alice.connection.sendMessage({msg: \'/join $2\', source: \'' + win.id + '\'})">$2</a>$3'
         );
       },
       function(msg, win) {
