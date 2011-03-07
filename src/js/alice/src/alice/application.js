@@ -7,6 +7,7 @@ Alice.Application = Class.create({
     this.selectedSet = '';
     this.tabs = $('tabs');
     this.topic = $('topic');
+    this.nicklist = $('nicklist');
     this.topic_height = "14px";
     this.connection = window.WebSocket ? new Alice.Connection.WebSocket(this) : new Alice.Connection.XHR(this);
     this.filters = [];
@@ -27,6 +28,7 @@ Alice.Application = Class.create({
     // setup UI elements in initial state
     this.makeSortable();
     this.setupTopic();
+    this.setupNicklist();
     this.setupMenus();
     
     this.oembeds = [
@@ -96,14 +98,14 @@ Alice.Application = Class.create({
           }
         }
       }
-      win.nicks = action.nicks;
+      win.updateNicks(action.nicks);
     },
     part: function (action) {
       this.closeWindow(action['window'].id);
     },
     nicks: function (action) {
       var win = this.getWindow(action['window'].id);
-      if (win) win.nicks = action.nicks;
+      if (win) win.updateNicks(action.nicks);
     },
     alert: function (action) {
       this.activeWindow().showAlert(action['body']);
@@ -503,6 +505,24 @@ Alice.Application = Class.create({
   displayTopic: function(new_topic) {
     this.topic.update(new_topic || "no topic set");
     this.filters[0](this.topic);
+  },
+
+  displayNicks: function(nicks) {
+    console.log(nicks);
+    this.nicklist.innerHTML = nicks.map(function(nick) {
+      return "<li>"+nick.escapeHTML()+"</li>";
+    }).join("");
+  },
+
+  setupNicklist: function() {
+    this.nicklist.observe(this.supportsTouch ? "touchstart" : "click", function(e) {
+      if (this.supportsTouch) e.stop();
+      var li = e.findElement('li');
+      if (li) {
+        var nick = li.innerHTML;
+        this.connection.requestWindow(nick, this.activeWindow().id);
+      }
+    }.bind(this));
   },
 
   setupTopic: function() {

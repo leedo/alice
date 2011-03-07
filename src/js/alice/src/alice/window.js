@@ -203,6 +203,7 @@ Alice.Window = Class.create({
     this.active = true;
 
     this.application.setSource(this.id);
+    this.application.displayNicks(this.nicks);
     this.markRead();
     this.setWindowHash();
     this.application.updateChannelSelect();
@@ -278,7 +279,7 @@ Alice.Window = Class.create({
     this.trimMessages();
     this.setupMessages();
     if (chunk.nicks && chunk.nicks.length)
-      this.nicks = chunk.nicks;
+      this.updateNicks(chunk.nicks);
     this.element.scrollTop = this.messages.scrollHeight;
   },
 
@@ -335,7 +336,7 @@ Alice.Window = Class.create({
     }
     
     if (message.nicks && message.nicks.length)
-      this.nicks = message.nicks;
+      this.updateNicks(message.nicks);
     
     this.scrollToBottom();
 
@@ -383,5 +384,10 @@ Alice.Window = Class.create({
 
   getNicknames: function() {
     return this.nicks;
+  },
+
+  updateNicks: function(nicks) {
+    this.nicks = nicks;
+    if (this.active) this.application.displayNicks(this.nicks);
   }
 });

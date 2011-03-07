@@ -79,7 +79,7 @@ div.window {
   background: #222222;
   position: absolute;
   overflow-x: hidden;
-  overflow-y: auto; }
+  overflow-y: scroll; }
 
 div#windows.resizing div.window {
   top: 0px;
@@ -99,8 +99,29 @@ div#windows.resizing div.window.active {
 
 div.window.active {
   left: 0px;
-  right: 0px;
+  right: 100px;
   visibility: visible; }
+
+ul#nicklist {
+  position: absolute;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  top: 18px;
+  right: 0px;
+  width: 100px;
+  bottom: 51px;
+  overflow-y: auto;
+  overflow-x: hidden; }
+
+ul#nicklist li {
+  font-size: 0.8em;
+  display: block;
+  padding: 2px 5px;
+  cursor: pointer; }
+
+ul#nicklist li:hover {
+  background: #333333; }
 
 div#input {
   background: #333333;
@@ -174,6 +195,12 @@ div#input div.editor_toolbar button {
   background: none;
   cursor: pointer;
   border: none; }
+
+div#input div.editor_toolbar button:hover {
+  background: #444444; }
+
+div#input div.editor_toolbar button.colors:hover {
+  background: none; }
 
 div#input div.editor_toolbar button.colors {
   width: 14px;
@@ -1173,28 +1200,28 @@ li.dropdown li.submenu:hover {
 li.dropdown > ul li.submenu:hover ul {
   display: block; }
 
-div#windows ::-webkit-scrollbar {
+.compact-scroll ::-webkit-scrollbar {
   width: 9px;
   height: 9px; }
 
-div#windows ::-webkit-scrollbar-button:start:decrement,
-div#windows ::-webkit-scrollbar-button:end:increment {
+.compact-scroll ::-webkit-scrollbar-button:start:decrement,
+.compact-scroll ::-webkit-scrollbar-button:end:increment {
   display: block;
   height: 0;
   background-color: transparent; }
 
-div#windows ::-webkit-scrollbar-track-piece {
+.compact-scroll ::-webkit-scrollbar-track-piece {
   background-color: #111111;
   -webkit-border-radius: 0;
   -webkit-border-bottom-right-radius: 8px;
   -webkit-border-bottom-left-radius: 8px; }
 
-div#windows ::-webkit-scrollbar-thumb:vertical {
+.compact-scroll ::-webkit-scrollbar-thumb:vertical {
   height: 50px;
   background-color: #222222;
   -webkit-border-radius: 8px; }
 
-div#windows ::-webkit-scrollbar-thumb:horizontal {
+.compact-scroll ::-webkit-scrollbar-thumb:horizontal {
   width: 50px;
   background-color: #222222;
   -webkit-border-radius: 8px; }
