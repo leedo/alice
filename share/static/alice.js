@@ -10775,6 +10775,14 @@ Alice.Application = Class.create({
     }).join("");
   },
 
+  toggleNicklist: function() {
+    var windows = $('windows');
+    if (windows.hasClassName('nicklist'))
+      windows.removeClassName('nicklist');
+    else
+      windows.addClassName('nicklist');
+  },
+
   setupNicklist: function() {
     this.nicklist.observe(this.supportsTouch ? "touchstart" : "click", function(e) {
       if (this.supportsTouch) e.stop();
@@ -12208,6 +12216,7 @@ if (window == window.parent) {
     window.alice = alice;
 
     $('helpclose').observe("click", function () { $('help').hide(); });
+    $('nicklist_toggle').observe("click", function () { alice.toggleNicklist() });
 
     $$('li.dropdown').each(function (li) {
       li.observe(alice.supportsTouch ? "touchstart" : "mousedown", function (e) {

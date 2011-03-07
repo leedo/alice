@@ -115,8 +115,35 @@ div#windows.resizing div.window.active {
 
 div.window.active {
   left: 0px;
-  right: 100px;
+  right: 0px;
   visibility: visible;
+}
+
+div#nicklist_toggle {
+  display: block;
+  position: absolute;
+  top: 0px;
+  right: 0px;
+  padding: 1px 0;
+  width: 100px;
+  text-align: center;
+  background: $topic_background;
+  border-top: $topic_border_top;
+  border-bottom: $topic_border_bottom;
+  border-left: $topic_border_bottom;
+  font-size: 11px;
+  z-index: 902;
+  opacity: 0;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+div#nicklist_toggle:hover {
+  opacity: 1;
+}
+
+div#windows.nicklist div.window.active {
+  right: 100px;
 }
 
 ul#nicklist {
@@ -125,11 +152,15 @@ ul#nicklist {
   margin: 0;
   padding: 0;
   top: 18px;
-  right: 0px;
+  right: -100px;
   width: 100px;
   bottom: 51px;
   overflow-y: auto;
   overflow-x: hidden;
+}
+
+div#windows.nicklist ul#nicklist {
+  right: 0px;
 }
 
 ul#nicklist li {
