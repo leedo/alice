@@ -25,6 +25,7 @@ if (window == window.parent) {
 
     // connect close botton for help 
     $('helpclose').observe("click", function () { $('help').hide(); });
+    $('nicklist_toggle').observe("click", function () { alice.toggleNicklist() });
 
     $$('li.dropdown').each(function (li) {
       li.observe(alice.supportsTouch ? "touchstart" : "mousedown", function (e) {

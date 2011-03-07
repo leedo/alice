@@ -522,6 +522,14 @@ Alice.Application = Class.create({
     }).join("");
   },
 
+  toggleNicklist: function() {
+    var windows = $('windows');
+    if (windows.hasClassName('nicklist'))
+      windows.removeClassName('nicklist');
+    else
+      windows.addClassName('nicklist');
+  },
+
   setupNicklist: function() {
     this.nicklist.observe(this.supportsTouch ? "touchstart" : "click", function(e) {
       if (this.supportsTouch) e.stop();
