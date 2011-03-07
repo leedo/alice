@@ -137,10 +137,11 @@ ul#nicklist li {
   display: block;
   padding: 2px 5px;
   cursor: pointer;
+  color: $tab_border_active;
 }
 
 ul#nicklist li:hover {
-  background: $tab_background_blurred;
+  color: $default_text;
 }
 
 div#input {

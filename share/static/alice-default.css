@@ -115,10 +115,11 @@ ul#nicklist li {
   font-size: 0.8em;
   display: block;
   padding: 2px 5px;
-  cursor: pointer; }
+  cursor: pointer;
+  color: #999999; }
 
 ul#nicklist li:hover {
-  background: #eeeeee; }
+  color: black; }
 
 div#input {
   background: #efefef;

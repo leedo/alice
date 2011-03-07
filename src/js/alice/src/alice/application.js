@@ -509,7 +509,15 @@ Alice.Application = Class.create({
 
   displayNicks: function(nicks) {
     console.log(nicks);
-    this.nicklist.innerHTML = nicks.map(function(nick) {
+    this.nicklist.innerHTML = nicks.sort(function(a, b) {
+      a = a.toLowerCase();
+      b = b.toLowerCase();
+      if (a > b) 
+        return 1 
+      if (a < b) 
+        return -1 
+      return 0;
+    }).map(function(nick) {
       return "<li>"+nick.escapeHTML()+"</li>";
     }).join("");
   },
