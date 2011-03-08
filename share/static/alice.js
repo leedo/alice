@@ -9952,14 +9952,6 @@ Object.extend(Alice, {
 		return special_keys.indexOf(keyCode) > -1;
   },
 
-  loadInlineImage: function(image) {
-    image.style.display = 'inline';
-    setTimeout(function () {
-      var elem = image.up(".window");
-      elem.scrollTop = elem.scrollHeight;
-    }, 50);
-  },
-
   playAudio: function(image, audio) {
     image.src = '/static/image/pause.png';
     if (! audio) {
@@ -10773,6 +10765,15 @@ Alice.Application = Class.create({
     }).map(function(nick) {
       return "<li>"+nick.escapeHTML()+"</li>";
     }).join("");
+  },
+
+  loadInlineImage: function(image) {
+    var win = this.getWindow(image.up(".window").id);
+    if (win) {
+      var scroll = win.shouldScrollToBottom();
+      image.style.display = 'inline';
+      if (scroll) win.scrollToBottom();
+    }
   },
 
   toggleNicklist: function() {
@@ -12350,7 +12351,7 @@ if (window == window.parent) {
           }).each(function(a) {
             if(a.innerHTML.indexOf('nsfw') !== -1) return;
             var img = new Element("IMG", {src: alice.options.image_prefix + a.innerHTML});
-            img.observe("load", function(){ Alice.loadInlineImage(img) });
+            img.observe("load", function(){ alice.loadInlineImage(img) });
             a.update(img);
             var div = new Element("DIV", {"class": "image"});
             a = a.replace(div);
