@@ -365,19 +365,20 @@ Alice.Window = Class.create({
 
     this.element.redraw();
   },
+
+  shouldScrollToBottom: function() {
+    var lastmsg = this.messages.down('li:last-child');
+    if (!lastmsg) return false;
+
+    var msgheight = lastmsg.offsetHeight;
+    var bottom = this.element.scrollTop + this.element.offsetHeight;
+    var height = this.element.scrollHeight;
+
+    return bottom + msgheight + 100 >= height;
+  },
   
   scrollToBottom: function(force) {
-    var bottom, height;
-
-    if (!force) {
-      var lastmsg = this.messages.down('li:last-child');
-      if (!lastmsg) return;
-      var msgheight = lastmsg.offsetHeight; 
-      bottom = this.element.scrollTop + this.element.offsetHeight;
-      height = this.element.scrollHeight;
-    }
-
-    if (force || bottom + msgheight + 100 >= height) {
+    if (force || this.shouldScrollToBottom()) {
       this.element.scrollTop = this.element.scrollHeight;
     }
   },

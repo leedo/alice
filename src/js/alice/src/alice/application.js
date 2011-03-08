@@ -524,10 +524,13 @@ Alice.Application = Class.create({
 
   toggleNicklist: function() {
     var windows = $('windows');
+    var win = this.activeWindow();
+    var scroll = win.shouldScrollToBottom();
     if (windows.hasClassName('nicklist'))
       windows.removeClassName('nicklist');
     else
       windows.addClassName('nicklist');
+    if (scroll) win.scrollToBottom(true);
   },
 
   setupNicklist: function() {
