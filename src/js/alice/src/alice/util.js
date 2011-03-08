@@ -73,14 +73,6 @@ Object.extend(Alice, {
 		return special_keys.indexOf(keyCode) > -1;
   },
   
-  loadInlineImage: function(image) {
-    image.style.display = 'inline';
-    setTimeout(function () {
-      var elem = image.up(".window");
-      elem.scrollTop = elem.scrollHeight;
-    }, 50);
-  },
-
   playAudio: function(image, audio) {
     image.src = '/static/image/pause.png'; 
     if (! audio) {
