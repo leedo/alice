@@ -10316,8 +10316,9 @@ Alice.Application = Class.create({
       e.stop();
       var state = container.style.display;
       if (state != "block") {
+        var scroll = win.shouldScrollToBottom();
         container.style.display = "block";
-        win.scrollToBottom();
+        if (scroll) win.scrollToBottom(true);
       }
       else {
         container.style.display = "none";
