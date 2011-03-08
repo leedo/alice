@@ -10111,6 +10111,10 @@ Object.extend(Alice, {
       });
 
 			alice.options = options;
+      if (alice.options.avatars == "hide")
+        $('container').addClassName('noavatars');
+      else
+        $('container').removeClassName('noavatars');
 
       new Ajax.Request('/save', {
         method: 'get',
@@ -10753,7 +10757,6 @@ Alice.Application = Class.create({
   },
 
   displayNicks: function(nicks) {
-    console.log(nicks);
     this.nicklist.innerHTML = nicks.sort(function(a, b) {
       a = a.toLowerCase();
       b = b.toLowerCase();

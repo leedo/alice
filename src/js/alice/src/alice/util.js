@@ -232,6 +232,10 @@ Object.extend(Alice, {
       });
 
 			alice.options = options;
+      if (alice.options.avatars == "hide")
+        $('container').addClassName('noavatars');
+      else 
+        $('container').removeClassName('noavatars');
 
       new Ajax.Request('/save', {
         method: 'get',
