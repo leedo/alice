@@ -367,14 +367,10 @@ Alice.Window = Class.create({
   },
 
   shouldScrollToBottom: function() {
-    var lastmsg = this.messages.down('li:last-child');
-    if (!lastmsg) return false;
-
-    var msgheight = lastmsg.offsetHeight;
     var bottom = this.element.scrollTop + this.element.offsetHeight;
     var height = this.element.scrollHeight;
 
-    return bottom + msgheight + 100 >= height;
+    return bottom + 100 >= height;
   },
   
   scrollToBottom: function(force) {

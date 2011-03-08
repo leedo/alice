@@ -10775,7 +10775,7 @@ Alice.Application = Class.create({
     if (win) {
       var scroll = win.shouldScrollToBottom();
       image.style.display = 'inline';
-      if (scroll) win.scrollToBottom();
+      if (scroll) win.element.scrollTop += Math.min(image.height, 300);
     }
   },
 
@@ -11558,14 +11558,10 @@ Alice.Window = Class.create({
   },
 
   shouldScrollToBottom: function() {
-    var lastmsg = this.messages.down('li:last-child');
-    if (!lastmsg) return false;
-
-    var msgheight = lastmsg.offsetHeight;
     var bottom = this.element.scrollTop + this.element.offsetHeight;
     var height = this.element.scrollHeight;
 
-    return bottom + msgheight + 100 >= height;
+    return bottom + 100 >= height;
   },
 
   scrollToBottom: function(force) {

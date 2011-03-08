@@ -526,7 +526,7 @@ Alice.Application = Class.create({
     if (win) {
       var scroll = win.shouldScrollToBottom();
       image.style.display = 'inline';
-      if (scroll) win.scrollToBottom();
+      if (scroll) win.element.scrollTop += Math.min(image.height, 300);
     }
   },
 
