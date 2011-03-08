@@ -644,6 +644,13 @@ ul.messages li.monospaced.avatar:not(.consecutive) div.msg {
   min-height: 24px;
 }
 
+.noavatars ul.messages li.avatar:not(.consecutive) div.msg {
+  min-height: 0px;
+}
+.noavatars ul.messages li.monospaced.avatar:not(.consecutive) div.msg {
+  min-height: 0px;
+}
+
 ul.messages li.monospaced {
   min-height: 0px;
 }

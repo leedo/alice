@@ -9,6 +9,8 @@
               alice.options.avatars = "hide";
             }
 
+            if (alice.options.avatars == "hide") $('container').addClassName('noavatars');
+
             <? my $tabsets = {map {$_->name => $_->windows } $app->tabsets}; ?>
             alice.tabsets = <?= Text::MicroTemplate::encoded_string(JSON::to_json $tabsets, {ascii => 1}) ?>;
 
