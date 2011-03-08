@@ -377,6 +377,7 @@ div#topic {
   padding: 1px 0;
   font-size: 11px;
   height: 14px;
+  min-height: 14px;
   overflow: hidden;
   z-index: 901;
   text-decoration: none; }
