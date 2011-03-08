@@ -7,6 +7,9 @@ body {
   overflow: hidden;
   color: black; }
 
+img {
+  border: none; }
+
 ul#tabs li:hover {
   cursor: default; }
 
