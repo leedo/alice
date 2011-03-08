@@ -10,6 +10,9 @@ body {
   overflow: hidden;
   color: white; }
 
+img {
+  border: none; }
+
 ul#tabs li:hover {
   cursor: default; }
 
