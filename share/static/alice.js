@@ -10110,16 +10110,22 @@ Object.extend(Alice, {
         options[pref] = $(pref).value;
       });
 
-			alice.options = options;
-      if (alice.options.avatars == "hide")
-        $('container').addClassName('noavatars');
-      else
-        $('container').removeClassName('noavatars');
+      Alice.prefs.remove();
 
-      new Ajax.Request('/save', {
+			new Ajax.Request('/save', {
         method: 'get',
         parameters: options,
-        onSuccess: function(){Alice.prefs.remove()}
+        onSuccess: function(){
+          alice.options = options;
+          if (window.location.toString().match(/safe/i)) {
+            alice.options.avatars = "hide";
+            alice.options.images = "hide";
+          }
+          if (alice.options.avatars == "hide")
+            $('container').addClassName('noavatars');
+          else
+            $('container').removeClassName('noavatars');
+        }
       });
 
       return false;
