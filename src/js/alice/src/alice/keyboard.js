@@ -20,7 +20,7 @@ Alice.Keyboard = Class.create({
     this.shortcut("Cmd+U");
     this.shortcut("Enter");
     this.shortcut("Esc");
-    this.shortcut("Tab");
+    this.shortcut("Tab", { propagate: true });
     for (var i = 0; i < 10; i++) {
       this.shortcut("Cmd+"+i);
       if (!this.isMac) this.shortcut("Opt+"+i);
@@ -111,8 +111,11 @@ Alice.Keyboard = Class.create({
     this.application.input.send();
   },
   
-  onTab: function() {
-    this.application.input.completeNickname();
+  onTab: function(e) {
+    if (!e.findElement('div.config')) {
+      e.stop();
+      this.application.input.completeNickname();
+    }
   },
   
   onEsc: function() {
