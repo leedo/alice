@@ -11301,6 +11301,13 @@ Alice.Window = Class.create({
       }
     });
 
+    if (window.navigator.userAgent.match(/chrome/i)) {
+      this.messages.select('div.msg').each(function(msg){
+        msg.setStyle({borderWidth: "2px"});
+        msg.setStyle({borderWidth: "1px"});
+      });
+    }
+
     this.scrollToBottom(true);
 
     setTimeout(function () {
