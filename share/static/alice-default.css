@@ -75,7 +75,6 @@ div.window {
   bottom: 51px;
   right: 100%;
   left: -100%;
-  visibility: hidden;
   background: white;
   position: absolute;
   overflow-x: hidden;
@@ -99,8 +98,7 @@ div#windows.resizing div.window.active {
 
 div.window.active {
   left: 0px;
-  right: 0px;
-  visibility: visible; }
+  right: 0px; }
 
 div#nicklist_toggle {
   display: block;
