@@ -98,6 +98,14 @@ Alice.Window = Class.create({
       }
     });
 
+    // work around chrome bugs! what the fuck.
+    if (window.navigator.userAgent.match(/chrome/i)) {
+      this.messages.select('div.msg').each(function(msg){
+        msg.setStyle({borderWidth: "2px"});
+        msg.setStyle({borderWidth: "1px"});
+      });
+    }
+
     this.scrollToBottom(true);
 
     // wait a second to load images, otherwise the browser will say "loading..."
