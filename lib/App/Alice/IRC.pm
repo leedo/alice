@@ -2,7 +2,7 @@ package App::Alice::IRC;
 
 use AnyEvent;
 use AnyEvent::IRC::Client;
-use AnyEvent::IRC::Util qw/split_prefix/;
+use AnyEvent::IRC::Util qw/split_prefix parse_irc_msg/;
 use IRC::Formatting::HTML qw/irc_to_html/;
 use List::Util qw/min first/;
 use List::MoreUtils qw/uniq none any/;
@@ -16,10 +16,13 @@ my $image_re = qr/(https?:\/\/\S+(?:jpe?g|png|gif))/i;
 {
   no warnings;
 
-  my $orig_read = \&AnyEvent::IRC::Connection::_feed_irc_data;
+  # YUCK!!!
   *AnyEvent::IRC::Connection::_feed_irc_data = sub {
     my ($self, $line) = @_;
-    $orig_read->($self, decode("utf8", $line));
+    my $m = parse_irc_msg (decode ("utf8", $line));
+    $self->event (read => $m);
+    $self->event ('irc_*' => $m);
+    $self->event ('irc_' . (lc $m->{command}), $m);
   };
 
   *AnyEvent::IRC::Connection::mk_msg = \&mk_msg;
