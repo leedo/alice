@@ -451,10 +451,15 @@ sub ctcp_action {
 
 sub nick_change {
   my ($self, $cl, $old_nick, $new_nick, $is_self) = @_;
+
   $self->broadcast(
     map  {$_->format_event("nick", $old_nick, $new_nick)}
     $self->nick_windows($new_nick)
   );
+
+  if ($self->avatars->{$old_nick}) {
+    $self->avatars->{$new_nick} = delete $self->avatars->{$old_nick};
+  }
 }
 
 sub invite {
