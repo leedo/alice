@@ -55,14 +55,22 @@ if (window == window.parent) {
         alice.input.focus();
     };
     
+    var scroll = false;
     var resize_complete = function(){
       $('windows').removeClassName("resizing");
       delete window.resizing;
+      if (scroll) alice.activeWindow().scrollToBottom(true);
+      scroll = false;
     };
 
     window.onresize = function () {
-      if (window.resizing) clearTimeout(window.resizing);
-      else $('windows').addClassName("resizing");
+      if (window.resizing) {
+        clearTimeout(window.resizing);
+      }
+      else {
+        $('windows').addClassName("resizing");
+        scroll = alice.activeWindow().shouldScrollToBottom();
+      }
       window.resizing = setTimeout(resize_complete, 1000);
     };
     
