@@ -10589,7 +10589,7 @@ Alice.Application = Class.create({
     var windows = this.windows();
     for (var i=0; i < windows.length; i++) {
       var win = windows[i];
-      if ((win.tab.hasClassName('unread') || win.tab.hasClassName('highlight')) && win.isTabWrapped()) {
+      if ((win.tab.hasClassName('unread') || win.tab.hasClassName('highlight')) && win.isTabHidden()) {
         this.highlightChannelSelect();
         return;
       }
