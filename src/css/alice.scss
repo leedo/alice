@@ -992,7 +992,7 @@ div.color_picker div.toggle span#bg.active {
     bottom: 30px;
   }
 
-  ul#tabs_container {
+  div#tab_container {
     display: none;
   }
 
@@ -1002,6 +1002,8 @@ div.color_picker div.toggle span#bg.active {
     position: absolute;
     bottom: 2px;
     right: 1px;
+    width: 24px;
+    border: none;
   }
 
   ul#controls li#connection_status, ul#controls li#config_menu {
