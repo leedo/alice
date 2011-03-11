@@ -59,7 +59,9 @@ if (window == window.parent) {
     var resize_complete = function(){
       $('windows').removeClassName("resizing");
       delete window.resizing;
-      if (scroll) alice.activeWindow().scrollToBottom(true);
+      var active = alice.activeWindow();
+      active.focus();
+      if (scroll) active.scrollToBottom(true);
       scroll = false;
     };
 

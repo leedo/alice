@@ -15,7 +15,7 @@ ul#tabs li:hover {
 
 ul#controls {
   background: #dddddd;
-  z-index: 901; }
+  z-index: 904; }
 
 body.blurred ul#controls {
   background: #eeeeee; }
@@ -214,7 +214,7 @@ div#input div.editor_toolbar button {
   display: block;
   float: left;
   color: #999999;
-  text-shadow: -1px -1px 0px white;
+  text-shadow: -1px -1px 0px #fff;
   line-height: 12px;
   font-size: 12px;
   margin: 0;
@@ -282,7 +282,8 @@ ul#tabs {
   background-color: #dddddd;
   left: 0px;
   padding-left: 3px;
-  right: 72px; }
+  width: 5000px;
+  -webkit-transition: left 1s ease-in-out; }
 
 body.blurred ul#tabs li {
   background: #eeeeee;
@@ -352,9 +353,12 @@ ul#controls {
   bottom: 0px;
   right: 0px;
   height: 23px;
+  width: 74px;
   margin: 0;
   padding: 0 2px 0 0;
-  list-style: none; }
+  list-style: none;
+  border-top: 1px solid #999999;
+  border-left: 1px solid #999999; }
 
 ul#controls > li {
   float: right;
