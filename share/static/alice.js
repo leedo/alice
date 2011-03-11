@@ -11330,7 +11330,7 @@ Alice.Window = Class.create({
 
   isTabHidden: function() {
     var pos = this.getTabPosition();
-    return (pos.overflow.left || pos.overflow.right);
+    return (pos.overflow.left < 0 || pos.overflow.right < 0);
   },
 
   getTabPosition: function() {
