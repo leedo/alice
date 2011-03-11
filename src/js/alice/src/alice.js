@@ -60,8 +60,8 @@ if (window == window.parent) {
       $('windows').removeClassName("resizing");
       delete window.resizing;
       var active = alice.activeWindow();
-      active.focus();
       if (scroll) active.scrollToBottom(true);
+      active.shiftTab();
       scroll = false;
     };
 

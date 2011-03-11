@@ -10522,7 +10522,9 @@ Alice.Application = Class.create({
 
     var id = nextTab.id.replace('_tab','');
     if (id != active.id) {
-      this.getWindow(id).focus();
+      var win = this.getWindow(id);
+      win.focus();
+      return win;
     }
   },
 
@@ -10728,10 +10730,13 @@ Alice.Application = Class.create({
 
       this.selectSet(name);
 
-      if (!this.activeWindow().visible) {
-        this.nextWindow();
-        this.activeWindow().focus();
+      var active = this.activeWindow();
+
+      if (!active.visible) {
+        active = this.nextWindow();
       }
+
+      if (active) active.shiftTab();
     }
   },
 
@@ -10748,6 +10753,7 @@ Alice.Application = Class.create({
     elem.addClassName('selectedset');
     this.windows().invoke("show");
     this.selectSet('');
+    this.activeWindow().shiftTab();
   },
 
   currentSetContains: function(win) {
@@ -12317,8 +12323,8 @@ if (window == window.parent) {
       $('windows').removeClassName("resizing");
       delete window.resizing;
       var active = alice.activeWindow();
-      active.focus();
       if (scroll) active.scrollToBottom(true);
+      active.shiftTab();
       scroll = false;
     };
 
