@@ -217,7 +217,7 @@ div#input div.editor_toolbar button {
   display: block;
   float: left;
   color: #222222;
-  text-shadow: -1px -1px 0px #fff;
+  text-shadow: -1px -1px 0px white;
   line-height: 12px;
   font-size: 12px;
   margin: 0;
@@ -854,7 +854,7 @@ div.color_picker div.toggle span#bg.active {
   div.window {
     bottom: 30px; }
 
-  ul#tabs {
+  ul#tabs_container {
     display: none; }
 
   ul#controls {
