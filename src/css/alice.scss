@@ -19,7 +19,7 @@ ul#tabs li:hover {
 
 ul#controls {
   background: $tab_background;
-  z-index: 901;
+  z-index: 904;
 }
 
 body.blurred ul#controls {
@@ -323,7 +323,8 @@ ul#tabs {
   background-color: $tab_background;
   left: 0px;
   padding-left: 3px;
-  right: 72px;
+  width: 5000px;
+  -webkit-transition: left 1s ease-in-out;
 }
 
 body.blurred ul#tabs li {
@@ -406,9 +407,12 @@ ul#controls {
   bottom: 0px;
   right: 0px;
   height: 23px;
+  width: 74px;
   margin: 0;
   padding: 0 2px 0 0;
   list-style: none;
+  border-top: 1px solid $tab_border_active;
+  border-left: 1px solid $tab_border_active;
 }
 
 ul#controls > li {

@@ -11322,8 +11322,55 @@ Alice.Window = Class.create({
     }
   },
 
-  isTabWrapped: function() {
-    return this.tab.offsetTop > 0;
+  isTabHidden: function() {
+    var pos = this.getTabPosition();
+    return (pos.overflow.left || pos.overflow.right);
+  },
+
+  getTabPosition: function() {
+    var ul = this.tab.up("ul");
+
+    var shift = ul.viewportOffset().left;
+    var width = document.viewport.getWidth() - 80;
+
+    var offset_start = this.tab.positionedOffset().left;
+    var offset_end = offset_start + this.tab.getWidth();
+
+    var overflow_right = shift + width - offset_end;
+    var overflow_left = shift + offset_start;
+
+    return {
+      overflow: {
+        left: overflow_left,
+        right: overflow_right
+      },
+      offset: {
+        start: offset_start,
+        end: offset_end
+      },
+      container: {
+        node: ul,
+        width: width,
+        shift: shift
+      }
+
+    };
+  },
+
+  shiftTab: function() {
+    var left;
+    var pos = this.getTabPosition();
+
+    if (pos.overflow.right < 0) left = pos.container.width - pos.offset.end;
+    if (pos.overflow.left < 0) left = pos.offset.start;
+
+    if (!left) return;
+
+    var diff = Math.abs(pos.container.shift - left);
+    var time = Math.min(Math.max(0.1, diff / 100), 0.5);
+
+    pos.container.node.style.webkitTransitionDuration = time+"s";
+    pos.container.node.setStyle({left: left+"px"});
   },
 
   unFocus: function() {
@@ -11415,6 +11462,8 @@ Alice.Window = Class.create({
     this.markRead();
     this.setWindowHash();
     this.application.updateChannelSelect();
+
+    this.shiftTab();
 
     var last = this.messages.childElements().last();
     if (last && last.hasClassName("fold"))
@@ -11547,7 +11596,7 @@ Alice.Window = Class.create({
     this.scrollToBottom();
 
     if (!this.active && this.title != "info") {
-      var wrapped = this.isTabWrapped();
+      var wrapped = this.isTabHidden();
       if (message.event == "say" && !message.self) {
         this.tab.addClassName("unread");
         this.tabOverflowButton.addClassName("unread");
@@ -12269,7 +12318,9 @@ if (window == window.parent) {
     var resize_complete = function(){
       $('windows').removeClassName("resizing");
       delete window.resizing;
-      if (scroll) alice.activeWindow().scrollToBottom(true);
+      var active = alice.activeWindow();
+      active.focus();
+      if (scroll) active.scrollToBottom(true);
       scroll = false;
     };
 
