@@ -123,7 +123,7 @@ Alice.Window = Class.create({
   
   isTabHidden: function() {
     var pos = this.getTabPosition();
-    return (pos.overflow.left < 0 || pos.overflow.right < 0);
+    return (pos.overflow.left || pos.overflow.right);
   },
 
   getTabPosition: function() {
@@ -162,6 +162,8 @@ Alice.Window = Class.create({
 
     if (pos.overflow.right < 0) left = pos.container.width - pos.offset.end;
     if (pos.overflow.left < 0) left = pos.offset.start;
+
+    left = Math.min(left, 0);
 
     var diff = Math.abs(pos.container.shift - left);
     var time = Math.min(Math.max(0.1, diff / 100), 0.5);
