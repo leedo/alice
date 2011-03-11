@@ -283,7 +283,8 @@ ul#tabs {
   left: 0px;
   padding-left: 3px;
   width: 5000px;
-  -webkit-transition: left 1s ease-in-out; }
+  -webkit-transition: left 0.25s ease-in-out;
+  -moz-transition: left 0.25s ease-in-out; }
 
 body.blurred ul#tabs li {
   background: #eeeeee;
