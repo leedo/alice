@@ -82,7 +82,7 @@ sub _build_httpd {
             unless -d $self->config->path."/sessions";
           enable "Session",
             store => Plack::Session::Store::File->new(dir => $self->config->path."/sessions"),
-            expires => "24h";
+            expires => 60 * 60 * 24 * 7,
         }
         enable "Static", path => qr{^/static/}, root => $self->config->assetdir;
         enable "WebSocket";
