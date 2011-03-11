@@ -11358,13 +11358,11 @@ Alice.Window = Class.create({
   },
 
   shiftTab: function() {
-    var left;
+    var left = 0;
     var pos = this.getTabPosition();
 
     if (pos.overflow.right < 0) left = pos.container.width - pos.offset.end;
     if (pos.overflow.left < 0) left = pos.offset.start;
-
-    if (!left) return;
 
     var diff = Math.abs(pos.container.shift - left);
     var time = Math.min(Math.max(0.1, diff / 100), 0.5);
