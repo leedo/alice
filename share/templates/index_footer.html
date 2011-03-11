@@ -52,11 +52,13 @@
           </ul>
         </li>
       </ul>
-      <ul id="tabs">
+      <div id="tab_container">
+        <ul id="tabs">
         <? for my $window (@windows) { ?>
           <?= $_mt->render_file('tab.html', $_[0], $window) ?>
         <? } ?>
-      </ul>
+        </ul>
+      </div>
       <div id="input">
         <form autocomplete="off">
           <input type="hidden" value="" name="source" id="source" />
