@@ -311,7 +311,6 @@ sub template {
   $path =~ s/^\///;
 
   eval {
-    my $body = $self->render($path);
     $res->body($self->render($path));
   };
 
