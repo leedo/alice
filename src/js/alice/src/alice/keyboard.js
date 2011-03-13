@@ -17,6 +17,8 @@ Alice.Keyboard = Class.create({
     this.shortcut("Cmd+Shift+J");
     this.shortcut("Cmd+Shift+K");
     this.shortcut("Cmd+Shift+H");
+    this.shortcut("Cmd+Left");
+    this.shortcut("Cmd+Right");
     this.shortcut("Cmd+Shift+Left");
     this.shortcut("Cmd+Shift+Right");
     this.shortcut("Cmd+Shift+U");
@@ -114,10 +116,18 @@ Alice.Keyboard = Class.create({
     this.application.toggleHelp();
   },
   
+  onCmdRight: function() {
+    this.application.nextWindow();
+  },
+
   onCmdShiftRight: function() {
     this.application.nextWindow();
   },
   
+  onCmdLeft: function() {
+    this.application.previousWindow();
+  },
+
   onCmdShiftLeft: function() {
     this.application.previousWindow();
   },
