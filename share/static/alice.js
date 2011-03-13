@@ -12076,11 +12076,12 @@ Alice.Keyboard = Class.create({
     this.shortcut("Cmd+Shift+M");
     this.shortcut("Cmd+Shift+J");
     this.shortcut("Cmd+Shift+K");
-    this.shortcut("Cmd+Shift+H");
     this.shortcut("Cmd+Left");
     this.shortcut("Cmd+Right");
     this.shortcut("Cmd+Shift+Left");
     this.shortcut("Cmd+Shift+Right");
+    this.shortcut("Cmd+Shift+H");
+    this.shortcut("Cmd+Shift+L");
     this.shortcut("Cmd+Shift+U");
     this.shortcut("Enter");
     this.shortcut("Esc");
@@ -12171,11 +12172,11 @@ Alice.Keyboard = Class.create({
     this.activeWindow.toggleNicks();
   },
 
-  onCmdShiftH: function() {
-    this.application.toggleHelp();
+  onCmdRight: function() {
+    this.application.nextWindow();
   },
 
-  onCmdRight: function() {
+  onCmdShiftL: function() {
     this.application.nextWindow();
   },
 
@@ -12184,6 +12185,10 @@ Alice.Keyboard = Class.create({
   },
 
   onCmdLeft: function() {
+    this.application.previousWindow();
+  },
+
+  onCmdShiftH: function() {
     this.application.previousWindow();
   },
 
