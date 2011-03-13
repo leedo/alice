@@ -9,14 +9,14 @@ Alice.Keyboard = Class.create({
     this.shortcut("Cmd+C", { propagate: true });
     this.shortcut("Ctrl+C", { propagate: true });
     this.shortcut("Cmd+K");
-    this.shortcut("Cmd+B");
-    this.shortcut("Cmd+F");
     this.shortcut("Opt+Up");
     this.shortcut("Opt+Down");
     this.shortcut("Cmd+Shift+M");
     this.shortcut("Cmd+Shift+J");
     this.shortcut("Cmd+Shift+K");
     this.shortcut("Cmd+Shift+H");
+    this.shortcut("Cmd+Shift+Left");
+    this.shortcut("Cmd+Shift+Right");
     this.shortcut("Cmd+U");
     this.shortcut("Enter");
     this.shortcut("Esc");
@@ -91,11 +91,11 @@ Alice.Keyboard = Class.create({
     this.application.toggleHelp();
   },
   
-  onCmdB: function() {
+  onCmdShiftRight: function() {
     this.application.previousWindow();
   },
   
-  onCmdF: function() {
+  onCmdShiftLeft: function() {
     this.application.nextWindow();
   },
   
