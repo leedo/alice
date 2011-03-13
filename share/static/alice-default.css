@@ -214,7 +214,7 @@ div#input div.editor_toolbar button {
   display: block;
   float: left;
   color: #999999;
-  text-shadow: -1px -1px 0px white;
+  text-shadow: -1px -1px 0px #fff;
   line-height: 12px;
   font-size: 12px;
   margin: 0;
@@ -1203,7 +1203,6 @@ li.dropdown ul {
   border: 1px solid #999999;
   -webkit-border-radius: 2px;
   -webkit-box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.4);
-  width: 100px;
   display: none;
   white-space: nowrap; }
 
@@ -1228,8 +1227,7 @@ li.dropdown ul li:hover {
 
 li.dropdown > ul ul {
   display: none;
-  left: -100px;
-  width: 100px;
+  right: 100%;
   bottom: -1px;
   top: auto; }
 
