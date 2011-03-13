@@ -12151,11 +12151,11 @@ Alice.Keyboard = Class.create({
   },
 
   onCmdShiftRight: function() {
-    this.application.previousWindow();
+    this.application.nextWindow();
   },
 
   onCmdShiftLeft: function() {
-    this.application.nextWindow();
+    this.application.previousWindow();
   },
 
   onOptUp: function() {
