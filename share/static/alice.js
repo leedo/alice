@@ -12068,6 +12068,9 @@ Alice.Keyboard = Class.create({
 
     this.shortcut("Cmd+C", { propagate: true });
     this.shortcut("Ctrl+C", { propagate: true });
+    this.shortcut("Cmd+B");
+    this.shortcut("Cmd+I");
+    this.shortcut("Cmd+U");
     this.shortcut("Opt+Up");
     this.shortcut("Opt+Down");
     this.shortcut("Cmd+Shift+M");
@@ -12077,7 +12080,7 @@ Alice.Keyboard = Class.create({
     this.shortcut("Cmd+Shift+Left");
     this.shortcut("Cmd+Shift+Right");
     this.shortcut("Cmd+Shift+K");
-    this.shortcut("Cmd+U");
+    this.shortcut("Cmd+Shift+U");
     this.shortcut("Enter");
     this.shortcut("Esc");
     this.shortcut("Tab", { propagate: true });
@@ -12130,7 +12133,28 @@ Alice.Keyboard = Class.create({
     });
   },
 
+  onCmdB: function() {
+    if (this.application.input.editor) {
+      this.application.input.focus();
+      this.application.input.editor.boldSelection();
+    }
+  },
+
   onCmdU: function() {
+    if (this.application.input.editor) {
+      this.application.input.focus();
+      this.application.input.editor.underlineSelection();
+    }
+  },
+
+  onCmdI: function() {
+    if (this.application.input.editor) {
+      this.application.input.focus();
+      this.application.input.editor.italicSelection();
+    }
+  },
+
+  onCmdShiftU: function() {
     this.application.nextUnreadWindow();
   },
 
