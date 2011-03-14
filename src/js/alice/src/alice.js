@@ -171,8 +171,12 @@ if (window == window.parent) {
             img.observe("load", function(){ alice.loadInlineImage(img) });
             a.update(img);
             var div = new Element("DIV", {"class": "image"});
+            var hide = new Element("A", {"class": "hideimg"});
+            hide.observe("click", Alice.removeImage);
+            hide.update("hide");
             a = a.replace(div);
             div.insert(a);
+            div.insert(hide);
           });
         }
       },

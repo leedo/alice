@@ -9889,6 +9889,15 @@ Object.extend(Alice, {
     );
   },
 
+  removeImage: function(e) {
+    var div = e.findElement('div.image');
+    if (div) {
+      var img = div.down('a img');
+      if (img) img.replace(img.src);
+      e.element().remove();
+    }
+  },
+
   epochToLocal: function(epoch, format) {
     var date = new Date(parseInt(epoch) * 1000);
     if (!date) return epoch;
@@ -12472,8 +12481,12 @@ if (window == window.parent) {
             img.observe("load", function(){ alice.loadInlineImage(img) });
             a.update(img);
             var div = new Element("DIV", {"class": "image"});
+            var hide = new Element("A", {"class": "hideimg"});
+            hide.observe("click", Alice.removeImage);
+            hide.update("hide");
             a = a.replace(div);
             div.insert(a);
+            div.insert(hide);
           });
         }
       },

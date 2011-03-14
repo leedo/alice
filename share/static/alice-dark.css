@@ -588,6 +588,28 @@ div.msg a {
 div.image {
   position: relative; }
 
+div.image a.hideimg {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  opacity: 0;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.5);
+  text-shadow: none;
+  padding: 1px 10px;
+  -webkit-border-radius: 10px;
+  -moz-border-radius: 10px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 10px; }
+
+div.image:hover a.hideimg {
+  opacity: 0.5; }
+
+div.image a.hideimg:hover {
+  background: rgba(0, 0, 0, 0.7);
+  opacity: 1; }
+
 div.msg div.image img {
   border: none;
   max-height: 300px;
