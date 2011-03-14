@@ -518,7 +518,7 @@ sub multiple_left {
 sub channel_topic {
   my ($self, $cl, $channel, $topic, $nick) = @_;
   if (my $window = $self->find_window($channel)) {
-    $topic = irc_to_html($topic);
+    $topic = irc_to_html($topic, classes => 1, invert => "italic");
     $window->topic({string => $topic, author => $nick, time => time});
     $self->broadcast($window->format_event("topic", $nick, $topic));
   }
