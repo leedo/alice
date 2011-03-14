@@ -125,18 +125,25 @@ div#nicklist_toggle {
   display: block;
   position: absolute;
   top: 1px;
-  right: 0px;
-  padding: 1px 0;
-  width: 115px;
-  background: $topic_background;
-  padding-left: 5px;
+  right: 5px;
+  padding: 1px 10px;
+  background: rgba(0,0,0,0.5);
+  -webkit-border-radius: 10px;
+  -moz-border-radius: 10px;
+  border-radius: 10px;
+  color: #fff;
+  -webkit-transition: opacity 0.1s ease-in-out;
   font-size: 11px;
   z-index: 902;
   opacity: 0;
   cursor: pointer;
-  font-style: italic;
-  color: $tab_border_active;
 }
+
+div#nicklist_toggle:active {
+  background: rgba(0,0,0,0.7);
+  opacity: 1;
+}
+
 
 div#nicklist_toggle:hover {
   opacity: 1;
@@ -539,7 +546,7 @@ li.event div.left {
 
 li.event div.left span.timestamp {
   opacity: 0;
-  //-webkit-transition: opacity 0.1s ease-in-out;
+  -webkit-transition: opacity 0.1s ease-in-out;
 }
 
 ul.messages li.avatar:not(.consecutive) {
@@ -563,6 +570,7 @@ ul.messages li.avatar span.nick {
   background: rgba(0, 0, 0, 0.5);
   color: #fff;
   text-shadow: rgba( 0, 0, 0, 1 ) 0 1px 1px;
+  -webkit-transition: opacity 0.1s ease-in-out;
   opacity: 0;
 }
 
