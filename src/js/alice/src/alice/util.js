@@ -14,7 +14,8 @@ Object.extend(Alice, {
     var div = e.findElement('div.image');
     if (div) {
       var img = div.down('a img');
-      if (img) img.replace(img.src);
+      var a = img.up('a');
+      if (img) img.replace(a.href);
       e.element().remove();
     }
   },
