@@ -12482,11 +12482,13 @@ if (window == window.parent) {
             var img = new Element("IMG", {src: alice.options.image_prefix + a.innerHTML});
             img.observe("load", function(){ alice.loadInlineImage(img) });
             a.update(img);
+            var wrap = new Element("DIV");
             var div = new Element("DIV", {"class": "image"});
             var hide = new Element("A", {"class": "hideimg"});
             hide.observe("click", Alice.removeImage);
             hide.update("hide");
-            a = a.replace(div);
+            wrap.insert(div);
+            a = a.replace(wrap);
             div.insert(a);
             div.insert(hide);
           });

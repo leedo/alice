@@ -223,7 +223,7 @@ div#input div.editor_toolbar button {
   display: block;
   float: left;
   color: #222222;
-  text-shadow: -1px -1px 0px #fff;
+  text-shadow: -1px -1px 0px white;
   line-height: 12px;
   font-size: 12px;
   margin: 0;
@@ -594,7 +594,8 @@ div.msg a {
   word-break: break-all; }
 
 div.image {
-  position: relative; }
+  position: relative;
+  display: inline-block; }
 
 div.image a.hideimg {
   position: absolute;
