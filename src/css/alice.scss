@@ -179,11 +179,12 @@ ul#nicklist li {
   display: block;
   padding: 2px 5px;
   cursor: pointer;
-  color: $tab_border_active;
+  color: $default_text;
+  opacity: 0.6;
 }
 
 ul#nicklist li:hover {
-  color: $default_text;
+  opacity: 1;
 }
 
 div#input {
@@ -1416,7 +1417,7 @@ li.dropdown > ul li.submenu:hover ul {
   background-color: transparent;
 }
 .compact-scroll ::-webkit-scrollbar-track-piece {
-  background-color: $message_nick_column_background;
+  background-color: $scrollbar_background;
   -webkit-border-radius: 0;
   -webkit-border-bottom-right-radius: 8px;
   -webkit-border-bottom-left-radius: 8px;
@@ -1424,12 +1425,12 @@ li.dropdown > ul li.submenu:hover ul {
 
 .compact-scroll ::-webkit-scrollbar-thumb:vertical {
   height: 50px;
-  background-color: $tab_border_active;
+  background-color: $scrollbar_thumb;
   -webkit-border-radius: 8px;
 }
 
 .compact-scroll ::-webkit-scrollbar-thumb:horizontal {
   width: 50px;
-  background-color: $tab_border_active;
+  background-color: $scrollbar_thumb;
   -webkit-border-radius: 8px;
 }

@@ -154,10 +154,11 @@ ul#nicklist li {
   display: block;
   padding: 2px 5px;
   cursor: pointer;
-  color: #222222; }
+  color: white;
+  opacity: 0.6; }
 
 ul#nicklist li:hover {
-  color: white; }
+  opacity: 1; }
 
 div#input {
   background: #333333;
@@ -1286,17 +1287,17 @@ li.dropdown > ul li.submenu:hover ul {
   background-color: transparent; }
 
 .compact-scroll ::-webkit-scrollbar-track-piece {
-  background-color: #111111;
+  background-color: black;
   -webkit-border-radius: 0;
   -webkit-border-bottom-right-radius: 8px;
   -webkit-border-bottom-left-radius: 8px; }
 
 .compact-scroll ::-webkit-scrollbar-thumb:vertical {
   height: 50px;
-  background-color: #222222;
+  background-color: #444444;
   -webkit-border-radius: 8px; }
 
 .compact-scroll ::-webkit-scrollbar-thumb:horizontal {
   width: 50px;
-  background-color: #222222;
+  background-color: #444444;
   -webkit-border-radius: 8px; }
