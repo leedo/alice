@@ -528,15 +528,6 @@ Alice.Application = Class.create({
     }).join("");
   },
 
-  loadInlineImage: function(image) {
-    var win = this.getWindow(image.up(".window").id);
-    if (win) {
-      var scroll = win.shouldScrollToBottom();
-      image.style.display = 'inline';
-      if (scroll) win.element.scrollTop += Math.min(image.height, 300);
-    }
-  },
-
   toggleNicklist: function() {
     var windows = $('windows');
     var win = this.activeWindow();

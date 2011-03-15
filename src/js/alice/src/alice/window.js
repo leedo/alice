@@ -442,5 +442,42 @@ Alice.Window = Class.create({
   updateNicks: function(nicks) {
     this.nicks = nicks;
     if (this.active) this.application.displayNicks(this.nicks);
+  },
+
+  removeImage: function(e) {
+    var div = e.findElement('div.image');
+    if (div) {
+      var img = div.down('a img');
+      var a = img.up('a');
+      if (img) img.replace(a.href);
+      e.element().remove();
+      a.observe("click", function(e){e.stop();this.inlineImage(a)}.bind(this));
+    }
+  },
+
+  inlineImage: function(a) {
+    if(a.innerHTML.indexOf('nsfw') !== -1) return;
+    a.stopObserving("click");
+
+    var scroll = this.shouldScrollToBottom();
+
+    var img = new Element("IMG", {src: alice.options.image_prefix + a.innerHTML});
+    img.observe("load", function(){
+      img.up("div.image").style.display = "inline-block";
+      if (scroll) this.scrollToBottom(true);
+    }.bind(this));
+
+    var wrap = new Element("DIV");
+    var div = new Element("DIV", {"class": "image"});
+    var hide = new Element("A", {"class": "hideimg"});
+
+    hide.observe("click", this.removeImage.bind(this));
+    hide.update("hide");
+    wrap.insert(div);
+
+    a = a.replace(wrap);
+    div.insert(a);
+    div.insert(hide);
+    a.update(img);
   }
 });
