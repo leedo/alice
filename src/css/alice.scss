@@ -692,7 +692,7 @@ div.msg a {
 
 div.image {
   position: relative;
-  display: inline-block;
+  display: none;
 }
 
 div.image a.hideimg {
@@ -724,7 +724,6 @@ div.msg div.image img {
   border: none;
   max-height: 300px;
   max-width: 100%;
-  display: none;
 }
 
 ul.messages li.monospaced + li.monospaced.consecutive {

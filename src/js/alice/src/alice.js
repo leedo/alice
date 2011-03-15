@@ -166,9 +166,9 @@ if (window == window.parent) {
           return regexes.img.match(a.innerHTML);
         }).each(function(a) {
           if (alice.options.images == "show")
-            Alice.inlineImage(a);
+            win.inlineImage(a);
           else
-            a.observe("click", function(e){e.stop();Alice.inlineImage(a)});
+            a.observe("click", function(e){e.stop();win.inlineImage(a)});
         });
       },
       function (msg, win) {
