@@ -162,25 +162,14 @@ if (window == window.parent) {
         }
       },
       function (msg, win) {
-        if (alice.options.images == "show") {
-          msg.select("a").filter(function(a) {
-            return regexes.img.match(a.innerHTML);
-          }).each(function(a) {
-            if(a.innerHTML.indexOf('nsfw') !== -1) return;
-            var img = new Element("IMG", {src: alice.options.image_prefix + a.innerHTML});
-            img.observe("load", function(){ alice.loadInlineImage(img) });
-            a.update(img);
-            var wrap = new Element("DIV");
-            var div = new Element("DIV", {"class": "image"});
-            var hide = new Element("A", {"class": "hideimg"});
-            hide.observe("click", Alice.removeImage);
-            hide.update("hide");
-            wrap.insert(div);
-            a = a.replace(wrap);
-            div.insert(a);
-            div.insert(hide);
-          });
-        }
+        msg.select("a").filter(function(a) {
+          return regexes.img.match(a.innerHTML);
+        }).each(function(a) {
+          if (alice.options.images == "show")
+            Alice.inlineImage(a);
+          else
+            a.observe("click", function(e){e.stop();Alice.inlineImage(a)});
+        });
       },
       function (msg, win) {
         if (alice.options.images == "show") {
