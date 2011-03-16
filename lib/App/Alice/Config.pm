@@ -27,6 +27,12 @@ has [qw/images avatars alerts/] => (
   default => "show",
 );
 
+has first_run => (
+  is      => 'rw',
+  isa     => 'Bool',
+  default => 1,
+);
+
 has style => (
   is      => 'rw',
   isa     => 'Str',

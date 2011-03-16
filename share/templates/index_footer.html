@@ -25,6 +25,9 @@
             <? if (!$app->connected_ircs) { ?>
             alice.toggleConfig();
             <? } ?>
+            <? if ($app->config->first_run) { ?>
+            alice.toggleHelp();
+            <? } ?>
           });
         </script>
         <ul id="nicklist"></ul>
