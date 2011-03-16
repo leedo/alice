@@ -220,7 +220,7 @@ div#input div.editor_toolbar button {
   display: block;
   float: left;
   color: #999999;
-  text-shadow: -1px -1px 0px #fff;
+  text-shadow: -1px -1px 0px white;
   line-height: 12px;
   font-size: 12px;
   margin: 0;
@@ -374,7 +374,7 @@ ul#controls {
   border-left: 1px solid #999999; }
 
 ul#controls > li {
-  float: right;
+  float: left;
   margin: 0;
   padding: 0;
   height: 16px;
