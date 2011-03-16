@@ -63,7 +63,7 @@ sub determine_irc {
     return();
   }
   elsif (!$irc->is_connected) {
-    $window->reply("$network is not connected");
+    $window->reply($irc->alias." is not connected");
     return ();
   }
   
