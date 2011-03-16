@@ -11330,6 +11330,8 @@ Alice.Window = Class.create({
     var shift = ul.viewportOffset().left;
     var width = document.viewport.getWidth() - 80;
 
+    tab.redraw();
+
     var offset_start = this.tab.positionedOffset().left;
     var offset_end = offset_start + this.tab.getWidth();
 
