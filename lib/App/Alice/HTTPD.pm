@@ -14,7 +14,6 @@ use App::Alice::Stream::WebSocket;
 use App::Alice::Commands;
 use JSON;
 use Encode;
-use utf8;
 use Any::Moose;
 
 has app => (
@@ -279,12 +278,14 @@ sub send_index {
   }
   push @queue, sub {
     my $html = $app->render('index_footer', $options, @windows);
+    $app->config->first_run(0);
+    $app->config->write;
     return $html;
   };
 
   my $idle_w; $idle_w = AE::idle sub {
     if (my $cb = shift @queue) {
-      my $content = encode_utf8 $cb->();
+      my $content = encode "utf8", $cb->();
       $writer->write($content);
     } else {
       $writer->close;
