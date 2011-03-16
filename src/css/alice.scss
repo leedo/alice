@@ -697,6 +697,7 @@ div.image {
 
 div.image a.hideimg {
   position: absolute;
+  white-space: nowrap;
   top: 2px;
   left: 2px;
   opacity: 0;
