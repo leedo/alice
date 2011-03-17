@@ -8,6 +8,7 @@ use Plack::Request;
 use Plack::Builder;
 use Plack::Middleware::Static;
 use Plack::Session::Store::File;
+use Plack::Session::State::Cookie;
 use App::Alice::Request;
 use App::Alice::Stream::XHR;
 use App::Alice::Stream::WebSocket;
@@ -81,7 +82,7 @@ sub _build_httpd {
             unless -d $self->config->path."/sessions";
           enable "Session",
             store => Plack::Session::Store::File->new(dir => $self->config->path."/sessions"),
-            expires => 60 * 60 * 24 * 7,
+            state => Plack::Session::State::Cookie->new(expires => 60 * 60 * 24 * 7);
         }
         enable "Static", path => qr{^/static/}, root => $self->config->assetdir;
         enable "WebSocket";
