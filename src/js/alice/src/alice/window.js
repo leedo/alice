@@ -125,11 +125,19 @@ Alice.Window = Class.create({
     var doc_width = document.viewport.getWidth() - $('controls').getWidth();
     var tab_width = this.tab.getWidth();
 
-    var offset_start = this.tab.positionedOffset().left + shift;
-    var offset_end = offset_start + tab_width;
+    var offset_left = this.tab.positionedOffset().left + shift;
+    var offset_right = doc_width - (offset_left + tab_width);
 
-    var overflow_right = Math.abs(Math.min(0, doc_width - offset_end));
-    var overflow_left = Math.abs(Math.min(0, offset_start - 2));
+    var overflow_right = Math.abs(Math.min(0, offset_right));
+    var overflow_left = Math.abs(Math.min(0, offset_left - 2));
+
+    if (this.tab.previous() && offset_left < 24) {
+      overflow_left += 24 - offset_left;
+    }
+
+    if (this.tab.next() && offset_right < 24) {
+      overflow_right += 24 - offset_right;
+    }
 
     return {
       tab: {
@@ -152,11 +160,9 @@ Alice.Window = Class.create({
 
     if (pos.tab.overflow_left) {
       left = pos.container.left + pos.tab.overflow_left;
-      if (this.tab.previous()) left += 22;
     }
     else if (pos.tab.overflow_right) {
       left = pos.container.left - pos.tab.overflow_right;
-      if (this.tab.next()) left -= 24;
     }
 
     if (left !== null) {

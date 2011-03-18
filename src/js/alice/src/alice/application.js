@@ -351,10 +351,10 @@ Alice.Application = Class.create({
     ['tab_menu_left', 'tab_menu_right'].each(function(menu) {
       menu = $(menu);
 
-      $(menu).select('li').each(function(li) {
+      menu.select('li').each(function(li) {
         if (li.getAttribute('rel') == id) {
           li.addClassName(classname);
-          $(menu).addClassName(classname);
+          menu.addClassName(classname);
           return;
         }
       });
@@ -369,6 +369,7 @@ Alice.Application = Class.create({
         if (li.getAttribute('rel') == id) {
           li.removeClassName("unread");
           li.removeClassName("highlight");
+          return;
         }
       });
 
