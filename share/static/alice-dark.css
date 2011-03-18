@@ -52,7 +52,7 @@ div#tab_overlay .dropdown {
   background-color: #444444; }
 
 body.blurred div#tab_overlay .dropdown {
-  background: #333333; }
+  background-color: #333333; }
 
 div#tab_overlay .dropdown:hover {
   background-color: #3a3a3a; }
