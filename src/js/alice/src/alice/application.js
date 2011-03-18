@@ -298,7 +298,6 @@ Alice.Application = Class.create({
     var display = (visible ? "block" : "none");
     var opacity = (visible ? 1 : 0);
     $('tab_menu_'+side).style.opacity = opacity;
-    
   },
 
   nextUnreadWindow: function() {
@@ -350,9 +349,10 @@ Alice.Application = Class.create({
   highlightChannelSelect: function(id, classname) {
     if (!classname) classname = "unread";
     ['tab_menu_left', 'tab_menu_right'].each(function(menu) {
+      menu = $(menu);
+
       $(menu).select('li').each(function(li) {
         if (li.getAttribute('rel') == id) {
-          console.log(li.getAttribute('rel'));
           li.addClassName(classname);
           $(menu).addClassName(classname);
           return;
@@ -361,9 +361,23 @@ Alice.Application = Class.create({
     });
   },
   
-  unHighlightChannelSelect: function() {
-    $('tab_menu').removeClassName('unread');
-    $('tab_menu').removeClassName('highlight');
+  unHighlightChannelSelect: function(id) {
+    ['tab_menu_left', 'tab_menu_right'].each(function(menu) {
+      menu = $(menu);
+
+      menu.select('li').each(function(li) {
+        if (li.getAttribute('rel') == id) {
+          li.removeClassName("unread");
+          li.removeClassName("highlight");
+        }
+      });
+
+      ["unread", "highlight"].each(function(c) {
+        if (!menu.select('li').any(function(li) {return li.hasClassName(c)})) {
+          menu.removeClassName(c);
+        }
+      });
+    });
   },
   
   handleAction: function(action) {
