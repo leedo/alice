@@ -143,7 +143,6 @@ sub join_action {
     html => {
       window  => $self->render("window", $self),
       tab     => $self->render("tab", $self),
-      select  => $self->render("select", $self),
     },
   };
 }

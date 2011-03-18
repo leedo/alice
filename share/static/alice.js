@@ -10528,6 +10528,35 @@ Alice.Application = Class.create({
     }
   },
 
+  updateOverflowMenus: function() {
+    var left = "";
+    var right = "";
+
+    this.windows().each(function(win) {
+      var tab = win.tab;
+      var position = win.getTabPosition();
+      if (position.tab.overflow_left) {
+        left += '<li rel="'+win.id+'">'+win.title.escapeHTML()+'</li>';
+      }
+      if (position.tab.overflow_right) {
+        right += '<li rel="'+win.id+'">'+win.title.escapeHTML()+'</li>';
+      }
+    }.bind(this));
+
+    $('tab_menu_right').down('ul').update(right);
+    $('tab_menu_left').down('ul').update(left);
+
+    this.toggleOverflow("left", !!left);
+    this.toggleOverflow("right", !!right);
+  },
+
+  toggleOverflow: function(side, visible) {
+    var display = (visible ? "block" : "none");
+    var opacity = (visible ? 1 : 0);
+    $('tab_menu_'+side).style.opacity = opacity;
+
+  },
+
   nextUnreadWindow: function() {
     var active = this.activeWindow();
     var tabs = active.tab.nextSiblings().concat(active.tab.previousSiblings().reverse());
@@ -10570,33 +10599,27 @@ Alice.Application = Class.create({
     if (!$(windowId)) {
       $('windows').insert(html['window']);
       $('tabs').insert(html.tab);
-      $('tab_menu').down('ul').insert(html.select);
-      $(windowId+"_tab_overflow").selected = false;
-      this.activeWindow().tabOverflowButton.selected = true;
       this.makeSortable();
     }
   },
 
-  highlightChannelSelect: function(classname) {
+  highlightChannelSelect: function(id, classname) {
     if (!classname) classname = "unread";
-    $('tab_menu').addClassName(classname);
+    ['tab_menu_left', 'tab_menu_right'].each(function(menu) {
+      $(menu).select('li').each(function(li) {
+        if (li.getAttribute('rel') == id) {
+          console.log(li.getAttribute('rel'));
+          li.addClassName(classname);
+          $(menu).addClassName(classname);
+          return;
+        }
+      });
+    });
   },
 
   unHighlightChannelSelect: function() {
     $('tab_menu').removeClassName('unread');
     $('tab_menu').removeClassName('highlight');
-  },
-
-  updateChannelSelect: function() {
-    var windows = this.windows();
-    for (var i=0; i < windows.length; i++) {
-      var win = windows[i];
-      if ((win.tab.hasClassName('unread') || win.tab.hasClassName('highlight')) && win.isTabHidden()) {
-        this.highlightChannelSelect();
-        return;
-      }
-    }
-    this.unHighlightChannelSelect();
   },
 
   handleAction: function(action) {
@@ -10682,10 +10705,12 @@ Alice.Application = Class.create({
   },
 
   ready: function() {
-    this.focusHash() || this.activeWindow().focus();
     this.connection.connect();
 
-    setTimeout(function(){this.activeWindow().scrollToBottom(true)}.bind(this), 1);
+    setTimeout(function(){
+      this.focusHash() || this.activeWindow().focus();
+      this.activeWindow().scrollToBottom(true)
+    }.bind(this), 10);
   },
 
   log: function () {
@@ -10820,8 +10845,9 @@ Alice.Application = Class.create({
     var click = this.supportsTouch ? "touchend" : "mouseup";
 
     $('config_menu').observe(click, function(e) {
-      var li = e.findElement("li.dropdown li");
+      var li = e.findElement(".dropdown li");
       if (li) {
+        e.stop();
         switch(li.innerHTML) {
           case "Help":
             this.toggleHelp();
@@ -10835,35 +10861,32 @@ Alice.Application = Class.create({
           case "Logout":
             window.location = "/logout";
             break;
+          case "All tabs":
+            this.clearSet(li);
+            break;
+          case "Edit":
+            this.toggleTabsets();
+            break;
         }
-        e.stop();
+
+        if (this.tabsets[li.innerHTML]) {
+          this.showSet(li.innerHTML);
+        }
         $$('li.dropdown.open').invoke("removeClassName", "open");
       }
     }.bind(this));
 
-    $('tab_menu').observe(click, function(e) {
-      var li = e.findElement("li.dropdown li");
-      if (!li) return;
+    ['tab_menu_left', 'tab_menu_right'].each(function(side) {
+      $(side).observe(click, function(e) {
+        var li = e.findElement(".dropdown li");
+        if (!li) return;
 
-      if (li && li.getAttribute("rel")) {
-        var win = this.getWindow(li.getAttribute("rel"));
-        if (win) win.focus();
-      }
-      else if (li.innerHTML.match(/^Sets/)) {
-        e.stop();
-        return;
-      }
-      else if (li.innerHTML == "All tabs") {
-        this.clearSet(li);
-      }
-      else if (li.innerHTML == "Edit") {
-        this.toggleTabsets();
-      }
-      else if (this.tabsets[li.innerHTML]) {
-        this.showSet(li.innerHTML);
-      }
-      e.stop();
-      $$('li.dropdown.open').invoke("removeClassName", "open");
+        if (li && li.getAttribute("rel")) {
+          $(side).removeClassName("open");
+          var win = this.getWindow(li.getAttribute("rel"));
+          if (win) win.focus();
+        }
+      }.bind(this));
     }.bind(this));
   }
 
@@ -11215,7 +11238,6 @@ Alice.Window = Class.create({
     this.topic = serialized['topic'];
     this.tab = $(this.id + "_tab");
     this.tabButton = $(this.id + "_tab_button");
-    this.tabOverflowButton = $(this.id + "_tab_overflow");
     this.messages = this.element.down('.messages');
     this.nicksVisible = false;
     this.visibleNick = "";
@@ -11230,7 +11252,6 @@ Alice.Window = Class.create({
   },
 
   hide: function() {
-    this.tabOverflowButton.hide();
     this.element.hide();
     this.tab.addClassName('hidden');
     this.tab.removeClassName('visible');
@@ -11238,7 +11259,6 @@ Alice.Window = Class.create({
   },
 
   show: function() {
-    this.tabOverflowButton.show();
     this.element.show();
     this.tab.addClassName('visible');
     this.tab.removeClassName('hidden');
@@ -11319,62 +11339,62 @@ Alice.Window = Class.create({
     }
   },
 
-  isTabHidden: function() {
-    var pos = this.getTabPosition();
-    return (pos.overflow.left < 0 || pos.overflow.right < 0);
-  },
-
   getTabPosition: function() {
     var ul = this.tab.up("ul");
 
     var shift = ul.viewportOffset().left;
-    var width = document.viewport.getWidth() - 80;
+    var doc_width = document.viewport.getWidth() - $('controls').getWidth();
+    var tab_width = this.tab.getWidth();
 
-    var offset_start = this.tab.positionedOffset().left;
-    var offset_end = offset_start + this.tab.getWidth();
+    var offset_start = this.tab.positionedOffset().left + shift;
+    var offset_end = offset_start + tab_width;
 
-    var overflow_right = shift + width - offset_end;
-    var overflow_left = shift + offset_start;
+    var overflow_right = Math.abs(Math.min(0, doc_width - offset_end));
+    var overflow_left = Math.abs(Math.min(0, offset_start - 2));
 
     return {
-      overflow: {
-        left: overflow_left,
-        right: overflow_right
-      },
-      offset: {
-        start: offset_start,
-        end: offset_end
+      tab: {
+        width: tab_width,
+        overflow_right: overflow_right,
+        overflow_left: overflow_left
       },
       container: {
         node: ul,
-        width: width,
-        shift: shift
+        width: doc_width,
+        left: shift
       }
-
     };
   },
 
   shiftTab: function() {
-    var left = 0;
-    var pos = this.getTabPosition();
+    var left = null
+      , time = 0
+      , pos = this.getTabPosition();
 
-    if (pos.overflow.right < 0) left = pos.container.width - pos.offset.end;
-    if (pos.overflow.left < 0) left = pos.offset.start;
+    if (pos.tab.overflow_left) {
+      left = pos.container.left + pos.tab.overflow_left;
+      if (this.tab.previous()) left += 22;
+    }
+    else if (pos.tab.overflow_right) {
+      left = pos.container.left - pos.tab.overflow_right;
+      if (this.tab.next()) left -= 24;
+    }
 
-    left = Math.min(left, 0);
+    if (left !== null) {
+      var diff = Math.abs(pos.container.left - left);
+      var time = Math.min(Math.max(0.1, diff / 100), 0.5);
 
-    var diff = Math.abs(pos.container.shift - left);
-    var time = Math.min(Math.max(0.1, diff / 100), 0.5);
+      pos.container.node.style.webkitTransitionDuration = time+"s";
+      pos.container.node.setStyle({left: left+"px"});
+    }
 
-    pos.container.node.style.webkitTransitionDuration = time+"s";
-    pos.container.node.setStyle({left: left+"px"});
+    setTimeout(this.application.updateOverflowMenus.bind(this.application), time * 1000 + 100);
   },
 
   unFocus: function() {
     this.active = false;
     this.element.removeClassName('active');
     this.tab.removeClassName('active');
-    this.tabOverflowButton.selected = false;
     this.addFold();
   },
 
@@ -11458,7 +11478,6 @@ Alice.Window = Class.create({
     this.application.displayNicks(this.nicks);
     this.markRead();
     this.setWindowHash();
-    this.application.updateChannelSelect();
 
     this.shiftTab();
 
@@ -11483,7 +11502,6 @@ Alice.Window = Class.create({
   markRead: function () {
     this.tab.removeClassName("unread");
     this.tab.removeClassName("highlight");
-    this.tabOverflowButton.removeClassName("unread");
   },
 
   disable: function () {
@@ -11499,7 +11517,6 @@ Alice.Window = Class.create({
     this.application.removeWindow(this);
     this.tab.remove();
     this.element.remove();
-    this.tabOverflowButton.remove();
   },
 
   showHappyAlert: function (message) {
@@ -11593,18 +11610,16 @@ Alice.Window = Class.create({
     this.scrollToBottom();
 
     if (!this.active && this.title != "info") {
-      var wrapped = this.isTabHidden();
       if (message.event == "say" && !message.self) {
         this.tab.addClassName("unread");
-        this.tabOverflowButton.addClassName("unread");
-        if (wrapped) this.application.highlightChannelSelect("unread");
+        this.application.highlightChannelSelect(this.id, "unread");
       }
       if (message.highlight) {
         this.tab.addClassName("highlight");
-        if (wrapped) this.application.highlightChannelSelect("highlight");
+        this.application.highlightChannelSelect(this.id, "highlight");
       }
       if (message.window.type == "privmsg" && wrapped) {
-        this.application.highlightChannelSelect("highlight");
+        this.application.highlightChannelSelect(this.id, "highlight");
       }
     }
 
@@ -12360,16 +12375,16 @@ if (window == window.parent) {
     $('helpclose').observe("click", function () { $('help').hide(); });
     $('nicklist_toggle').observe("click", function () { alice.toggleNicklist() });
 
-    $$('li.dropdown').each(function (li) {
-      li.observe(alice.supportsTouch ? "touchstart" : "mousedown", function (e) {
-        var element = e.element();
+    $$('.dropdown').each(function (menu) {
+      menu.observe(alice.supportsTouch ? "touchstart" : "mousedown", function (e) {
+        var element = e.element('.dropdown');
         if (element.hasClassName("dropdown")) {
-          if (li.hasClassName("open")) {
-            li.removeClassName("open");
+          if (menu.hasClassName("open")) {
+            menu.removeClassName("open");
           }
           else {
-            $$("li.dropdown").invoke("removeClassName", "open");
-            li.addClassName("open");
+            $$(".dropdown.open").invoke("removeClassName", "open");
+            menu.addClassName("open");
           }
           e.stop();
         }
@@ -12377,8 +12392,8 @@ if (window == window.parent) {
     });
 
     document.observe(alice.supportsTouch ? "touchend" : "mouseup", function (e) {
-      if (e.findElement('li.dropdown')) return;
-      $$('li.dropdown.open').invoke("removeClassName", "open");
+      if (e.findElement('.dropdown')) return;
+      $$('.dropdown.open').invoke("removeClassName", "open");
     });
 
 

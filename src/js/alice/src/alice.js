@@ -27,16 +27,16 @@ if (window == window.parent) {
     $('helpclose').observe("click", function () { $('help').hide(); });
     $('nicklist_toggle').observe("click", function () { alice.toggleNicklist() });
 
-    $$('li.dropdown').each(function (li) {
-      li.observe(alice.supportsTouch ? "touchstart" : "mousedown", function (e) {
-        var element = e.element();
+    $$('.dropdown').each(function (menu) {
+      menu.observe(alice.supportsTouch ? "touchstart" : "mousedown", function (e) {
+        var element = e.element('.dropdown');
         if (element.hasClassName("dropdown")) {
-          if (li.hasClassName("open")) {
-            li.removeClassName("open");
+          if (menu.hasClassName("open")) {
+            menu.removeClassName("open");
           }
           else {
-            $$("li.dropdown").invoke("removeClassName", "open");
-            li.addClassName("open");
+            $$(".dropdown.open").invoke("removeClassName", "open");
+            menu.addClassName("open");
           }
           e.stop();
         }
@@ -44,8 +44,8 @@ if (window == window.parent) {
     });
 
     document.observe(alice.supportsTouch ? "touchend" : "mouseup", function (e) {
-      if (e.findElement('li.dropdown')) return;
-      $$('li.dropdown.open').invoke("removeClassName", "open");
+      if (e.findElement('.dropdown')) return;
+      $$('.dropdown.open').invoke("removeClassName", "open");
     });
 
     // setup window events
