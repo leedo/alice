@@ -10605,6 +10605,8 @@ Alice.Application = Class.create({
   highlightChannelSelect: function(id, classname) {
     if (!classname) classname = "unread";
     ['tab_menu_left', 'tab_menu_right'].each(function(menu) {
+      menu = $(menu);
+
       $(menu).select('li').each(function(li) {
         if (li.getAttribute('rel') == id) {
           li.addClassName(classname);

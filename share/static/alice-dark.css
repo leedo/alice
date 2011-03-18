@@ -51,6 +51,9 @@ div#tab_overlay .dropdown {
   opacity: 0;
   background-color: #444444; }
 
+body.blurred div#tab_overlay .dropdown {
+  background: #333333; }
+
 div#tab_overlay .dropdown:hover {
   background-color: #3a3a3a; }
 
@@ -274,7 +277,7 @@ div#input div.editor_toolbar button {
   display: block;
   float: left;
   color: #222222;
-  text-shadow: -1px -1px 0px #fff;
+  text-shadow: -1px -1px 0px white;
   line-height: 12px;
   font-size: 12px;
   margin: 0;
