@@ -32,21 +32,15 @@
         </script>
         <ul id="nicklist"></ul>
       </div>
+
       <ul id="controls">
-        <li class="dropdown" id="tab_menu">
+        <li class="dropdown" id="config_menu">
           <ul>
             <li class="submenu separate-bottom">Sets
               <?= $_mt->render_file('tabset_menu.html', $_[0]); ?>
             </li>
-            <? for my $window (@windows) { ?>
-              <?= $_mt->render_file('select.html', $_[0], $window); ?>
-            <? } ?>
-          </ul>
-        </li>
-        <li class="dropdown" id="config_menu">
-          <ul>
             <? if ($app->auth_enabled) { ?>
-            <li>Logout</li>
+            <li class="separate-bottom">Logout</li>
             <? } ?>
             <li>Help</li>
             <li>Preferences</li>
@@ -55,6 +49,7 @@
         </li>
         <li id="connection_status" class="ok"></li>
       </ul>
+
       <div id="tab_container">
         <ul id="tabs">
         <? for my $window (@windows) { ?>
@@ -62,6 +57,16 @@
         <? } ?>
         </ul>
       </div>
+
+      <div id="tab_overlay">
+        <div class="dropdown tab_menu" id="tab_menu_left">
+          <ul></ul>
+        </div>
+        <div class="dropdown tab_menu" id="tab_menu_right">
+          <ul></ul>
+        </div>
+      </div>
+
       <div id="input">
         <form autocomplete="off">
           <input type="hidden" value="" name="source" id="source" />
@@ -70,6 +75,8 @@
         </form>
       </div>
     </div>
+
     <?= $_mt->render_file('help.html', $_[0]) ?>
+
   </body>
 </html>

@@ -272,6 +272,35 @@ Alice.Application = Class.create({
     }
   },
 
+  updateOverflowMenus: function() {
+    var left = "";
+    var right = "";
+
+    this.windows().each(function(win) {
+      var tab = win.tab;
+      var position = win.getTabPosition();
+      if (position.tab.overflow_left) {
+        left += '<li rel="'+win.id+'">'+win.title.escapeHTML()+'</li>';
+      }
+      if (position.tab.overflow_right) {
+        right += '<li rel="'+win.id+'">'+win.title.escapeHTML()+'</li>';
+      }
+    }.bind(this));
+
+    $('tab_menu_right').down('ul').update(right);
+    $('tab_menu_left').down('ul').update(left);
+
+    this.toggleOverflow("left", !!left);
+    this.toggleOverflow("right", !!right);
+  },
+
+  toggleOverflow: function(side, visible) {
+    var display = (visible ? "block" : "none");
+    var opacity = (visible ? 1 : 0);
+    $('tab_menu_'+side).style.opacity = opacity;
+    
+  },
+
   nextUnreadWindow: function() {
     var active = this.activeWindow();
     var tabs = active.tab.nextSiblings().concat(active.tab.previousSiblings().reverse());
@@ -314,33 +343,27 @@ Alice.Application = Class.create({
     if (!$(windowId)) {
       $('windows').insert(html['window']);
       $('tabs').insert(html.tab);
-      $('tab_menu').down('ul').insert(html.select);
-      $(windowId+"_tab_overflow").selected = false;
-      this.activeWindow().tabOverflowButton.selected = true;
       this.makeSortable();
     }
   },
   
-  highlightChannelSelect: function(classname) {
+  highlightChannelSelect: function(id, classname) {
     if (!classname) classname = "unread";
-    $('tab_menu').addClassName(classname);
+    ['tab_menu_left', 'tab_menu_right'].each(function(menu) {
+      $(menu).select('li').each(function(li) {
+        if (li.getAttribute('rel') == id) {
+          console.log(li.getAttribute('rel'));
+          li.addClassName(classname);
+          $(menu).addClassName(classname);
+          return;
+        }
+      });
+    });
   },
   
   unHighlightChannelSelect: function() {
     $('tab_menu').removeClassName('unread');
     $('tab_menu').removeClassName('highlight');
-  },
-  
-  updateChannelSelect: function() {
-    var windows = this.windows();
-    for (var i=0; i < windows.length; i++) {
-      var win = windows[i];
-      if ((win.tab.hasClassName('unread') || win.tab.hasClassName('highlight')) && win.isTabHidden()) {
-        this.highlightChannelSelect();
-        return;
-      }
-    }
-    this.unHighlightChannelSelect();
   },
   
   handleAction: function(action) {
@@ -426,11 +449,13 @@ Alice.Application = Class.create({
   },
 
   ready: function() {
-    this.focusHash() || this.activeWindow().focus();
     this.connection.connect();
 
     // required due to browser weirdness with scrolltobottom on initial focus
-    setTimeout(function(){this.activeWindow().scrollToBottom(true)}.bind(this), 1);
+    setTimeout(function(){
+      this.focusHash() || this.activeWindow().focus();
+      this.activeWindow().scrollToBottom(true)
+    }.bind(this), 10);
   },
 
   log: function () {
@@ -565,8 +590,9 @@ Alice.Application = Class.create({
     var click = this.supportsTouch ? "touchend" : "mouseup";
 
     $('config_menu').observe(click, function(e) {
-      var li = e.findElement("li.dropdown li");
+      var li = e.findElement(".dropdown li");
       if (li) {
+        e.stop();
         switch(li.innerHTML) {
           case "Help":
             this.toggleHelp();
@@ -580,35 +606,32 @@ Alice.Application = Class.create({
           case "Logout":
             window.location = "/logout";
             break;
+          case "All tabs":
+            this.clearSet(li);
+            break;
+          case "Edit":
+            this.toggleTabsets();
+            break;
         }
-        e.stop();
+
+        if (this.tabsets[li.innerHTML]) {
+          this.showSet(li.innerHTML);
+        }
         $$('li.dropdown.open').invoke("removeClassName", "open");
       }
     }.bind(this));
 
-    $('tab_menu').observe(click, function(e) {
-      var li = e.findElement("li.dropdown li");
-      if (!li) return;
+    ['tab_menu_left', 'tab_menu_right'].each(function(side) {
+      $(side).observe(click, function(e) {
+        var li = e.findElement(".dropdown li");
+        if (!li) return;
 
-      if (li && li.getAttribute("rel")) {
-        var win = this.getWindow(li.getAttribute("rel"));
-        if (win) win.focus();
-      }
-      else if (li.innerHTML.match(/^Sets/)) {
-        e.stop();
-        return;
-      }
-      else if (li.innerHTML == "All tabs") {
-        this.clearSet(li);
-      }
-      else if (li.innerHTML == "Edit") {
-        this.toggleTabsets();
-      }
-      else if (this.tabsets[li.innerHTML]) {
-        this.showSet(li.innerHTML);
-      }
-      e.stop();
-      $$('li.dropdown.open').invoke("removeClassName", "open");
+        if (li && li.getAttribute("rel")) {
+          $(side).removeClassName("open");
+          var win = this.getWindow(li.getAttribute("rel"));
+          if (win) win.focus();
+        }
+      }.bind(this));
     }.bind(this));
   }
 

@@ -11,7 +11,6 @@ Alice.Window = Class.create({
     this.topic = serialized['topic'];
     this.tab = $(this.id + "_tab");
     this.tabButton = $(this.id + "_tab_button");
-    this.tabOverflowButton = $(this.id + "_tab_overflow");
     this.messages = this.element.down('.messages');
     this.nicksVisible = false;
     this.visibleNick = "";
@@ -26,7 +25,6 @@ Alice.Window = Class.create({
   },
 
   hide: function() {
-    this.tabOverflowButton.hide();
     this.element.hide();
     this.tab.addClassName('hidden');
     this.tab.removeClassName('visible');
@@ -34,7 +32,6 @@ Alice.Window = Class.create({
   },
 
   show: function() {
-    this.tabOverflowButton.show();
     this.element.show();
     this.tab.addClassName('visible');
     this.tab.removeClassName('hidden');
@@ -121,62 +118,63 @@ Alice.Window = Class.create({
     }
   },
   
-  isTabHidden: function() {
-    var pos = this.getTabPosition();
-    return (pos.overflow.left < 0 || pos.overflow.right < 0);
-  },
-
   getTabPosition: function() {
     var ul = this.tab.up("ul");
 
     var shift = ul.viewportOffset().left;
-    var width = document.viewport.getWidth() - 80;
+    var doc_width = document.viewport.getWidth() - $('controls').getWidth();
+    var tab_width = this.tab.getWidth();
 
-    var offset_start = this.tab.positionedOffset().left;
-    var offset_end = offset_start + this.tab.getWidth();
+    var offset_start = this.tab.positionedOffset().left + shift;
+    var offset_end = offset_start + tab_width;
 
-    var overflow_right = shift + width - offset_end;
-    var overflow_left = shift + offset_start;
-    
+    var overflow_right = Math.abs(Math.min(0, doc_width - offset_end));
+    var overflow_left = Math.abs(Math.min(0, offset_start - 2));
+
     return {
-      overflow: {
-        left: overflow_left,
-        right: overflow_right
-      },
-      offset: {
-        start: offset_start,
-        end: offset_end
+      tab: {
+        width: tab_width,
+        overflow_right: overflow_right,
+        overflow_left: overflow_left
       },
       container: {
         node: ul,
-        width: width,
-        shift: shift
+        width: doc_width,
+        left: shift
       }
-
     };
   },
 
   shiftTab: function() {
-    var left = 0;
-    var pos = this.getTabPosition(); 
+    var left = null
+      , time = 0
+      , pos = this.getTabPosition(); 
 
-    if (pos.overflow.right < 0) left = pos.container.width - pos.offset.end;
-    if (pos.overflow.left < 0) left = pos.offset.start;
+    if (pos.tab.overflow_left) {
+      left = pos.container.left + pos.tab.overflow_left;
+      if (this.tab.previous()) left += 22;
+    }
+    else if (pos.tab.overflow_right) {
+      left = pos.container.left - pos.tab.overflow_right;
+      if (this.tab.next()) left -= 24;
+    }
 
-    left = Math.min(left, 0);
+    if (left !== null) {
+      var diff = Math.abs(pos.container.left - left);
+      var time = Math.min(Math.max(0.1, diff / 100), 0.5);
 
-    var diff = Math.abs(pos.container.shift - left);
-    var time = Math.min(Math.max(0.1, diff / 100), 0.5);
+      pos.container.node.style.webkitTransitionDuration = time+"s";
+      pos.container.node.setStyle({left: left+"px"});
+    }
 
-    pos.container.node.style.webkitTransitionDuration = time+"s";
-    pos.container.node.setStyle({left: left+"px"});
+    // update overflow menus after tabs have finisehd moving
+    setTimeout(this.application.updateOverflowMenus.bind(this.application), time * 1000 + 100);
   },
 
   unFocus: function() {
     this.active = false;
     this.element.removeClassName('active');
     this.tab.removeClassName('active');
-    this.tabOverflowButton.selected = false;
     this.addFold();
   },
 
@@ -260,7 +258,6 @@ Alice.Window = Class.create({
     this.application.displayNicks(this.nicks);
     this.markRead();
     this.setWindowHash();
-    this.application.updateChannelSelect();
 
     this.shiftTab();
 
@@ -286,7 +283,6 @@ Alice.Window = Class.create({
   markRead: function () {
     this.tab.removeClassName("unread");
     this.tab.removeClassName("highlight");
-    this.tabOverflowButton.removeClassName("unread");
   },
   
   disable: function () {
@@ -302,7 +298,6 @@ Alice.Window = Class.create({
     this.application.removeWindow(this);
     this.tab.remove();
     this.element.remove();
-    this.tabOverflowButton.remove();
   },
   
   showHappyAlert: function (message) {
@@ -398,18 +393,16 @@ Alice.Window = Class.create({
 
     // highlight the tab
     if (!this.active && this.title != "info") {
-      var wrapped = this.isTabHidden();
       if (message.event == "say" && !message.self) {
         this.tab.addClassName("unread");
-        this.tabOverflowButton.addClassName("unread");
-        if (wrapped) this.application.highlightChannelSelect("unread");
+        this.application.highlightChannelSelect(this.id, "unread");
       }
       if (message.highlight) {
         this.tab.addClassName("highlight");
-        if (wrapped) this.application.highlightChannelSelect("highlight");
+        this.application.highlightChannelSelect(this.id, "highlight");
       }
       if (message.window.type == "privmsg" && wrapped) {
-        this.application.highlightChannelSelect("highlight");
+        this.application.highlightChannelSelect(this.id, "highlight");
       }
     }
 

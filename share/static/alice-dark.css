@@ -34,18 +34,70 @@ ul#controls li.dropdown {
   margin: 0;
   position: relative; }
 
-li.dropdown li.selectedset,
-li.dropdown li.unread {
+div#tab_overlay {
+  position: absolute;
+  bottom: 0px;
+  left: 0px;
+  right: 46px;
+  height: 24px; }
+
+div#tab_overlay .dropdown {
+  width: 24px;
+  height: 23px;
+  border-top: 1px solid #222222;
+  z-index: 904;
+  -moz-transition: opacity 0.25s ease-in-out;
+  -webkit-transition: opacity 0.25s ease-in-out;
+  opacity: 0;
+  background-color: #444444; }
+
+div#tab_overlay .dropdown:hover {
+  background-color: #3a3a3a; }
+
+div#tab_menu_left {
+  border-right: 1px solid #222222; }
+
+div#tab_menu_right {
+  border-left: 1px solid #222222; }
+
+div#tab_menu_left {
+  position: absolute;
+  left: 0px;
+  bottom: 0px; }
+
+div#tab_menu_left ul {
+  left: 0px;
+  right: auto; }
+
+div#tab_menu_right {
+  position: absolute;
+  right: 0px;
+  bottom: 0px; }
+
+.dropdown li.selectedset,
+.dropdown li.unread {
   font-weight: bold; }
 
-li#tab_menu {
+.tab_menu {
   background: url(image/sprites.png) 4px -174px no-repeat; }
 
-li#tab_menu.unread {
+#tab_menu_left.tab_menu {
+  background: url(image/sprites.png) -19px -174px no-repeat;
+  background-color: #444444; }
+
+.tab_menu.unread {
   background: url(image/sprites.png) 4px -194px no-repeat; }
 
-li#tab_menu.unread.highlight {
-  background: url(image/sprites.png) -20px -194px no-repeat; }
+#tab_menu_left.tab_menu.unread {
+  background: url(image/sprites.png) -19px -194px no-repeat;
+  background-color: #444444; }
+
+.tab_menu.unread.highlight {
+  background: url(image/sprites.png) 4px -235px no-repeat; }
+
+#tab_menu_left.tab_menu.unread.highlight {
+  background: url(image/sprites.png) -19px -235px no-repeat;
+  background-color: #444444; }
 
 li#config_menu {
   background: url(image/sprites.png) 5px -216px no-repeat; }
@@ -216,14 +268,13 @@ div#input div.editor_toolbar {
   width: 70px;
   bottom: -3px;
   z-index: 902;
-  background: #333333;
-  border-left: 1px solid #444444; }
+  background: #333333; }
 
 div#input div.editor_toolbar button {
   display: block;
   float: left;
   color: #222222;
-  text-shadow: -1px -1px 0px white;
+  text-shadow: -1px -1px 0px #fff;
   line-height: 12px;
   font-size: 12px;
   margin: 0;
@@ -284,7 +335,8 @@ ul#tabs {
   margin: 0;
   padding: 0;
   font-size: 11px;
-  position: relative;
+  position: absolute;
+  left: 0px;
   height: 24px;
   overflow: hidden;
   background-color: #444444;
@@ -369,12 +421,10 @@ ul#controls {
   bottom: 0px;
   right: 0px;
   height: 23px;
-  width: 74px;
   margin: 0;
-  padding: 0 2px 0 0;
+  padding: 0;
   list-style: none;
-  border-top: 1px solid #222222;
-  border-left: 1px solid #222222; }
+  border-top: 1px solid #222222; }
 
 ul#controls > li {
   float: left;
@@ -882,28 +932,6 @@ div.color_picker div.toggle span#bg.active {
   div.msg {
     margin-left: 44px !important; }
 
-  div.window {
-    bottom: 30px; }
-
-  div#tab_container {
-    display: none; }
-
-  ul#controls {
-    padding-right: 0;
-    background: none;
-    position: absolute;
-    bottom: 2px;
-    right: 1px;
-    width: 24px;
-    border: none; }
-
-  ul#controls li#connection_status, ul#controls li#config_menu {
-    display: none; }
-
-  div#input {
-    bottom: 0px;
-    border-bottom: none; }
-
   div#input div {
     margin-right: 80px;
     background: none; }
@@ -1222,10 +1250,10 @@ span.nickborder {
   position: absolute;
   left: -1000px; }
 
-ul#controls li.dropdown.open {
+.dropdown.open {
   background-color: #3a3a3a; }
 
-li.dropdown ul {
+.dropdown ul {
   position: absolute;
   bottom: 30px;
   right: 0px;
@@ -1240,41 +1268,41 @@ li.dropdown ul {
   display: none;
   white-space: nowrap; }
 
-li.dropdown.open > ul {
+.dropdown.open > ul {
   display: block; }
 
-li.dropdown li {
+.dropdown li {
   display: block;
   padding: 4px 5px;
   text-decoration: none;
   color: white; }
 
-li.dropdown li {
+.dropdown li {
   cursor: pointer; }
 
-li.dropdown li a:hover {
+.dropdown li a:hover {
   color: white;
   text-shadow: none; }
 
-li.dropdown ul li:hover {
+.dropdown ul li:hover {
   background: #3a3a3a; }
 
-li.dropdown > ul ul {
+.dropdown > ul ul {
   display: none;
   right: 100%;
   bottom: -1px;
   top: auto; }
 
-li.dropdown li.separate-bottom {
+.dropdown li.separate-bottom {
   border-bottom: 1px solid #3a3a3a; }
 
-li.dropdown li.submenu {
+.dropdown li.submenu {
   background: url(image/arrow.png) center right no-repeat; }
 
-li.dropdown li.submenu:hover {
+.dropdown li.submenu:hover {
   background: url(image/arrow.png) #3a3a3a center right no-repeat; }
 
-li.dropdown > ul li.submenu:hover ul {
+.dropdown > ul li.submenu:hover ul {
   display: block; }
 
 .compact-scroll ::-webkit-scrollbar {
