@@ -58,6 +58,10 @@ div#tab_overlay .dropdown {
   background-color: $tab_background;
 }
 
+body.blurred div#tab_overlay .dropdown {
+  background: $tab_background_blurred;
+}
+
 div#tab_overlay .dropdown:hover {
   background-color: $tab_background_hover;
 }
