@@ -283,6 +283,7 @@ Alice.Window = Class.create({
   markRead: function () {
     this.tab.removeClassName("unread");
     this.tab.removeClassName("highlight");
+    this.application.unHighlightChannelSelect(this.id);
   },
   
   disable: function () {
