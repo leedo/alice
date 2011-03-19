@@ -298,6 +298,7 @@ Alice.Application = Class.create({
     var display = (visible ? "block" : "none");
     var opacity = (visible ? 1 : 0);
     $('tab_menu_'+side).style.opacity = opacity;
+    $('tab_menu_'+side).style.display = display;
   },
 
   nextUnreadWindow: function() {
