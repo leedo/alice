@@ -10554,6 +10554,7 @@ Alice.Application = Class.create({
     var display = (visible ? "block" : "none");
     var opacity = (visible ? 1 : 0);
     $('tab_menu_'+side).style.opacity = opacity;
+    $('tab_menu_'+side).style.display = display;
   },
 
   nextUnreadWindow: function() {
@@ -11367,12 +11368,13 @@ Alice.Window = Class.create({
     var overflow_right = Math.abs(Math.min(0, offset_right));
     var overflow_left = Math.abs(Math.min(0, offset_left - 2));
 
-    if (this.tab.previous() && offset_left < 24) {
-      overflow_left += 24 - offset_left;
+    if (this.tab.previous() && overflow_left) {
+      overflow_left += 22;
     }
 
-    if (this.tab.next() && offset_right < 24) {
-      overflow_right += 24 - offset_right;
+    else if (this.tab.next() && overflow_right) {
+      console.log(overflow_right);
+      overflow_right += 24;
     }
 
     return {
