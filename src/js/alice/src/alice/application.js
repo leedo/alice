@@ -205,6 +205,12 @@ Alice.Application = Class.create({
       }
     }
   },
+
+  info_window: function(n) {
+    return this.windows().find(function(win) {
+      if (win.type == "info") return win;
+    });
+  },
   
   openWindow: function(serialized) {
     var win = new Alice.Window(this, serialized);
