@@ -293,7 +293,8 @@ sub sorted_windows {
              0 .. @{$self->config->order} - 1;
   }
   $o{info} = "01";
-  sort { ($o{$a->title} || $a->sort_name) cmp ($o{$b->title} || $b->sort_name) }
+  my $prefix = scalar @{$self->config->order} + 1;
+  sort { ($o{$a->title} || $prefix.$a->sort_name) cmp ($o{$b->title} || $prefix.$b->sort_name) }
        $self->windows;
 }
 
