@@ -10462,6 +10462,12 @@ Alice.Application = Class.create({
     }
   },
 
+  info_window: function(n) {
+    return this.windows().find(function(win) {
+      if (win.type == "info") return win;
+    });
+  },
+
   openWindow: function(serialized) {
     var win = new Alice.Window(this, serialized);
     this.addWindow(win);
@@ -12197,6 +12203,9 @@ Alice.Keyboard = Class.create({
 
   onNumeric: function(event, number) {
     var win = this.application.nth_window(number);
+    if (number == 0) {
+      win = this.application.info_window();
+    }
     if (win) win.focus();
   },
 
