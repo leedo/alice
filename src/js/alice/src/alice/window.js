@@ -129,15 +129,24 @@ Alice.Window = Class.create({
     var offset_right = doc_width - (offset_left + tab_width);
 
     var overflow_right = Math.abs(Math.min(0, offset_right));
-    var overflow_left = Math.abs(Math.min(0, offset_left - 2));
+    var overflow_left = Math.abs(Math.min(0, offset_left));
 
-    if (this.tab.previous() && overflow_left) {
-      overflow_left += 22;
+    if (this.tab.previous()) {
+      if (overflow_left) {
+        overflow_left += 24;
+      }
+      else if (offset_left < 24 && offset_left > 0) {
+        overflow_left += 24 - offset_left;
+      }
     }
 
-    else if (this.tab.next() && overflow_right) {
-      console.log(overflow_right);
-      overflow_right += 24;
+    if (!overflow_left && this.tab.next()) {
+      if (overflow_right) {
+        overflow_right += 24;
+      }
+      else if (offset_right < 24 && offset_right > 0) {
+        overflow_right += 24 - offset_right;
+      }
     }
 
     return {
