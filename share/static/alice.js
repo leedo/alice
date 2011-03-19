@@ -10533,14 +10533,19 @@ Alice.Application = Class.create({
     var right = "";
 
     this.windows().each(function(win) {
+
+      if (!win.visible) return;
+
       var tab = win.tab;
       var position = win.getTabPosition();
+
       if (position.tab.overflow_left) {
         left += '<li rel="'+win.id+'">'+win.title.escapeHTML()+'</li>';
       }
       if (position.tab.overflow_right) {
         right += '<li rel="'+win.id+'">'+win.title.escapeHTML()+'</li>';
       }
+
     }.bind(this));
 
     $('tab_menu_right').down('ul').update(right);
@@ -11368,7 +11373,7 @@ Alice.Window = Class.create({
     var overflow_right = Math.abs(Math.min(0, offset_right));
     var overflow_left = Math.abs(Math.min(0, offset_left));
 
-    if (this.tab.previous()) {
+    if (this.tab.previous('.visible')) {
       if (overflow_left) {
         overflow_left += 24;
       }
@@ -11377,7 +11382,7 @@ Alice.Window = Class.create({
       }
     }
 
-    if (!overflow_left && this.tab.next()) {
+    if (!overflow_left && this.tab.next('.visible')) {
       if (overflow_right) {
         overflow_right += 24;
       }

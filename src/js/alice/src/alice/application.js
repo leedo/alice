@@ -277,14 +277,19 @@ Alice.Application = Class.create({
     var right = "";
 
     this.windows().each(function(win) {
+
+      if (!win.visible) return;
+
       var tab = win.tab;
       var position = win.getTabPosition();
+
       if (position.tab.overflow_left) {
         left += '<li rel="'+win.id+'">'+win.title.escapeHTML()+'</li>';
       }
       if (position.tab.overflow_right) {
         right += '<li rel="'+win.id+'">'+win.title.escapeHTML()+'</li>';
       }
+
     }.bind(this));
 
     $('tab_menu_right').down('ul').update(right);

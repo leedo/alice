@@ -131,7 +131,7 @@ Alice.Window = Class.create({
     var overflow_right = Math.abs(Math.min(0, offset_right));
     var overflow_left = Math.abs(Math.min(0, offset_left));
 
-    if (this.tab.previous()) {
+    if (this.tab.previous('.visible')) {
       if (overflow_left) {
         overflow_left += 24;
       }
@@ -140,7 +140,7 @@ Alice.Window = Class.create({
       }
     }
 
-    if (!overflow_left && this.tab.next()) {
+    if (!overflow_left && this.tab.next('.visible')) {
       if (overflow_right) {
         overflow_right += 24;
       }
