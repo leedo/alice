@@ -10968,7 +10968,7 @@ Alice.Application = Class.create({
         if (!time) return;
         time = time.innerHTML;
 
-        if (time - win.lasttimestamp > 60 * 5) {
+        if (time % 300 == 0 || time - win.lasttimestamp > 60 * 5) {
           hint.style.opacity = 1;
           win.lasttimestamp = time;
         }
