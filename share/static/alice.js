@@ -10961,8 +10961,9 @@ Alice.Application = Class.create({
         var hint = li.down('div.timehint');
         if (!hint) return;
 
-        var time = hint.down('span.timestamp').innerHTML;
+        var time = hint.down('span.timestamp');
         if (!time) return;
+        time = time.innerHTML;
 
         if (time - win.lasttimestamp > 60 * 5) {
           hint.style.opacity = 1;
@@ -10972,7 +10973,9 @@ Alice.Application = Class.create({
 
       function(li, win) {
         var timestamp = li.down('span.timestamp');
-        timestamp.innerHTML = Alice.epochToLocal(timestamp.innerHTML.strip(), this.options.timeformat);
+        if (!timestamp) return;
+
+        timestamp.update(Alice.epochToLocal(timestamp.innerHTML.strip(), this.options.timeformat));
         timestamp.style.opacity = 1;
       },
 
