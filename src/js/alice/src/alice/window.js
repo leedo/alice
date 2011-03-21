@@ -12,14 +12,12 @@ Alice.Window = Class.create({
     this.tab = $(this.id + "_tab");
     this.tabButton = $(this.id + "_tab_button");
     this.messages = this.element.down('.messages');
-    this.nicksVisible = false;
     this.visibleNick = "";
     this.visibleNickTimeout = "";
     this.nicks = [];
     this.messageLimit = this.application.isMobile ? 50 : 200;
     this.msgid = 0;
     this.visible = true;
-    this.lastnotify = 0;
     
     this.setupEvents();
   },
@@ -76,48 +74,6 @@ Alice.Window = Class.create({
     this.messages.observe("mouseover", this.showNick.bind(this));
   },
 
-  setupMessages: function() {
-    // fix height of non-consecutive avatar messages
-    this.messages.select('li.avatar:not(.consecutive) + li.consecutive').each(function (li) {
-      li.previous().down('div.msg').setStyle({minHeight:'0px'});
-    });
-
-    this.messages.select('li.monospaced + li.monospaced.consecutive').each(function(li) {
-      li.previous().down('div.msg').setStyle({paddingBottom:'0px'});
-    });
-
-    // change timestamps from epoch to local time
-    this.messages.select('span.timestamp').each(function(elem) {
-      var inner = elem.innerHTML.strip();
-      if (inner.match(/^\d+$/)) {
-        elem.innerHTML = Alice.epochToLocal(inner, alice.options.timeformat);
-        elem.style.opacity = 1;
-      }
-    });
-
-    // work around chrome bugs! what the fuck.
-    if (window.navigator.userAgent.match(/chrome/i)) {
-      this.messages.select('div.msg').each(function(msg){
-        msg.setStyle({borderWidthTop: "1px"});
-      });
-    }
-
-    this.scrollToBottom(true);
-
-    // wait a second to load images, otherwise the browser will say "loading..."
-    setTimeout(function () {
-      this.messages.select('li.message div.msg').each(function (msg) {
-        this.application.applyFilters(msg, this);
-      }.bind(this));
-    }.bind(this), this.application.loadDelay);
-
-    var last = this.messages.down("li:last-child");
-    if (last && last.id) {
-      this.application.log("setting "+this.title+" msgid to "+last.id);
-      this.msgid = last.id.replace("msg-", "");
-    }
-  },
-  
   getTabPosition: function() {
     var ul = this.tab.up("ul");
 
@@ -203,7 +159,7 @@ Alice.Window = Class.create({
   showNick: function (e) {
     var li = e.findElement("li.message");
     if (li) {
-      if (this.nicksVisible || li == this.visibleNick) return;
+      if (this.application.overlayVisible || li == this.visibleNick) return;
       clearTimeout(this.visibleNickTimeout);
 
       this.visibleNick = li;
@@ -224,7 +180,7 @@ Alice.Window = Class.create({
           if (time) time.style.opacity = 1;
 
           setTimeout(function(){
-            if (this.nicksVisible) return;
+            if (this.overlayVisible) return;
             if (nick) nick.style.opacity = 0;
             if (time) time.style.opacity = 0;
           }.bind(this, nick, time) , 1000);
@@ -237,26 +193,6 @@ Alice.Window = Class.create({
     }
   },
   
-  toggleNicks: function () {
-    if (this.nicksVisible) {
-      this.messages.select("li.avatar span.nick").each(function(span){
-        span.style.opacity = 0;
-      });
-      this.messages.select("div.timehint").each(function(span){
-        span.style.opacity = 0;
-      });
-    }
-    else {
-      this.messages.select("li.avatar span.nick").each(function(span){
-        span.style.opacity = 1;
-      });
-      this.messages.select("div.timehint").each(function(span){
-        span.style.opacity = 1;
-      });
-    }
-    this.nicksVisible = !this.nicksVisible;
-  },
-
   focus: function(event) {
     if (!this.application.currentSetContains(this)) return;
 
@@ -301,6 +237,11 @@ Alice.Window = Class.create({
     this.tab.removeClassName("highlight");
     this.application.unHighlightChannelSelect(this.id);
   },
+
+  markUnread: function(classname) {
+    this.tab.addClassName(classname);
+    this.application.highlightChannelSelect(this.id, classname);
+  },
   
   disable: function () {
     this.markRead();
@@ -343,91 +284,40 @@ Alice.Window = Class.create({
   },
 
   addChunk: function(chunk) {
+    var scroll = this.shouldScrollToBottom();
     this.messages.insert({bottom: chunk.html});
+
+    if (chunk.nicks) this.updateNicks(chunk.nicks);
     this.trimMessages();
-    this.setupMessages();
-    if (chunk.nicks && chunk.nicks.length)
-      this.updateNicks(chunk.nicks);
-    this.element.scrollTop = this.messages.scrollHeight;
+
+    this.messages.select('li').each(function (li) {
+      this.application.applyFilters(li, this);
+    }.bind(this));
+
+    if (message.event == "topic" && win.active) {
+      win.topic = message.body;
+      if (win.active) this.displayTopic(topic);
+    }
+
+    var last = this.messages.select("li").last();
+    if (last && last.id) this.msgid = last.id.replace("msg-", "");
+
+    this.scrollToBottom(scroll);
   },
 
   addMessage: function(message) {
     if (!message.html || message.msgid <= this.msgid) return;
     
-    this.messages.insert(message.html);
     if (message.msgid) this.msgid = message.msgid;
+    if (message.nicks) this.updateNicks(message.nicks);
+    
+    this.messages.insert(message.html);
     this.trimMessages();
 
-    //this.messages.down('ul').insert(Alice.uncacheGravatar(message.html));
-    var li = this.messages.down('li:last-child');
-
-    if (message.consecutive) {
-      var prev = li.previous(); 
-      if (prev && prev.hasClassName("avatar") && !prev.hasClassName("consecutive")) {
-        prev.down('div.msg').setStyle({minHeight: '0px'});
-      }
-      if (prev && prev.hasClassName("monospaced")) {
-        prev.down('div.msg').setStyle({paddingBottom: '0px'});
-      }
-    }
-    
-    if (message.event == "say") {
-      var msg = li.down('div.msg');
-      this.application.applyFilters(msg, this);
-      
-      var nick = li.down('span.nick');
-      if (nick && this.nicksVisible) nick.style.opacity = 1;
-
-      var time = li.down('div.timehint');
-      if (time && this.nicksVisible) time.style.opacity = 1;
-      
-      if (message.consecutive) {
-        var avatar = li.previous(".avatar:not(.consecutive)");
-        if (avatar && avatar.down(".timehint"))
-          avatar.down(".timehint").innerHTML = message.timestamp;
-      }
-    }
-    else if (message.event == "topic") {
-      this.topic = message.body;
-      if (this.active) this.application.displayTopic(this.topic);
-    }
-    
-    if (!this.application.isFocused && !message.self &&
-        (message.highlight || this.type == "privmsg") ) {
-      message.body = li.down(".msg").innerHTML.stripTags();
-      var time = (new Date()).getTime();
-      if (time - this.lastnotify > 5000) {
-        this.lastnotify = time;
-        Alice.growlNotify(message);
-      }
-      this.application.addMissed();
-    }
-    
-    if (message.nicks && message.nicks.length)
-      this.updateNicks(message.nicks);
-    
-    this.scrollToBottom();
-
-    // highlight the tab
-    if (!this.active && this.title != "info") {
-      if (message.event == "say" && !message.self) {
-        this.tab.addClassName("unread");
-        this.application.highlightChannelSelect(this.id, "unread");
-      }
-      if (message.highlight) {
-        this.tab.addClassName("highlight");
-        this.application.highlightChannelSelect(this.id, "highlight");
-      }
-      if (message.window.type == "privmsg" && wrapped) {
-        this.application.highlightChannelSelect(this.id, "highlight");
-      }
-    }
-
-    // fix timestamps
-    li.select("span.timestamp").each(function(elem) {
-      elem.innerHTML = Alice.epochToLocal(elem.innerHTML.strip(), this.application.options.timeformat);
-      elem.style.opacity = 1;
-    }.bind(this));
+    var scroll = this.shouldScrollToBottom();
+    var li = this.messages.select("li").last();
+    this.application.applyFilters(li, this);
+    this.scrollToBottom(scroll);
 
     this.element.redraw();
   },

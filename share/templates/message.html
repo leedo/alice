@@ -3,37 +3,15 @@
 ?   grep {$msg->{$_}} qw/highlight self consecutive monospaced avatar/,
 ? );
 
-<li class="message <?= $classes ?>" id="msg-<?= $msg->{msgid} ?>">
-    <? if (!$msg->{consecutive} and $msg->{timestamp}) { ?>
-    <div class="timehint"><span class="timestamp"><?= $msg->{timestamp} ?></span></div>
-    <? } ?>
+<li class="message <?= $classes ?>" id="msg-<?= $msg->{msgid} ?>"<?= $msg->{avatar} ? " avatar='$msg->{avatar}'" : "" ?>>
     <div class="left">
       <a href="javascript:alice.connection.requestWindow('<?= $msg->{nick} ?>','<?= $msg->{window}{id} ?>')" class="nick"<?= $msg->{source} ? " title=$msg->{source}" : "" ?>>
         <span class="nick"><span class="nickborder">&lt;</span><?= $msg->{nick} ?><span class="nickborder">&gt;</span></span>
 
       </a>
     </div>
-    <div class="msg"><?= $msg->{html} ?></div>
+    <div class="msg">
+      <?= $msg->{html} ?>
+      <div class="timehint"><span class="timestamp"><?= $msg->{timestamp} ?></span></div>
+    </div>
 </li>
-
-<? if ($msg->{avatar}) { ?>
-<script type="text/javascript">
-  var cb;
-
-  if (alice.options.avatars == "show") {
-    cb = function () {
-      var msg = $('msg-<?= $msg->{msgid} ?>')
-      if (!msg) return;
-      msg.down("a.nick").insert('<img src="<?= $msg->{avatar} ?>" alt="<?= $msg->{nick} ?>" />');
-    };
-  }
-  else {
-    cb = function () {
-      var msg = $('msg-<?= $msg->{msgid} ?>');
-      if (msg) msg.removeClassName('avatar');
-    };
-  }
-
-  document.loaded ? cb() : document.observe("dom:loaded", cb);
-</script>
-<?}?>

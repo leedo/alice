@@ -1,14 +1,5 @@
 Object.extend(Alice, {
-  uncacheGravatar: function(content) {
-    if (!this.timestamp) {
-      var date = new Date();
-      this.timestamp = date.getTime();
-    }
-    return content.replace(
-      /(src=".*?gravatar.com\/avatar\/[^?]*\?)/gi,
-      "$1time=" + this.timestamp + "&"
-    ); 
-  },
+  urlRE: /(https?:\/\/(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'".,<>?«»“”‘’]))/g,
 
   epochToLocal: function(epoch, format) {
     var date = new Date(parseInt(epoch) * 1000);
@@ -29,20 +20,18 @@ Object.extend(Alice, {
 
     return sprintf("%02d:%02d", hours, date.getMinutes());
   },
-  
-  stripNick: function(html) {
-    return html.replace(/<div class="left">.*<\/div>/, '');
-  },
 
+  makeLinksClickable: function(elem) {
+    elem.innerHTML = elem.innerHTML.replace(
+      Alice.urlRE, '<a href="$1" target="_blank" rel="noreferrer">$1</a>'
+    );
+  },
+ 
   growlNotify: function(message) {
-    var subject = message.window.title;
-    if (message.window.type != "privmsg") {
-      subject += ": " + message.nick;
-    }
     if (window.fluid) {
       window.fluid.showGrowlNotification({
-        title: subject, 
-        description: message.body.unescapeHTML(),
+        title: message.subject, 
+        description: message.body,
         priority: 1, 
         sticky: false,
         identifier: message.msgid
@@ -52,8 +41,8 @@ Object.extend(Alice, {
       if (window.webkitNotifications.checkPermission() == 0) {
         var popup = window.webkitNotifications.createNotification(
           "http://static.usealice.org/image/alice.png",
-          subject,
-          message.body.unescapeHTML()
+          message.subject,
+          message.body
         );
 
         popup.ondisplay = function() {

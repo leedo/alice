@@ -122,7 +122,6 @@ if (window == window.parent) {
     // setup default filters
 
     var regexes = {
-      url: /(https?:\/\/(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'".,<>?«»“”‘’]))/g,
       twitter: /https?:\/\/(?:www\.)?twitter\.com\/(?:#!\/)?[^\/]+\/status\/(\d+)/i,
       img: /^http[^\s]*\.(?:jpe?g|gif|png|bmp|svg)[^\/]*$/i,
       audio: /^http[^\s]*\.(?:wav|mp3|ogg|aiff|m4a)[^\/]*$/i,
@@ -130,13 +129,7 @@ if (window == window.parent) {
       channel: /([\b>\s])(#[^\b<\s]+)([\b<\s])/
     };
     
-
     alice.addFilters([
-      function(msg, win) {
-        msg.innerHTML = msg.innerHTML.replace(
-          regexes.url, '<a href="$1" target="_blank" rel="noreferrer">$1</a>'
-        );
-      },
       function(msg, win) {
         if (win.type == "info") return;
         msg.innerHTML = msg.innerHTML.replace(
@@ -208,6 +201,14 @@ if (window == window.parent) {
           })
         }
       },
+
+      // work around chrome bugs! what the fuck.
+      function(msg, win) {
+        if (window.navigator.userAgent.match(/chrome/i)) {
+          msg.setStyle({borderWidthTop: "1px"});
+        }
+      }
+
     ]);
   });
 }

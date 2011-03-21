@@ -114,7 +114,7 @@ Alice.Keyboard = Class.create({
   },
   
   onCmdShiftK: function() {
-    this.activeWindow.toggleNicks();
+    this.application.toggleOverlay();
   },
 
   onCmdRight: function() {
