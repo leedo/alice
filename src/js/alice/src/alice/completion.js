@@ -49,7 +49,16 @@ Alice.Completion = Class.create({
   next: function() {
     if (!this.matches.length) return;
     if (++this.matchIndex == this.matches.length) this.matchIndex = 0;
+    this.complete();
+  },
 
+  prev: function() {
+    if (!this.matches.length) return;
+    if (--this.matchIndex <= 0) this.matchIndex = this.matches.length - 1;
+    this.complete();
+  },
+
+  complete: function() {
     var match = this.matches[this.matchIndex];
     match += this.leftOffset == 0 ? ": " : " ";
     this.restore(match, this.leftOffset + match.length);
