@@ -1,33 +1,37 @@
 Alice.Completion = Class.create({
-  initialize: function(candidates) {
+  initialize: function(candidates, editor) {
     var range = this.getRange();
     if (!range) return;
 
     this.element = range.startContainer;
-
-    // gross hack to make this work when
-    // element is the editor div, which only
-    // happens when the editor is blank
-
-    if (this.element.nodeName == "DIV") {
-      this.element.innerHTML = ""; // removes any leading <br>s
-      var node = document.createTextNode("");
-      this.element.appendChild(node);
-      var selection = window.getSelection();
-      selection.removeAllRanges();
-      selection.selectNode(node);
-      range = selection.getRangeAt(0);
-      this.element = node;
+    this.editor = editor;
+    if (this.element == this.editor) {
+      this.addTextNode();
     }
 
-    this.value = this.element.data;
+    this.value = this.element.data || "";
     this.index = range.startOffset;
 
     this.findStem();
     this.matches = this.matchAgainst(candidates);
     this.matchIndex = -1;
   },
-  
+
+  addTextNode: function() {
+    // gross hack to make this work when
+    // element is the editor div, which only
+    // happens when the editor is blank
+
+    this.editor.innerHTML = "";
+    var node = document.createTextNode("");
+    this.editor.appendChild(node);
+    var selection = window.getSelection();
+    selection.removeAllRanges();
+    selection.selectNode(node);
+    range = selection.getRangeAt(0);
+    this.element = node;
+  },
+
   getRange: function() {
     var selection = window.getSelection();
     if (selection.rangeCount > 0) {
@@ -49,13 +53,26 @@ Alice.Completion = Class.create({
   next: function() {
     if (!this.matches.length) return;
     if (++this.matchIndex == this.matches.length) this.matchIndex = 0;
+    this.complete();
+  },
 
+  prev: function() {
+    if (!this.matches.length) return;
+    if (--this.matchIndex <= 0) this.matchIndex = this.matches.length - 1;
+    this.complete();
+  },
+
+  complete: function() {
     var match = this.matches[this.matchIndex];
     match += this.leftOffset == 0 ? ": " : " ";
     this.restore(match, this.leftOffset + match.length);
   },
   
   restore: function(stem, index) {
+    // add a new text node if our element was deleted (select-all delete)
+    if (!this.element.parentNode)
+      this.addTextNode();
+
     this.element.data = this.stemLeft + (stem || this.stem) + this.stemRight;
     this.setCursorToIndex(Object.isUndefined(index) ? this.index : index);
   },
