@@ -209,11 +209,10 @@ ul#nicklist li {
   display: block;
   padding: 2px 5px;
   cursor: pointer;
-  color: white;
-  opacity: 0.6; }
+  color: #666666; }
 
 ul#nicklist li:hover {
-  opacity: 1; }
+  color: #cccccc; }
 
 div#input {
   background: #333333;
@@ -557,7 +556,7 @@ div.timehint {
   position: absolute;
   right: 5px;
   top: 6px;
-  color: black;
+  color: #666666;
   opacity: 0; }
 
 li.consecutive div.timehint {
