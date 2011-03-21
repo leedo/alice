@@ -687,12 +687,15 @@ Alice.Application = Class.create({
 
       // insert avatars
       function(li, win) {
-        if (this.options.avatars && li.hasClassName("avatar")) {
-          var avatar = li.getAttribute("avatar");
-          if (avatar)
-            li.down("a.nick").insert('<img src="'+avatar+'" />');
-          else
+        if (li.hasClassName("avatar")) {
+          if (this.options.avatars == "show") {
+            var avatar = li.getAttribute("avatar");
+            if (avatar)
+              li.down("a.nick").insert('<img src="'+avatar+'" />');
+          }
+          else {
             li.removeClassName("avatar");
+          }
         }
       },
 
