@@ -206,11 +206,10 @@ ul#nicklist li {
   display: block;
   padding: 2px 5px;
   cursor: pointer;
-  color: black;
-  opacity: 0.6; }
+  color: #cccccc; }
 
 ul#nicklist li:hover {
-  opacity: 1; }
+  color: black; }
 
 div#input {
   background: #efefef;
