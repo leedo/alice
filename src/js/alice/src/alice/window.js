@@ -281,22 +281,28 @@ Alice.Window = Class.create({
   },
 
   addChunk: function(chunk) {
-    var scroll = this.shouldScrollToBottom();
-    this.messages.insert({bottom: chunk.html});
-
     if (chunk.nicks) this.updateNicks(chunk.nicks);
-    this.trimMessages();
 
+    var scroll = this.shouldScrollToBottom();
+
+    this.messages.insert({bottom: chunk.html});
+    this.trimMessages();
     this.scrollToBottom(scroll);
 
-    this.messages.select('li').each(function (li) {
+    // so the tab doesn't get highlighted :|
+    this.bulk_insert = true;
+
+    var messages = this.messages.select("li");
+    messages.each(function (li) {
       this.application.applyFilters(li, this);
     }.bind(this));
 
-    var last = this.messages.select("li").last();
-    if (last && last.id) this.msgid = last.id.replace("msg-", "");
+    this.bulk_insert = false;
 
     this.scrollToBottom(scroll);
+
+    var last = messages.last();
+    if (last && last.id) this.msgid = last.id.replace("msg-", "");
   },
 
   addMessage: function(message) {
@@ -304,11 +310,13 @@ Alice.Window = Class.create({
     
     if (message.msgid) this.msgid = message.msgid;
     if (message.nicks) this.updateNicks(message.nicks);
+
+    var scroll = this.shouldScrollToBottom();
     
     this.messages.insert(message.html);
     this.trimMessages();
+    this.scrollToBottom(scroll);
 
-    var scroll = this.shouldScrollToBottom();
     var li = this.messages.select("li").last();
     this.application.applyFilters(li, this);
 

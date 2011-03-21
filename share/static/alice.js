@@ -10517,14 +10517,14 @@ Alice.Application = Class.create({
 
     this.base_filters.each(function(f) {
       try { f.call(this, li, win); }
-      catch (e) { console.log(e.toString()) }
+      catch (e) { this.log(e.toString()) }
     }.bind(this));
 
     if (li.hasClassName("message")) {
       var msg = li.down("div.msg");
       this.message_filters.each(function(f){
         try { f.call(this, msg, win); }
-        catch (e) { console.log(e.toString()) }
+        catch (e) { this.log(e.toString()) }
       }.bind(this));
     }
 
@@ -10755,10 +10755,10 @@ Alice.Application = Class.create({
   log: function () {
     var win = this.activeWindow();
     for (var i=0; i < arguments.length; i++) {
+      if (window.console && window.console.log) {
+        console.log(arguments[i]);
+      }
       if (this.options.debug == "true") {
-        if (window.console && window.console.log) {
-          console.log(arguments[i]);
-        }
         if (win) {
           win.addMessage({
             html: '<li class="message monospace"><div class="left">console</div><div class="msg">'+arguments[i].toString()+'</div></li>'
@@ -10979,6 +10979,8 @@ Alice.Application = Class.create({
       },
 
       function(li, win) {
+        if (win.bulk_insert) return;
+
         if (li.hasClassName("message") && !win.active && win.title != "info") {
           if (!li.hasClassName("self"))
             win.markUnread("unread");
@@ -10990,7 +10992,7 @@ Alice.Application = Class.create({
       },
 
       function(li, win) {
-        if (this.isFocused || li.hasClassName("self")) return;
+        if (this.isFocused || win.bulk_insert || li.hasClassName("self")) return;
 
         if (li.hasClassName("highlight") || win.type == "privmsg") {
           var prefix = "";
@@ -11638,22 +11640,27 @@ Alice.Window = Class.create({
   },
 
   addChunk: function(chunk) {
-    var scroll = this.shouldScrollToBottom();
-    this.messages.insert({bottom: chunk.html});
-
     if (chunk.nicks) this.updateNicks(chunk.nicks);
-    this.trimMessages();
 
+    var scroll = this.shouldScrollToBottom();
+
+    this.messages.insert({bottom: chunk.html});
+    this.trimMessages();
     this.scrollToBottom(scroll);
 
-    this.messages.select('li').each(function (li) {
+    this.bulk_insert = true;
+
+    var messages = this.messages.select("li");
+    messages.each(function (li) {
       this.application.applyFilters(li, this);
     }.bind(this));
 
-    var last = this.messages.select("li").last();
-    if (last && last.id) this.msgid = last.id.replace("msg-", "");
+    this.bulk_insert = false;
 
     this.scrollToBottom(scroll);
+
+    var last = messages.last();
+    if (last && last.id) this.msgid = last.id.replace("msg-", "");
   },
 
   addMessage: function(message) {
@@ -11662,10 +11669,12 @@ Alice.Window = Class.create({
     if (message.msgid) this.msgid = message.msgid;
     if (message.nicks) this.updateNicks(message.nicks);
 
+    var scroll = this.shouldScrollToBottom();
+
     this.messages.insert(message.html);
     this.trimMessages();
+    this.scrollToBottom(scroll);
 
-    var scroll = this.shouldScrollToBottom();
     var li = this.messages.select("li").last();
     this.application.applyFilters(li, this);
 

@@ -686,8 +686,7 @@ ul.messages li.monospaced div.msg {
   font-family: Monaco, monospace;
   font-size: 10px;
   line-height: 12px;
-  word-wrap: normal;
-  white-space: pre-wrap; }
+  word-wrap: normal; }
 
 li.monospaced div.msg span[style*="bold"] {
   letter-spacing: -1px; }
