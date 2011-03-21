@@ -3,7 +3,7 @@
 ?   grep {$msg->{$_}} qw/highlight self consecutive monospaced avatar/,
 ? );
 
-<li class="message <?= $classes ?>" id="msg-<?= $msg->{msgid} ?>"<?= $msg->{avatar} ? " avatar='$msg->{avatar}'" : "" ?>>
+<li class="message <?= $classes ?>" id="msg-<?= $msg->{msgid} ?>"<?= $msg->{avatar} ? " avatar=$msg->{avatar}" : "" ?>>
     <div class="timehint"><span class="timestamp"><?= $msg->{timestamp} ?></span></div>
     <div class="left">
       <a href="javascript:alice.connection.requestWindow('<?= $msg->{nick} ?>','<?= $msg->{window}{id} ?>')" class="nick"<?= $msg->{source} ? " title=$msg->{source}" : "" ?>>
