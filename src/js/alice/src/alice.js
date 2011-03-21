@@ -120,25 +120,16 @@ if (window == window.parent) {
     }
 
     // setup default filters
-
-    var regexes = {
-      twitter: /https?:\/\/(?:www\.)?twitter\.com\/(?:#!\/)?[^\/]+\/status\/(\d+)/i,
-      img: /^http[^\s]*\.(?:jpe?g|gif|png|bmp|svg)[^\/]*$/i,
-      audio: /^http[^\s]*\.(?:wav|mp3|ogg|aiff|m4a)[^\/]*$/i,
-      gist: /^https?:\/\/gist\.github\.com\/[0-9a-fA-F]+$/i,
-      channel: /([\b>\s])(#[^\b<\s]+)([\b<\s])/
-    };
-    
     alice.addFilters([
       function(msg, win) {
         if (win.type == "info") return;
         msg.innerHTML = msg.innerHTML.replace(
-          regexes.channel, '$1<a class="channel" href="javascript:alice.connection.sendMessage({msg: \'/join $2\', source: \'' + win.id + '\'})">$2</a>$3'
+          Alice.RE.channel, '$1<a class="channel" href="javascript:alice.connection.sendMessage({msg: \'/join $2\', source: \'' + win.id + '\'})">$2</a>$3'
         );
       },
       function(msg, win) {
         msg.select("a").filter(function(a) {
-          return regexes.audio.match(a.href);
+          return Alice.RE.audio.match(a.href);
         }).each(function(a) {
           var img = new Element("IMG", {"class": "audio", src: "/static/image/play.png"});
           img.onclick = function(){ Alice.playAudio(img) };
@@ -148,15 +139,15 @@ if (window == window.parent) {
       function (msg, win) {
         if (alice.options.images == "show") {
           msg.select("a").filter(function(a) {
-            return regexes.twitter.match(a.href);
+            return Alice.RE.twitter.match(a.href);
           }).each(function(a) {
-            a.innerHTML = a.innerHTML.replace(regexes.twitter, "http://prettybrd.com/peebone/$1.png");
+            a.innerHTML = a.innerHTML.replace(Alice.RE.twitter, "http://prettybrd.com/peebone/$1.png");
           });
         }
       },
       function (msg, win) {
         msg.select("a").filter(function(a) {
-          return regexes.img.match(a.innerHTML);
+          return Alice.RE.img.match(a.innerHTML);
         }).each(function(a) {
           if (alice.options.images == "show")
             win.inlineImage(a);
@@ -167,7 +158,7 @@ if (window == window.parent) {
       function (msg, win) {
         if (alice.options.images == "show") {
           msg.select("a").filter(function(a) {
-            return regexes.gist.match(a.href);
+            return Alice.RE.gist.match(a.href);
           }).each(function(a) {
             var iframe = new Element('iframe', {src: a.href+".pibb"});
             iframe.setStyle({width: (msg.getWidth() - 50)+"px"});

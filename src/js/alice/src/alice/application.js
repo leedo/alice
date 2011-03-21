@@ -709,6 +709,15 @@ Alice.Application = Class.create({
         }
       },
 
+      // toggle on timestamps if it has been 5 minutes
+      function(li, win) {
+        var time = li.down('span.timestamp').innerHTML;
+        if (time - win.lasttimestamp > 60 * 5) {
+          li.down('div.timehint').style.opacity = 1;
+          win.lasttimestamp = time;
+        }
+      },
+
       // format timestamps
       function(li, win) {
         var timestamp = li.down('span.timestamp');
@@ -716,30 +725,17 @@ Alice.Application = Class.create({
         timestamp.style.opacity = 1;
       },
 
-      // copy timestamp up to the previous first non-consecutive message
+      // turn on nicks if they are toggled
       function(li, win) {
-        var timehint = li.down('.timehint');
-        if (!timehint) return;
-
-        var stem = li.previous(":not(.consecutive)");
-        if (stem && stem.down(".timehint"))
-          stem.down(".timehint").replace(timehint.remove());
-      },
-
-      // turn on timestamps if they are toggled
-      function(li, win) {
-        if (!this.overlayVisible) return;
+        if (!this.overlayVisible || !li.hasClassName("avatar")) return;
 
         var nick = li.down('span.nick');
         if (nick) nick.style.opacity = 1;
-
-        var time = li.down('div.timehint');
-        if (time) time.style.opacity = 1;
       },
 
       // highlights
       function(li, win) {
-        if (!win.active && win.title != "info") {
+        if (li.hasClassName("message") && !win.active && win.title != "info") {
           if (!li.hasClassName("self"))
             win.markUnread("unread");
           if (li.hasClassName("highlight"))
@@ -781,10 +777,6 @@ Alice.Application = Class.create({
     var opacity = this.overlayVisible ? 1 : 0;
 
     $$("li.avatar span.nick").each(function(span){
-      span.style.opacity = opacity;
-    });
-
-    $$("div.timehint").each(function(span){
       span.style.opacity = opacity;
     });
   }

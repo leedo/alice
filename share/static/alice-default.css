@@ -551,10 +551,15 @@ ul.messages li.avatar span.nick {
 
 div.timehint {
   font-size: 10px;
-  float: right;
-  padding-top: 4px;
-  color: #555555;
+  position: absolute;
+  right: 5px;
+  top: 6px;
+  color: #cccccc;
   opacity: 0; }
+
+li.consecutive div.timehint {
+  top: auto;
+  bottom: 3px; }
 
 .info ul.messages li.highlight div.timehint,
 li.self div.timehint {
@@ -564,6 +569,7 @@ div.msg {
   margin-left: 100px;
   min-height: 1.2em;
   padding: 3px 5px;
+  padding-right: 45px;
   word-wrap: break-word;
   -khtml-line-break: after-white-space;
   -khtml-nbsp-mode: space;

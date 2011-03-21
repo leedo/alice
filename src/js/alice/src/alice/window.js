@@ -14,6 +14,7 @@ Alice.Window = Class.create({
     this.messages = this.element.down('.messages');
     this.visibleNick = "";
     this.visibleNickTimeout = "";
+    this.lasttimestamp = 0;
     this.nicks = [];
     this.messageLimit = this.application.isMobile ? 50 : 200;
     this.msgid = 0;
@@ -163,28 +164,24 @@ Alice.Window = Class.create({
       clearTimeout(this.visibleNickTimeout);
 
       this.visibleNick = li;
-      var nick; var time;
+      var nick;
       if (li.hasClassName("consecutive")) {
         var stem = li.previous("li:not(.consecutive)");
         if (!stem) return;
         if (li.hasClassName("avatar")) nick = stem.down("span.nick");
-        time = stem.down(".timehint");
       } else {
         if (li.hasClassName("avatar")) nick = li.down("span.nick");
-        time = li.down(".timehint");
       }
 
-      if (nick || time) {
-        this.visibleNickTimeout = setTimeout(function(nick, time) {
+      if (nick) {
+        this.visibleNickTimeout = setTimeout(function(nick) {
           if (nick) nick.style.opacity = 1;
-          if (time) time.style.opacity = 1;
 
           setTimeout(function(){
             if (this.overlayVisible) return;
             if (nick) nick.style.opacity = 0;
-            if (time) time.style.opacity = 0;
-          }.bind(this, nick, time) , 1000);
-        }.bind(this, nick, time), 500);
+          }.bind(this, nick) , 1000);
+        }.bind(this, nick), 500);
       }
     }
     else {
@@ -290,14 +287,11 @@ Alice.Window = Class.create({
     if (chunk.nicks) this.updateNicks(chunk.nicks);
     this.trimMessages();
 
+    this.scrollToBottom(scroll);
+
     this.messages.select('li').each(function (li) {
       this.application.applyFilters(li, this);
     }.bind(this));
-
-    if (message.event == "topic" && win.active) {
-      win.topic = message.body;
-      if (win.active) this.displayTopic(topic);
-    }
 
     var last = this.messages.select("li").last();
     if (last && last.id) this.msgid = last.id.replace("msg-", "");
@@ -317,7 +311,13 @@ Alice.Window = Class.create({
     var scroll = this.shouldScrollToBottom();
     var li = this.messages.select("li").last();
     this.application.applyFilters(li, this);
+
     this.scrollToBottom(scroll);
+
+    if (message.event == "topic" && win.active) {
+      win.topic = message.body;
+      if (win.active) this.displayTopic(topic);
+    }
 
     this.element.redraw();
   },
