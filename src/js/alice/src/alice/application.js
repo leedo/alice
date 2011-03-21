@@ -265,14 +265,14 @@ Alice.Application = Class.create({
 
     this.base_filters.each(function(f) {
       try { f.call(this, li, win); }
-      catch (e) { console.log(e.toString()) }
+      catch (e) { this.log(e.toString()) }
     }.bind(this));
 
     if (li.hasClassName("message")) {
       var msg = li.down("div.msg");
       this.message_filters.each(function(f){
         try { f.call(this, msg, win); }
-        catch (e) { console.log(e.toString()) }
+        catch (e) { this.log(e.toString()) }
       }.bind(this));
     }
 
@@ -504,10 +504,10 @@ Alice.Application = Class.create({
   log: function () {
     var win = this.activeWindow();
     for (var i=0; i < arguments.length; i++) {
+      if (window.console && window.console.log) {
+        console.log(arguments[i]);
+      }
       if (this.options.debug == "true") {
-        if (window.console && window.console.log) {
-          console.log(arguments[i]);
-        }
         if (win) {
           win.addMessage({
             html: '<li class="message monospace"><div class="left">console</div><div class="msg">'+arguments[i].toString()+'</div></li>'
@@ -735,6 +735,8 @@ Alice.Application = Class.create({
 
       // highlights
       function(li, win) {
+        if (win.bulk_insert) return;
+
         if (li.hasClassName("message") && !win.active && win.title != "info") {
           if (!li.hasClassName("self"))
             win.markUnread("unread");
@@ -747,7 +749,7 @@ Alice.Application = Class.create({
 
       // growls
       function(li, win) {
-        if (this.isFocused || li.hasClassName("self")) return;
+        if (this.isFocused || win.bulk_insert || li.hasClassName("self")) return;
 
         if (li.hasClassName("highlight") || win.type == "privmsg") {
           var prefix = "";
