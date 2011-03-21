@@ -12065,7 +12065,7 @@ Alice.Input = Class.create({
   completeNickname: function(prev) {
     if (this.disabled) return;
     if (!this.completion) {
-      this.completion = new Alice.Completion(this.application.activeWindow().getNicknames());
+      this.completion = new Alice.Completion(this.application.activeWindow().getNicknames(), this.editor);
     }
 
     if (prev)
@@ -12348,30 +12348,34 @@ Alice.Keyboard = Class.create({
   }
 });
 Alice.Completion = Class.create({
-  initialize: function(candidates) {
+  initialize: function(candidates, editor) {
     var range = this.getRange();
     if (!range) return;
 
     this.element = range.startContainer;
-
-
-    if (this.element.nodeName == "DIV") {
-      this.element.innerHTML = ""; // removes any leading <br>s
-      var node = document.createTextNode("");
-      this.element.appendChild(node);
-      var selection = window.getSelection();
-      selection.removeAllRanges();
-      selection.selectNode(node);
-      range = selection.getRangeAt(0);
-      this.element = node;
+    this.editor = editor;
+    if (this.element == this.editor) {
+      this.addTextNode();
     }
 
-    this.value = this.element.data;
+    this.value = this.element.data || "";
     this.index = range.startOffset;
 
     this.findStem();
     this.matches = this.matchAgainst(candidates);
     this.matchIndex = -1;
+  },
+
+  addTextNode: function() {
+
+    this.editor.innerHTML = "";
+    var node = document.createTextNode("");
+    this.editor.appendChild(node);
+    var selection = window.getSelection();
+    selection.removeAllRanges();
+    selection.selectNode(node);
+    range = selection.getRangeAt(0);
+    this.element = node;
   },
 
   getRange: function() {
@@ -12411,6 +12415,9 @@ Alice.Completion = Class.create({
   },
 
   restore: function(stem, index) {
+    if (!this.element.parentNode)
+      this.addTextNode();
+
     this.element.data = this.stemLeft + (stem || this.stem) + this.stemRight;
     this.setCursorToIndex(Object.isUndefined(index) ? this.index : index);
   },
