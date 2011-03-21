@@ -12044,13 +12044,16 @@ Alice.Input = Class.create({
     }
   },
 
-  completeNickname: function() {
+  completeNickname: function(prev) {
     if (this.disabled) return;
     if (!this.completion) {
       this.completion = new Alice.Completion(this.application.activeWindow().getNicknames());
     }
 
-    this.completion.next();
+    if (prev)
+      this.completion.prev();
+    else
+      this.completion.next();
   },
 
   stopCompletion: function() {
@@ -12174,6 +12177,7 @@ Alice.Keyboard = Class.create({
     this.shortcut("Enter");
     this.shortcut("Esc");
     this.shortcut("Tab", { propagate: true });
+    this.shortcut("Shift+Tab", { propagate: true });
     for (var i = 0; i < 10; i++) {
       this.shortcut("Cmd+"+i);
       if (!this.isMac) this.shortcut("Opt+"+i);
@@ -12306,6 +12310,13 @@ Alice.Keyboard = Class.create({
     }
   },
 
+  onShiftTab: function(e) {
+    if (!e.findElement('div.config')) {
+      e.stop();
+      this.application.input.completeNickname(true);
+    }
+  },
+
   onEsc: function() {
     this.application.input.stopCompletion();
   },
@@ -12366,7 +12377,16 @@ Alice.Completion = Class.create({
   next: function() {
     if (!this.matches.length) return;
     if (++this.matchIndex == this.matches.length) this.matchIndex = 0;
+    this.complete();
+  },
 
+  prev: function() {
+    if (!this.matches.length) return;
+    if (--this.matchIndex <= 0) this.matchIndex = this.matches.length - 1;
+    this.complete();
+  },
+
+  complete: function() {
     var match = this.matches[this.matchIndex];
     match += this.leftOffset == 0 ? ": " : " ";
     this.restore(match, this.leftOffset + match.length);

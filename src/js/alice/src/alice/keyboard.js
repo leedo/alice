@@ -27,6 +27,7 @@ Alice.Keyboard = Class.create({
     this.shortcut("Enter");
     this.shortcut("Esc");
     this.shortcut("Tab", { propagate: true });
+    this.shortcut("Shift+Tab", { propagate: true });
     for (var i = 0; i < 10; i++) {
       this.shortcut("Cmd+"+i);
       if (!this.isMac) this.shortcut("Opt+"+i);
@@ -159,7 +160,14 @@ Alice.Keyboard = Class.create({
       this.application.input.completeNickname();
     }
   },
-  
+
+  onShiftTab: function(e) {
+    if (!e.findElement('div.config')) {
+      e.stop();
+      this.application.input.completeNickname(true);
+    }
+  },
+
   onEsc: function() {
     this.application.input.stopCompletion();
   },
