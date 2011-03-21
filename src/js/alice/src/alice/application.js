@@ -711,9 +711,14 @@ Alice.Application = Class.create({
 
       // toggle on timestamps if it has been 5 minutes
       function(li, win) {
-        var time = li.down('span.timestamp').innerHTML;
+        var hint = li.down('div.timehint');
+        if (!hint) return;
+
+        var time = hint.down('span.timestamp').innerHTML;
+        if (!time) return;
+
         if (time - win.lasttimestamp > 60 * 5) {
-          li.down('div.timehint').style.opacity = 1;
+          hint.style.opacity = 1;
           win.lasttimestamp = time;
         }
       },
@@ -769,7 +774,7 @@ Alice.Application = Class.create({
           }
           this.addMissed();
         }
-      },
+      }
 
     ];
   },

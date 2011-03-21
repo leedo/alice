@@ -124,7 +124,7 @@ if (window == window.parent) {
       function(msg, win) {
         if (win.type == "info") return;
         msg.innerHTML = msg.innerHTML.replace(
-          Alice.RE.channel, '$1<a class="channel" href="javascript:alice.connection.sendMessage({msg: \'/join $2\', source: \'' + win.id + '\'})">$2</a>$3'
+          Alice.RE.channel, '$1<a class="channel" href="javascript:alice.connection.sendMessage({msg: \'/join $2\', source: \'' + win.id + '\'})">$2</a>'
         );
       },
       function(msg, win) {
