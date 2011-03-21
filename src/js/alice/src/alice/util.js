@@ -4,8 +4,8 @@ Object.extend(Alice, {
     img: /^http[^\s]*\.(?:jpe?g|gif|png|bmp|svg)[^\/]*$/i,
     audio: /^http[^\s]*\.(?:wav|mp3|ogg|aiff|m4a)[^\/]*$/i,
     gist: /^https?:\/\/gist\.github\.com\/[0-9a-fA-F]+$/i,
-    channel: /([\b>\s])(#[^\b<\s]+)([\b<\s])/,
-    url: /(https?:\/\/(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'".,<>?«»“”‘’]))/g
+    channel: /([\b>\s])(#[^\b<\s]+)/gi,
+    url: /(https?:\/\/(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'".,<>?«»“”‘’]))/gi
   },
 
   epochToLocal: function(epoch, format) {
