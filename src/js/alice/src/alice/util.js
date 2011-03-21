@@ -1,5 +1,12 @@
 Object.extend(Alice, {
-  urlRE: /(https?:\/\/(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'".,<>?«»“”‘’]))/g,
+  RE: { 
+    twitter: /https?:\/\/(?:www\.)?twitter\.com\/(?:#!\/)?[^\/]+\/status\/(\d+)/i,
+    img: /^http[^\s]*\.(?:jpe?g|gif|png|bmp|svg)[^\/]*$/i,
+    audio: /^http[^\s]*\.(?:wav|mp3|ogg|aiff|m4a)[^\/]*$/i,
+    gist: /^https?:\/\/gist\.github\.com\/[0-9a-fA-F]+$/i,
+    channel: /([\b>\s])(#[^\b<\s]+)([\b<\s])/,
+    url: /(https?:\/\/(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'".,<>?«»“”‘’]))/g
+  },
 
   epochToLocal: function(epoch, format) {
     var date = new Date(parseInt(epoch) * 1000);
@@ -23,7 +30,7 @@ Object.extend(Alice, {
 
   makeLinksClickable: function(elem) {
     elem.innerHTML = elem.innerHTML.replace(
-      Alice.urlRE, '<a href="$1" target="_blank" rel="noreferrer">$1</a>'
+      Alice.RE.url, '<a href="$1" target="_blank" rel="noreferrer">$1</a>'
     );
   },
  
