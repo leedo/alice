@@ -721,7 +721,8 @@ Alice.Application = Class.create({
         if (!time) return;
         time = time.innerHTML;
 
-        if (time - win.lasttimestamp > 60 * 5) {
+        // if it on a 5 or has been more than 5 min since last time
+        if (time % 300 == 0 || time - win.lasttimestamp > 60 * 5) {
           hint.style.opacity = 1;
           win.lasttimestamp = time;
         }
