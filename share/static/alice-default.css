@@ -274,7 +274,7 @@ div#input div.editor_toolbar button {
   display: block;
   float: left;
   color: #999999;
-  text-shadow: -1px -1px 0px white;
+  text-shadow: -1px -1px 0px #fff;
   line-height: 12px;
   font-size: 12px;
   margin: 0;
@@ -552,10 +552,8 @@ ul.messages li.avatar span.nick {
 div.timehint {
   font-size: 10px;
   float: right;
-  padding: 5px 5px 0px 5px;
+  padding-top: 4px;
   color: #555555;
-  margin-top: 1px;
-  margin-right: 3px;
   opacity: 0; }
 
 .info ul.messages li.highlight div.timehint,

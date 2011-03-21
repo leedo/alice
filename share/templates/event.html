@@ -1,5 +1,5 @@
 ? my ($app, $msg) = @_;
-<li class="event" id="<?= $msg->{msgid} ?>">
+<li class="event $msg->{event}" id="<?= $msg->{msgid} ?>">
     <div class="left"><span class="timestamp"><?= $msg->{timestamp} ?></span></div>
     <div class="msg">
 

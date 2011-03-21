@@ -8,9 +8,14 @@ Alice.Application = Class.create({
     this.tabs = $('tabs');
     this.topic = $('topic');
     this.nicklist = $('nicklist');
+    this.overlayVisible = false;
+    this.lastnotify = 0;
     this.topic_height = "14px";
     this.connection = window.WebSocket ? new Alice.Connection.WebSocket(this) : new Alice.Connection.XHR(this);
-    this.filters = [];
+
+    this.base_filters = this.baseFilters();
+    this.message_filters = [];
+
     this.keyboard = new Alice.Keyboard(this);
     this.supportsTouch = 'createTouch' in document;
 
@@ -252,15 +257,26 @@ Alice.Application = Class.create({
   },
   
   addFilters: function(list) {
-    this.filters = this.filters.concat(list);
+    this.message_filters = this.message_filters.concat(list);
   },
   
-  applyFilters: function(msg, win) {
-    if (msg.hasClassName("filtered")) return;
-    this.filters.each(function(f){
-      f(msg, win);
-    });
-    msg.addClassName("filtered");
+  applyFilters: function(li, win) {
+    if (li.hasClassName("filtered")) return;
+
+    this.base_filters.each(function(f) {
+      try { f.call(this, li, win); }
+      catch (e) { console.log(e.toString()) }
+    }.bind(this));
+
+    if (li.hasClassName("message")) {
+      var msg = li.down("div.msg");
+      this.message_filters.each(function(f){
+        try { f.call(this, msg, win); }
+        catch (e) { console.log(e.toString()) }
+      }.bind(this));
+    }
+
+    li.addClassName("filtered");
   },
   
   nextWindow: function() {
@@ -563,7 +579,7 @@ Alice.Application = Class.create({
 
   displayTopic: function(new_topic) {
     this.topic.update(new_topic || "no topic set");
-    this.filters[0](this.topic);
+    Alice.makeLinksClickable(this.topic);
   },
 
   displayNicks: function(nicks) {
@@ -660,6 +676,117 @@ Alice.Application = Class.create({
         }
       }.bind(this));
     }.bind(this));
+  },
+
+  baseFilters: function() {
+    return [
+      // linkify
+      function(li, win) {
+        Alice.makeLinksClickable(li.down("div.msg"));
+      },
+
+      // insert avatars
+      function(li, win) {
+        if (this.options.avatars && li.hasClassName("avatar")) {
+          var avatar = li.getAttribute("avatar");
+          if (avatar)
+            li.down("a.nick").insert('<img src="'+avatar+'" />');
+          else
+            li.removeClassName("avatar");
+        }
+      },
+
+      // shrink previous line for consecutive messages
+      function(li, win) {
+        if (li.hasClassName("consecutive")) {
+          var prev = li.previous(); 
+          if (!prev) return;
+
+          if (prev && prev.hasClassName("avatar") && !prev.hasClassName("consecutive"))
+            prev.down('div.msg').setStyle({minHeight: '0px'});
+          if (prev && prev.hasClassName("monospaced"))
+            prev.down('div.msg').setStyle({paddingBottom: '0px'});
+        }
+      },
+
+      // format timestamps
+      function(li, win) {
+        var timestamp = li.down('span.timestamp');
+        timestamp.innerHTML = Alice.epochToLocal(timestamp.innerHTML.strip(), this.options.timeformat);
+        timestamp.style.opacity = 1;
+      },
+
+      // copy timestamp up to the previous first non-consecutive message
+      function(li, win) {
+        var timehint = li.down('.timehint');
+        if (!timehint) return;
+
+        var stem = li.previous(":not(.consecutive)");
+        if (stem && stem.down(".timehint"))
+          stem.down(".timehint").replace(timehint.remove());
+      },
+
+      // turn on timestamps if they are toggled
+      function(li, win) {
+        if (!this.overlayVisible) return;
+
+        var nick = li.down('span.nick');
+        if (nick) nick.style.opacity = 1;
+
+        var time = li.down('div.timehint');
+        if (time) time.style.opacity = 1;
+      },
+
+      // highlights
+      function(li, win) {
+        if (!win.active && win.title != "info") {
+          if (!li.hasClassName("self"))
+            win.markUnread("unread");
+          if (li.hasClassName("highlight"))
+            win.markUnread("highlight");
+          if (win.type == "privmsg")
+            this.highlightChannelSelect(this.id, "highlight");
+        }
+      },
+
+      // growls
+      function(li, win) {
+        if (this.isFocused || li.hasClassName("self")) return;
+
+        if (li.hasClassName("highlight") || win.type == "privmsg") {
+          var prefix = "";
+
+          if (win.type != "privmsg")
+            prefix = li.down("span.nick").innserHTML.strip() + " in ";
+
+          var message = {
+            body: li.down(".msg").innerHTML.stripTags(),
+            subject: prefix + win.title
+          };
+
+          var time = (new Date()).getTime();
+          if (time - this.lastnotify > 5000) {
+            this.lastnotify = time;
+            Alice.growlNotify(message);
+          }
+          this.addMissed();
+        }
+      },
+
+    ];
+  },
+
+  toggleOverlay: function () {
+    this.overlayVisible = !this.overlayVisible;
+    var opacity = this.overlayVisible ? 1 : 0;
+
+    $$("li.avatar span.nick").each(function(span){
+      span.style.opacity = opacity;
+    });
+
+    $$("div.timehint").each(function(span){
+      span.style.opacity = opacity;
+    });
   }
 
 });

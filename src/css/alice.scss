@@ -643,10 +643,8 @@ ul.messages li.avatar span.nick {
 div.timehint {
   font-size: 10px;
   float: right;
-  padding: 5px 5px 0px 5px;
+  padding-top: 4px;
   color: $timehint_color;
-  margin-top: 1px;
-  margin-right: 3px;
   opacity: 0;
 }
 
