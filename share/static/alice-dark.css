@@ -170,6 +170,7 @@ div#nicklist_toggle {
   border-radius: 10px;
   color: #fff;
   -webkit-transition: opacity 0.1s ease-in-out;
+  -moz-transition: opacity 0.1s ease-in-out;
   font-size: 11px;
   z-index: 902;
   opacity: 0;
@@ -527,7 +528,8 @@ li.event div.left {
 
 li.event div.left span.timestamp {
   opacity: 0;
-  -webkit-transition: opacity 0.1s ease-in-out; }
+  -webkit-transition: opacity 0.1s ease-in-out;
+  -moz-transition: opacity 0.1s ease-in-out; }
 
 ul.messages li.avatar:not(.consecutive) {
   z-index: 800; }
@@ -549,6 +551,7 @@ ul.messages li.avatar span.nick {
   color: #fff;
   text-shadow: black 0 1px 1px;
   -webkit-transition: opacity 0.1s ease-in-out;
+  -moz-transition: opacity 0.1s ease-in-out;
   opacity: 0; }
 
 div.timehint {
@@ -1269,7 +1272,11 @@ span.nickborder {
   background: #444444;
   border: 1px solid #222222;
   -webkit-border-radius: 2px;
+  -moz-border-radius: 2px;
+  border-radius: 2px;
   -webkit-box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.4);
+  -moz-box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.4);
+  box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.4);
   display: none;
   white-space: nowrap; }
 
