@@ -324,7 +324,7 @@ Alice.Window = Class.create({
 
     if (message.event == "topic" && this.active) {
       this.topic = message.body;
-      if (this.active) this.application.displayTopic(topic);
+      if (this.active) this.application.displayTopic(this.topic);
     }
 
     this.element.redraw();
