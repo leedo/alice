@@ -322,9 +322,9 @@ Alice.Window = Class.create({
 
     this.scrollToBottom(scroll);
 
-    if (message.event == "topic" && win.active) {
-      win.topic = message.body;
-      if (win.active) this.displayTopic(topic);
+    if (message.event == "topic" && this.active) {
+      this.topic = message.body;
+      if (this.active) this.application.displayTopic(topic);
     }
 
     this.element.redraw();

@@ -10966,9 +10966,11 @@ Alice.Application = Class.create({
 
         var time = hint.down('span.timestamp');
         if (!time) return;
-        time = time.innerHTML;
 
-        if (time % 300 == 0 || time - win.lasttimestamp > 60 * 5) {
+        time = new Date(time.innerHTML * 1000);
+        var diff = (time - win.lasttimestamp) / 1000;
+
+        if (diff >= 300 || (diff > 60 && time.getMinutes() % 5 == 0)) {
           hint.style.opacity = 1;
           win.lasttimestamp = time;
         }
@@ -11691,9 +11693,9 @@ Alice.Window = Class.create({
 
     this.scrollToBottom(scroll);
 
-    if (message.event == "topic" && win.active) {
-      win.topic = message.body;
-      if (win.active) this.displayTopic(topic);
+    if (message.event == "topic" && this.active) {
+      this.topic = message.body;
+      if (this.active) this.application.displayTopic(topic);
     }
 
     this.element.redraw();
