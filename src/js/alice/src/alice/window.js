@@ -159,7 +159,7 @@ Alice.Window = Class.create({
 
   showNick: function (e) {
     var li = e.findElement("li.message");
-    if (li) {
+    if (li.hasClassName("avatar")) {
       if (this.application.overlayVisible || li == this.visibleNick) return;
       clearTimeout(this.visibleNickTimeout);
 
@@ -168,9 +168,9 @@ Alice.Window = Class.create({
       if (li.hasClassName("consecutive")) {
         var stem = li.previous("li:not(.consecutive)");
         if (!stem) return;
-        if (li.hasClassName("avatar")) nick = stem.down("span.nick");
+        nick = stem.down("span.nick");
       } else {
-        if (li.hasClassName("avatar")) nick = li.down("span.nick");
+        nick = li.down("span.nick");
       }
 
       if (nick) {
@@ -178,7 +178,7 @@ Alice.Window = Class.create({
           if (nick) nick.style.opacity = 1;
 
           setTimeout(function(){
-            if (this.overlayVisible) return;
+            if (this.application.overlayVisible) return;
             if (nick) nick.style.opacity = 0;
           }.bind(this, nick) , 1000);
         }.bind(this, nick), 500);
