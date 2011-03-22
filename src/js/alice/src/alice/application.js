@@ -719,10 +719,11 @@ Alice.Application = Class.create({
 
         var time = hint.down('span.timestamp');
         if (!time) return;
-        time = time.innerHTML;
 
-        // if it on a 5 or has been more than 5 min since last time
-        if (time % 300 == 0 || time - win.lasttimestamp > 60 * 5) {
+        time = new Date(time.innerHTML * 1000);
+        var diff = (time - win.lasttimestamp) / 1000;
+
+        if (diff >= 300 || (diff > 60 && time.getMinutes() % 5 == 0)) {
           hint.style.opacity = 1;
           win.lasttimestamp = time;
         }
