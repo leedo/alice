@@ -17,33 +17,11 @@ ul#tabs li:hover {
   cursor: default;
 }
 
-ul#controls {
-  background: $tab_background;
-  z-index: 904;
-}
-
-body.blurred ul#controls {
-  background: $tab_background_blurred;
-}
-
-ul#controls li {
-  position: relative;
-}
-
-ul#controls li.dropdown {
-  width: 24px;
-  height: 23px;
-  border: none;
-  padding: 0;
-  margin: 0;
-  position: relative;
-}
-
 div#tab_overlay {
   position: absolute;
   bottom: 0px;
   left: 0px;
-  right: 46px;
+  right: 24px;
   height: 24px;
 }
 
@@ -123,17 +101,40 @@ div#tab_menu_right {
   background-color: $tab_background;
 }
 
-li#config_menu {
-  background: url(image/sprites.png) 5px -216px no-repeat;
+div#config_menu {
+  top: 0px;
+  left: 0px;
+  height: 18px;
+  width: 24px;
+  position: absolute;
+  z-index: 902;
+  background: url(image/sprites.png) 5px -218px no-repeat;
+  background-color: $topic_background;
 }
 
-li#connection_status.loading {
+div#config_menu ul ul {
+  left: 100%;
+  right: auto;
+}
+
+div#config_menu:hover {
+  background-color: $tab_background;
+}
+
+div#connection_status.loading {
   background: url(image/loading.gif) center 3px no-repeat;
   opacity: 0.4;
 }
 
-ul#controls li#connection_status:hover {
-  background-color: transparent;
+div#connection_status {
+  width: 24px;
+  height: 23px;
+  position: absolute;
+  bottom: 0px;
+  right: 0px;
+  z-index: 906;
+  background-color: $tab_background;
+  border-top: 1px solid $tab_border_active;
 }
 
 body {
@@ -381,8 +382,9 @@ div#input input.send {
   display: none;
 }
 
+body.blurred div#connection_status,
 body.blurred ul#tabs {
-  background: $tab_background_blurred;
+  background-color: $tab_background_blurred;
 }
 
 ul#tabs {
@@ -485,43 +487,21 @@ ul#tabs li:hover div.hit_area {
   background: $tab_background_hover;
 }
 
-ul#controls {
-  position: absolute;
-  bottom: 0px;
-  right: 0px;
-  height: 23px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  border-top: 1px solid $tab_border_active;
-}
-
-ul#controls > li {
-  float: left;
-  margin: 0;
-  padding: 0;
-  height: 16px;
-  width: 16px;
-  padding: 4px 3px 3px 3px;
-}
-
-ul#controls > li:hover {
-  background-color: $tab_background_hover;
-}
 
 div#topic {
   position: absolute;
   top: 0px;
   left: 0px;
   right: 0px;
+  padding-left: 24px;
   background: $topic_background;
   text-align: center;
   border-top: $topic_border_top;
   border-bottom: $topic_border_bottom;
   padding: 1px 0;
   font-size: 11px;
-  height: 14px;
-  min-height: 14px;
+  height: 15px;
+  min-height: 15px;
   overflow: hidden;
   z-index: 901;
   text-decoration: none;
@@ -1388,10 +1368,19 @@ span.nickborder {
   background-color: $tab_background_hover;
 }
 
+.dropdown.top ul {
+  bottom: auto;
+  top: 100%;
+}
+
+.dropdown.bottom ul {
+  bottom: 100%;
+  top: auto;
+}
+
 .dropdown ul {
   position: absolute;
-  bottom: 30px;
-  right: 0px;
+  left: 0px;
   list-style: none;
   margin: 0;
   padding: 0;
@@ -1435,6 +1424,14 @@ span.nickborder {
 .dropdown > ul ul {
   display: none;
   right: 100%;
+}
+
+.dropdown.top > ul ul {
+  top: -1px;
+  bottom: auto;
+}
+
+.dropdown.bottom > ul ul {
   bottom: -1px;
   top: auto;
 }
