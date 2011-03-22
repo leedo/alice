@@ -79,7 +79,7 @@ Alice.Window = Class.create({
     var ul = this.tab.up("ul");
 
     var shift = ul.viewportOffset().left;
-    var doc_width = document.viewport.getWidth() - $('controls').getWidth();
+    var doc_width = document.viewport.getWidth() - 24;
     var tab_width = this.tab.getWidth();
 
     var offset_left = this.tab.positionedOffset().left + shift;
