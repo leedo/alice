@@ -246,12 +246,11 @@ ul#nicklist li {
   display: block;
   padding: 2px 5px;
   cursor: pointer;
-  color: $default_text;
-  opacity: 0.6;
+  color: $nicklist_color;
 }
 
 ul#nicklist li:hover {
-  opacity: 1;
+  color: $nicklist_color_hover;
 }
 
 div#input {
