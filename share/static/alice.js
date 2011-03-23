@@ -10971,7 +10971,7 @@ Alice.Application = Class.create({
           var time = new Date(seconds * 1000);
           var diff = (time - win.lasttimestamp) / 1000;
           remove = !(diff >= 300 || (diff > 60 && time.getMinutes() % 5 == 0));
-          win.lasttimestamp = time;
+          if (!remove) win.lasttimestamp = time;
         }
 
         if (remove) {

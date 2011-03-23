@@ -168,20 +168,27 @@ a.channel {
   text-decoration: none;
 }
 
+div#windows {
+  position:absolute;
+  top: 19px;
+  bottom: 51px;
+  right: 0px;
+  left: 0px;
+  overflow: hidden;
+}
+
 div.window {
   position:absolute;
-  top: 18px;
-  bottom: 51px;
-  right: 100%;
+  top: 0px;
+  bottom: 0px;
   left: -100%;
+  right: 100%;
   background: $message_background;
-  position: absolute;
   overflow-x: hidden;
   overflow-y: scroll;
 }
 
 div#windows.resizing div.window {
-  top: 0px;
   left: -500px;
   width: 500px;
   height: 500px;
@@ -192,10 +199,9 @@ div#windows.resizing div.window {
 div#windows.resizing div.window.active {
   left: 0px;
   right: 0px;
-  bottom: 51px;
-  top: 17px;
   height: auto;
   width: auto;
+  bottom: 0px;
 }
 
 div.window.active {
@@ -204,34 +210,33 @@ div.window.active {
 }
 
 div#nicklist_toggle {
-  display: block;
   position: absolute;
-  top: 1px;
-  right: 5px;
-  padding: 1px 10px;
-  background: rgba(0,0,0,0.5);
-  -webkit-border-radius: 10px;
-  -moz-border-radius: 10px;
-  border-radius: 10px;
-  color: #fff;
+  text-align: center;
+  width: 80px;
+  top: 50%;
+  margin-top: -20px;
+  right: 0px;
+  background: $message_background;
+  border: 1px solid $tab_border_active;
+  border-bottom: none;
+  -webkit-border-top-left-radius: 4px;
+  -webkit-border-top-right-radius: 4px;
+  color: $default_text;
+  -webkit-transform: rotate(-90deg) translateY(23px);
+  -moz-transform: rotate(-90deg);
   -webkit-transition: opacity 0.1s ease-in-out;
   -moz-transition: opacity 0.1s ease-in-out;
-  font-size: 11px;
+  font-size: 14px;
   z-index: 902;
-  opacity: 0;
   cursor: pointer;
 }
 
+div#nicklist_toggle:hover,
 div#nicklist_toggle:active {
-  background: rgba(0,0,0,0.7);
   opacity: 1;
 }
 
-
-div#nicklist_toggle:hover {
-  opacity: 1;
-}
-
+div#windows.nicklist div#nicklist_toggle,
 div#windows.nicklist div.window.active {
   right: 120px;
 }
@@ -241,7 +246,7 @@ ul#nicklist {
   list-style: none;
   margin: 0;
   padding: 0;
-  top: 18px;
+  top: 0px;
   left: -120px;
   right: auto;
   width: 120px;
@@ -262,11 +267,7 @@ ul#nicklist li {
   display: block;
   padding: 2px 5px;
   cursor: pointer;
-  color: $nicklist_color;
-}
-
-ul#nicklist li:hover {
-  color: $nicklist_color_hover;
+  color: $default_text;
 }
 
 div#input {
