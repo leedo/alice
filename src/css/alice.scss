@@ -104,12 +104,18 @@ div#tab_menu_right {
 div#config_menu {
   top: 0px;
   left: 0px;
-  height: 18px;
+  height: 17px;
+  border-top: 1px solid #DDECFF;
+  border-left: 1px solid #DDECFF;
+  border-bottom: 1px solid #1859A8;
+  border-right: 1px solid #1859A8;
+  cursor: pointer;
   width: 24px;
   position: absolute;
   z-index: 902;
-  background: url(image/sprites.png) 5px -218px no-repeat;
-  background-color: $topic_background;
+  background: url(image/logo.png) center center no-repeat;
+  background-color: #4196FF;
+  width: 50px;
 }
 
 div#config_menu ul ul {
@@ -118,7 +124,11 @@ div#config_menu ul ul {
 }
 
 div#config_menu:hover {
-  background-color: $tab_background;
+  background-color: #3880D9;
+}
+
+div#config_menu.open {
+  border: 1px solid #1859A8;
 }
 
 div#connection_status.loading {
@@ -493,7 +503,7 @@ div#topic {
   top: 0px;
   left: 0px;
   right: 0px;
-  padding-left: 24px;
+  padding-left: 50px;
   background: $topic_background;
   text-align: center;
   border-top: $topic_border_top;
@@ -1371,6 +1381,7 @@ span.nickborder {
 .dropdown.top ul {
   bottom: auto;
   top: 100%;
+  margin-top: 1px;
 }
 
 .dropdown.bottom ul {
@@ -1380,21 +1391,33 @@ span.nickborder {
 
 .dropdown ul {
   position: absolute;
-  left: 0px;
+  left: -1px;
   list-style: none;
   margin: 0;
   padding: 0;
   font-size: 12px;
   background: $tab_background;
   border: 1px solid $tab_border;
-  -webkit-border-radius: 2px;
-  -moz-border-radius: 2px;
-  border-radius: 2px;
   -webkit-box-shadow: 1px 1px 3px rgba(0,0,0,0.4);
   -moz-box-shadow: 1px 1px 3px rgba(0,0,0,0.4);
   box-shadow: 1px 1px 3px rgba(0,0,0,0.4);
   display: none;
   white-space: nowrap;
+}
+
+.dropdown.top ul {
+  -webkit-border-bottom-right-radius: 2px;
+  -webkit-border-bottom-left-radius: 2px;
+  -moz-border-radius-bottomleft: 2px;
+  -moz-border-radius-bottomright: 2px;
+  border-top: none;
+}
+.dropdown.bottom ul {
+  -webkit-border-top-right-radius: 2px;
+  -webkit-border-top-left-radius: 2px;
+  -moz-border-radius-topleft: 2px;
+  -moz-border-radius-topright: 2px;
+  border-bottom: none;
 }
 
 .dropdown.open > ul {
