@@ -87,19 +87,28 @@ div#tab_menu_right {
 div#config_menu {
   top: 0px;
   left: 0px;
-  height: 18px;
+  height: 17px;
+  border-top: 1px solid #DDECFF;
+  border-left: 1px solid #DDECFF;
+  border-bottom: 1px solid #1859A8;
+  border-right: 1px solid #1859A8;
+  cursor: pointer;
   width: 24px;
   position: absolute;
   z-index: 902;
-  background: url(image/sprites.png) 5px -218px no-repeat;
-  background-color: #3a3a3a; }
+  background: url(image/logo.png) center center no-repeat;
+  background-color: #4196FF;
+  width: 50px; }
 
 div#config_menu ul ul {
   left: 100%;
   right: auto; }
 
 div#config_menu:hover {
-  background-color: #444444; }
+  background-color: #3880D9; }
+
+div#config_menu.open {
+  border: 1px solid #1859A8; }
 
 div#connection_status.loading {
   background: url(image/loading.gif) center 3px no-repeat;
@@ -280,7 +289,7 @@ div#input div.editor_toolbar button {
   display: block;
   float: left;
   color: #222222;
-  text-shadow: -1px -1px 0px white;
+  text-shadow: -1px -1px 0px #fff;
   line-height: 12px;
   font-size: 12px;
   margin: 0;
@@ -428,7 +437,7 @@ div#topic {
   top: 0px;
   left: 0px;
   right: 0px;
-  padding-left: 24px;
+  padding-left: 50px;
   background: #3a3a3a;
   text-align: center;
   border-top: 1px solid #666666;
@@ -1247,7 +1256,8 @@ span.nickborder {
 
 .dropdown.top ul {
   bottom: auto;
-  top: 100%; }
+  top: 100%;
+  margin-top: 1px; }
 
 .dropdown.bottom ul {
   bottom: 100%;
@@ -1255,21 +1265,32 @@ span.nickborder {
 
 .dropdown ul {
   position: absolute;
-  left: 0px;
+  left: -1px;
   list-style: none;
   margin: 0;
   padding: 0;
   font-size: 12px;
   background: #444444;
   border: 1px solid #222222;
-  -webkit-border-radius: 2px;
-  -moz-border-radius: 2px;
-  border-radius: 2px;
   -webkit-box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.4);
   -moz-box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.4);
   box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.4);
   display: none;
   white-space: nowrap; }
+
+.dropdown.top ul {
+  -webkit-border-bottom-right-radius: 2px;
+  -webkit-border-bottom-left-radius: 2px;
+  -moz-border-radius-bottomleft: 2px;
+  -moz-border-radius-bottomright: 2px;
+  border-top: none; }
+
+.dropdown.bottom ul {
+  -webkit-border-top-right-radius: 2px;
+  -webkit-border-top-left-radius: 2px;
+  -moz-border-radius-topleft: 2px;
+  -moz-border-radius-topright: 2px;
+  border-bottom: none; }
 
 .dropdown.open > ul {
   display: block; }
