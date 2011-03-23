@@ -12523,9 +12523,6 @@ if (window == window.parent) {
     };
 
     window.onfocus = function () {
-      if (!alice.isMobile)
-        window.document.body.removeClassName("blurred");
-
       alice.input.focus();
 
       alice.isFocused = true
@@ -12534,8 +12531,6 @@ if (window == window.parent) {
 
     window.status = " ";
     window.onblur = function () {
-      if (!alice.isMobile)
-        window.document.body.addClassName("blurred");
       alice.isFocused = false
     };
     window.onhashchange = function (e) {alice.focusHash()};
