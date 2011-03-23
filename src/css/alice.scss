@@ -654,11 +654,6 @@ li.consecutive div.timehint {
   bottom: 3px;
 }
 
-.info ul.messages li.highlight div.timehint,
-li.self div.timehint {
-  background: $message_self_background;
-}
-
 div.msg {
   margin-left: 100px;
   min-height: 1.2em;

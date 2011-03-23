@@ -566,10 +566,6 @@ li.consecutive div.timehint {
   top: auto;
   bottom: 3px; }
 
-.info ul.messages li.highlight div.timehint,
-li.self div.timehint {
-  background: #333333; }
-
 div.msg {
   margin-left: 100px;
   min-height: 1.2em;

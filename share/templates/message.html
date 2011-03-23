@@ -4,7 +4,7 @@
 ? );
 
 <li class="message <?= $classes ?>" id="msg-<?= $msg->{msgid} ?>"<?= $msg->{avatar} ? " avatar=$msg->{avatar}" : "" ?>>
-    <div class="timehint"><span class="timestamp"><?= $msg->{timestamp} ?></span></div>
+    <div class="timehint timestamp"><?= $msg->{timestamp} ?></div>
     <div class="left">
       <a href="javascript:alice.connection.requestWindow('<?= $msg->{nick} ?>','<?= $msg->{window}{id} ?>')" class="nick"<?= $msg->{source} ? " title=$msg->{source}" : "" ?>>
         <span class="nick"><span class="nickborder">&lt;</span><?= $msg->{nick} ?><span class="nickborder">&gt;</span></span>
