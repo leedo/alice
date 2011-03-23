@@ -105,8 +105,8 @@ div#config_menu {
   top: 0px;
   left: 0px;
   height: 17px;
-  border-top: 1px solid #DDECFF;
-  border-left: 1px solid #DDECFF;
+  border-top: 1px solid #94C4FF;
+  border-left: 1px solid #94C4FF;
   border-bottom: 1px solid #1859A8;
   border-right: 1px solid #1859A8;
   cursor: pointer;
@@ -114,7 +114,7 @@ div#config_menu {
   position: absolute;
   z-index: 902;
   background: url(image/logo.png) center center no-repeat;
-  background-color: #4196FF;
+  background-color: #3880D9;
   width: 50px;
 }
 
@@ -123,8 +123,9 @@ div#config_menu ul ul {
   right: auto;
 }
 
+div#config_menu.open,
 div#config_menu:hover {
-  background-color: #3880D9;
+  background-color: #4196FF;
 }
 
 div#config_menu.open {
@@ -1387,6 +1388,7 @@ span.nickborder {
 .dropdown.bottom ul {
   bottom: 100%;
   top: auto;
+  margin-bottom: 1px;
 }
 
 .dropdown ul {
