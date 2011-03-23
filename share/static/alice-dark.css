@@ -33,9 +33,6 @@ div#tab_overlay .dropdown {
   opacity: 0;
   background-color: #444444; }
 
-body.blurred div#tab_overlay .dropdown {
-  background-color: #333333; }
-
 div#tab_overlay .dropdown:hover {
   background-color: #3a3a3a; }
 
@@ -244,9 +241,6 @@ div#input {
   right: 0px;
   z-index: 900; }
 
-body.blurred div#input {
-  border-bottom: 1px solid #111111; }
-
 div#input form {
   display: block;
   margin: 0;
@@ -296,7 +290,7 @@ div#input div.editor_toolbar button {
   display: block;
   float: left;
   color: #222222;
-  text-shadow: -1px -1px 0px #fff;
+  text-shadow: -1px -1px 0px white;
   line-height: 12px;
   font-size: 12px;
   margin: 0;
@@ -349,10 +343,6 @@ div.editor img {
 div#input input.send {
   display: none; }
 
-body.blurred div#connection_status,
-body.blurred ul#tabs {
-  background-color: #333333; }
-
 ul#tabs {
   list-style: none;
   margin: 0;
@@ -376,10 +366,6 @@ div#tab_container {
   height: 24px;
   position: absolute; }
 
-body.blurred ul#tabs li {
-  background: #333333;
-  color: #cccccc; }
-
 ul#tabs li {
   float: left;
   margin: 0;
@@ -392,9 +378,6 @@ ul#tabs li.hidden {
 ul#tabs li.visible {
   display: block; }
 
-body.blurred ul#tabs li:first-child div.hit_area {
-  border-left: 1px solid #333333; }
-
 ul#tabs li:first-child div.hit_area {
   border-left: 1px solid #444444; }
 
@@ -405,17 +388,6 @@ ul#tabs li div.hit_area {
   float: left;
   height: 14px;
   padding: 3px 10px 8px 4px; }
-
-body.blurred ul#tabs li div.hit_area {
-  border: 1px solid #111111;
-  border-bottom: none;
-  border-top: none; }
-
-body.blurred ul#tabs li.active div.hit_area {
-  border: 1px solid #111111;
-  -webkit-border-bottom-left-radius: 1px;
-  -webkit-border-bottom-right-radius: 1px;
-  border-top: none; }
 
 ul#tabs li.active div.hit_area {
   border: 1px solid #222222;

@@ -36,10 +36,6 @@ div#tab_overlay .dropdown {
   background-color: $tab_background;
 }
 
-body.blurred div#tab_overlay .dropdown {
-  background-color: $tab_background_blurred;
-}
-
 div#tab_overlay .dropdown:hover {
   background-color: $tab_background_hover;
 }
@@ -284,10 +280,6 @@ div#input {
   z-index: 900;
 }
 
-body.blurred div#input {
-  border-bottom: 1px solid $tab_border_blurred;
-}
-
 div#input form {
   display: block;
   margin: 0;
@@ -400,11 +392,6 @@ div#input input.send {
   display: none;
 }
 
-body.blurred div#connection_status,
-body.blurred ul#tabs {
-  background-color: $tab_background_blurred;
-}
-
 ul#tabs {
   list-style: none;
   margin: 0;
@@ -430,11 +417,6 @@ div#tab_container {
   position: absolute;
 }
 
-body.blurred ul#tabs li {
-  background: $tab_background_blurred;
-  color: $tab_text_blurred;
-}
-
 ul#tabs li {
   float: left;
   margin: 0;
@@ -449,10 +431,6 @@ ul#tabs li.visible {
   display: block;
 }
 
-body.blurred ul#tabs li:first-child div.hit_area {
-  border-left: 1px solid $tab_background_blurred;
-}
-
 ul#tabs li:first-child div.hit_area {
   border-left: 1px solid $tab_background;
 }
@@ -464,18 +442,6 @@ ul#tabs li div.hit_area {
   float:left;
   height: 14px;
   padding: 3px 10px 8px 4px;
-}
-
-body.blurred ul#tabs li div.hit_area {
-  border: 1px solid $tab_border_blurred;
-  border-bottom: none;
-  border-top: none;
-}
-body.blurred ul#tabs li.active div.hit_area {
-  border: 1px solid $tab_border_blurred;
-  -webkit-border-bottom-left-radius: 1px;
-  -webkit-border-bottom-right-radius: 1px;
-  border-top: none;
 }
 
 ul#tabs li.active div.hit_area {
