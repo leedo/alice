@@ -85,16 +85,16 @@ div#config_menu {
   top: 0px;
   left: 0px;
   height: 17px;
-  border-top: 1px solid #94C4FF;
-  border-left: 1px solid #94C4FF;
-  border-bottom: 1px solid #1859A8;
-  border-right: 1px solid #1859A8;
+  border: #fff;
+  border: 1px solid #cccccc;
+  border-bottom: 1px solid #555555;
+  border-right: 1px solid #555555;
   cursor: pointer;
   width: 24px;
   position: absolute;
   z-index: 902;
   background: url(image/logo.png) center center no-repeat;
-  background-color: #3880D9;
+  background-color: #999999;
   width: 50px; }
 
 div#config_menu ul ul {
@@ -103,7 +103,10 @@ div#config_menu ul ul {
 
 div#config_menu.open,
 div#config_menu:hover {
-  background-color: #4196FF; }
+  background-color: #4196FF;
+  border: 1px solid #94C4FF;
+  border-right: 1px solid #1859A8;
+  border-bottom: 1px solid #1859A8; }
 
 div#config_menu.open {
   border: 1px solid #1859A8; }
