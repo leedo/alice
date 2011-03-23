@@ -10964,24 +10964,21 @@ Alice.Application = Class.create({
         var hint = li.down('div.timehint');
         if (!hint) return;
 
-        var time = hint.down('span.timestamp');
-        if (!time) return;
+        var stamp = hint.down('span.timestamp');
+        if (!stamp) return;
 
-        time = new Date(time.innerHTML * 1000);
+        var seconds = stamp.innerHTML.strip();
+        var time = new Date(seconds * 1000);
         var diff = (time - win.lasttimestamp) / 1000;
 
         if (diff >= 300 || (diff > 60 && time.getMinutes() % 5 == 0)) {
+          hint.update(Alice.epochToLocal(seconds, this.options.timeformat));
           hint.style.opacity = 1;
           win.lasttimestamp = time;
         }
-      },
-
-      function(li, win) {
-        var timestamp = li.down('span.timestamp');
-        if (!timestamp) return;
-
-        timestamp.update(Alice.epochToLocal(timestamp.innerHTML.strip(), this.options.timeformat));
-        timestamp.style.opacity = 1;
+        else {
+          hint.remove();
+        }
       },
 
       function(li, win) {
