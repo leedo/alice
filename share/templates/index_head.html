@@ -15,23 +15,21 @@
   </head>
   <body>
     <img style="position:absolute;top:-100px;left:-100px" src="<?= $app->static_url("image/sprites.png") ?>" />
-    <div id="container">
 
+    <div class="dropdown top" id="config_menu">
+      <ul>
+        <li class="submenu separate-bottom">Sets
+          <?= $_mt->render_file('tabset_menu.html', $_[0]); ?>
+        </li>
+        <li>Preferences</li>
+        <li>Connections</li>
+        <li>Help</li>
+        <? if ($app->auth_enabled) { ?>
+        <li class="separate-bottom">Logout</li>
+        <? } ?>
+      </ul>
+    </div>
+
+    <div id="topic">No topic set.</div>
+    <div id="windows" class="compact-scroll">
       <div id="nicklist_toggle" title="Toggle nick list">nicks</div>
-
-      <div class="dropdown top" id="config_menu">
-        <ul>
-          <li class="submenu separate-bottom">Sets
-            <?= $_mt->render_file('tabset_menu.html', $_[0]); ?>
-          </li>
-          <li>Preferences</li>
-          <li>Connections</li>
-          <li>Help</li>
-          <? if ($app->auth_enabled) { ?>
-          <li class="separate-bottom">Logout</li>
-          <? } ?>
-        </ul>
-      </div>
-
-      <div id="topic">No topic set.</div>
-      <div id="windows" class="compact-scroll">
