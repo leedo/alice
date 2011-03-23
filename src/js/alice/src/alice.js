@@ -55,27 +55,29 @@ if (window == window.parent) {
         alice.input.focus();
     };
     
+
     var scroll = false;
-    var resize_complete = function(){
+
+    var complete = function(){
+      console.log("complete");
       $('windows').removeClassName("resizing");
-      delete window.resizing;
       var active = alice.activeWindow();
       if (scroll) active.scrollToBottom(true);
       active.shiftTab();
       scroll = false;
+      Event.observe(window, "resize", resize);
     };
 
-    window.onresize = function () {
-      if (window.resizing) {
-        clearTimeout(window.resizing);
-      }
-      else {
-        $('windows').addClassName("resizing");
-        scroll = alice.activeWindow().shouldScrollToBottom();
-      }
-      window.resizing = setTimeout(resize_complete, 1000);
+    var resize = function () {
+      Event.stopObserving(window, "resize");
+      console.log("resizing");
+      $('windows').addClassName("resizing");
+      scroll = alice.activeWindow().shouldScrollToBottom();
+      setTimeout(complete, 2000);
     };
-    
+
+    Event.observe(window, "resize", resize);
+
     window.onfocus = function () {
       alice.input.focus();
 

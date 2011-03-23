@@ -97,6 +97,7 @@ Alice.Application = Class.create({
           if (confirm("You joined "+win.title+" which is not in the '"+this.selectedSet+"' set. Do you want to add it?")) {
             this.tabsets[this.selectedSet].push(win.id);
             win.show();
+            this.updateOverflowMenus();
             Alice.tabsets.submit(this.tabsets);
           }
           else {
