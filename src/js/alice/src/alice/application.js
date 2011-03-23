@@ -754,7 +754,7 @@ Alice.Application = Class.create({
           if (li.hasClassName("highlight"))
             win.markUnread("highlight");
           if (win.type == "privmsg")
-            this.highlightChannelSelect(this.id, "highlight");
+            this.highlightChannelSelect(win.id, "highlight");
         }
       },
 
