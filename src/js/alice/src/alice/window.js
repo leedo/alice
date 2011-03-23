@@ -14,7 +14,7 @@ Alice.Window = Class.create({
     this.messages = this.element.down('.messages');
     this.visibleNick = "";
     this.visibleNickTimeout = "";
-    this.lasttimestamp = 0;
+    this.lasttimestamp = new Date(0);
     this.nicks = [];
     this.messageLimit = this.application.isMobile ? 50 : 200;
     this.msgid = 0;
@@ -159,7 +159,7 @@ Alice.Window = Class.create({
 
   showNick: function (e) {
     var li = e.findElement("li.message");
-    if (li.hasClassName("avatar")) {
+    if (li && li.hasClassName("avatar")) {
       if (this.application.overlayVisible || li == this.visibleNick) return;
       clearTimeout(this.visibleNickTimeout);
 

@@ -714,23 +714,25 @@ Alice.Application = Class.create({
 
       // toggle on timestamps if it has been 5 minutes
       function(li, win) {
-        var hint = li.down('div.timehint');
-        if (!hint) return;
-
-        var stamp = hint.down('span.timestamp');
+        var stamp = li.down('.timestamp');
         if (!stamp) return;
 
+        var remove = false;
         var seconds = stamp.innerHTML.strip();
-        var time = new Date(seconds * 1000);
-        var diff = (time - win.lasttimestamp) / 1000;
 
-        if (diff >= 300 || (diff > 60 && time.getMinutes() % 5 == 0)) {
-          hint.update(Alice.epochToLocal(seconds, this.options.timeformat));
-          hint.style.opacity = 1;
+        if (li.hasClassName("message")) {
+          var time = new Date(seconds * 1000);
+          var diff = (time - win.lasttimestamp) / 1000;
+          remove = !(diff >= 300 || (diff > 60 && time.getMinutes() % 5 == 0));
           win.lasttimestamp = time;
         }
+
+        if (remove) {
+          stamp.remove();
+        }
         else {
-          hint.remove();
+          stamp.update(Alice.epochToLocal(seconds, this.options.timeformat));
+          stamp.style.opacity = 1;
         }
       },
 
