@@ -118,6 +118,10 @@ div#config_menu {
   width: 50px;
 }
 
+div#config_menu > ul > li{
+  padding-left: 10px;
+}
+
 div#config_menu ul ul {
   left: 100%;
   right: auto;
