@@ -217,18 +217,20 @@ div.window.active {
 div#nicklist_toggle {
   position: absolute;
   text-align: center;
-  width: 10px;
+  width: 12px;
   height: 50px;
   margin-top: -25px;
   top: 50%;
   right: 15px;
-  background: $tab_background_active;
+  background: url(image/slider.png) center center no-repeat;
+  background-color: $tab_background_active;
   border: 1px solid $tab_border_blurred;
+  border-bottom: 1px solid $tab_border_active;
   border-right: none;
-  -webkit-border-top-left-radius: 4px;
-  -webkit-border-bottom-left-radius: 4px;
-  -moz-border-radius-topleft: 4px;
-  -moz-border-radius-bottomleft: 4px;
+  -webkit-border-top-left-radius: 6px;
+  -webkit-border-bottom-left-radius: 6px;
+  -moz-border-radius-topleft: 6px;
+  -moz-border-radius-bottomleft: 6px;
   color: $tab_text;
   -webkit-transition: opacity 0.3s ease-in-out;
   -moz-transition: opacity 0.3s ease-in-out;
@@ -238,12 +240,16 @@ div#nicklist_toggle {
   opacity: 0;
 }
 
+div#windows.nicklist div#nicklist_toggle {
+  background-image: url(image/slider-right.png);
+}
+
 div#windows.narrow div#nicklist_toggle {
   right: 9px;
 }
 
 div#nicklist_toggle.visible {
-  opacity: 0.5;
+  opacity: 0.75;
 }
 
 div#nicklist_toggle:hover,
