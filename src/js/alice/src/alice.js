@@ -26,6 +26,8 @@ if (window == window.parent) {
     // connect close botton for help 
     $('helpclose').observe("click", function () { $('help').hide(); });
     $('nicklist_toggle').observe("click", function () { alice.toggleNicklist() });
+    if (Prototype.Browser.MobileSafari || Prototype.Browser.WebKit)
+      $('windows').addClassName('narrow');
 
     $$('.dropdown').each(function (menu) {
       menu.observe(alice.supportsTouch ? "touchstart" : "mousedown", function (e) {
@@ -82,7 +84,7 @@ if (window == window.parent) {
         var width = document.viewport.getWidth();
         var left = windows.hasClassName('nicklist') ? 200 : 100;
         var visible  = toggle.hasClassName('visible');
-        if (!visible && width - e.x > left)
+        if (!visible && width - e.pointerX() > left)
           return;
 
         window.onmousemove = null;
@@ -91,14 +93,14 @@ if (window == window.parent) {
         var end = setTimeout(function() {
           toggle.removeClassName('visible');
           window.onmousemove = move;
-        }, 3000);
+        }, 1500);
 
         var timer = setTimeout(function() {
           window.onmousemove = function() {
             clearTimeout(end);
             window.onmousemove = move;
           };
-        }, 2000);
+        }, 1000);
       };
 
       window.onmousemove = move;
@@ -119,7 +121,9 @@ if (window == window.parent) {
     window.onhashchange = function (e) {alice.focusHash()};
 
     window.onorientationchange = function() {
-      alice.activeWindow().scrollToBottom(true);
+      var active = alice.activeWindow();
+      active.scrollToBottom(true);
+      active.shiftTab();
     };
 
     // editing the copy buffer only seems to work with Safari on Mac

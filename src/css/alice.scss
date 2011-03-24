@@ -221,12 +221,14 @@ div#nicklist_toggle {
   height: 50px;
   margin-top: -25px;
   top: 50%;
-  right: 9px;
+  right: 15px;
   background: $tab_background_active;
   border: 1px solid $tab_border_blurred;
   border-right: none;
   -webkit-border-top-left-radius: 4px;
   -webkit-border-bottom-left-radius: 4px;
+  -moz-border-radius-topleft: 4px;
+  -moz-border-radius-bottomleft: 4px;
   color: $tab_text;
   -webkit-transition: opacity 0.3s ease-in-out;
   -moz-transition: opacity 0.3s ease-in-out;
@@ -236,13 +238,24 @@ div#nicklist_toggle {
   opacity: 0;
 }
 
-div#nicklist_toggle.visible,
+div#windows.narrow div#nicklist_toggle {
+  right: 9px;
+}
+
+div#nicklist_toggle.visible {
+  opacity: 0.5;
+}
+
 div#nicklist_toggle:hover,
 div#nicklist_toggle:active {
   opacity: 1;
 }
 
 div#windows.nicklist div#nicklist_toggle {
+  right: 135px;
+}
+
+div#windows.nicklist.narrow div#nicklist_toggle {
   right: 129px;
 }
 
