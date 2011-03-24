@@ -280,6 +280,7 @@ Alice.Window = Class.create({
 
     this.messages.insert({bottom: chunk.html});
     this.trimMessages();
+    if (scroll) this.scrollToBottom(true);
 
     // so the tab doesn't get highlighted :|
     this.bulk_insert = true;
@@ -291,7 +292,7 @@ Alice.Window = Class.create({
 
     this.bulk_insert = false;
 
-    this.scrollToBottom(scroll);
+    if (scroll) this.scrollToBottom(true);
 
     var last = messages.last();
     if (last && last.id) this.msgid = last.id.replace("msg-", "");
@@ -307,12 +308,12 @@ Alice.Window = Class.create({
     
     this.messages.insert(message.html);
     this.trimMessages();
-    this.scrollToBottom(scroll);
+    if (scroll) this.scrollToBottom(true);
 
     var li = this.messages.select("li").last();
     this.application.applyFilters(li, this);
 
-    this.scrollToBottom(scroll);
+    if (scroll) this.scrollToBottom(true);
 
     if (message.event == "topic" && this.active) {
       this.topic = message.body;
