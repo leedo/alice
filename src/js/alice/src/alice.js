@@ -26,6 +26,7 @@ if (window == window.parent) {
     // connect close botton for help 
     $('helpclose').observe("click", function () { $('help').hide(); });
     $('nicklist_toggle').observe("click", function () { alice.toggleNicklist() });
+    
     if (Prototype.Browser.MobileSafari || Prototype.Browser.WebKit)
       $('windows').addClassName('narrow');
 
@@ -52,8 +53,10 @@ if (window == window.parent) {
 
     // setup window events
     
-    if (!alice.isMobile) {
-
+    if (alice.isMobile) {
+      $('nicklist_toggle').addClassName('visible');
+    }
+    else {
       window.onkeydown = function (e) {
         if (!$('config') && !Alice.isSpecialKey(e.which))
           alice.input.focus();

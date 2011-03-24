@@ -1,0 +1,8 @@
+div#nicklist_toggle,
+div.image a.hideimg,
+div#nicklist_toggle,
+ul.messages li.avatar span.nick,
+li.event div.left span.timestamp {
+  -webkit-transform: translate3d(0,0,0);
+} 
+
