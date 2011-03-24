@@ -12502,62 +12502,72 @@ if (window == window.parent) {
     });
 
 
-    window.onkeydown = function (e) {
-      if (!$('config') && !Alice.isSpecialKey(e.which))
-        alice.input.focus();
-    };
+    if (!alice.mobile) {
+
+      window.onkeydown = function (e) {
+        if (!$('config') && !Alice.isSpecialKey(e.which))
+          alice.input.focus();
+      };
 
 
-    var windows = $('windows');
-    var toggle = $('nicklist_toggle');
+      var windows = $('windows');
+      var toggle = $('nicklist_toggle');
 
-    var resize = function () {
-      window.onresize = null;
+      var resize = function () {
+        window.onresize = null;
 
-      windows.addClassName("resizing");
-      var scroll = alice.activeWindow().shouldScrollToBottom();
+        windows.addClassName("resizing");
+        var scroll = alice.activeWindow().shouldScrollToBottom();
 
-      setTimeout(function(){
-        windows.removeClassName("resizing");
-        var active = alice.activeWindow();
-        if (scroll) active.scrollToBottom(true);
-        active.shiftTab();
-        window.onresize = resize;
-      }, 2000);
-    };
+        setTimeout(function(){
+          windows.removeClassName("resizing");
+          var active = alice.activeWindow();
+          if (scroll) active.scrollToBottom(true);
+          active.shiftTab();
+          window.onresize = resize;
+        }, 2000);
+      };
 
-    window.onresize = resize;
+      window.onresize = resize;
 
-    var move = function(noclass) {
-      window.onmousemove = null;
-      toggle.addClassName('visible');
+      var move = function(e) {
+        var width = document.viewport.getWidth();
+        var left = windows.hasClassName('nicklist') ? 200 : 100;
+        var visible  = toggle.hasClassName('visible');
+        if (!visible && width - e.x > left)
+          return;
 
-      var end = setTimeout(function() {
-        toggle.removeClassName('visible');
-        window.onmousemove = move;
-      }, 3000);
+        window.onmousemove = null;
+        toggle.addClassName('visible');
 
-      var timer = setTimeout(function() {
-        window.onmousemove = function() {
-          clearTimeout(end);
+        var end = setTimeout(function() {
+          toggle.removeClassName('visible');
           window.onmousemove = move;
-        };
-      }, 2000);
-    };
+        }, 3000);
 
-    window.onmousemove = move;
+        var timer = setTimeout(function() {
+          window.onmousemove = function() {
+            clearTimeout(end);
+            window.onmousemove = move;
+          };
+        }, 2000);
+      };
 
-    window.onfocus = function () {
-      alice.input.focus();
+      window.onmousemove = move;
 
-      alice.isFocused = true
-      alice.clearMissed();
-    };
+      window.onfocus = function () {
+        alice.input.focus();
 
-    window.status = " ";
-    window.onblur = function () {
-      alice.isFocused = false
-    };
+        alice.isFocused = true
+          alice.clearMissed();
+      };
+
+      window.status = " ";
+      window.onblur = function () {
+        alice.isFocused = false
+      };
+    }
+
     window.onhashchange = function (e) {alice.focusHash()};
 
     window.onorientationchange = function() {

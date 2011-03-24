@@ -191,10 +191,11 @@ div#nicklist_toggle {
   margin-top: -25px;
   top: 50%;
   right: 9px;
-  background: #3a3a3a;
-  border-bottom: 1px solid #333333;
-  border-left: 1px solid #666666;
-  border-top: 1px solid #666666;
+  background: #333333;
+  border: 1px solid #111111;
+  border-right: none;
+  -webkit-border-top-left-radius: 4px;
+  -webkit-border-bottom-left-radius: 4px;
   color: white;
   -webkit-transition: opacity 0.3s ease-in-out;
   -moz-transition: opacity 0.3s ease-in-out;
