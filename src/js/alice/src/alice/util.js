@@ -239,9 +239,9 @@ Object.extend(Alice, {
             alice.options.images = "hide";
           }
           if (alice.options.avatars == "hide")
-            $('container').addClassName('noavatars');
+            document.body.addClassName('noavatars');
           else 
-            $('container').removeClassName('noavatars');
+            document.body.removeClassName('noavatars');
         }
       });
 

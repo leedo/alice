@@ -9,7 +9,7 @@
               alice.options.avatars = "hide";
             }
 
-            if (alice.options.avatars == "hide") $('container').addClassName('noavatars');
+            if (alice.options.avatars == "hide") document.body.addClassName('noavatars');
 
             <? my $tabsets = {map {$_->name => $_->windows } $app->tabsets}; ?>
             alice.tabsets = <?= Text::MicroTemplate::encoded_string(JSON::to_json $tabsets, {ascii => 1}) ?>;
@@ -59,7 +59,6 @@
           <input type="submit" id="submit" class="send" value="Send">
         </form>
       </div>
-    </div>
 
     <?= $_mt->render_file('help.html', $_[0]) ?>
 

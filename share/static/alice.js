@@ -10118,9 +10118,9 @@ Object.extend(Alice, {
             alice.options.images = "hide";
           }
           if (alice.options.avatars == "hide")
-            $('container').addClassName('noavatars');
+            document.body.addClassName('noavatars');
           else
-            $('container').removeClassName('noavatars');
+            document.body.removeClassName('noavatars');
         }
       });
 
@@ -10427,7 +10427,7 @@ Alice.Application = Class.create({
   toggleConfig: function(e) {
     this.connection.getConfig(function (transport) {
       this.input.disabled = true;
-      $('container').insert(transport.responseText);
+      $('windows').insert(transport.responseText);
     }.bind(this));
 
     if (e) e.stop();
@@ -10436,7 +10436,7 @@ Alice.Application = Class.create({
   togglePrefs: function(e) {
     this.connection.getPrefs(function (transport) {
       this.input.disabled = true;
-      $('container').insert(transport.responseText);
+      $('windows').insert(transport.responseText);
     }.bind(this));
 
     if (e) e.stop();
@@ -10445,7 +10445,7 @@ Alice.Application = Class.create({
   toggleTabsets: function(e) {
     this.connection.getTabsets(function (transport) {
       this.input.disabled = true;
-      $('container').insert(transport.responseText);
+      $('windows').insert(transport.responseText);
       Alice.tabsets.focusIndex(0);
     }.bind(this));
   },
