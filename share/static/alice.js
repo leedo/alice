@@ -12508,25 +12508,44 @@ if (window == window.parent) {
     };
 
 
-    var scroll = false;
-
-    var complete = function(){
-      $('windows').removeClassName("resizing");
-      var active = alice.activeWindow();
-      if (scroll) active.scrollToBottom(true);
-      active.shiftTab();
-      scroll = false;
-      Event.observe(window, "resize", resize);
-    };
+    var windows = $('windows');
+    var toggle = $('nicklist_toggle');
 
     var resize = function () {
-      Event.stopObserving(window, "resize");
-      $('windows').addClassName("resizing");
-      scroll = alice.activeWindow().shouldScrollToBottom();
-      setTimeout(complete, 2000);
+      window.onresize = null;
+
+      windows.addClassName("resizing");
+      var scroll = alice.activeWindow().shouldScrollToBottom();
+
+      setTimeout(function(){
+        windows.removeClassName("resizing");
+        var active = alice.activeWindow();
+        if (scroll) active.scrollToBottom(true);
+        active.shiftTab();
+        window.onresize = resize;
+      }, 2000);
     };
 
-    Event.observe(window, "resize", resize);
+    window.onresize = resize;
+
+    var move = function(noclass) {
+      window.onmousemove = null;
+      toggle.addClassName('visible');
+
+      var end = setTimeout(function() {
+        toggle.removeClassName('visible');
+        window.onmousemove = move;
+      }, 3000);
+
+      var timer = setTimeout(function() {
+        window.onmousemove = function() {
+          clearTimeout(end);
+          window.onmousemove = move;
+        };
+      }, 2000);
+    };
+
+    window.onmousemove = move;
 
     window.onfocus = function () {
       alice.input.focus();
