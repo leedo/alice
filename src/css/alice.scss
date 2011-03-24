@@ -222,10 +222,11 @@ div#nicklist_toggle {
   margin-top: -25px;
   top: 50%;
   right: 9px;
-  background: $topic_background;
-  border-bottom: $topic_border_bottom;
-  border-left: $topic_border_top;
-  border-top: $topic_border_top;
+  background: $tab_background_active;
+  border: 1px solid $tab_border_blurred;
+  border-right: none;
+  -webkit-border-top-left-radius: 4px;
+  -webkit-border-bottom-left-radius: 4px;
   color: $tab_text;
   -webkit-transition: opacity 0.3s ease-in-out;
   -moz-transition: opacity 0.3s ease-in-out;
