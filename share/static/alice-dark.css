@@ -186,29 +186,30 @@ div.window.active {
 div#nicklist_toggle {
   position: absolute;
   text-align: center;
-  width: 80px;
+  width: 10px;
+  height: 50px;
+  margin-top: -25px;
   top: 50%;
-  margin-top: -20px;
-  right: 0px;
-  background: #222222;
-  border: 1px solid #222222;
-  border-bottom: none;
-  -webkit-border-top-left-radius: 4px;
-  -webkit-border-top-right-radius: 4px;
+  right: 9px;
+  background: #3a3a3a;
+  border-bottom: 1px solid #333333;
+  border-left: 1px solid #666666;
+  border-top: 1px solid #666666;
   color: white;
-  -webkit-transform: rotate(-90deg) translateY(23px);
-  -moz-transform: rotate(-90deg);
   -webkit-transition: opacity 0.1s ease-in-out;
   -moz-transition: opacity 0.1s ease-in-out;
   font-size: 14px;
   z-index: 902;
-  cursor: pointer; }
+  cursor: pointer;
+  opacity: 0; }
 
 div#nicklist_toggle:hover,
 div#nicklist_toggle:active {
   opacity: 1; }
 
-div#windows.nicklist div#nicklist_toggle,
+div#windows.nicklist div#nicklist_toggle {
+  right: 129px; }
+
 div#windows.nicklist div.window.active {
   right: 120px; }
 
