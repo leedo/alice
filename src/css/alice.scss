@@ -253,6 +253,10 @@ div#nicklist_toggle {
   -moz-transition-property: opacity, width;
   -moz-transition-duration: 0.3s, 0.2s;
   -moz-transition-timing-function: ease-in-out;
+  -webkit-border-top-left-radius: 6px;
+  -webkit-border-bottom-left-radius: 6px;
+  -moz-border-radius-topleft: 6px;
+  -moz-border-radius-bottomleft: 6px;
   color: $tab_text;
   font-size: 14px;
   z-index: 902;
@@ -297,10 +301,10 @@ ul#nicklist {
   margin: 0;
   padding: 0;
   top: 0px;
+  bottom: 0px;
   left: -120px;
   right: auto;
   width: 120px;
-  bottom: 51px;
   overflow-y: auto;
   overflow-x: hidden;
   visibility: hidden;

@@ -310,10 +310,12 @@ Alice.Application = Class.create({
       var position = win.getTabPosition();
 
       if (position.tab.overflow_left) {
-        left += '<li rel="'+win.id+'">'+win.title.escapeHTML()+'</li>';
+        var classes = ['unread', 'highlight'].filter(function(c){return tab.hasClassName(c)});
+        left += '<li rel="'+win.id+'" class="'+classes+'">'+win.title.escapeHTML()+'</li>';
       }
       if (position.tab.overflow_right) {
-        right += '<li rel="'+win.id+'">'+win.title.escapeHTML()+'</li>';
+        var classes = ['unread', 'highlight'].filter(function(c){return tab.hasClassName(c)});
+        right += '<li rel="'+win.id+'" class="'+classes+'">'+win.title.escapeHTML()+'</li>';
       }
 
     }.bind(this));
@@ -383,7 +385,7 @@ Alice.Application = Class.create({
     ['tab_menu_left', 'tab_menu_right'].find(function(menu) {
       menu = $(menu);
 
-      var li = menu.select('li[rel='+id+']');
+      var li = menu.down('li[rel='+id+']');
       if (li) {
         li.addClassName(classname);
         menu.addClassName(classname);
@@ -397,7 +399,7 @@ Alice.Application = Class.create({
     ['tab_menu_left', 'tab_menu_right'].find(function(menu) {
       menu = $(menu);
 
-      var li = menu.select('li[rel='+id+']');
+      var li = menu.down('li[rel='+id+']');
       if (li) {
         li.removeClassName("unread");
         li.removeClassName("highlight");
