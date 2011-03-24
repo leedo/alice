@@ -12502,7 +12502,7 @@ if (window == window.parent) {
     });
 
 
-    if (!alice.mobile) {
+    if (!alice.isMobile) {
 
       window.onkeydown = function (e) {
         if (!$('config') && !Alice.isSpecialKey(e.which))
