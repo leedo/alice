@@ -20,13 +20,15 @@ Alice.Application = Class.create({
     this.base_filters = this.baseFilters();
     this.message_filters = [];
 
-    this.keyboard = new Alice.Keyboard(this);
     this.supportsTouch = 'createTouch' in document;
 
     this.isPhone = window.navigator.userAgent.match(/(android|iphone)/i) ? true : false;
     this.isMobile = this.isPhone || Prototype.Browser.MobileSafari;
     this.loadDelay = this.isMobile ? 3000 : 1000;
     if (window.navigator.standalone) this.loadDelay = 0;
+    
+    if (!this.isMobile)
+      this.keyboard = new Alice.Keyboard(this);
 
     this.input = new Alice.Input(this, "msg");
     this.submit = $("submit");
@@ -475,7 +477,6 @@ Alice.Application = Class.create({
   },
 
   shiftTabs: function(shift) {
-    console.log(shift);
     var current = this.tabShift();
 
     var left = current + shift;
@@ -483,12 +484,10 @@ Alice.Application = Class.create({
 
     this.tab_container.style.webkitTransitionDuration = time+"s";
     this.tab_container.setStyle({left: left+"px"});
+    this.tabs_layout = this.tab_container.getLayout();
 
     // update overflow menus after tabs have finisehd moving
-    setTimeout(function () {
-      this.tabs_layout = this.tab_container.getLayout();
-      this.updateOverflowMenus();
-    }.bind(this), time * 1000 + 100);
+    setTimeout(this.updateOverflowMenus.bind(this), time * 1000 + 100);
   },
   
   makeSortable: function() {
