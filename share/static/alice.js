@@ -12511,7 +12511,6 @@ if (window == window.parent) {
     var scroll = false;
 
     var complete = function(){
-      console.log("complete");
       $('windows').removeClassName("resizing");
       var active = alice.activeWindow();
       if (scroll) active.scrollToBottom(true);
@@ -12522,7 +12521,6 @@ if (window == window.parent) {
 
     var resize = function () {
       Event.stopObserving(window, "resize");
-      console.log("resizing");
       $('windows').addClassName("resizing");
       scroll = alice.activeWindow().shouldScrollToBottom();
       setTimeout(complete, 2000);
