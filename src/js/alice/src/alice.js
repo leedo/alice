@@ -50,7 +50,7 @@ if (window == window.parent) {
 
     // setup window events
     
-    if (!alice.mobile) {
+    if (!alice.isMobile) {
 
       window.onkeydown = function (e) {
         if (!$('config') && !Alice.isSpecialKey(e.which))
