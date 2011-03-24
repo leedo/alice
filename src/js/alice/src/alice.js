@@ -74,6 +74,7 @@ if (window == window.parent) {
 
         setTimeout(function(){
           windows.removeClassName("resizing");
+          alice.width = document.viewport.getWidth();
           var active = alice.activeWindow();
           if (scroll) active.scrollToBottom(true);
           active.shiftTab();

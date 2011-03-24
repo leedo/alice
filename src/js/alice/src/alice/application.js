@@ -13,6 +13,10 @@ Alice.Application = Class.create({
     this.topic_height = "14px";
     this.connection = window.WebSocket ? new Alice.Connection.WebSocket(this) : new Alice.Connection.XHR(this);
 
+    this.width = document.viewport.getWidth();
+    this.tab_container = $('tab_container');
+    this.tabs_layout = this.tab_container.getLayout();
+
     this.base_filters = this.baseFilters();
     this.message_filters = [];
 
@@ -306,16 +310,13 @@ Alice.Application = Class.create({
 
       if (!win.visible) return;
 
-      var tab = win.tab;
-      var position = win.getTabPosition();
+      var pos = win.getTabPosition();
 
-      if (position.tab.overflow_left) {
-        var classes = ['unread', 'highlight'].filter(function(c){return tab.hasClassName(c)});
-        left += '<li rel="'+win.id+'" class="'+classes+'">'+win.title.escapeHTML()+'</li>';
+      if (pos.left) {
+        left += sprintf('<li rel="%s" class="%s">%s</a>', win.id, win.status_class, win.title)
       }
-      if (position.tab.overflow_right) {
-        var classes = ['unread', 'highlight'].filter(function(c){return tab.hasClassName(c)});
-        right += '<li rel="'+win.id+'" class="'+classes+'">'+win.title.escapeHTML()+'</li>';
+      else if (pos.right) {
+        right += sprintf('<li rel="%s" class="%s">%s</a>', win.id, win.status_class, win.title)
       }
 
     }.bind(this));
@@ -468,6 +469,27 @@ Alice.Application = Class.create({
     }
     return false;
   },
+
+  tabShift: function() {
+    return this.tabs_layout.get('left');
+  },
+
+  shiftTabs: function(shift) {
+    console.log(shift);
+    var current = this.tabShift();
+
+    var left = current + shift;
+    var time = Math.min(Math.max(0.1, Math.abs(shift) / 100), 0.5);
+
+    this.tab_container.style.webkitTransitionDuration = time+"s";
+    this.tab_container.setStyle({left: left+"px"});
+
+    // update overflow menus after tabs have finisehd moving
+    setTimeout(function () {
+      this.tabs_layout = this.tab_container.getLayout();
+      this.updateOverflowMenus();
+    }.bind(this), time * 1000 + 100);
+  },
   
   makeSortable: function() {
     Sortable.create('tabs', {
@@ -475,6 +497,7 @@ Alice.Application = Class.create({
       constraint: 'horizontal',
       format: /(.+)/,
       onUpdate: function (res) {
+        this.windows().invoke("updateTabLayout");
         var tabs = res.childElements();
         var order = tabs.collect(function(t){
           var m = t.id.match(/([^_]+)_tab/);

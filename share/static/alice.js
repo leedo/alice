@@ -10271,6 +10271,10 @@ Alice.Application = Class.create({
     this.topic_height = "14px";
     this.connection = window.WebSocket ? new Alice.Connection.WebSocket(this) : new Alice.Connection.XHR(this);
 
+    this.width = document.viewport.getWidth();
+    this.tab_container = $('tab_container');
+    this.tabs_layout = this.tab_container.getLayout();
+
     this.base_filters = this.baseFilters();
     this.message_filters = [];
 
@@ -10562,16 +10566,13 @@ Alice.Application = Class.create({
 
       if (!win.visible) return;
 
-      var tab = win.tab;
-      var position = win.getTabPosition();
+      var pos = win.getTabPosition();
 
-      if (position.tab.overflow_left) {
-        var classes = ['unread', 'highlight'].filter(function(c){return tab.hasClassName(c)});
-        left += '<li rel="'+win.id+'" class="'+classes+'">'+win.title.escapeHTML()+'</li>';
+      if (pos.left) {
+        left += sprintf('<li rel="%s" class="%s">%s</a>', win.id, win.status_class, win.title)
       }
-      if (position.tab.overflow_right) {
-        var classes = ['unread', 'highlight'].filter(function(c){return tab.hasClassName(c)});
-        right += '<li rel="'+win.id+'" class="'+classes+'">'+win.title.escapeHTML()+'</li>';
+      else if (pos.right) {
+        right += sprintf('<li rel="%s" class="%s">%s</a>', win.id, win.status_class, win.title)
       }
 
     }.bind(this));
@@ -10725,12 +10726,33 @@ Alice.Application = Class.create({
     return false;
   },
 
+  tabShift: function() {
+    return this.tabs_layout.get('left');
+  },
+
+  shiftTabs: function(shift) {
+    console.log(shift);
+    var current = this.tabShift();
+
+    var left = current + shift;
+    var time = Math.min(Math.max(0.1, Math.abs(shift) / 100), 0.5);
+
+    this.tab_container.style.webkitTransitionDuration = time+"s";
+    this.tab_container.setStyle({left: left+"px"});
+
+    setTimeout(function () {
+      this.tabs_layout = this.tab_container.getLayout();
+      this.updateOverflowMenus();
+    }.bind(this), time * 1000 + 100);
+  },
+
   makeSortable: function() {
     Sortable.create('tabs', {
       overlap: 'horizontal',
       constraint: 'horizontal',
       format: /(.+)/,
       onUpdate: function (res) {
+        this.windows().invoke("updateTabLayout");
         var tabs = res.childElements();
         var order = tabs.collect(function(t){
           var m = t.id.match(/([^_]+)_tab/);
@@ -11393,6 +11415,7 @@ Alice.Window = Class.create({
     this.active = false;
     this.topic = serialized['topic'];
     this.tab = $(this.id + "_tab");
+    this.tab_layout = this.tab.getLayout();
     this.tabButton = $(this.id + "_tab_button");
     this.messages = this.element.down('.messages');
     this.visibleNick = "";
@@ -11456,14 +11479,17 @@ Alice.Window = Class.create({
     this.messages.observe("mouseover", this.showNick.bind(this));
   },
 
+  updateTabLayout: function() {
+    this.tab_layout = this.tab.getLayout();
+  },
+
   getTabPosition: function() {
-    var ul = this.tab.up("ul");
+    var shift = this.application.tabShift();
 
-    var shift = ul.viewportOffset().left;
-    var doc_width = document.viewport.getWidth() - 24;
-    var tab_width = this.tab.getWidth();
+    var doc_width = this.application.width - 24;
+    var tab_width = this.tab_layout.get("width");
 
-    var offset_left = this.tab.positionedOffset().left + shift;
+    var offset_left = this.tab_layout.get("left") + shift;
     var offset_right = doc_width - (offset_left + tab_width);
 
     var overflow_right = Math.abs(Math.min(0, offset_right));
@@ -11488,16 +11514,8 @@ Alice.Window = Class.create({
     }
 
     return {
-      tab: {
-        width: tab_width,
-        overflow_right: overflow_right,
-        overflow_left: overflow_left
-      },
-      container: {
-        node: ul,
-        width: doc_width,
-        left: shift
-      }
+      right: overflow_right,
+      left: overflow_left
     };
   },
 
@@ -11506,22 +11524,12 @@ Alice.Window = Class.create({
       , time = 0
       , pos = this.getTabPosition();
 
-    if (pos.tab.overflow_left) {
-      left = pos.container.left + pos.tab.overflow_left;
+    if (pos.left) {
+      this.application.shiftTabs(pos.left);
     }
-    else if (pos.tab.overflow_right) {
-      left = pos.container.left - pos.tab.overflow_right;
+    else if (pos.right) {
+      this.application.shiftTabs(-pos.right);
     }
-
-    if (left !== null) {
-      var diff = Math.abs(pos.container.left - left);
-      var time = Math.min(Math.max(0.1, diff / 100), 0.5);
-
-      pos.container.node.style.webkitTransitionDuration = time+"s";
-      pos.container.node.setStyle({left: left+"px"});
-    }
-
-    setTimeout(this.application.updateOverflowMenus.bind(this.application), time * 1000 + 100);
   },
 
   unFocus: function() {
@@ -11611,12 +11619,18 @@ Alice.Window = Class.create({
   markRead: function () {
     this.tab.removeClassName("unread");
     this.tab.removeClassName("highlight");
+    this.statuses = [];
     this.application.unHighlightChannelSelect(this.id);
   },
 
   markUnread: function(classname) {
     this.tab.addClassName(classname);
+    this.statuses.push(classname).uniq();
     this.application.highlightChannelSelect(this.id, classname);
+  },
+
+  status_class: function() {
+    return this.statuses.join(" ");
   },
 
   disable: function () {
@@ -12528,6 +12542,7 @@ if (window == window.parent) {
 
         setTimeout(function(){
           windows.removeClassName("resizing");
+          alice.width = document.viewport.getWidth();
           var active = alice.activeWindow();
           if (scroll) active.scrollToBottom(true);
           active.shiftTab();
