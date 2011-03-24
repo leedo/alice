@@ -10526,12 +10526,14 @@ Alice.Application = Class.create({
       catch (e) { this.log(e.toString()) }
     }.bind(this));
 
-    if (li.hasClassName("message")) {
-      var msg = li.down("div.msg");
-      this.message_filters.each(function(f){
-        try { f.call(this, msg, win); }
-        catch (e) { this.log(e.toString()) }
-      }.bind(this));
+    if (!alice.isPhone) {
+      if (li.hasClassName("message")) {
+        var msg = li.down("div.msg");
+        this.message_filters.each(function(f){
+          try { f.call(this, msg, win); }
+          catch (e) { this.log(e.toString()) }
+        }.bind(this));
+      }
     }
 
     li.addClassName("filtered");
@@ -10865,8 +10867,7 @@ Alice.Application = Class.create({
   },
 
   setupNicklist: function() {
-    this.nicklist.observe(this.supportsTouch ? "touchstart" : "click", function(e) {
-      if (this.supportsTouch) e.stop();
+    this.nicklist.observe("click", function(e) {
       var li = e.findElement('li');
       if (li) {
         var nick = li.innerHTML;
@@ -10917,7 +10918,7 @@ Alice.Application = Class.create({
         if (this.tabsets[li.innerHTML]) {
           this.showSet(li.innerHTML);
         }
-        $$('li.dropdown.open').invoke("removeClassName", "open");
+        $$('.dropdown.open').invoke("removeClassName", "open");
       }
     }.bind(this));
 
