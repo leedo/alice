@@ -186,7 +186,7 @@ div.window.active {
 div#nicklist_toggle {
   position: absolute;
   text-align: center;
-  width: 12px;
+  width: 0px;
   height: 50px;
   margin-top: -25px;
   top: 50%;
@@ -196,10 +196,12 @@ div#nicklist_toggle {
   border: 1px solid #111111;
   border-bottom: 1px solid #222222;
   border-right: none;
-  -webkit-border-top-left-radius: 6px;
-  -webkit-border-bottom-left-radius: 6px;
-  -moz-border-radius-topleft: 6px;
-  -moz-border-radius-bottomleft: 6px;
+  -webkit-transition-property: opacity, width;
+  -webkit-transition-duration: 0.3s, 0.2s;
+  -webkit-transition-timing-function: ease-in-out;
+  -moz-transition-property: opacity, width;
+  -moz-transition-duration: 0.3s, 0.2s;
+  -moz-transition-timing-function: ease-in-out;
   color: white;
   -webkit-transition: opacity 0.3s ease-in-out;
   -moz-transition: opacity 0.3s ease-in-out;
@@ -215,11 +217,13 @@ div#windows.narrow div#nicklist_toggle {
   right: 9px; }
 
 div#nicklist_toggle.visible {
-  opacity: 0.75; }
+  opacity: 0.75;
+  width: 12px; }
 
 div#nicklist_toggle:hover,
 div#nicklist_toggle:active {
-  opacity: 1; }
+  opacity: 1;
+  width: 12px; }
 
 div#windows.nicklist div#nicklist_toggle {
   right: 135px; }
