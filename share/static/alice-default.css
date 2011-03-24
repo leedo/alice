@@ -53,6 +53,10 @@ div#tab_menu_right {
   right: 0px;
   bottom: 0px; }
 
+div#tab_menu_right ul {
+  right: 0px;
+  left: auto; }
+
 .dropdown li.selectedset,
 .dropdown li.unread {
   font-weight: bold; }
@@ -290,7 +294,7 @@ div#input div.editor_toolbar button {
   display: block;
   float: left;
   color: #999999;
-  text-shadow: -1px -1px 0px white;
+  text-shadow: -1px -1px 0px #fff;
   line-height: 12px;
   font-size: 12px;
   margin: 0;
