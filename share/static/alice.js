@@ -10278,7 +10278,7 @@ Alice.Application = Class.create({
     this.supportsTouch = 'createTouch' in document;
 
     this.isPhone = window.navigator.userAgent.match(/(android|iphone)/i) ? true : false;
-    this.isMobile = this.isPhone || Prototype.Browser.MobileSafari || Prototype.Browser.Gecko;
+    this.isMobile = this.isPhone || Prototype.Browser.MobileSafari;
     this.loadDelay = this.isMobile ? 3000 : 1000;
     if (window.navigator.standalone) this.loadDelay = 0;
 
@@ -12147,7 +12147,7 @@ Alice.Input = Class.create({
 
   canContentEditable: function() {
     var element = new Element("div", {contentEditable: "true"});
-    return element.contentEditable != null && ! this.application.isMobile;
+    return ! (element.contentEditable != null || this.application.isMobile || Prototype.Browser.IE || Prototype.Browser.Gecko);
   },
 
   updateRange: function (e) {
@@ -12479,6 +12479,8 @@ if (window == window.parent) {
 
     $('helpclose').observe("click", function () { $('help').hide(); });
     $('nicklist_toggle').observe("click", function () { alice.toggleNicklist() });
+    if (Prototype.Browser.MobileSafari || Prototype.Browser.WebKit)
+      $('windows').addClassName('narrow');
 
     $$('.dropdown').each(function (menu) {
       menu.observe(alice.supportsTouch ? "touchstart" : "mousedown", function (e) {
@@ -12534,7 +12536,7 @@ if (window == window.parent) {
         var width = document.viewport.getWidth();
         var left = windows.hasClassName('nicklist') ? 200 : 100;
         var visible  = toggle.hasClassName('visible');
-        if (!visible && width - e.x > left)
+        if (!visible && width - e.pointerX() > left)
           return;
 
         window.onmousemove = null;
@@ -12543,14 +12545,14 @@ if (window == window.parent) {
         var end = setTimeout(function() {
           toggle.removeClassName('visible');
           window.onmousemove = move;
-        }, 3000);
+        }, 1500);
 
         var timer = setTimeout(function() {
           window.onmousemove = function() {
             clearTimeout(end);
             window.onmousemove = move;
           };
-        }, 2000);
+        }, 1000);
       };
 
       window.onmousemove = move;
@@ -12571,7 +12573,9 @@ if (window == window.parent) {
     window.onhashchange = function (e) {alice.focusHash()};
 
     window.onorientationchange = function() {
-      alice.activeWindow().scrollToBottom(true);
+      var active = alice.activeWindow();
+      active.scrollToBottom(true);
+      active.shiftTab();
     };
 
 
