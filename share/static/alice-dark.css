@@ -101,6 +101,24 @@ div#config_menu {
   background-color: #555555;
   width: 50px; }
 
+@media screen and (-webkit-device-pixel-ratio: 2) {
+  div#config_menu {
+    top: 0px;
+    left: 0px;
+    height: 17px;
+    border: #fff;
+    border: 1px solid #999999;
+    border-bottom: 1px solid #333333;
+    border-right: 1px solid #333333;
+    cursor: pointer;
+    width: 24px;
+    position: absolute;
+    z-index: 902;
+    background: url(image/logo2x.png) center center no-repeat;
+    -webkit-background-size: 33px 13px;
+    background-color: #555555;
+    width: 50px; } }
+
 div#config_menu > ul > li {
   padding-left: 10px; }
 
@@ -203,8 +221,6 @@ div#nicklist_toggle {
   -moz-transition-duration: 0.3s, 0.2s;
   -moz-transition-timing-function: ease-in-out;
   color: white;
-  -webkit-transition: opacity 0.3s ease-in-out;
-  -moz-transition: opacity 0.3s ease-in-out;
   font-size: 14px;
   z-index: 902;
   cursor: pointer;
@@ -319,7 +335,7 @@ div#input div.editor_toolbar button {
   display: block;
   float: left;
   color: #222222;
-  text-shadow: -1px -1px 0px #fff;
+  text-shadow: -1px -1px 0px white;
   line-height: 12px;
   font-size: 12px;
   margin: 0;

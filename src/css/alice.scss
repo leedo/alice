@@ -119,6 +119,26 @@ div#config_menu {
   width: 50px;
 }
 
+@media screen and (-webkit-device-pixel-ratio: 2) {
+  div#config_menu {
+    top: 0px;
+    left: 0px;
+    height: 17px;
+    border: #fff;
+    border: 1px solid $logo_border_light;
+    border-bottom: 1px solid $logo_border_dark;
+    border-right: 1px solid $logo_border_dark;
+    cursor: pointer;
+    width: 24px;
+    position: absolute;
+    z-index: 902;
+    background: url(image/logo2x.png) center center no-repeat;
+    -webkit-background-size: 33px 13px;
+    background-color: $logo_color;
+    width: 50px;
+  }
+}
+
 div#config_menu > ul > li{
   padding-left: 10px;
 }
