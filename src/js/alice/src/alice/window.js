@@ -17,6 +17,7 @@ Alice.Window = Class.create({
     this.visibleNickTimeout = "";
     this.lasttimestamp = new Date(0);
     this.nicks = [];
+    this.statuses = [];
     this.messageLimit = this.application.isMobile ? 50 : 200;
     this.msgid = 0;
     this.visible = true;
@@ -223,7 +224,8 @@ Alice.Window = Class.create({
 
   markUnread: function(classname) {
     this.tab.addClassName(classname);
-    this.statuses.push(classname).uniq();
+    this.statuses.push(classname);
+    this.statuses = this.statuses.uniq();
     this.application.highlightChannelSelect(this.id, classname);
   },
 
@@ -274,11 +276,10 @@ Alice.Window = Class.create({
   addChunk: function(chunk) {
     if (chunk.nicks) this.updateNicks(chunk.nicks);
 
-    var scroll = this.shouldScrollToBottom();
+    var scroll = this.application.isMobile || this.shouldScrollToBottom();
 
     this.messages.insert({bottom: chunk.html});
     this.trimMessages();
-    this.scrollToBottom(scroll);
 
     // so the tab doesn't get highlighted :|
     this.bulk_insert = true;

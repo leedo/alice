@@ -276,7 +276,7 @@ Alice.Application = Class.create({
     }.bind(this));
 
     // skip all the extra filters on phones
-    if (!alice.isPhone) {
+    if (!this.isPhone) {
       if (li.hasClassName("message")) {
         var msg = li.down("div.msg");
         this.message_filters.each(function(f){
