@@ -276,7 +276,7 @@ Alice.Window = Class.create({
   addChunk: function(chunk) {
     if (chunk.nicks) this.updateNicks(chunk.nicks);
 
-    var scroll = this.application.isMobile || this.shouldScrollToBottom();
+    var scroll = this.shouldScrollToBottom();
 
     this.messages.insert({bottom: chunk.html});
     this.trimMessages();
@@ -323,6 +323,8 @@ Alice.Window = Class.create({
   },
 
   shouldScrollToBottom: function() {
+    if (!this.active) return false;
+
     var bottom = this.element.scrollTop + this.element.offsetHeight;
     var height = this.element.scrollHeight;
 
