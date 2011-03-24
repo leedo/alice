@@ -233,15 +233,20 @@ Object.extend(Alice, {
         method: 'get',
         parameters: options,
         onSuccess: function(){
-          alice.options = options;
-          if (window.location.toString().match(/safe/i)) {
-            alice.options.avatars = "hide";
-            alice.options.images = "hide";
+          var reload = (alice.options.avatars != options.avatars || 
+                        alice.options.images != options.images ||
+                        alice.options.style != options.style);
+
+          if (reload) {
+            window.location.reload();
           }
-          if (alice.options.avatars == "hide")
-            document.body.addClassName('noavatars');
-          else 
-            document.body.removeClassName('noavatars');
+          else {
+            alice.options = options;
+            if (window.location.toString().match(/safe/i)) {
+              alice.options.avatars = "hide";
+              alice.options.images = "hide";
+            }
+          }
         }
       });
 
