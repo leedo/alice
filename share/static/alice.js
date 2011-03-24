@@ -10636,36 +10636,35 @@ Alice.Application = Class.create({
 
   highlightChannelSelect: function(id, classname) {
     if (!classname) classname = "unread";
-    ['tab_menu_left', 'tab_menu_right'].each(function(menu) {
+    ['tab_menu_left', 'tab_menu_right'].find(function(menu) {
       menu = $(menu);
 
-      menu.select('li').each(function(li) {
-        if (li.getAttribute('rel') == id) {
-          li.addClassName(classname);
-          menu.addClassName(classname);
-          return;
-        }
-      });
+      var li = menu.select('li[rel='+id+']');
+      if (li) {
+        li.addClassName(classname);
+        menu.addClassName(classname);
+        return true;
+      }
+      return false;
     });
   },
 
   unHighlightChannelSelect: function(id) {
-    ['tab_menu_left', 'tab_menu_right'].each(function(menu) {
+    ['tab_menu_left', 'tab_menu_right'].find(function(menu) {
       menu = $(menu);
 
-      menu.select('li').each(function(li) {
-        if (li.getAttribute('rel') == id) {
-          li.removeClassName("unread");
-          li.removeClassName("highlight");
-          return;
-        }
-      });
-
-      ["unread", "highlight"].each(function(c) {
-        if (!menu.select('li').any(function(li) {return li.hasClassName(c)})) {
-          menu.removeClassName(c);
-        }
-      });
+      var li = menu.select('li[rel='+id+']');
+      if (li) {
+        li.removeClassName("unread");
+        li.removeClassName("highlight");
+        ["unread", "highlight"].each(function(c) {
+          if (!menu.select('li').any(function(li) {return li.hasClassName(c)})) {
+            menu.removeClassName(c);
+          }
+        });
+        return true;
+      }
+      return false;
     });
   },
 
