@@ -65,6 +65,11 @@ div#tab_menu_right {
   bottom: 0px;
 }
 
+div#tab_menu_right ul {
+  right: 0px;
+  left: auto;
+}
+
 .dropdown li.selectedset,
 .dropdown li.unread {
   font-weight: bold;
