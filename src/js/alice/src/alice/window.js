@@ -315,7 +315,7 @@ Alice.Window = Class.create({
 
     if (scroll) this.scrollToBottom(true);
 
-    if (message.event == "topic" && this.active) {
+    if (message.event == "topic") {
       this.topic = message.body;
       if (this.active) this.application.displayTopic(this.topic);
     }

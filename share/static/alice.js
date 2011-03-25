@@ -11715,7 +11715,7 @@ Alice.Window = Class.create({
 
     if (scroll) this.scrollToBottom(true);
 
-    if (message.event == "topic" && this.active) {
+    if (message.event == "topic") {
       this.topic = message.body;
       if (this.active) this.application.displayTopic(this.topic);
     }
@@ -11894,7 +11894,7 @@ Alice.Colorpicker = Class.create({
     });
     elem.insert(colorcontainer);
 
-    button.up('#container').insert(elem);
+    document.body.insert(elem);
     elem.observe("mousedown", this.clicked.bind(this));
     elem.observe("mouseup", function(e) {e.stop()});
 
