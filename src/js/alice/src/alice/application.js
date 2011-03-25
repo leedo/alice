@@ -792,7 +792,7 @@ Alice.Application = Class.create({
           var prefix = "";
 
           if (win.type != "privmsg")
-            prefix = li.down("span.nick").innserHTML.strip() + " in ";
+            prefix = li.down("span.nick").innerHTML.strip() + " in ";
 
           var message = {
             body: li.down(".msg").innerHTML.stripTags(),
