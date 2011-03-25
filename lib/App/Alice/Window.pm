@@ -85,6 +85,14 @@ sub sort_name {
   $name;
 }
 
+sub pretty_name {
+  my $self = shift;
+  if ($self->is_channel) {
+    return substr $self->title, 1;
+  }
+  return $self->title;
+}
+
 has type => (
   is => 'ro',
   lazy => 1,
