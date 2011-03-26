@@ -37,6 +37,7 @@ Alice.Window = Class.create({
     this.tab.addClassName('visible');
     this.tab.removeClassName('hidden');
     this.visible = true;
+    this.updateTabLayout();
   },
 
   setupEvents: function() {

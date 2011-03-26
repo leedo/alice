@@ -134,7 +134,7 @@ Object.extend(Alice, {
 
     sets: function () {
       if (!$('sets')) return [];
-      return $('sets').select('li').map(function(li) {return li.innerHTML});
+      return $('sets').select('li').map(function(li) {return li.innerHTML.unescapeHTML()});
     },
 
     values: function () {

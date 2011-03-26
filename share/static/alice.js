@@ -10013,7 +10013,7 @@ Object.extend(Alice, {
 
     sets: function () {
       if (!$('sets')) return [];
-      return $('sets').select('li').map(function(li) {return li.innerHTML});
+      return $('sets').select('li').map(function(li) {return li.innerHTML.unescapeHTML()});
     },
 
     values: function () {
@@ -10818,15 +10818,13 @@ Alice.Application = Class.create({
     var ids = this.tabsets[name];
     if (ids) {
       var elem = $('tabset_menu').select('li').find(function(li) {
-        return li.innerHTML.strip() == name;
+        return li.innerHTML.unescapeHTML() == name;
       });
       elem.up('ul').select('li').invoke('removeClassName', 'selectedset');
       elem.addClassName('selectedset');
 
-      this.windows().filter(function(win) {
-        return win.type != "privmsg";
-      }).each(function(win) {
-        ids.indexOf(win.id) >= 0 ? win.show() : win.hide();
+      this.windows().each(function(win) {
+        ids.indexOf(win.id) >= 0 || win.type == "privmsg" ? win.show() : win.hide();
       });
 
       this.selectSet(name);
@@ -10944,8 +10942,9 @@ Alice.Application = Class.create({
             break;
         }
 
-        if (this.tabsets[li.innerHTML]) {
-          this.showSet(li.innerHTML);
+        var name = li.innerHTML.unescapeHTML();
+        if (this.tabsets[name]) {
+          this.showSet(name);
         }
         $$('.dropdown.open').invoke("removeClassName", "open");
       }
@@ -11448,6 +11447,7 @@ Alice.Window = Class.create({
     this.tab.addClassName('visible');
     this.tab.removeClassName('hidden');
     this.visible = true;
+    this.updateTabLayout();
   },
 
   setupEvents: function() {
