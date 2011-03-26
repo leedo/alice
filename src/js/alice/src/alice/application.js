@@ -86,6 +86,13 @@ Alice.Application = Class.create({
       }
     });
 
+    if (data.provider_name == "YouTube") {
+      var id = a.href.match(/v=([^&]+)/)[1];
+      data.html = '<iframe class="youtube-player" type="text/html" width="640"'
+                + ' height="385" src="http://www.youtube.com/embed/'
+                + id + '" frameborder="0"></iframe';
+    }
+
     div.insert(data.html);
     container.insert(div);
     container.insert("<div class='oembed_clearfix'></div>");
