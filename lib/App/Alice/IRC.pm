@@ -408,6 +408,8 @@ sub publicmsg {
   my ($self, $cl, $channel, $msg) = @_;
 
   if (my $window = $self->find_window($channel)) {
+    $window->disabled(0) if $window->disabled;
+
     my ($nick) = split_prefix($msg->{prefix});
     my $text = $msg->{params}[1];
 
