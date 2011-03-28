@@ -63,6 +63,27 @@ has app => (
   required => 1,
 );
 
+around disabled => sub {
+  my $orig = shift;
+  my $self = shift;
+
+  if (@_) {
+    if ($_[0]) {
+      $self->app->broadcast(
+        $self->format_event("disconnect", $self->nick, $self->session),
+        $self->disconnect_action
+      );
+    }
+    else {
+      $self->app->broadcast(
+        $self->connect_action,
+        $self->format_event("reconnect", $self->nick, $self->session),
+      );
+    }
+  }
+  $self->$orig(@_);
+};
+
 # move irc arg to _irc, which is wrapped in a method
 # because infowindow has logic to choose which irc
 # connection to return
@@ -72,11 +93,6 @@ sub BUILDARGS {
   $args->{_irc} = $args->{irc};
   delete $args->{irc};
   return $args;
-}
-
-sub disable {
-  my $self = shift;
-  $self->disabled(1);
 }
 
 sub sort_name {
@@ -139,6 +155,26 @@ sub all_nicks {
   return $self->is_channel ?
          [ $self->irc->channel_nicks($self->title, $modes) ]
        : [ $self->title, $self->nick ];
+}
+
+sub connect_action {
+  my $self = shift;
+  return {
+    type => "action",
+    event => "connect",
+    session => $self->session,
+    windows => [$self->serialized],
+  };
+}
+
+sub disconnect_action {
+  my $self = shift;
+  return {
+    type => "action",
+    event => "disconnect",
+    session => $self->session,
+    windows => [$self->serialized],
+  };
 }
 
 sub join_action {

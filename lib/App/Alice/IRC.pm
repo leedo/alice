@@ -248,19 +248,8 @@ sub connect {
 sub connected {
   my ($self, $cl, $err) = @_;
 
-  # kludge to work around broken MOTDs with an extra \015 in the
-  # line ending (e.g. irc.omgwtfhax.net)
   if ($cl->{socket}) {
-
     $cl->{socket}->{rbuf_max} = 1024 * 10; # 10K max read buffer
-
-    $self->{orig_on_read} = $cl->{socket}{on_read};
-    $cl->{socket}->on_read(sub {
-      my ($hdl) = @_;
-      $hdl->push_read (line => qr{\015?\015?\012}, sub {
-        $cl->_feed_irc_data ($_[1]);
-      });
-    });
   }
 
   if (defined $err) {
@@ -278,17 +267,6 @@ sub connected {
     $self->nick, $self->config->{username},
     $self->config->{ircname}, $self->config->{password}
   );
-
-  $self->broadcast({
-    type => "action",
-    event => "connect",
-    session => $self->alias,
-    windows => [map {$_->serialized} $self->windows],
-  });
-
-  $self->broadcast(map {
-    $_->format_event("reconnect", $self->nick, $self->config->{host}),
-  } $self->windows);
 }
 
 sub reconnect {
@@ -324,11 +302,6 @@ sub registered {
   my $self = shift;
   my @log;
 
-  # set the client's on read function back to the default
-  if ($self->{orig_on_read} and ref $self->{orig_on_read} eq "CODE") {
-    $self->cl->{socket}->on_read(delete $self->{orig_on_read});
-  }
-
   $self->cl->enable_ping (300, sub {
     $self->disconnected("ping timeout");
   });
@@ -357,19 +330,8 @@ sub disconnected {
   return if $reason eq "reconnect requested.";
   $self->log(info => "disconnected: $reason");
   
-  $_->disable for grep {$_->is_channel} $self->windows;
+  $_->disabled(1) for grep {$_->is_channel} $self->windows;
   
-  $self->broadcast(map {
-    $_->format_event("disconnect", $self->nick, $self->config->{host})
-  } $self->windows);
-  
-  $self->broadcast({
-    type => "action",
-    event => "disconnect",
-    session => $self->alias,
-    windows => [map {$_->serialized} $self->windows],
-  });
-
   $self->is_connected(0);
   
   $self->reconnect(0) unless $self->disabled;
@@ -408,8 +370,6 @@ sub publicmsg {
   my ($self, $cl, $channel, $msg) = @_;
 
   if (my $window = $self->find_window($channel)) {
-    $window->disabled(0) if $window->disabled;
-
     my ($nick) = split_prefix($msg->{prefix});
     my $text = $msg->{params}[1];
 
@@ -487,8 +447,8 @@ sub _join {
     # self->window uses find_or_create, so we don't create
     # duplicate windows here
     my $window = $self->window($channel);
-    $window->disabled(0);
 
+    $window->disabled(0) if $window->disabled;
     $self->broadcast($window->join_action);
 
     # client library only sends WHO if the server doesn't
@@ -520,6 +480,7 @@ sub multiple_left {
 sub channel_topic {
   my ($self, $cl, $channel, $topic, $nick) = @_;
   if (my $window = $self->find_window($channel)) {
+    $window->disabled(0) if $window->disabled;
     $topic = irc_to_html($topic, classes => 1, invert => "italic");
     $window->topic({string => $topic, author => $nick, time => time});
     $self->broadcast($window->format_event("topic", $nick, $topic));
@@ -659,6 +620,7 @@ sub irc_318 {
 sub irc_366 {
   my ($self, $cl, $msg) = @_;
   if (my $window = $self->find_window($msg->{params}[1])) {
+    $window->disabled(0) if $window->disabled;
     $self->broadcast($window->nicks_action);
   }
 }
