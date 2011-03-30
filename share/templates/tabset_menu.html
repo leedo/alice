@@ -10,6 +10,7 @@
     if (window.alice) {
       <? my $tabsets = {map {$_->name => $_->windows } $app->tabsets}; ?>
       alice.tabsets = <?= Text::MicroTemplate::encoded_string(JSON::encode_json $tabsets) ?>;
+      alice.showSet(alice.selectedSet);
     }
   </script>
 </ul>
