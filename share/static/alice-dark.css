@@ -274,11 +274,14 @@ div#windows.nicklist ul#nicklist {
   visibility: visible; }
 
 ul#nicklist li {
-  font-size: 0.8em;
   display: block;
-  padding: 2px 5px;
+  padding: 2px 5px; }
+
+ul#nicklist li a {
   cursor: pointer;
-  color: white; }
+  color: white;
+  font-size: 0.8em;
+  text-shadow: none; }
 
 div#input {
   background: #333333;

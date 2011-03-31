@@ -626,7 +626,7 @@ Alice.Application = Class.create({
         return -1 
       return 0;
     }).map(function(nick) {
-      return "<li>"+nick.escapeHTML()+"</li>";
+      return '<li><a>'+nick.escapeHTML()+'</a></li>';
     }).join("");
   },
 
@@ -643,9 +643,9 @@ Alice.Application = Class.create({
 
   setupNicklist: function() {
     this.nicklist.observe("click", function(e) {
-      var li = e.findElement('li');
+      var li = e.findElement('a');
       if (li) {
-        var nick = li.innerHTML;
+        var nick = a.innerHTML;
         this.connection.requestWindow(nick, this.activeWindow().id);
       }
     }.bind(this));

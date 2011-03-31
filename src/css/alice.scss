@@ -317,11 +317,15 @@ div#windows.nicklist ul#nicklist {
 }
 
 ul#nicklist li {
-  font-size: 0.8em;
   display: block;
   padding: 2px 5px;
+}
+
+ul#nicklist li a {
   cursor: pointer;
   color: $default_text;
+  font-size: 0.8em;
+  text-shadow: none;
 }
 
 div#input {
