@@ -183,6 +183,12 @@ div.window {
   overflow-x: hidden;
   overflow-y: scroll; }
 
+div.window table {
+  width: 100%;
+  height: 100%;
+  vertical-align: bottom;
+  table-layout: fixed; }
+
 div#windows.resizing div.window {
   left: -500px;
   width: 500px;
