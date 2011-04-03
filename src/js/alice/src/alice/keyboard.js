@@ -6,32 +6,35 @@ Alice.Keyboard = Class.create({
     this.cycleDelay = 300;
     this.enable();
     
-    this.shortcut("Cmd+C", { propagate: true });
-    this.shortcut("Ctrl+C", { propagate: true });
-    this.shortcut("Cmd+B");
-    this.shortcut("Cmd+I");
-    this.shortcut("Cmd+Shift+U");
-    this.shortcut("Opt+Up");
-    this.shortcut("Opt+Down");
-    this.shortcut("Cmd+Shift+M");
-    this.shortcut("Cmd+Shift+J");
-    this.shortcut("Cmd+Shift+K");
-    this.shortcut("Cmd+K");
-    this.shortcut("Cmd+Left");
-    this.shortcut("Cmd+Right");
-    this.shortcut("Cmd+Shift+Left");
-    this.shortcut("Cmd+Shift+Right");
-    this.shortcut("Cmd+Shift+H");
-    this.shortcut("Cmd+Shift+L");
-    this.shortcut("Cmd+U");
-    this.shortcut("Enter");
-    this.shortcut("Esc");
-    this.shortcut("Tab", { propagate: true });
-    this.shortcut("Shift+Tab", { propagate: true });
-    for (var i = 0; i < 10; i++) {
-      this.shortcut("Cmd+"+i);
-      if (!this.isMac) this.shortcut("Opt+"+i);
+    if (!this.application.isMobile) {
+      this.shortcut("Cmd+C", { propagate: true });
+      this.shortcut("Ctrl+C", { propagate: true });
+      this.shortcut("Cmd+B");
+      this.shortcut("Cmd+I");
+      this.shortcut("Cmd+Shift+U");
+      this.shortcut("Opt+Up");
+      this.shortcut("Opt+Down");
+      this.shortcut("Cmd+Shift+M");
+      this.shortcut("Cmd+Shift+J");
+      this.shortcut("Cmd+Shift+K");
+      this.shortcut("Cmd+K");
+      this.shortcut("Cmd+Left");
+      this.shortcut("Cmd+Right");
+      this.shortcut("Cmd+Shift+Left");
+      this.shortcut("Cmd+Shift+Right");
+      this.shortcut("Cmd+Shift+H");
+      this.shortcut("Cmd+Shift+L");
+      this.shortcut("Cmd+U");
+      this.shortcut("Esc");
+      this.shortcut("Tab", { propagate: true });
+      this.shortcut("Shift+Tab", { propagate: true });
+      for (var i = 0; i < 10; i++) {
+        this.shortcut("Cmd+"+i);
+        if (!this.isMac) this.shortcut("Opt+"+i);
+      }
     }
+
+    this.shortcut("Enter");
   },
   
   shortcut: function(name, options) {

@@ -27,8 +27,7 @@ Alice.Application = Class.create({
     this.loadDelay = this.isMobile ? 3000 : 1000;
     if (window.navigator.standalone) this.loadDelay = 0;
     
-    if (!this.isMobile)
-      this.keyboard = new Alice.Keyboard(this);
+    this.keyboard = new Alice.Keyboard(this);
 
     this.input = new Alice.Input(this, "msg");
     this.submit = $("submit");
