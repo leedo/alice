@@ -306,20 +306,34 @@ sub registered {
     $self->disconnected("ping timeout");
   });
   
-  for (@{$self->config->{on_connect}}) {
-    push @log, "sending $_";
-    $self->send_raw($_);
-  }
-  
   # merge auto-joined channel list with existing channels
   my @channels = uniq @{$self->config->{channels}}, $self->channels;
+  my @commands = ();
+
+  push @commands, map {
+    my $command = $_;
+    sub {
+      $self->log(debug => "sending $command");
+      $self->send_raw($command);
+    }
+  } @{$self->config->{on_connect}};
+
+  push @commands, map {
+    my $channel = $_;
+    sub {
+      $self->log(debug => "joining $channel");
+      $self->send_srv("JOIN", split /\s+/, $channel);
+    }
+  } @channels; 
     
-  for (@channels) {
-    push @log, "joining $_";
-    $self->send_srv("JOIN", split /\s+/);
-  }
-  
-  $self->log(debug => \@log);
+  my $t; $t = AE::timer 0, 0.25, sub {
+    if (my $command = shift @commands) {
+      $command->();
+    }
+    else {
+      undef $t;
+    }
+  };
 };
 
 sub disconnected {
