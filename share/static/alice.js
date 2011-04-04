@@ -10499,7 +10499,7 @@ Alice.Application = Class.create({
   },
 
   removeWindow: function(win) {
-    this.tabs_layout = this.tab_container.getLayout();
+    this.tabs_layout = this.tabs.getLayout();
 
     if (win.active) this.focusLast();
     if (window.fluid)
