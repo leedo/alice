@@ -326,7 +326,7 @@ sub registered {
     }
   } @channels; 
     
-  my $t; $t = AE::timer 0, 0.25, sub {
+  my $t; $t = AE::timer 1, 0.5, sub {
     if (my $command = shift @commands) {
       $command->();
     }
