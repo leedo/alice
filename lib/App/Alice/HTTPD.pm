@@ -418,7 +418,7 @@ sub render {
 
 sub export_config {
   my ($self, $req, $res) = @_;
-  $res->content_type("text/plain");
+  $res->content_type("text/plain; charset=utf-8");
   {
     $res->body(to_json($self->app->config->serialized,
       {utf8 => 1, pretty => 1}));
