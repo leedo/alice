@@ -226,9 +226,9 @@ Alice.Window = Class.create({
   },
   
   close: function(event) {
-    this.application.removeWindow(this);
     this.tab.remove();
     this.element.remove();
+    this.application.removeWindow(this);
   },
   
   showHappyAlert: function (message) {
