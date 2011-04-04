@@ -10271,9 +10271,8 @@ Alice.Application = Class.create({
     this.topic_height = "14px";
     this.connection = window.WebSocket ? new Alice.Connection.WebSocket(this) : new Alice.Connection.XHR(this);
 
-    this.width = document.viewport.getWidth();
-    this.tab_container = $('tab_container');
-    this.tabs_layout = this.tab_container.getLayout();
+    this.tabs_width = $('tabs_container').getWidth();
+    this.tabs_layout = this.tabs.getLayout();
 
     this.base_filters = this.baseFilters();
     this.message_filters = [];
@@ -10594,11 +10593,13 @@ Alice.Application = Class.create({
     this.toggleOverflow("right", !!right);
   },
 
-  toggleOverflow: function(side, visible) {
-    var display = (visible ? "block" : "none");
-    var opacity = (visible ? 1 : 0);
-    $('tab_menu_'+side).style.opacity = opacity;
-    setTimeout(function(){$('tab_menu_'+side).style.display = display}, 500);
+  toggleOverflow: function(side, active) {
+    if (active) {
+      $('tab_menu_'+side).addClassName("active");
+    }
+    else {
+      $('tab_menu_'+side).removeClassName("active");
+    }
   },
 
   nextUnreadWindow: function() {
@@ -10740,15 +10741,19 @@ Alice.Application = Class.create({
     return this.tabs_layout.get('left');
   },
 
+  tabsWidth: function() {
+    return this.tabs_width;
+  },
+
   shiftTabs: function(shift) {
     var current = this.tabShift();
 
     var left = current + shift;
     var time = Math.min(Math.max(0.1, Math.abs(shift) / 100), 0.5);
 
-    this.tab_container.style.webkitTransitionDuration = time+"s";
-    this.tab_container.setStyle({left: left+"px"});
-    this.tabs_layout = this.tab_container.getLayout();
+    this.tabs.style.webkitTransitionDuration = time+"s";
+    this.tabs.setStyle({left: left+"px"});
+    this.tabs_layout = this.tabs.getLayout();
 
     setTimeout(this.updateOverflowMenus.bind(this), time * 1000 + 100);
   },
@@ -10787,6 +10792,7 @@ Alice.Application = Class.create({
     setTimeout(function(){
       this.focusHash() || this.activeWindow().focus();
       this.activeWindow().scrollToBottom(true)
+      setTimeout(function(){this.shiftTabs(0)}.bind(this), 1000);
     }.bind(this), 10);
   },
 
@@ -10853,6 +10859,7 @@ Alice.Application = Class.create({
     elem.addClassName('selectedset');
     this.windows().invoke("show");
     this.selectSet('');
+    this.updateOverflowMenus();
     this.activeWindow().shiftTab();
   },
 
@@ -10935,18 +10942,24 @@ Alice.Application = Class.create({
           case "Logout":
             window.location = "/logout";
             break;
-          case "All tabs":
-            this.clearSet(li);
-            break;
-          case "Edit":
-            this.toggleTabsets();
-            break;
         }
+        $$('.dropdown.open').invoke("removeClassName", "open");
+      }
+    }.bind(this));
 
+    $('tabset_menu').observe(click, function(e) {
+      var li = e.findElement(".dropdown li");
+      if (li) {
+        e.stop();
         var name = li.innerHTML.unescapeHTML();
-        if (this.tabsets[name]) {
+
+        if (name == "Edit Sets")
+          this.toggleTabsets();
+        else if (name == "All tabs")
+          this.clearSet(li);
+        else if (this.tabsets[name])
           this.showSet(name);
-        }
+
         $$('.dropdown.open').invoke("removeClassName", "open");
       }
     }.bind(this));
@@ -11494,32 +11507,14 @@ Alice.Window = Class.create({
   getTabPosition: function() {
     var shift = this.application.tabShift();
 
-    var doc_width = this.application.width - 24;
+    var tabs_width = this.application.tabsWidth();
     var tab_width = this.tab_layout.get("width");
 
     var offset_left = this.tab_layout.get("left") + shift;
-    var offset_right = doc_width - (offset_left + tab_width);
+    var offset_right = tabs_width - (offset_left + tab_width);
 
     var overflow_right = Math.abs(Math.min(0, offset_right));
     var overflow_left = Math.abs(Math.min(0, offset_left));
-
-    if (this.tab.previous('.visible')) {
-      if (overflow_left) {
-        overflow_left += 24;
-      }
-      else if (offset_left < 24 && offset_left > 0) {
-        overflow_left += 24 - offset_left;
-      }
-    }
-
-    if (!overflow_left && this.tab.next('.visible')) {
-      if (overflow_right) {
-        overflow_right += 24;
-      }
-      else if (offset_right < 24 && offset_right > 0) {
-        overflow_right += 24 - offset_right;
-      }
-    }
 
     return {
       right: overflow_right,
@@ -12556,7 +12551,7 @@ if (window == window.parent) {
 
         setTimeout(function(){
           windows.removeClassName("resizing");
-          alice.width = document.viewport.getWidth();
+          alice.width = $('tabs_container').getWidth();
           var active = alice.activeWindow();
           if (scroll) active.scrollToBottom(true);
           active.shiftTab();

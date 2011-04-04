@@ -7,6 +7,7 @@ body {
   padding: 0;
   overflow: hidden;
   color: $default_text;
+  -webkit-text-size-adjust: none !important;
 }
 
 img {
@@ -17,41 +18,38 @@ ul#tabs li:hover {
   cursor: default;
 }
 
-div#tab_overlay {
-  position: absolute;
-  bottom: 0px;
-  left: 0px;
-  right: 24px;
-  height: 24px;
-}
-
-div#tab_overlay .dropdown {
+div#tab_bar .dropdown {
+  opacity: 0;
   width: 24px;
   height: 23px;
-  border-top: 1px solid $tab_border_active;
-  z-index: 904;
-  -moz-transition: opacity 0.25s ease-in-out;
-  -webkit-transition: opacity 0.25s ease-in-out;
-  opacity: 0;
-  background-color: $tab_background;
+  z-index: 905;
+  -moz-transition: opacity 0.5s ease-in-out;
+  -webkit-transition: opacity 0.5s ease-in-out;
 }
 
-div#tab_overlay .dropdown:hover {
-  background-color: $tab_background_hover;
+div#tab_bar div#tabset_dropdown {
+  position: absolute;
+  bottom: 0px;
+  left: 0px;
+  background: url(image/sprites.png) -29px 4px no-repeat;
+  opacity: 1;
+  cursor: pointer;
 }
 
-div#tab_menu_left {
-  border-right: 1px solid $tab_border_active;
+div#tab_bar div#tabset_dropdown:hover {
+  background: url(image/sprites.png) -29px -16px no-repeat;
 }
 
-div#tab_menu_right {
-  border-left: 1px solid $tab_border_active;
+div#tab_bar .dropdown.active {
+  opacity: 1;
+  cursor: pointer;
 }
 
 div#tab_menu_left {
   position: absolute;
-  left: 0px;
+  left: 24px;
   bottom: 0px;
+  border-right: 1px solid $tab_border_blurred;
 }
 
 div#tab_menu_left ul {
@@ -61,8 +59,9 @@ div#tab_menu_left ul {
 
 div#tab_menu_right {
   position: absolute;
-  right: 0px;
+  right: 12px;
   bottom: 0px;
+  border-left: 1px solid $tab_border_blurred;
 }
 
 div#tab_menu_right ul {
@@ -75,31 +74,38 @@ div#tab_menu_right ul {
   font-weight: bold;
 }
 
-.tab_menu {
-  background: url(image/sprites.png) 4px -174px no-repeat;
+.tab_menu.active {
+  background: url(image/sprites.png) 4px -275px no-repeat;
 }
 
-#tab_menu_left.tab_menu {
-  background: url(image/sprites.png) -19px -174px no-repeat;
-  background-color: $tab_background;
+#tab_menu_left.tab_menu.active {
+  background: url(image/sprites.png) -29px -275px no-repeat;
+}
+
+.tab_menu:hover,
+.tab_menu.open {
+  background: url(image/sprites.png) 4px -175px no-repeat;
+}
+
+#tab_menu_left.tab_menu:hover,
+#tab_menu_left.tab_menu.open {
+  background: url(image/sprites.png) -29px -175px no-repeat;
 }
 
 .tab_menu.unread {
-  background: url(image/sprites.png) 4px -194px no-repeat;
+  background: url(image/sprites.png) 4px -195px no-repeat;
 }
 
 #tab_menu_left.tab_menu.unread {
-  background: url(image/sprites.png) -19px -194px no-repeat;
-  background-color: $tab_background;
+  background: url(image/sprites.png) -29px -195px no-repeat;
 }
 
 .tab_menu.unread.highlight {
-  background: url(image/sprites.png) 4px -235px no-repeat;
+  background: url(image/sprites.png) 4px -236px no-repeat;
 }
 
 #tab_menu_left.tab_menu.unread.highlight {
-  background: url(image/sprites.png) -19px -235px no-repeat;
-  background-color: $tab_background;
+  background: url(image/sprites.png) -29px -236px no-repeat;
 }
 
 div#config_menu {
@@ -111,12 +117,15 @@ div#config_menu {
   border-bottom: 1px solid $logo_border_dark;
   border-right: 1px solid $logo_border_dark;
   cursor: pointer;
-  width: 24px;
   position: absolute;
   z-index: 902;
   background: url(image/logo.png) center center no-repeat;
   background-color: $logo_color;
   width: 50px;
+}
+
+div#config_menu > ul {
+  margin-left: -1px;
 }
 
 @media screen and (-webkit-device-pixel-ratio: 2) {
@@ -129,13 +138,12 @@ div#config_menu {
     border-bottom: 1px solid $logo_border_dark;
     border-right: 1px solid $logo_border_dark;
     cursor: pointer;
-    width: 24px;
     position: absolute;
     z-index: 902;
     background: url(image/logo2x.png) center center no-repeat;
     -webkit-background-size: 33px 13px;
     background-color: $logo_color;
-    width: 50px;
+    width: 53px;
   }
 }
 
@@ -146,6 +154,7 @@ div#config_menu > ul > li{
 div#config_menu ul ul {
   left: 100%;
   right: auto;
+  margin-left: -2px;
 }
 
 div#config_menu.open,
@@ -166,14 +175,15 @@ div#connection_status.loading {
 }
 
 div#connection_status {
+  display: none;
   width: 24px;
   height: 23px;
   position: absolute;
   bottom: 0px;
-  right: 0px;
-  z-index: 906;
+  left: 0px;
+  z-index: 904;
   background-color: $tab_background;
-  border-top: 1px solid $tab_border_active;
+  border-top: 1px solid $tab_border;
 }
 
 body {
@@ -325,7 +335,7 @@ div#windows.nicklist ul#nicklist {
 
 ul#nicklist li {
   display: block;
-  padding: 2px 5px;
+  padding: 3px 5px 0px 5px;
 }
 
 ul#nicklist li a {
@@ -462,25 +472,33 @@ ul#tabs {
   list-style: none;
   margin: 0;
   padding: 0;
+  padding-left: 1px;
   font-size: 11px;
   position: absolute;
   left: 0px;
   height: 24px;
   overflow: hidden;
-  background-color: $tab_background;
-  padding-left: 3px;
   width: 5000px;
   -webkit-transition: left 0.25s ease-in-out;
   -moz-transition: left 0.25s ease-in-out;
 }
 
-div#tab_container {
-  overflow: hidden;
+div#tab_bar {
   bottom: 0px;
   left: 0px;
   right: 0px;
   height: 24px;
   position: absolute;
+  background: url(image/sprites.png) 0px -300px repeat-x $tab_background;
+}
+
+div#tabs_container {
+  position: absolute;
+  top: 0px;
+  bottom: 0px;
+  right: 36px;
+  left: 48px;
+  overflow: hidden;
 }
 
 ul#tabs li {
@@ -495,10 +513,6 @@ ul#tabs li.hidden {
 }
 ul#tabs li.visible {
   display: block;
-}
-
-ul#tabs li:first-child div.hit_area {
-  border-left: 1px solid $tab_background;
 }
 
 ul#tabs li div.hit_area {
@@ -517,6 +531,7 @@ ul#tabs li.active div.hit_area {
   height: 11px;
   padding-top: 4px;
   margin-top: -1px;
+  -webkit-box-shadow: 2px 2px 2px rgba(0,0,0,0.1);
 }
 
 ul#tabs li:not(.active) {
@@ -535,26 +550,27 @@ ul#tabs li.active:hover div.hit_area {
 
 ul#tabs li:hover div.hit_area {
   background: $tab_background_hover;
+  background: url(image/sprites.png) 0px -300px repeat-x $tab_background_hover;
 }
-
 
 div#topic {
   position: absolute;
   top: 0px;
   left: 0px;
   right: 0px;
-  padding-left: 50px;
   background: $topic_background;
   text-align: center;
   border-top: $topic_border_top;
   border-bottom: $topic_border_bottom;
   padding: 1px 0;
+  padding-left: 50px;
   font-size: 11px;
   height: 15px;
   min-height: 15px;
   overflow: hidden;
   z-index: 901;
   text-decoration: none;
+  -webkit-box-shadow: 2px 0 2px rgba(0,0,0,0.2);
 }
 
 ul.messages {
@@ -562,6 +578,7 @@ ul.messages {
   margin: 0;
   padding: 3px 0;
   margin: 0;
+  -webkit-transition: opacity 0.1s ease-in-out;
 }
 
 ul.messages > li {
@@ -704,7 +721,7 @@ div.msg div.oembed {
   float: left;
   margin: 5px;
   font-size: 0.8em;
-  padding: 5px 10px;
+  padding: 5px;
 }
 
 div.oembed_clearfix {
@@ -767,10 +784,6 @@ ul.messages li.monospaced.avatar:not(.consecutive) div.msg {
   min-height: 0px;
 }
 
-ul.messages li.monospaced {
-  min-height: 0px;
-}
-
 ul.messages li.message:last-child {
   border-bottom: 1px solid $message_border;
 }
@@ -807,6 +820,7 @@ div.image a.hideimg {
   border-radius: 10px; 
   cursor:pointer;
   font-size: 10px;
+  -webkit-transition: opacity 0.1s ease-in-out;
 }
 
 div.image:hover a.hideimg {
@@ -1110,17 +1124,31 @@ div.color_picker div.toggle span#bg.active {
 }
 
 @media screen and (max-device-width: 480px) {
+  div#topic {
+    padding-left: 58px;
+  }
+
+  div#nicklist_toggle {
+    display: none !important;
+  }
+
+  div.msg img {
+    max-width: 200px;
+    max-height: 200px;
+  }
+
   div.left {
-    width: 40px !important;
+    width: 50px !important;
     padding-right: 0px !important;
+    text-overflow: clip
   }
 
   div.msg {
-    margin-left: 44px !important;
+    margin-left: 54px !important;
   }
 
   div#input div {
-    margin-right: 80px;
+    margin-right: 58px;
     background: none;
   }
 
@@ -1128,7 +1156,7 @@ div.color_picker div.toggle span#bg.active {
     display: block;
     position: absolute;
     bottom: 0px;
-    right: 26px;
+    right: 2px;
     z-index: 904;
   }
 
@@ -1409,10 +1437,6 @@ span.nickborder {
   left: -1000px; 
 }
 
-.dropdown.open {
-  background-color: $tab_background_hover;
-}
-
 .dropdown.top ul {
   bottom: auto;
   top: 100%;
@@ -1427,16 +1451,16 @@ span.nickborder {
 
 .dropdown ul {
   position: absolute;
-  left: -1px;
+  left: 0px;
   list-style: none;
   margin: 0;
   padding: 0;
   font-size: 12px;
   background: $tab_background;
   border: 1px solid $tab_border;
-  -webkit-box-shadow: 1px 1px 3px rgba(0,0,0,0.4);
-  -moz-box-shadow: 1px 1px 3px rgba(0,0,0,0.4);
-  box-shadow: 1px 1px 3px rgba(0,0,0,0.4);
+  -webkit-box-shadow: 1px 1px 3px rgba(0,0,0,0.2);
+  -moz-box-shadow: 1px 1px 3px rgba(0,0,0,0.2);
+  box-shadow: 1px 1px 3px rgba(0,0,0,0.2);
   display: none;
   white-space: nowrap;
 }
@@ -1448,12 +1472,12 @@ span.nickborder {
   -moz-border-radius-bottomright: 2px;
   border-top: none;
 }
+
 .dropdown.bottom ul {
   -webkit-border-top-right-radius: 2px;
   -webkit-border-top-left-radius: 2px;
   -moz-border-radius-topleft: 2px;
   -moz-border-radius-topright: 2px;
-  border-bottom: none;
 }
 
 .dropdown.open > ul {
@@ -1524,8 +1548,6 @@ span.nickborder {
 .compact-scroll ::-webkit-scrollbar-track-piece {
   background-color: $scrollbar_background;
   -webkit-border-radius: 0;
-  -webkit-border-bottom-right-radius: 8px;
-  -webkit-border-bottom-left-radius: 8px;
 }
 
 .compact-scroll ::-webkit-scrollbar-thumb:vertical {
@@ -1539,3 +1561,4 @@ span.nickborder {
   background-color: $scrollbar_thumb;
   -webkit-border-radius: 8px;
 }
+

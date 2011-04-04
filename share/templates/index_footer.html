@@ -35,18 +35,23 @@
 
       <div id="connection_status" class="ok"></div>
 
-      <div id="tab_container">
-        <ul id="tabs">
-        <? for my $window (@windows) { ?>
-          <?= $_mt->render_file('tab.html', $_[0], $window) ?>
-        <? } ?>
-        </ul>
-      </div>
+      <div id="tab_bar">
+        <div class="dropdown bottom" id="tabset_dropdown">
+          <?= $_mt->render_file('tabset_menu.html', $_[0]); ?>
+        </div>
 
-      <div id="tab_overlay">
         <div class="dropdown tab_menu bottom" id="tab_menu_left">
           <ul></ul>
         </div>
+
+        <div id="tabs_container">
+          <ul id="tabs">
+          <? for my $window (@windows) { ?>
+            <?= $_mt->render_file('tab.html', $_[0], $window) ?>
+          <? } ?>
+          </ul>
+        </div>
+
         <div class="dropdown tab_menu bottom" id="tab_menu_right">
           <ul></ul>
         </div>

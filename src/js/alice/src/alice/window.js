@@ -85,32 +85,14 @@ Alice.Window = Class.create({
   getTabPosition: function() {
     var shift = this.application.tabShift();
 
-    var doc_width = this.application.width - 24;
+    var tabs_width = this.application.tabsWidth();
     var tab_width = this.tab_layout.get("width");
 
     var offset_left = this.tab_layout.get("left") + shift;
-    var offset_right = doc_width - (offset_left + tab_width);
+    var offset_right = tabs_width - (offset_left + tab_width);
 
     var overflow_right = Math.abs(Math.min(0, offset_right));
     var overflow_left = Math.abs(Math.min(0, offset_left));
-
-    if (this.tab.previous('.visible')) {
-      if (overflow_left) {
-        overflow_left += 24;
-      }
-      else if (offset_left < 24 && offset_left > 0) {
-        overflow_left += 24 - offset_left;
-      }
-    }
-
-    if (!overflow_left && this.tab.next('.visible')) {
-      if (overflow_right) {
-        overflow_right += 24;
-      }
-      else if (offset_right < 24 && offset_right > 0) {
-        overflow_right += 24 - offset_right;
-      }
-    }
 
     return {
       right: overflow_right,
