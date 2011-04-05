@@ -10808,6 +10808,7 @@ Alice.Application = Class.create({
     setTimeout(function(){
       this.focusHash() || this.activeWindow().focus();
       this.activeWindow().scrollToBottom(true)
+      this.freeze();
       setTimeout(function(){this.shiftTabs(0)}.bind(this), 1000);
     }.bind(this), 10);
   },
@@ -12563,10 +12564,8 @@ if (window == window.parent) {
         var active = alice.activeWindow();
         var scroll = active.shouldScrollToBottom();
 
-        alice.freeze();
-
         var end = function(){
-          alice.thaw();
+          alice.freeze();
           alice.tabs_width = $('tabs_container').getWidth();
           alice.updateOverflowMenus();
           if (scroll) active.scrollToBottom(true);

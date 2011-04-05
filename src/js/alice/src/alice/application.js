@@ -554,6 +554,7 @@ Alice.Application = Class.create({
     setTimeout(function(){
       this.focusHash() || this.activeWindow().focus();
       this.activeWindow().scrollToBottom(true)
+      this.freeze();
       setTimeout(function(){this.shiftTabs(0)}.bind(this), 1000);
     }.bind(this), 10);
   },
