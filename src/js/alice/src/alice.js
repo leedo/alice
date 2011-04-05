@@ -114,6 +114,7 @@ if (window == window.parent) {
 
       window.onfocus = function () {
         alice.input.focus();
+        alice.freeze();
         alice.isFocused = true
         alice.clearMissed();
       };
