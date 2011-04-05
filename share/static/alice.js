@@ -10746,10 +10746,8 @@ Alice.Application = Class.create({
   },
 
   freeze: function() {
-    var windows = $('windows');
-    var dimensions = windows.getDimensions();
-    windows.setStyle({
-      width: dimensions.width+"px",
+    $('windows').setStyle({
+      width: document.viewport.getWidth()+"px",
       right: "auto",
     });
   },
