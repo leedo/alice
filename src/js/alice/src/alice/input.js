@@ -195,7 +195,7 @@ Alice.Input = Class.create({
       if (height == 0) {
         this.element.setStyle({ height: null, top: 0 });
       } else if (height <= 150) {
-        this.element.setStyle({ height: height + "px", top: "-1px" });
+        this.element.setStyle({ height: height + "px", top: "0px" });
       }
     }).bind(this).defer();
   },

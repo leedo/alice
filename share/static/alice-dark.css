@@ -197,10 +197,6 @@ div.window table {
   vertical-align: bottom;
   table-layout: fixed; }
 
-div#windows.resizing div.window {
-  right: auto;
-  bottom: auto; }
-
 div.window.active {
   left: 0px;
   right: 0px; }

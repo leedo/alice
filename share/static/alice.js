@@ -10282,7 +10282,7 @@ Alice.Application = Class.create({
     this.isPhone = window.navigator.userAgent.match(/(android|iphone)/i) ? true : false;
     this.isMobile = this.isPhone || Prototype.Browser.MobileSafari;
     this.loadDelay = this.isMobile ? 3000 : 1000;
-    if (window.navigator.standalone) this.loadDelay = 0;
+    if (window.navigator.standalone || window.navigator.userAgent.match(/Fluid/)) this.loadDelay = 0;
 
     this.keyboard = new Alice.Keyboard(this);
 
@@ -10743,6 +10743,22 @@ Alice.Application = Class.create({
 
   tabsWidth: function() {
     return this.tabs_width;
+  },
+
+  freeze: function() {
+    var windows = $('windows');
+    var dimensions = windows.getDimensions();
+    windows.setStyle({
+      width: dimensions.width+"px",
+      right: "auto",
+    });
+  },
+
+  thaw: function() {
+    $('windows').setStyle({
+      width: "auto",
+      right: "0px",
+    });
   },
 
   shiftTabs: function(shift) {
@@ -11522,21 +11538,6 @@ Alice.Window = Class.create({
     };
   },
 
-  freeze: function() {
-    var dimensions = this.element.getDimensions();
-    this.element.setStyle({
-      width: dimensions.width+"px",
-      height: dimensions.height+"px"
-    });
-  },
-
-  thaw: function() {
-    this.element.setStyle({
-      width: 'auto',
-      height: 'auto',
-    });
-  },
-
   shiftTab: function() {
     var left = null
       , time = 0
@@ -12153,7 +12154,7 @@ Alice.Input = Class.create({
       if (height == 0) {
         this.element.setStyle({ height: null, top: 0 });
       } else if (height <= 150) {
-        this.element.setStyle({ height: height + "px", top: "-1px" });
+        this.element.setStyle({ height: height + "px", top: "0px" });
       }
     }).bind(this).defer();
   },
@@ -12555,27 +12556,30 @@ if (window == window.parent) {
       };
 
 
-      var container = $('windows');
+      var windows = $('windows');
       var toggle = $('nicklist_toggle');
 
       var resize = function () {
-        window.onresize = null;
-
-        var windows = alice.windows();
         var active = alice.activeWindow();
         var scroll = active.shouldScrollToBottom();
 
-        windows.invoke("freeze");
-        container.addClassName("resizing");
+        alice.freeze();
 
-        setTimeout(function(){
-          container.removeClassName("resizing");
-          windows.invoke("thaw");
-          alice.width = $('tabs_container').getWidth();
+        var end = function(){
+          alice.thaw();
+          alice.tabs_width = $('tabs_container').getWidth();
+          alice.updateOverflowMenus();
           if (scroll) active.scrollToBottom(true);
           active.shiftTab();
           window.onresize = resize;
-        }, 1000);
+        };
+
+        var end_timer;
+
+        window.onresize = function() {
+          clearTimeout(end_timer);
+          end_timer = setTimeout(end, 1000);
+        };
       };
 
       window.onresize = resize;
@@ -12587,29 +12591,26 @@ if (window == window.parent) {
         if (!visible && width - e.pointerX() > left)
           return;
 
-        window.onmousemove = null;
         toggle.addClassName('visible');
 
-        var end = setTimeout(function() {
+        var end = function() {
           toggle.removeClassName('visible');
           window.onmousemove = move;
-        }, 1500);
+        };
+        var end_timer;
 
-        var timer = setTimeout(function() {
-          window.onmousemove = function() {
-            clearTimeout(end);
-            window.onmousemove = move;
-          };
-        }, 1000);
+        window.onmousemove = function() {
+          clearTimeout(end_timer);
+          end_timer = setTimeout(end, 1000);
+        };
       };
 
       window.onmousemove = move;
 
       window.onfocus = function () {
         alice.input.focus();
-
         alice.isFocused = true
-          alice.clearMissed();
+        alice.clearMissed();
       };
 
       window.status = " ";
@@ -12675,7 +12676,7 @@ if (window == window.parent) {
         msg.select("a").filter(function(a) {
           return Alice.RE.img.match(a.innerHTML);
         }).each(function(a) {
-          if (alice.options.images == "show")
+          if (alice.options.images == "show" && (!alice.isMobile || !a.href.match(/\.gif/)))
             win.inlineImage(a);
           else
             a.observe("click", function(e){e.stop();win.inlineImage(a)});

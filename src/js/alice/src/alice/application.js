@@ -24,7 +24,7 @@ Alice.Application = Class.create({
     this.isPhone = window.navigator.userAgent.match(/(android|iphone)/i) ? true : false;
     this.isMobile = this.isPhone || Prototype.Browser.MobileSafari;
     this.loadDelay = this.isMobile ? 3000 : 1000;
-    if (window.navigator.standalone) this.loadDelay = 0;
+    if (window.navigator.standalone || window.navigator.userAgent.match(/Fluid/)) this.loadDelay = 0;
     
     this.keyboard = new Alice.Keyboard(this);
 
@@ -487,6 +487,22 @@ Alice.Application = Class.create({
 
   tabsWidth: function() {
     return this.tabs_width;
+  },
+
+  freeze: function() {
+    var windows = $('windows');
+    var dimensions = windows.getDimensions();
+    windows.setStyle({
+      width: dimensions.width+"px",
+      right: "auto",
+    });
+  },
+
+  thaw: function() {
+    $('windows').setStyle({
+      width: "auto",
+      right: "0px",
+    });
   },
 
   shiftTabs: function(shift) {

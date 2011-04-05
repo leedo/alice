@@ -100,21 +100,6 @@ Alice.Window = Class.create({
     };
   },
 
-  freeze: function() {
-    var dimensions = this.element.getDimensions();
-    this.element.setStyle({
-      width: dimensions.width+"px",
-      height: dimensions.height+"px"
-    });
-  },
-
-  thaw: function() {
-    this.element.setStyle({
-      width: 'auto',
-      height: 'auto',
-    });
-  },
-
   shiftTab: function() {
     var left = null
       , time = 0
