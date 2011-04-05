@@ -198,18 +198,8 @@ div.window table {
   table-layout: fixed; }
 
 div#windows.resizing div.window {
-  left: -500px;
-  width: 500px;
-  height: 500px;
   right: auto;
   bottom: auto; }
-
-div#windows.resizing div.window.active {
-  left: 0px;
-  right: 0px;
-  height: auto;
-  width: auto;
-  bottom: 0px; }
 
 div.window.active {
   left: 0px;

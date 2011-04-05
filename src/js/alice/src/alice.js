@@ -63,23 +63,27 @@ if (window == window.parent) {
       };
 
 
-      var windows = $('windows');
+      var container = $('windows');
       var toggle = $('nicklist_toggle');
 
       var resize = function () {
         window.onresize = null;
 
-        windows.addClassName("resizing");
-        var scroll = alice.activeWindow().shouldScrollToBottom();
+        var windows = alice.windows();
+        var active = alice.activeWindow();
+        var scroll = active.shouldScrollToBottom();
+
+        windows.invoke("freeze");
+        container.addClassName("resizing");
 
         setTimeout(function(){
-          windows.removeClassName("resizing");
+          container.removeClassName("resizing");
+          windows.invoke("thaw");
           alice.width = $('tabs_container').getWidth();
-          var active = alice.activeWindow();
           if (scroll) active.scrollToBottom(true);
           active.shiftTab();
           window.onresize = resize;
-        }, 2000);
+        }, 1000);
       };
 
       window.onresize = resize;
