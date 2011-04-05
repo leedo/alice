@@ -342,7 +342,6 @@ Alice.Window = Class.create({
   },
 
   inlineImage: function(a) {
-    if(a.innerHTML.indexOf('nsfw') !== -1) return;
     a.stopObserving("click");
 
     var scroll = this.shouldScrollToBottom();

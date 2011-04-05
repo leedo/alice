@@ -11777,7 +11777,6 @@ Alice.Window = Class.create({
   },
 
   inlineImage: function(a) {
-    if(a.innerHTML.indexOf('nsfw') !== -1) return;
     a.stopObserving("click");
 
     var scroll = this.shouldScrollToBottom();
@@ -12677,7 +12676,8 @@ if (window == window.parent) {
           return Alice.RE.img.match(img);
         }).each(function(a) {
           var image = a.readAttribute("img") || a.href;
-          if (alice.options.images == "show" && (!alice.isMobile || !image.match(/\.gif/)))
+          var hide = (alice.isMobile && image.match(/\.gif/)) || image.match(/#(nsfw|hide)$/);
+          if (alice.options.images == "show" && !hide)
             win.inlineImage(a);
           else
             a.observe("click", function(e){e.stop();win.inlineImage(a)});

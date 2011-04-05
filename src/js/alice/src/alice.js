@@ -186,7 +186,8 @@ if (window == window.parent) {
           return Alice.RE.img.match(img);
         }).each(function(a) {
           var image = a.readAttribute("img") || a.href;
-          if (alice.options.images == "show" && (!alice.isMobile || !image.match(/\.gif/)))
+          var hide = (alice.isMobile && image.match(/\.gif/)) || image.match(/#(nsfw|hide)$/);
+          if (alice.options.images == "show" && !hide)
             win.inlineImage(a);
           else
             a.observe("click", function(e){e.stop();win.inlineImage(a)});
