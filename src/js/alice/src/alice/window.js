@@ -347,7 +347,8 @@ Alice.Window = Class.create({
 
     var scroll = this.shouldScrollToBottom();
 
-    var img = new Element("IMG", {src: alice.options.image_prefix + a.innerHTML});
+    var src = a.readAttribute("img") || a.innerHTML;
+    var img = new Element("IMG", {src: alice.options.image_prefix + src});
     img.observe("load", function(){
       img.up("div.image").style.display = "inline-block";
       if (scroll) this.scrollToBottom(true);

@@ -60,7 +60,7 @@ my $commands = [
   },
   {
     name => 'names',
-    re => qr{^/n(?:ames)?(?:\s(-a(?:vatars)?))?},
+    re => qr{^/n(?:ames)?(?:\s(-a(?:vatars)?))?$},
     in_channel => 1,
     eg => "/NAMES [-avatars]",
     desc => "Lists nicks in current channel. Pass the -avatars option to display avatars with the nicks.",

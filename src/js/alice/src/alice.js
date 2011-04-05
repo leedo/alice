@@ -155,6 +155,7 @@ if (window == window.parent) {
     }
 
     // setup default filters
+
     alice.addFilters([
       function(msg, win) {
         if (win.type == "info") return;
@@ -172,69 +173,76 @@ if (window == window.parent) {
         });
       },
       function (msg, win) {
-        if (alice.options.images == "show") {
-          msg.select("a").filter(function(a) {
-            return Alice.RE.twitter.match(a.href);
-          }).each(function(a) {
-            a.innerHTML = a.innerHTML.replace(Alice.RE.twitter, "http://prettybrd.com/peebone/$1.png");
-          });
-        }
+        msg.select("a").filter(function(a) {
+          return Alice.RE.twitter.match(a.href);
+        }).each(function(a) {
+          var match = a.href.match(Alice.RE.twitter);
+          a.writeAttribute("img", "http://prettybrd.com/peebone/"+match[1]+".png");
+        });
       },
       function (msg, win) {
         msg.select("a").filter(function(a) {
-          return Alice.RE.img.match(a.innerHTML);
+          var img = a.readAttribute("img") || a.innerHTML;
+          return Alice.RE.img.match(img);
         }).each(function(a) {
-          if (alice.options.images == "show" && (!alice.isMobile || !a.href.match(/\.gif/)))
+          var image = a.readAttribute("img") || a.href;
+          if (alice.options.images == "show" && (!alice.isMobile || !image.match(/\.gif/)))
             win.inlineImage(a);
           else
             a.observe("click", function(e){e.stop();win.inlineImage(a)});
         });
       },
-      function (msg, win) {
-        if (alice.options.images == "show") {
-          msg.select("a").filter(function(a) {
-            return Alice.RE.gist.match(a.href);
-          }).each(function(a) {
-            var iframe = new Element('iframe', {src: a.href+".pibb"});
-            iframe.setStyle({width: (msg.getWidth() - 50)+"px"});
-            var data = {
-              provider_name: "gist.github.org",
-              title: a.href.match(/[^\/]*$/),
-              type: "rich",
-              html: iframe
-            };
-            alice.insertOembedContent(a, data, win);
-          });
-        }
-      },
-      function (msg, win) {
-        if (alice.options.images == "show") {
-          msg.select("a").each(function(a) {
-            var oembed = alice.oembeds.find(function(service) {
-              return service[0].match(a.href);
-            });
-            if (oembed) {
-              var callback = alice.addOembedCallback(a.identify(), win);
-              var params = {
-                url: a.href,
-                format: 'json',
-                callback: callback
-              };
-              var src = (oembed[1] || "http://oohembed.com/oohembed/")+ "?"+Object.toQueryString(params);
-              var script = new Element('script', {src: src});
-              a.insert(script);
-            }
-          })
-        }
-      },
+    ]);
 
-      // work around chrome bugs! what the fuck.
-      function(msg, win) {
-        if (window.navigator.userAgent.match(/chrome/i)) {
+    if (!alice.isMobile) {
+      alice.addFilters([
+        function (msg, win) {
+          if (alice.options.images == "show") {
+            msg.select("a").each(function(a) {
+              var oembed = alice.oembeds.find(function(service) {
+                return service[0].match(a.href);
+              });
+              if (oembed) {
+                var callback = alice.addOembedCallback(a.identify(), win);
+                var params = {
+                  url: a.href,
+                  format: 'json',
+                  callback: callback
+                };
+                var src = (oembed[1] || "http://oohembed.com/oohembed/")+ "?"+Object.toQueryString(params);
+                var script = new Element('script', {src: src});
+                a.insert(script);
+              }
+            })
+          }
+        },
+        function (msg, win) {
+          if (alice.options.images == "show") {
+            msg.select("a").filter(function(a) {
+              return Alice.RE.gist.match(a.href);
+            }).each(function(a) {
+              var iframe = new Element('iframe', {src: a.href+".pibb"});
+              iframe.setStyle({width: (msg.getWidth() - 50)+"px"});
+              var data = {
+                provider_name: "gist.github.org",
+                title: a.href.match(/[^\/]*$/),
+                type: "rich",
+                html: iframe
+              };
+              alice.insertOembedContent(a, data, win);
+            });
+          }
+        }
+      ]);
+    }
+
+    // work around chrome bugs! what the fuck.
+    if (window.navigator.userAgent.match(/chrome/i)) {
+      alice.addFilters([
+        function(msg, win) {
           msg.setStyle({borderWidthTop: "1px"});
         }
-      }
-
-    ]);
+      ]);
+    }
   });
 }
