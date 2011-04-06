@@ -1,4 +1,4 @@
-package App::Alice::Test::NullHistory;
+package Alice::Test::NullHistory;
 
 use Any::Moose;
 

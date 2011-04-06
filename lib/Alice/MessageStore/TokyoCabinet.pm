@@ -1,4 +1,4 @@
-package App::Alice::MessageStore::TokyoCabinet;
+package Alice::MessageStore::TokyoCabinet;
 
 use JSON;
 use Any::Moose;

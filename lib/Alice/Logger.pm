@@ -1,4 +1,4 @@
-package App::Alice::Logger;
+package Alice::Logger;
 
 use Any::Moose;
 

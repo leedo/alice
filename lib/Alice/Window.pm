@@ -1,8 +1,8 @@
-package App::Alice::Window;
+package Alice::Window;
 
 use Encode;
 use utf8;
-use App::Alice::MessageBuffer;
+use Alice::MessageBuffer;
 use Text::MicroTemplate qw/encoded_string/;
 use IRC::Formatting::HTML qw/irc_to_html/;
 use Any::Moose;
@@ -12,10 +12,10 @@ my $url_regex = qr/\b(https?:\/\/(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\
 
 has buffer => (
   is      => 'rw',
-  isa     => 'App::Alice::MessageBuffer',
+  isa     => 'Alice::MessageBuffer',
   lazy    => 1,
   default => sub {
-    App::Alice::MessageBuffer->new(
+    Alice::MessageBuffer->new(
       id => $_[0]->id,
       store_class => $_[0]->app->config->message_store,
     );
@@ -45,7 +45,7 @@ has id => (
 
 has _irc => (
   is       => 'ro',
-  isa      => 'App::Alice::IRC',
+  isa      => 'Alice::IRC',
   required => 1,
   weak_ref => 1,
 );
@@ -58,7 +58,7 @@ has disabled => (
 
 has app => (
   is      => 'ro',
-  isa     => 'App::Alice',
+  isa     => 'Alice',
   weak_ref => 1,
   required => 1,
 );

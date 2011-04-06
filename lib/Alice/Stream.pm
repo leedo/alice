@@ -1,4 +1,4 @@
-package App::Alice::Stream;
+package Alice::Stream;
 
 use Any::Moose;
 

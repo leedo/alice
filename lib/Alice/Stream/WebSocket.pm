@@ -1,11 +1,11 @@
-package App::Alice::Stream::WebSocket;
+package Alice::Stream::WebSocket;
 
 use JSON;
 use Any::Moose;
 use Digest::MD5 qw/md5/;
 use Time::HiRes qw/time/;
 
-extends 'App::Alice::Stream';
+extends 'Alice::Stream';
 
 has fh => (
   is => 'ro',

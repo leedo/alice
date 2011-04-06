@@ -1,4 +1,4 @@
-package App::Alice::Test::MockIRC;
+package Alice::Test::MockIRC;
 
 use Any::Moose;
 use AnyEvent::IRC::Util qw/parse_irc_msg prefix_nick mk_msg/;

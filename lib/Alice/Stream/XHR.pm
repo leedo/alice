@@ -1,10 +1,10 @@
-package App::Alice::Stream::XHR;
+package Alice::Stream::XHR;
 
 use JSON;
 use Time::HiRes qw/time/;
 use Any::Moose;
 
-extends 'App::Alice::Stream';
+extends 'Alice::Stream';
 
 use strict;
 use warnings;

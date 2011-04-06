@@ -18,11 +18,11 @@ BEGIN {
       eval "use local::lib '$bin/../extlib'";
     }
   }
-  require App::Alice::Standalone;
+  require Alice::Standalone;
 }
 
 $0 = "aliced\0";
 binmode(STDERR, ":utf8");
 binmode(STDOUT, ":utf8");
   
-App::Alice::Standalone->new->run;
+Alice::Standalone->new->run;

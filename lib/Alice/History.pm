@@ -1,4 +1,4 @@
-package App::Alice::History;
+package Alice::History;
 
 use Any::Moose;
 use AnyEvent::DBI;

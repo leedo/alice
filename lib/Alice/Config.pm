@@ -1,4 +1,4 @@
-package App::Alice::Config;
+package Alice::Config;
 
 use FindBin;
 use Data::Dumper;
@@ -165,7 +165,7 @@ sub load {
     $self->merge($config);
     $self->callback->();
 
-    my $class = "App::Alice::MessageStore::".$self->message_store;
+    my $class = "Alice::MessageStore::".$self->message_store;
     eval "require $class";
 
     delete $self->{callback};

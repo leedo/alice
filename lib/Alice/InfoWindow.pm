@@ -1,11 +1,11 @@
-package App::Alice::InfoWindow;
+package Alice::InfoWindow;
 
 use Any::Moose;
 use Encode;
 use IRC::Formatting::HTML qw/irc_to_html/;
 use Text::MicroTemplate qw/encoded_string/;
 
-extends 'App::Alice::Window';
+extends 'Alice::Window';
 
 has '+title' => (required => 0, default => 'info');
 has 'topic' => (is => 'ro', isa => 'HashRef', default => sub {{string => ''}});

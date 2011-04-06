@@ -1,6 +1,6 @@
-package App::Alice::MessageStore::DBI;
+package Alice::MessageStore::DBI;
 
-use App::Alice::MessageBuffer;
+use Alice::MessageBuffer;
 use AnyEvent::DBI;
 use DBI;
 use Any::Moose;
@@ -13,7 +13,7 @@ our $dbi = AnyEvent::DBI->new(@$dsn);
   # block to get the min msgid
   my $dbh = DBI->connect(@$dsn);
   my $row = $dbh->selectrow_arrayref("SELECT msgid FROM window_buffer ORDER BY msgid DESC LIMIT 1");
-  $App::Alice::MessageBuffer::MSGID = $row->[0] + 1 if $row;
+  $Alice::MessageBuffer::MSGID = $row->[0] + 1 if $row;
 }
 
 our $INSERT = [];

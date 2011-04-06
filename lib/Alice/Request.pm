@@ -1,4 +1,4 @@
-package App::Alice::Request;
+package Alice::Request;
 
 use parent 'Plack::Request';
 use Encode;
@@ -16,7 +16,7 @@ sub new {
 
 sub new_response {
   my $self = shift;
-  App::Alice::Response->new($self->{cb}, @_);
+  Alice::Response->new($self->{cb}, @_);
 }
 
 sub param {
@@ -29,7 +29,7 @@ sub param {
   }
 }
 
-package App::Alice::Response;
+package Alice::Response;
 use parent 'Plack::Response';
 use Encode;
 

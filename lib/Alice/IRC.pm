@@ -1,4 +1,4 @@
-package App::Alice::IRC;
+package Alice::IRC;
 
 use AnyEvent;
 use AnyEvent::IRC::Client;
@@ -45,7 +45,7 @@ sub config {
 }
 
 has 'app' => (
-  isa      => 'App::Alice',
+  isa      => 'Alice',
   is       => 'ro',
   weak_ref => 1,
   required => 1,
@@ -130,7 +130,7 @@ sub BUILD {
     irc_433        => sub{$self->nick; $self->log_message($_[1])}, # Bad nick
     irc_464        => sub{$self->disconnect("bad USER/PASS")},
   );
-  $self->cl->ctcp_auto_reply ('VERSION', ['VERSION', "alice $App::Alice::VERSION"]);
+  $self->cl->ctcp_auto_reply ('VERSION', ['VERSION', "alice $Alice::VERSION"]);
   $self->connect unless $self->disabled;
 }
 
@@ -723,7 +723,7 @@ __PACKAGE__->meta->make_immutable;
 
 =head1 NAME
 
-App::Alice::IRC - an Altogether Lovely Internet Chatting Experience
+Alice::IRC - an Altogether Lovely Internet Chatting Experience
 
 =head2 METHODS
 
@@ -785,14 +785,14 @@ will be sent to the client and printed in the "info" tab.
 
 =item $irc->window ($title)
 
-Returns an App::Alice::Window for this server using $title.
+Returns an Alice::Window for this server using $title.
 If one already exists it will be returned, otherwise a new
 Window will be created.
 
 
 =item $irc->find_window ($title)
 
-Find an App::Alice::Window from this server by $title.
+Find an Alice::Window from this server by $title.
 
 
 =item $irc->nick
@@ -802,7 +802,7 @@ The nick being used on this server.
 
 =item $irc->windows
 
-Returns a list of App::Alice::Windows for this server.
+Returns a list of Alice::Windows for this server.
 
 
 =item $irc->channels
@@ -829,7 +829,7 @@ Returns a list of channel names that $nick is in.
 
 =item $irc->nick_windows ($nick)
 
-Returns a list of App::Alice::Windows that $nick is in.
+Returns a list of Alice::Windows that $nick is in.
 
 
 =item $irc->nick_avatar ($nick)

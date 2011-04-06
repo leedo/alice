@@ -1,4 +1,4 @@
-package App::Alice::HTTPD;
+package Alice::HTTPD;
 
 use AnyEvent;
 use AnyEvent::HTTP;
@@ -9,17 +9,17 @@ use Plack::Builder;
 use Plack::Middleware::Static;
 use Plack::Session::Store::File;
 use Plack::Session::State::Cookie;
-use App::Alice::Request;
-use App::Alice::Stream::XHR;
-use App::Alice::Stream::WebSocket;
-use App::Alice::Commands;
+use Alice::Request;
+use Alice::Stream::XHR;
+use Alice::Stream::WebSocket;
+use Alice::Commands;
 use JSON;
 use Encode;
 use Any::Moose;
 
 has app => (
   is  => 'ro',
-  isa => 'App::Alice',
+  isa => 'Alice',
   required => 1,
 );
 
@@ -101,7 +101,7 @@ sub _build_httpd {
 sub dispatch {
   my ($self, $env, $cb) = @_;
 
-  my $req = App::Alice::Request->new($env, $cb);
+  my $req = Alice::Request->new($env, $cb);
   my $res = $req->new_response(200);
 
   if ($self->auth_enabled) {
@@ -202,8 +202,8 @@ sub setup_xhr_stream {
   my $app = $self->app;
   $app->log(info => "opening new stream");
 
-  $res->headers([@App::Alice::Stream::XHR::headers]);
-  my $stream = App::Alice::Stream::XHR->new(
+  $res->headers([@Alice::Stream::XHR::headers]);
+  my $stream = Alice::Stream::XHR->new(
     queue      => [ map({$_->join_action} $app->windows) ],
     writer     => $res->writer,
     start_time => $req->param('t'),
@@ -222,7 +222,7 @@ sub setup_ws_stream {
   $app->log(info => "opening new websocket stream");
 
   if (my $fh = $req->env->{'websocket.impl'}->handshake) {
-    my $stream = App::Alice::Stream::WebSocket->new(
+    my $stream = Alice::Stream::WebSocket->new(
       start_time => $req->param('t') || time,
       fh      => $fh,
       on_read => sub { $app->handle_message(@_) },

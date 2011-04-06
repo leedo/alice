@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-App::Alice::ReadMe - an Altogether Lovely Internet Chatting Experience
+Alice::ReadMe - an Altogether Lovely Internet Chatting Experience
 
 =head1 SYNPOSIS
 

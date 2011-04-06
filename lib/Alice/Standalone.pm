@@ -1,9 +1,9 @@
-package App::Alice::Standalone;
+package Alice::Standalone;
 
 use Any::Moose;
 use AnyEvent;
 
-extends 'App::Alice';
+extends 'Alice';
 
 has cv => (
   is       => 'rw',

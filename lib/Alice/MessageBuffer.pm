@@ -1,4 +1,4 @@
-package App::Alice::MessageBuffer;
+package Alice::MessageBuffer;
 
 use Any::Moose;
 
@@ -25,7 +25,7 @@ has store => (
   lazy => 1, 
   default => sub {
     my $self = shift;
-    my $class = "App::Alice::MessageStore::".$self->store_class;
+    my $class = "Alice::MessageStore::".$self->store_class;
     my $id = $self->id;
     my $store = $class->new(id => $id);
     die $@ if $@;

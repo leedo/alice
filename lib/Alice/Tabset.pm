@@ -1,4 +1,4 @@
-package App::Alice::Tabset;
+package Alice::Tabset;
 
 use Any::Moose;
 

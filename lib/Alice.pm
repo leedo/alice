@@ -1,15 +1,15 @@
-package App::Alice;
+package Alice;
 
 use AnyEvent;
 use Text::MicroTemplate::File;
-use App::Alice::Window;
-use App::Alice::InfoWindow;
-use App::Alice::HTTPD;
-use App::Alice::IRC;
-use App::Alice::Config;
-use App::Alice::Logger;
-use App::Alice::History;
-use App::Alice::Tabset;
+use Alice::Window;
+use Alice::InfoWindow;
+use Alice::HTTPD;
+use Alice::IRC;
+use Alice::Config;
+use Alice::Logger;
+use Alice::History;
+use Alice::Tabset;
 use Any::Moose;
 use File::Copy;
 use Digest::MD5 qw/md5_hex/;
@@ -25,7 +25,7 @@ our $VERSION = '0.19';
 
 has config => (
   is       => 'rw',
-  isa      => 'App::Alice::Config',
+  isa      => 'Alice::Config',
 );
 
 has _ircs => (
@@ -44,10 +44,10 @@ sub connected_ircs {grep {$_->is_connected} $_[0]->ircs}
 
 has httpd => (
   is      => 'rw',
-  isa     => 'App::Alice::HTTPD',
+  isa     => 'Alice::HTTPD',
   lazy    => 1,
   default => sub {
-    App::Alice::HTTPD->new(app => shift);
+    Alice::HTTPD->new(app => shift);
   },
 );
 
@@ -63,10 +63,10 @@ sub stream_count {scalar @{$_[0]->streams}}
 
 has commands => (
   is      => 'ro',
-  isa     => 'App::Alice::Commands',
+  isa     => 'Alice::Commands',
   lazy    => 1,
   default => sub {
-    App::Alice::Commands->new(commands_file => $_[0]->config->assetdir."/commands.pl");
+    Alice::Commands->new(commands_file => $_[0]->config->assetdir."/commands.pl");
   }
 );
 
@@ -77,7 +77,7 @@ has history => (
     my $self = shift;
     my $config = $self->config->path."/log.db";
     copy($self->config->assetdir."/log.db", $config) unless -e $config;
-    App::Alice::History->new(dbfile => $config);
+    Alice::History->new(dbfile => $config);
   },
 );
 
@@ -96,7 +96,7 @@ sub store {
 
 has logger => (
   is        => 'ro',
-  default   => sub {App::Alice::Logger->new},
+  default   => sub {Alice::Logger->new},
 );
 
 sub log {$_[0]->logger->log($_[1] => $_[2]) if $_[0]->config->show_debug}
@@ -129,11 +129,11 @@ has 'template' => (
 
 has 'info_window' => (
   is => 'ro',
-  isa => 'App::Alice::InfoWindow',
+  isa => 'Alice::InfoWindow',
   lazy => 1,
   default => sub {
     my $self = shift;
-    my $info = App::Alice::InfoWindow->new(
+    my $info = Alice::InfoWindow->new(
       id       => $self->_build_window_id("info", "info"),
       assetdir => $self->config->assetdir,
       app      => $self,
@@ -160,7 +160,7 @@ sub BUILDARGS {
     }
   }
 
-  $self->{config} = App::Alice::Config->new(
+  $self->{config} = Alice::Config->new(
     %options,
     callback => sub {$self->{config}->merge(\%options)}
   );
@@ -258,7 +258,7 @@ sub alert {
 
 sub create_window {
   my ($self, $title, $connection) = @_;
-  my $window = App::Alice::Window->new(
+  my $window = Alice::Window->new(
     title    => $title,
     irc      => $connection,
     assetdir => $self->config->assetdir,
@@ -309,7 +309,7 @@ sub close_window {
 sub add_irc_server {
   my ($self, $name, $config) = @_;
   $self->config->servers->{$name} = $config;
-  my $irc = App::Alice::IRC->new(
+  my $irc = Alice::IRC->new(
     app    => $self,
     alias  => $name
   );
@@ -507,7 +507,7 @@ sub set_away {
 sub tabsets {
   my $self = shift;
   map {
-    App::Alice::Tabset->new(
+    Alice::Tabset->new(
       name => $_,
       windows => $self->config->tabsets->{$_},
     );
@@ -521,29 +521,29 @@ __PACKAGE__->meta->make_immutable;
 
 =head1 NAME
 
-App::Alice - an Altogether Lovely Internet Chatting Experience
+Alice - an Altogether Lovely Internet Chatting Experience
 
 =head1 SYNPOSIS
 
-    my $app = App::Alice->new;
+    my $app = Alice->new;
     $app->run;
 
 =head1 DESCRIPTION
 
-This is an overview of the App::Alice class. If you are curious
-about running and/or using alice please read the L<App::Alice::Readme>.
+This is an overview of the Alice class. If you are curious
+about running and/or using alice please read the L<Alice::Readme>.
 
 =head2 CONSTRUCTOR
 
 =over 4
 
-=item App::Alice->new(%options)
+=item Alice->new(%options)
 
-App::Alice's contructor takes these options:
+Alice's contructor takes these options:
 
 =item user => $username
 
-This can be a unique name for this App::Alice instance, if none is
+This can be a unique name for this Alice instance, if none is
 provided it will simply use $ENV{USER}.
 
 =back
@@ -554,18 +554,18 @@ provided it will simply use $ENV{USER}.
 
 =item run
 
-This will start the App::Alice. It will start up the HTTP server and
+This will start the Alice. It will start up the HTTP server and
 begin connecting to IRC servers that are set to autoconnect.
 
 =item handle_command ($command_string, $window)
 
 Take a string and matches it to the correct action as defined by
-L<App::Alice::Command>. A source L<App::Alice::Window> must also
+L<Alice::Command>. A source L<Alice::Window> must also
 be provided.
 
 =item find_window ($title, $connection)
 
-Takes a window title and App::Alice::IRC object. It will attempt
+Takes a window title and Alice::IRC object. It will attempt
 to find a matching window and return undef if none is found.
 
 =item alert ($alertstring)
@@ -575,8 +575,8 @@ line in their currently focused window.
 
 =item create_window ($title, $connection)
 
-This will create a new L<App::Alice::Window> object associated
-with the provided L<App::Alice::IRC> object.
+This will create a new L<Alice::Window> object associated
+with the provided L<Alice::IRC> object.
 
 =item find_or_create_window ($title, $connection)
 
@@ -586,30 +586,30 @@ a new one.
 
 =item windows
 
-Returns a list of all the L<App::Alice::Window>s.
+Returns a list of all the L<Alice::Window>s.
 
 =item sorted_windows
 
-Returns a list of L<App::Alice::Windows> sorted in the order
+Returns a list of L<Alice::Windows> sorted in the order
 defined by the user's config.
 
 =item close_window ($window)
 
-Takes an L<App::Alice::Window> object to be closed. It will
+Takes an L<Alice::Window> object to be closed. It will
 part if it is a channel and send the required messages to the
 client to close the tab.
 
 =item ircs
 
-Returns a list of all the L<App::Alice::IRC>s.
+Returns a list of all the L<Alice::IRC>s.
 
 =item connected_ircs
 
-Returns a list of all the connected L<App::Alice::IRC>s.
+Returns a list of all the connected L<Alice::IRC>s.
 
 =item config
 
-Returns this instance's L<App::Alice::Config> object.
+Returns this instance's L<Alice::Config> object.
 
 =back
 
