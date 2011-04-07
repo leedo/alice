@@ -1,4 +1,4 @@
-? my ($app, $error) = @_;
+? my ($app, $dest, $error) = @_;
 <html>
   <head>
     <title>Use Alice Login</title>
@@ -45,6 +45,8 @@
   </head>
   <body>
     <form action="/login" method="post">
+      <input type="hidden" name="dest" value="<?= $dest || "/" ?>" />
+
       <label for="username">User Name:</label>
       <input type="text" name="username" value="" id="username" />
       

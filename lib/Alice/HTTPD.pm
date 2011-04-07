@@ -124,8 +124,8 @@ sub dispatch {
 sub auth_failed {
   my ($self, $req, $res) = @_;
 
-  if ($req->path eq "/") {
-    $res->redirect("/login");
+  if ($req->path =~ m{^(/(?:safe)?)$}) {
+    $res->redirect("/login".($1 ? "?dest=$1" : ""));
     $res->body("bai");
   } else {
     $res->status(401);
@@ -143,9 +143,11 @@ sub is_logged_in {
 sub login {
   my ($self, $req, $res) = @_;
 
+  my $dest = $req->param("dest") || "/";
+
   # no auth is required
   if (!$self->auth_enabled) {
-    $res->redirect("/");
+    $res->redirect($dest);
     $res->send;
   }
 
@@ -161,12 +163,12 @@ sub login {
           username     => $user,
           userid       => $app->user,
         };
-        $res->redirect("/");
+        $res->redirect($dest);
       }
       else {
         $req->env->{"psgix.session"}{is_logged_in} = 0;
         $req->env->{"psgix.session.options"}{expire} = 1;
-        $res->body($self->render("login", "bad username or password"));
+        $res->body($self->render("login", $dest, "bad username or password"));
       }
       $res->send;
     });
@@ -174,7 +176,7 @@ sub login {
 
   # render the login page
   else {
-    $res->body($self->render("login"));
+    $res->body($self->render("login", $dest));
     $res->send;
   }
 }
