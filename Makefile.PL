@@ -1,8 +1,8 @@
 use inc::Module::Install;
-name 'App-Alice';
+name 'Alice';
 perl_version '5.008';
 author 'Lee Aylward <leedo@cpan.org>';
-all_from 'lib/App/Alice.pm';
+all_from 'lib/Alice.pm';
 requires 'List::MoreUtils' => '0';
 requires 'Any::Moose' => '0';
 requires 'Try::Tiny' => '0';
