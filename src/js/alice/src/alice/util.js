@@ -5,7 +5,7 @@ Object.extend(Alice, {
     audio: /^http[^\s]*\.(?:wav|mp3|ogg|aiff|m4[ar])[^\/]*$/i,
     gist: /^https?:\/\/gist\.github\.com\/[0-9a-fA-F]+$/i,
     channel: /([\b>\s])(#[^\b<\s]+)/gi,
-    url: /(https?:\/\/[^\s]*)/i
+    url: /(https?:\/\/[^\s<]*)/i
   },
 
   epochToLocal: function(epoch, format) {
