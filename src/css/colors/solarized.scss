@@ -39,11 +39,11 @@ $nicklist_color: $base02;
 $nicklist_color_hover: $base03;
 
 $logo_color: $base00;
-$logo_border_dark: $base02;
+$logo_border_dark: $base03;
 $logo_border_light: $base1;
 
 $textentry_border: $base03;
-$textentry_background: $base2;
+$textentry_background: $base3;
 $textentry_toolbar_background: rgba(0,0,0,0.6);
 
 $textentry_toolbar_toggle_color: #000;
@@ -52,24 +52,25 @@ $textentry_toolbar_toggle_active_color: #fff;
 
 $avatar_border: $base3;
 
-$topic_background: $base1;
-$topic_border_top: 1px solid $base2;
+$topic_background: $base0;
+$topic_border_top: 1px solid $base1;
 $topic_border_bottom: 1px solid $base02;
+$topic_text: $base3;
 
 $event_border: $base03;
 $event_background: $base0;
 $event_text: $base2;
 
 // old shit
-$tab_background: $base00;
-$tab_background_active: $base1;
-$tab_background_blurred: $base1;
-$tab_background_hover: $base01;
+$tab_background: $base01;
+$tab_background_active: $base00;
+$tab_background_blurred: $base00;
+$tab_background_hover: $base00;
 $tab_border: $base01;
-$tab_border_active: $base02;
+$tab_border_active: $base01;
 $tab_border_blurred: $base01;
-$tab_text: $base03;
-$tab_text_blurred: $base02;
+$tab_text: $base3;
+$tab_text_blurred: $base2;
 
-$scrollbar_background: $base00;
-$scrollbar_thumb: $base1;
+$scrollbar_background: $base2;
+$scrollbar_thumb: $base0;
