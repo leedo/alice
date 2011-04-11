@@ -183,7 +183,7 @@ if (window == window.parent) {
       function (msg, win) {
         msg.select("a").filter(function(a) {
           var img = a.readAttribute("img") || a.innerHTML;
-          return Alice.RE.img.match(img);
+          return img.match(Alice.RE.img);
         }).each(function(a) {
           var image = a.readAttribute("img") || a.href;
           var hide = (alice.isMobile && image.match(/\.gif/)) || image.match(/#(nsfw|hide)$/);
