@@ -1,0 +1,75 @@
+$font_family: "Lucida Grande", Helvetica, sans-serif;
+$font_family_monospace: Monaco, monospace;
+
+$base03:    #002b36;
+$base02:    #073642;
+$base01:    #586e75;
+$base00:    #657b83;
+$base0:     #839496;
+$base1:     #93a1a1;
+$base2:     #eee8d5;
+$base3:     #fdf6e3;
+$yellow:    #b58900;
+$orange:    #cb4b16;
+$red:       #dc322f;
+$magenta:   #d33682;
+$violet:    #6c71c4;
+$blue:      #268bd2;
+$cyan:      #2aa198;
+$green:     #859900;
+
+$default_text: $base2;
+$nicks: $base2;
+$links: $base3;
+$link_hover_shadow: rgba( 0, 0, 0, .3 ) 0 1px 1px;
+
+$message_background: $base03;
+$message_nick_column_background: $base02;
+
+$message_self_background: $base02;
+$message_self_nick_column_background: $base02;
+
+$nick_column_border: $base03;
+$message_border: $base02;
+$message_border_fold: $base1;
+$message_highlight: $red;
+
+$timehint_color: $base1;
+$nicklist_color: $base2;
+$nicklist_color_hover: $base3;
+
+$logo_color: $base00;
+$logo_border_dark: $base02;
+$logo_border_light: $base1;
+
+$textentry_border: $base0;
+$textentry_background: $base03;
+$textentry_toolbar_background: rgba(0,0,0,0.6);
+
+$textentry_toolbar_toggle_color: #000;
+$textentry_toolbar_toggle_active_background: rgba(0,0,0,0.6);
+$textentry_toolbar_toggle_active_color: #fff;
+
+$avatar_border: $base01;
+
+$topic_background: $base00;
+$topic_border_top: 1px solid $base1;
+$topic_border_bottom: 1px solid $base02;
+
+$event_border: $base03;
+$event_background: $base0;
+$event_text: $base2;
+
+// old shit
+$tab_background: $base00;
+$tab_background_active: $base0;
+$tab_background_blurred: $base0;
+$tab_background_hover: $base00;
+$tab_border: $base01;
+$tab_border_active: $base01;
+$tab_border_blurred: $base01;
+$tab_text: $base3;
+$tab_text_blurred: $base3;
+
+$scrollbar_background: $base00;
+$scrollbar_thumb: $base1;
