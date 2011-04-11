@@ -9884,7 +9884,7 @@ Object.extend(Alice, {
     audio: /^http[^\s]*\.(?:wav|mp3|ogg|aiff|m4[ar])[^\/]*$/i,
     gist: /^https?:\/\/gist\.github\.com\/[0-9a-fA-F]+$/i,
     channel: /([\b>\s])(#[^\b<\s]+)/gi,
-    url: /(https?:\/\/(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'".,<>?«»“”‘’]))/gi
+    url: /(https?:\/\/[^\s<]*)/i
   },
 
   epochToLocal: function(epoch, format) {
@@ -12673,7 +12673,7 @@ if (window == window.parent) {
       function (msg, win) {
         msg.select("a").filter(function(a) {
           var img = a.readAttribute("img") || a.innerHTML;
-          return Alice.RE.img.match(img);
+          return img.match(Alice.RE.img);
         }).each(function(a) {
           var image = a.readAttribute("img") || a.href;
           var hide = (alice.isMobile && image.match(/\.gif/)) || image.match(/#(nsfw|hide)$/);
