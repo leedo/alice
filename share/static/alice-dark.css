@@ -50,6 +50,10 @@ div#tab_menu_left ul {
   left: 0px;
   right: auto; }
 
+div#tab_menu_right ul {
+  left: auto;
+  right: 0px; }
+
 div#tab_menu_right {
   position: absolute;
   right: 12px;
@@ -126,7 +130,8 @@ div#config_menu > ul {
     width: 53px; } }
 
 div#config_menu > ul > li {
-  padding-left: 10px; }
+  padding-left: 10px;
+  padding-right: 10px; }
 
 div#config_menu ul ul {
   left: 100%;
@@ -145,7 +150,7 @@ div#config_menu.open {
 
 div#connection_status.loading {
   background: url(image/loading.gif) center 3px no-repeat;
-  opacity: 0.4; }
+  background-color: #444444; }
 
 div#connection_status {
   display: none;
@@ -180,6 +185,12 @@ div#windows {
   right: 0px;
   left: 0px;
   overflow: hidden; }
+
+div.window table {
+  vertical-align: bottom;
+  width: 100%;
+  height: 100%;
+  table-layout: fixed; }
 
 div.window {
   position: absolute;
@@ -236,10 +247,7 @@ div#windows.nicklist div#nicklist_toggle {
 div#windows.narrow div#nicklist_toggle {
   right: 9px; }
 
-div#nicklist_toggle.visible {
-  opacity: 0.75;
-  width: 12px; }
-
+div#nicklist_toggle.visible,
 div#nicklist_toggle:hover,
 div#nicklist_toggle:active {
   opacity: 1;
@@ -341,8 +349,7 @@ div#input div.editor_toolbar {
 div#input div.editor_toolbar button {
   display: block;
   float: left;
-  color: #222222;
-  text-shadow: -1px -1px 0px #fff;
+  color: white;
   line-height: 12px;
   font-size: 12px;
   margin: 0;
@@ -429,7 +436,8 @@ ul#tabs li {
   float: left;
   margin: 0;
   margin-left: -1px;
-  color: white; }
+  color: white;
+  background: url(image/sprites.png) 0px -300px repeat-x #444444; }
 
 ul#tabs li.hidden {
   display: none; }
@@ -506,7 +514,7 @@ ul.messages > li:not(.consecutive) {
   clear: both; }
 
 ul.messages li.highlight div.msg {
-  border-right: 3px solid #eb2222; }
+  border-right: 3px solid #ff4300; }
 
 .info ul.messages li.highlight,
 ul.messages li.self {
@@ -593,7 +601,8 @@ div.timehint {
   right: 5px;
   top: 6px;
   color: #666666;
-  opacity: 0; }
+  opacity: 0;
+  -webkit-transition: opacity 0.1s ease-in-out; }
 
 li.consecutive div.timehint {
   top: auto;
@@ -1303,8 +1312,7 @@ span.nickborder {
 
 .dropdown.bottom ul {
   bottom: 100%;
-  top: auto;
-  margin-bottom: 1px; }
+  top: auto; }
 
 .dropdown ul {
   position: absolute;

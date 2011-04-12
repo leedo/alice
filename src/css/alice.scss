@@ -57,6 +57,11 @@ div#tab_menu_left ul {
   right: auto;
 }
 
+div#tab_menu_right ul {
+  left: auto;
+  right: 0px;
+}
+
 div#tab_menu_right {
   position: absolute;
   right: 12px;
@@ -149,6 +154,7 @@ div#config_menu > ul {
 
 div#config_menu > ul > li{
   padding-left: 10px;
+  padding-right: 10px;
 }
 
 div#config_menu ul ul {
@@ -171,7 +177,7 @@ div#config_menu.open {
 
 div#connection_status.loading {
   background: url(image/loading.gif) center 3px no-repeat;
-  opacity: 0.4;
+  background-color: $tab_background;
 }
 
 div#connection_status {
@@ -210,6 +216,13 @@ div#windows {
   right: 0px;
   left: 0px;
   overflow: hidden;
+}
+
+div.window table {
+  vertical-align: bottom;
+  width: 100%;
+  height: 100%;
+  table-layout: fixed;
 }
 
 div.window {
@@ -273,11 +286,7 @@ div#windows.narrow div#nicklist_toggle {
   right: 9px;
 }
 
-div#nicklist_toggle.visible {
-  opacity: 0.75;
-  width: 12px;
-}
-
+div#nicklist_toggle.visible,
 div#nicklist_toggle:hover,
 div#nicklist_toggle:active {
   opacity: 1;
@@ -394,8 +403,7 @@ div#input div.editor_toolbar {
 div#input div.editor_toolbar button {
   display: block;
   float: left;
-  color: $tab_border;
-  text-shadow: -1px -1px 0px #fff;
+  color: $tab_text;
   line-height: 12px;
   font-size: 12px;
   margin: 0;
@@ -490,6 +498,7 @@ ul#tabs li {
   margin: 0;
   margin-left: -1px;
   color: $tab_text;
+  background: url(image/sprites.png) 0px -300px repeat-x $tab_background;
 }
 
 ul#tabs li.hidden {
@@ -681,6 +690,7 @@ div.timehint {
   top: 6px;
   color: $timehint_color;
   opacity: 0;
+  -webkit-transition: opacity 0.1s ease-in-out;
 }
 
 li.consecutive div.timehint {
@@ -1125,7 +1135,7 @@ div.color_picker div.toggle span#bg.active {
   div.left {
     width: 50px !important;
     padding-right: 0px !important;
-    text-overflow: clip
+    text-overflow: clip;
   }
 
   div.msg {
@@ -1431,7 +1441,6 @@ span.nickborder {
 .dropdown.bottom ul {
   bottom: 100%;
   top: auto;
-  margin-bottom: 1px;
 }
 
 .dropdown ul {
