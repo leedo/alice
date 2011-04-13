@@ -34,6 +34,9 @@ Alice.Application = Class.create({
     this.submit.observe("click", function (e) {
         this.input.send(); e.stop()}.bind(this));
 
+    this.tabs.observe("webkitTransitionEnd", this.shiftEnd.bind(this));
+    this.tabs.observe("transitionend", this.shiftEnd.bind(this));
+
     // setup UI elements in initial state
     this.makeSortable();
     this.setupTopic();
@@ -512,9 +515,11 @@ Alice.Application = Class.create({
     this.tabs.style.webkitTransitionDuration = time+"s";
     this.tabs.setStyle({left: left+"px"});
     this.tabs_layout = this.tabs.getLayout();
-
-    // update overflow menus after tabs have finisehd moving
-    setTimeout(this.updateOverflowMenus.bind(this), time * 1000 + 100);
+  },
+  
+  shiftEnd: function(e) {
+    this.tabs_layout = this.tabs.getLayout();
+    this.updateOverflowMenus();
   },
   
   makeSortable: function() {
