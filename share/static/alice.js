@@ -10571,8 +10571,14 @@ Alice.Application = Class.create({
   },
 
   updateOverflowMenus: function() {
-    var left = "";
-    var right = "";
+    var left = $('tab_menu_left');
+    var right = $('tab_menu_right');
+
+    var left_menu = left.down('ul');
+    var right_menu = right.down('ul');
+
+    left_menu.innerHTML = "";
+    right_menu.innerHTML = "";
 
     this.windows().each(function(win) {
 
@@ -10581,27 +10587,26 @@ Alice.Application = Class.create({
       var pos = win.getTabPosition();
 
       if (pos.left) {
-        left += sprintf('<li rel="%s" class="%s">%s</a>', win.id, win.status_class, win.title)
+        left.addClassName(win.status_class);
+        left_menu.innerHTML += sprintf('<li rel="%s" class="%s">%s</a>', win.id, win.status_class, win.title)
       }
       else if (pos.right) {
-        right += sprintf('<li rel="%s" class="%s">%s</a>', win.id, win.status_class, win.title)
+        right.addClassName(win.status_class);
+        right_menu.innerHTML += sprintf('<li rel="%s" class="%s">%s</a>', win.id, win.status_class, win.title)
       }
 
     }.bind(this));
 
-    $('tab_menu_right').down('ul').update(right);
-    $('tab_menu_left').down('ul').update(left);
-
-    this.toggleOverflow("left", !!left);
-    this.toggleOverflow("right", !!right);
+    this.toggleMenu(left, !!left_menu.innerHTML);
+    this.toggleMenu(right, !!right_menu.innerHTML);
   },
 
-  toggleOverflow: function(side, active) {
+  toggleMenu: function(menu, active) {
     if (active) {
-      $('tab_menu_'+side).addClassName("active");
+      menu.addClassName("active");
     }
     else {
-      $('tab_menu_'+side).removeClassName("active");
+      menu.removeClassName("active");
     }
   },
 
