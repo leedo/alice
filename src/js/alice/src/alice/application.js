@@ -331,12 +331,14 @@ Alice.Application = Class.create({
       var pos = win.getTabPosition();
 
       if (pos.left) {
-        left.addClassName(win.status_class);
-        left_menu.innerHTML += sprintf('<li rel="%s" class="%s">%s</a>', win.id, win.status_class, win.title)
+        var classes = win.status_class();
+        left.addClassName(classes);
+        left_menu.innerHTML += sprintf('<li rel="%s" class="%s">%s</a>', win.id, classes, win.title)
       }
       else if (pos.right) {
-        right.addClassName(win.status_class);
-        right_menu.innerHTML += sprintf('<li rel="%s" class="%s">%s</a>', win.id, win.status_class, win.title)
+        var classes = win.status_class();
+        right.addClassName(classes);
+        right_menu.innerHTML += sprintf('<li rel="%s" class="%s">%s</a>', win.id, classes, win.title)
       }
 
     }.bind(this));
