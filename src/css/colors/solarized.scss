@@ -20,19 +20,19 @@ $green:     #859900;
 
 $default_text: $base02;
 $nicks: $base02;
-$links: $blue;
-#topic a {
-  color: $base3;
-}
+
+$links: $base3;
+div.msg a { color: $orange; }
+
 $link_hover_shadow: rgba( 0, 0, 0, .3 ) 0 1px 1px;
 
 $message_background: $base3;
-$message_nick_column_background: $base2;;
+$message_nick_column_background: $base2;
 
-$message_self_background: #F5E8C0;
-$message_self_nick_column_background: #F5E8C0;
+$message_self_background: #FFFAED;
+$message_self_nick_column_background: #FFFAED;
 
-$nick_column_border: $base1;
+$nick_column_border: #DDD7C5;
 $message_border: $base2;
 $message_border_fold: $base1;
 $message_highlight: $orange;
@@ -49,9 +49,13 @@ $textentry_border: #44555A;
 $textentry_background: $base3;
 $textentry_toolbar_background: rgba(0,0,0,0.6);
 
+$textentry_button_color: $base1;
+$textentry_button_active_color: $base01;
 $textentry_toolbar_toggle_color: #000;
 $textentry_toolbar_toggle_active_background: rgba(0,0,0,0.6);
 $textentry_toolbar_toggle_active_color: #fff;
+$textentry_toolbar_background: $base2;
+$textentry_toolbar_border: #DDD7C5;
 
 $avatar_border: $base3;
 
@@ -61,25 +65,30 @@ $topic_border_bottom: 1px solid $base02;
 $topic_text: $base3;
 
 $event_border: $base3;
-$event_background: $base1;
-$event_text: $base3;
+$event_background: #BBD6EA;
+$event_text: #002b36;
 
 // old shit
 $tab_background: $base01;
 $tab_background_active: $base00;
-$tab_background_blurred: $base00;
-$tab_background_hover: $base00;
+$tab_background_blurred: #4B5E64;
+$tab_background_hover: #4B5E64;
 $tab_border: transparent;
 $tab_border_active: #44555A;
 $tab_border_blurred: #44555A;
 $tab_text: #fff;
 $tab_text_blurred: $base2;
 
-$scrollbar_background: $base2;
+$scrollbar_background: #DDD7C5;
 $scrollbar_thumb: $base00;
 
-div.left span.nick, div#input button, li.event, #tabs li, #topic {
+div.left span.nick, div#input button, #tabs li, #topic {
   -webkit-font-smoothing: antialiased;
 }
 
 
+::selection {
+  background: #FF5E99;
+  color: #fff;
+  text-shadow: none;
+}

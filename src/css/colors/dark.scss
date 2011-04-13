@@ -27,11 +27,14 @@ $logo_border_light: #999;
 $textentry_border: #444;
 $textentry_background: #000;
 $textentry_toolbar_background: rgba(255,255,255,0.6);
-$textentry_toolbar_button_color: #222;
-$textentry_toolbar_button_hover_color: #000;
+
+$textentry_button_color: #666;
+$textentry_button_active_color: #fff;
 $textentry_toolbar_toggle_color: #fff;
 $textentry_toolbar_toggle_active_background: rgba(255,255,255,0.6);
 $textentry_toolbar_toggle_active_color: #000;
+$textentry_toolbar_background: #333;
+$textentry_toolbar_border: #333;
 
 $avatar_border: #000;
 
@@ -50,7 +53,6 @@ $tab_background_blurred: #333;
 $tab_background_hover: #3a3a3a;
 $tab_border: #222;
 $tab_border_active: #222;
-$tab_border_blurred: #111;
 $tab_text: #fff;;
 $tab_text_blurred: #ccc;
 

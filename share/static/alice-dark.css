@@ -44,24 +44,20 @@ div#tab_menu_left {
   position: absolute;
   left: 24px;
   bottom: 0px;
-  border-right: 1px solid #111111; }
+  border-right: 1px solid #222222; }
 
 div#tab_menu_left ul {
   left: 0px;
   right: auto; }
 
-div#tab_menu_right ul {
-  left: auto;
-  right: 0px; }
-
 div#tab_menu_right {
   position: absolute;
   right: 12px;
   bottom: 0px;
-  border-left: 1px solid #111111; }
+  border-left: 1px solid #222222; }
 
 div#tab_menu_right ul {
-  right: 0px;
+  right: -1px;
   left: auto; }
 
 .dropdown li.selectedset,
@@ -222,9 +218,6 @@ div#nicklist_toggle {
   right: 15px;
   background: url(image/slider.png) center center no-repeat;
   background-color: #333333;
-  border: 1px solid #111111;
-  border-bottom: 1px solid #222222;
-  border-right: none;
   -webkit-transition-property: opacity, width;
   -webkit-transition-duration: 0.3s, 0.2s;
   -webkit-transition-timing-function: ease-in-out;
@@ -245,7 +238,7 @@ div#windows.nicklist div#nicklist_toggle {
   background-image: url(image/slider-right.png); }
 
 div#windows.narrow div#nicklist_toggle {
-  right: 9px; }
+  right: 11px; }
 
 div#nicklist_toggle.visible,
 div#nicklist_toggle:hover,
@@ -257,7 +250,7 @@ div#windows.nicklist div#nicklist_toggle {
   right: 135px; }
 
 div#windows.nicklist.narrow div#nicklist_toggle {
-  right: 129px; }
+  right: 131px; }
 
 div#windows.nicklist div.window.active {
   right: 120px; }
@@ -339,7 +332,7 @@ div#input div.editor {
 div#input div.editor_toolbar {
   overflow: hidden;
   position: absolute;
-  top: -4px;
+  top: -3px;
   right: 0px;
   width: 70px;
   bottom: -3px;
@@ -353,14 +346,12 @@ div#input div.editor_toolbar button {
   line-height: 12px;
   font-size: 12px;
   margin: 0;
-  padding: 5px 4px;
+  padding: 4px 4px;
   text-align: center;
   background: none;
   cursor: pointer;
-  border: none; }
-
-div#input div.editor_toolbar button:hover {
-  background: #444444; }
+  border: none;
+  color: #666666; }
 
 div#input div.editor_toolbar button.colors:hover {
   background: none; }
@@ -369,7 +360,7 @@ div#input div.editor_toolbar button.colors {
   width: 14px;
   height: 14px;
   border: 2px solid white;
-  margin: 5px;
+  margin: 4px;
   padding: 0; }
 
 div#input div.editor_toolbar button.selected {
@@ -1045,8 +1036,8 @@ div.config div.buttons {
   right: 0px;
   padding: 2px 10px;
   height: 24px;
-  background: #cccccc;
-  border: 1px solid #3a3a3a;
+  background: #222222;
+  border: 1px solid #333333;
   border-top: none; }
 
 div.config div.buttons button {
@@ -1347,7 +1338,7 @@ span.nickborder {
 
 .dropdown li {
   display: block;
-  padding: 4px 5px;
+  padding: 4px 10px;
   text-decoration: none;
   color: white; }
 
@@ -1386,8 +1377,8 @@ span.nickborder {
   display: block; }
 
 .compact-scroll ::-webkit-scrollbar {
-  width: 9px;
-  height: 9px; }
+  width: 11px;
+  height: 11px; }
 
 .compact-scroll ::-webkit-scrollbar-button:start:decrement,
 .compact-scroll ::-webkit-scrollbar-button:end:increment {
@@ -1397,14 +1388,14 @@ span.nickborder {
 
 .compact-scroll ::-webkit-scrollbar-track-piece {
   background-color: black;
-  -webkit-border-radius: 0; }
+  -webkit-border-radius: 0;
+  border: 1px solid black; }
 
-.compact-scroll ::-webkit-scrollbar-thumb:vertical {
+.compact-scroll ::-webkit-scrollbar-thumb {
+  -webkit-background-clip: padding-box;
+  background-clip: padding-box;
+  width: 50px;
   height: 50px;
   background-color: #444444;
-  -webkit-border-radius: 8px; }
-
-.compact-scroll ::-webkit-scrollbar-thumb:horizontal {
-  width: 50px;
-  background-color: #444444;
+  border: 1px solid black;
   -webkit-border-radius: 8px; }
