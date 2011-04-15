@@ -10576,6 +10576,11 @@ Alice.Application = Class.create({
     var left = $('tab_menu_left');
     var right = $('tab_menu_right');
 
+    left.removeClassName("unread");
+    left.removeClassName("highlight");
+    right.removeClassName("unread");
+    right.removeClassName("highlight");
+
     var left_menu = left.down('ul');
     var right_menu = right.down('ul');
 
