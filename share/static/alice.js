@@ -10793,13 +10793,17 @@ Alice.Application = Class.create({
       constraint: 'horizontal',
       format: /(.+)/,
       onUpdate: function (res) {
-        this.windows().invoke("updateTabLayout");
         var tabs = res.childElements();
         var order = tabs.collect(function(t){
           var m = t.id.match(/([^_]+)_tab/);
           if (m) return m[1]
         });
         if (order.length) this.connection.sendTabOrder(order);
+
+        setTimeout(function(){
+          this.windows().invoke("updateTabLayout");
+          this.activeWindow().shiftTab();
+        }.bind(this), 100);
       }.bind(this)
     });
   },
