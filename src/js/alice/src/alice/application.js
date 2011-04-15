@@ -835,12 +835,10 @@ Alice.Application = Class.create({
         if (win.bulk_insert) return;
 
         if (li.hasClassName("message") && !win.active && win.title != "info") {
-          if (!li.hasClassName("self"))
-            win.markUnread("unread");
-          if (li.hasClassName("highlight"))
+          if (li.hasClassName("highlight") || win.type == "privmsg")
             win.markUnread("highlight");
-          if (win.type == "privmsg")
-            this.highlightChannelSelect(win.id, "highlight");
+          else if (!li.hasClassName("self"))
+            win.markUnread("unread");
         }
       },
 
