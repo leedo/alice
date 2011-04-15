@@ -10504,6 +10504,8 @@ Alice.Application = Class.create({
   removeWindow: function(win) {
     this.tabs_layout = this.tabs.getLayout();
 
+    this.windows().invoke("updateTabLayout");
+
     if (win.active) this.focusLast();
     if (window.fluid)
       window.fluid.removeDockMenuItem(win.title);
