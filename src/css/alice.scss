@@ -100,11 +100,11 @@ div#tab_menu_right ul {
   background: url(image/sprites.png) -29px -195px no-repeat;
 }
 
-.tab_menu.unread.highlight {
+.tab_menu.highlight {
   background: url(image/sprites.png) 4px -236px no-repeat;
 }
 
-#tab_menu_left.tab_menu.unread.highlight {
+#tab_menu_left.tab_menu.highlight {
   background: url(image/sprites.png) -29px -236px no-repeat;
 }
 
@@ -957,6 +957,7 @@ ul#tabs li.unread.channel_tab div.tab_button {
   background: url(image/sprites.png) 0px -20px no-repeat;
 }
 
+ul#tabs li.highlight.privmsg_tab div.tab_button,
 ul#tabs li.unread.privmsg_tab div.tab_button {
   background: url(image/sprites.png) 0 -100px no-repeat;
 }
