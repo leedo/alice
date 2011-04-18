@@ -114,7 +114,11 @@ if (window == window.parent) {
 
       window.onfocus = function () {
         alice.input.focus();
+
         alice.freeze();
+        alice.tabs_width = $('tabs_container').getWidth();
+        alice.updateOverflowMenus();
+
         alice.isFocused = true
         alice.clearMissed();
       };
@@ -130,6 +134,7 @@ if (window == window.parent) {
     window.onorientationchange = function() {
       var active = alice.activeWindow();
       active.scrollToBottom(true);
+      alice.freeze();
       active.shiftTab();
     };
 

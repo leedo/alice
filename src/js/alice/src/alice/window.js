@@ -162,13 +162,13 @@ Alice.Window = Class.create({
   focus: function(event) {
     if (!this.application.currentSetContains(this)) return;
 
-    this.element.addClassName('active');
-    this.tab.addClassName('active');
-    this.scrollToBottom(true);
-
     this.application.previousFocus = this.application.activeWindow();
     if (this != this.application.previousFocus)
       this.application.previousFocus.unFocus();
+
+    this.element.addClassName('active');
+    this.tab.addClassName('active');
+    this.scrollToBottom(true);
 
     this.active = true;
 
@@ -191,7 +191,7 @@ Alice.Window = Class.create({
   },
 
   setWindowHash: function () {
-    var new_hash = this.application.selectedSet + this.hashtag;
+    var new_hash = "#" + this.application.selectedSet + this.hashtag;
     if (new_hash != window.location.hash) {
       window.location.hash = encodeURI(new_hash);
       window.location = window.location.toString();
@@ -206,10 +206,13 @@ Alice.Window = Class.create({
   },
 
   markUnread: function(classname) {
-    this.tab.addClassName(classname);
-    this.statuses.push(classname);
-    this.statuses = this.statuses.uniq();
-    this.application.highlightChannelSelect(this.id, classname);
+    var classes = ["unread"];
+    if (classname && classname != "unread") classes.push(classname);
+
+    this.statuses = classes;
+    this.tab.addClassName(this.status_class());
+
+    this.application.highlightChannelSelect(this.id, this.status_class());
   },
 
   status_class: function() {

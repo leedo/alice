@@ -629,6 +629,7 @@ Alice.Application = Class.create({
       }
 
       if (active) active.shiftTab();
+      setTimeout(this.updateOverflowMenus.bind(this), 2000);
     }
   },
 
@@ -777,7 +778,7 @@ Alice.Application = Class.create({
           if (this.options.avatars == "show") {
             var avatar = li.getAttribute("avatar");
             if (avatar)
-              li.down("a.nick").insert('<img src="'+avatar+'" />');
+              li.down("a.nick").insert('<img src="'+alice.options.image_prefix+avatar+'" />');
           }
           else {
             li.removeClassName("avatar");
@@ -838,7 +839,7 @@ Alice.Application = Class.create({
           if (li.hasClassName("highlight") || win.type == "privmsg")
             win.markUnread("highlight");
           else if (!li.hasClassName("self"))
-            win.markUnread("unread");
+            win.markUnread();
         }
       },
 

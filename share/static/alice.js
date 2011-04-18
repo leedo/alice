@@ -10882,6 +10882,7 @@ Alice.Application = Class.create({
       }
 
       if (active) active.shiftTab();
+      setTimeout(this.updateOverflowMenus.bind(this), 2000);
     }
   },
 
@@ -11028,7 +11029,7 @@ Alice.Application = Class.create({
           if (this.options.avatars == "show") {
             var avatar = li.getAttribute("avatar");
             if (avatar)
-              li.down("a.nick").insert('<img src="'+avatar+'" />');
+              li.down("a.nick").insert('<img src="'+alice.options.image_prefix+avatar+'" />');
           }
           else {
             li.removeClassName("avatar");
@@ -11085,7 +11086,7 @@ Alice.Application = Class.create({
           if (li.hasClassName("highlight") || win.type == "privmsg")
             win.markUnread("highlight");
           else if (!li.hasClassName("self"))
-            win.markUnread("unread");
+            win.markUnread();
         }
       },
 
@@ -11621,13 +11622,13 @@ Alice.Window = Class.create({
   focus: function(event) {
     if (!this.application.currentSetContains(this)) return;
 
-    this.element.addClassName('active');
-    this.tab.addClassName('active');
-    this.scrollToBottom(true);
-
     this.application.previousFocus = this.application.activeWindow();
     if (this != this.application.previousFocus)
       this.application.previousFocus.unFocus();
+
+    this.element.addClassName('active');
+    this.tab.addClassName('active');
+    this.scrollToBottom(true);
 
     this.active = true;
 
@@ -11649,7 +11650,7 @@ Alice.Window = Class.create({
   },
 
   setWindowHash: function () {
-    var new_hash = this.application.selectedSet + this.hashtag;
+    var new_hash = "#" + this.application.selectedSet + this.hashtag;
     if (new_hash != window.location.hash) {
       window.location.hash = encodeURI(new_hash);
       window.location = window.location.toString();
@@ -11664,10 +11665,13 @@ Alice.Window = Class.create({
   },
 
   markUnread: function(classname) {
-    this.tab.addClassName(classname);
-    this.statuses.push(classname);
-    this.statuses = this.statuses.uniq();
-    this.application.highlightChannelSelect(this.id, classname);
+    var classes = ["unread"];
+    if (classname && classname != "unread") classes.push(classname);
+
+    this.statuses = classes;
+    this.tab.addClassName(this.status_class());
+
+    this.application.highlightChannelSelect(this.id, this.status_class());
   },
 
   status_class: function() {
@@ -12628,7 +12632,11 @@ if (window == window.parent) {
 
       window.onfocus = function () {
         alice.input.focus();
+
         alice.freeze();
+        alice.tabs_width = $('tabs_container').getWidth();
+        alice.updateOverflowMenus();
+
         alice.isFocused = true
         alice.clearMissed();
       };
@@ -12644,6 +12652,7 @@ if (window == window.parent) {
     window.onorientationchange = function() {
       var active = alice.activeWindow();
       active.scrollToBottom(true);
+      alice.freeze();
       active.shiftTab();
     };
 
