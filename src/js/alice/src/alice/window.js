@@ -326,11 +326,19 @@ Alice.Window = Class.create({
     }
   },
 
-  getNicknames: function() {
-    var time = (new Date()).getTime();
-    return this.nicks.sortBy(function(nick) {
-      var diff = (this.nick_timestamps[nick] || time) - time;
-      return diff + nick.toLowerCase();
+  getNicknames: function () {
+    return this.nicks.sort(function(a, b) {
+
+      var time_a = this.nick_timestamps[a] || 0,
+          time_b = this.nick_timestamps[b] || 0;
+
+      if (time_a == time_b)
+        return a.toLowerCase().localeCompare(b.toLowerCase());
+      else if (time_a > time_b)
+        return -1;
+      else if (time_a < time_b)
+        return 1;
+
     }.bind(this));
   },
 
