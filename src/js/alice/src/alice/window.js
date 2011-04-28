@@ -327,9 +327,10 @@ Alice.Window = Class.create({
   },
 
   getNicknames: function() {
+    var time = (new Date()).getTime();
     return this.nicks.sortBy(function(nick) {
-      var timestamp = this.nick_timestamps[nick] || "";
-      return timestamp + nick.toLowerCase();
+      var diff = (this.nick_timestamps[nick] || time) - time;
+      return diff + nick.toLowerCase();
     }.bind(this));
   },
 
