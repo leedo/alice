@@ -11477,9 +11477,9 @@ Alice.Window = Class.create({
     this.messages = this.element.down('.messages');
     this.visibleNick = "";
     this.visibleNickTimeout = "";
-    this.lastnick = "";
     this.lasttimestamp = new Date(0);
     this.nicks = [];
+    this.nick_timestamps = {};
     this.statuses = [];
     this.messageLimit = this.application.isMobile ? 50 : 200;
     this.msgid = 0;
@@ -11766,16 +11766,7 @@ Alice.Window = Class.create({
     }
 
     this.element.redraw();
-    if (message.nick != this.lastnick) this.reorder_nicks(message.nick);
-  },
-
-  reorder_nicks: function(nick) {
-    var index = this.nicks.indexOf(nick);
-    if (index > -1) {
-      this.lastnick = nick;
-      this.nicks.splice(index, 1);
-      this.nicks.unshift(nick);
-    }
+    this.nick_timestamps[message.nick] = (new Date()).getTime();
   },
 
   shouldScrollToBottom: function() {
@@ -11794,7 +11785,10 @@ Alice.Window = Class.create({
   },
 
   getNicknames: function() {
-    return this.nicks;
+    return this.nicks.sortBy(function(nick) {
+      var timestamp = this.nick_timestamps[nick] || "";
+      return timestamp + nick.toLowerCase();
+    }.bind(this));
   },
 
   updateNicks: function(nicks) {
