@@ -326,20 +326,15 @@ Alice.Window = Class.create({
     }
   },
 
-  sortNicknames: function() {
-    this.nicks = this.nicks.sortBy(function(nick) {
+  getNicknames: function() {
+    this.nicks.sortBy(function(nick) {
       var timestamp = this.nick_timestamps[nick] || "";
       return timestamp + nick.toLowerCase();
     }.bind(this));
   },
 
-  getNicknames: function() {
-    return this.nicks;
-  },
-
   updateNicks: function(nicks) {
     this.nicks = nicks;
-    this.sortNicknames();
     if (this.active) this.application.displayNicks(this.nicks);
   },
 
