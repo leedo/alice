@@ -15,6 +15,7 @@ Alice.Window = Class.create({
     this.messages = this.element.down('.messages');
     this.visibleNick = "";
     this.visibleNickTimeout = "";
+    this.lastnick = "";
     this.lasttimestamp = new Date(0);
     this.nicks = [];
     this.statuses = [];
@@ -307,6 +308,16 @@ Alice.Window = Class.create({
     }
 
     this.element.redraw();
+    if (message.nick != this.lastnick) this.reorder_nicks(message.nick);
+  },
+
+  reorder_nicks: function(nick) {
+    var index = this.nicks.indexOf(nick);
+    if (index > -1) {
+      this.lastnick = nick;
+      this.nicks.splice(index, 1);
+      this.nicks.unshift(nick);
+    }
   },
 
   shouldScrollToBottom: function() {
