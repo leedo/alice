@@ -11785,7 +11785,7 @@ Alice.Window = Class.create({
   },
 
   getNicknames: function() {
-    this.nicks.sortBy(function(nick) {
+    return this.nicks.sortBy(function(nick) {
       var timestamp = this.nick_timestamps[nick] || "";
       return timestamp + nick.toLowerCase();
     }.bind(this));
