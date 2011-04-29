@@ -17,7 +17,7 @@ Alice.Window = Class.create({
     this.visibleNickTimeout = "";
     this.lasttimestamp = new Date(0);
     this.nicks = [];
-    this.nick_timestamps = {};
+    this.nicks_order = [];
     this.statuses = [];
     this.messageLimit = this.application.isMobile ? 50 : 200;
     this.msgid = 0;
@@ -308,7 +308,18 @@ Alice.Window = Class.create({
     }
 
     this.element.redraw();
-    this.nick_timestamps[message.nick] = (new Date()).getTime();
+    this.promoteNick(message.nick);
+  },
+
+  promoteNick: function(nick) {
+    // just return if this nick is already at the front
+    if (this.nicks_order[0] == nick) return; 
+
+    // remove nick from list if it exists
+    var index = this.nicks_order.indexOf(nick);
+    if (index > -1) this.nicks_order.splice(index, 1);
+
+    this.nicks_order.push(nick);
   },
 
   shouldScrollToBottom: function() {
@@ -329,14 +340,14 @@ Alice.Window = Class.create({
   getNicknames: function () {
     return this.nicks.sort(function(a, b) {
 
-      var time_a = this.nick_timestamps[a] || 0,
-          time_b = this.nick_timestamps[b] || 0;
+      var pos_a = this.nicks_order.indexOf(a),
+          pos_b = this.nicks_order.indexOf(b);
 
-      if (time_a == time_b)
+      if (pos_a == pos_b)
         return a.toLowerCase().localeCompare(b.toLowerCase());
-      else if (time_a > time_b)
+      else if (pos_a > pos_b)
         return -1;
-      else if (time_a < time_b)
+      else if (pos_a < pos_b)
         return 1;
 
     }.bind(this));
