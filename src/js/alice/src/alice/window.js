@@ -312,8 +312,8 @@ Alice.Window = Class.create({
   },
 
   promoteNick: function(nick) {
-    // just return if this nick is already at the front
-    if (this.nicks_order[0] == nick) return; 
+    // just return if this nick is already at the end
+    if (this.nicks_order.last() == nick) return; 
 
     // remove nick from list if it exists
     var index = this.nicks_order.indexOf(nick);

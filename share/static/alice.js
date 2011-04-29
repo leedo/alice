@@ -11770,7 +11770,7 @@ Alice.Window = Class.create({
   },
 
   promoteNick: function(nick) {
-    if (this.nicks_order[0] == nick) return;
+    if (this.nicks_order.last() == nick) return;
 
     var index = this.nicks_order.indexOf(nick);
     if (index > -1) this.nicks_order.splice(index, 1);
