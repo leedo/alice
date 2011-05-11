@@ -701,20 +701,11 @@ div.msg {
 }
 
 div.msg div.oembed {
-  background: $message_nick_column_background;
-  border: 1px solid $nick_column_border;
-  float: left;
-  margin: 5px;
   font-size: 0.8em;
   padding: 5px;
-}
-
-div.oembed_clearfix {
-  clear: both;
-}
-
-div.oembed_container {
-  display: none;
+  word-break: default;
+  white-space: normal;
+  font-size: 16px;
 }
 
 a.external img {

@@ -619,18 +619,11 @@ div.msg {
   border-left: 1px solid #ddd7c5; }
 
 div.msg div.oembed {
-  background: #eee8d5;
-  border: 1px solid #ddd7c5;
-  float: left;
-  margin: 5px;
   font-size: 0.8em;
-  padding: 5px; }
-
-div.oembed_clearfix {
-  clear: both; }
-
-div.oembed_container {
-  display: none; }
+  padding: 5px;
+  word-break: default;
+  white-space: normal;
+  font-size: 16px; }
 
 a.external img {
   padding: 0 2px;

@@ -9879,10 +9879,8 @@ var Alice = { };
 
 Object.extend(Alice, {
   RE: {
-    twitter: /https?:\/\/(?:www\.)?twitter\.com\/(?:#!\/)?[^\/]+\/status\/(\d+)/i,
     img: /^http[^\s]*\.(?:jpe?g|gif|png|bmp|svg)[^\/]*$/i,
     audio: /^http[^\s]*\.(?:wav|mp3|ogg|aiff|m4[ar])[^\/]*$/i,
-    gist: /^https?:\/\/gist\.github\.com\/[0-9a-fA-F]+$/i,
     channel: /([\b>\s])(#[^\b<\s]+)/gi,
     url: /(https?:\/\/[^\s<]*)/ig
   },
@@ -10301,14 +10299,16 @@ Alice.Application = Class.create({
     this.setupMenus();
 
     this.oembeds = [
-      [/https?:\/\/.*\.flickr.com\/.*/i],
-      [/https?:\/\/www\.youtube\.com\/watch.*/i],
-      [/https?:\/\/.*\.wikipedia.org\/wiki\/.*/i],
-      [/https?:\/\/.*\.twitpic\.com\/.*/i],
-      [/https?:\/\/www\.hulu\.com\/watch\/.*/i],
-      [/https?:\/\/(:?www\.)?vimeo\.com\/.*/i],
-      [/https?:\/\/(:?www\.)?vimeo\.com\/groups\/.*\/videos\/.*/i],
-      [/https?:\/\/.*\.funnyordie\.com\/videos\/.*/i]
+      /https?:\/\/.*\.flickr.com\/.*/i,
+      /https?:\/\/www\.youtube\.com\/watch.*/i,
+      /https?:\/\/.*\.wikipedia.org\/wiki\/.*/i,
+      /https?:\/\/.*\.twitpic\.com\/.*/i,
+      /https?:\/\/www\.hulu\.com\/watch\/.*/i,
+      /https?:\/\/(:?www\.)?vimeo\.com\/.*/i,
+      /https?:\/\/(:?www\.)?vimeo\.com\/groups\/.*\/videos\/.*/i,
+      /https?:\/\/.*\.funnyordie\.com\/videos\/.*/i,
+      /https?:\/\/gist\.github\.com\/[0-9a-fA-F]+/i,
+      /https?:\/\/(?:www\.)?twitter\.com\/(?:#!\/)?[^\/]+\/status(?:es)?\/\d+/i,
     ];
     this.jsonp_callbacks = {};
   },
@@ -10316,46 +10316,12 @@ Alice.Application = Class.create({
   addOembedCallback: function(id, win) {
     this.jsonp_callbacks[id] = function (data) {
       delete this.jsonp_callbacks[id];
-      if (!data) return;
-      if (!data.html && data.type == "photo")
-        data.html = "<a href=\""+data.url+"\" target=\"_blank\">"
-                  + "<img src=\""+this.options.image_prefix+data.url+"\">"
-                  + "</a>";
-      if (!data.html) return;
-      this.insertOembedContent($(id), data, win);
+      if (!data || !data.html) return;
+      var scroll = win.shouldScrollToBottom();
+      $(id).replace('<div class="oembed">'+data.html+'</div>');
+      if (scroll) win.scrollToBottom(true);
     }.bind(this);
-    return "alice.jsonp_callbacks['"+id+"']";
-  },
-
-  insertOembedContent: function(a, data, win) {
-    if (data.title) a.update(data.title);
-    var container = new Element("div", {"class": "oembed_container"});
-    var div = new Element("div", {"class": "oembed"});
-    a.observe("click", function(e) {
-      e.stop();
-      var state = container.style.display;
-      if (state != "block") {
-        var scroll = win.shouldScrollToBottom();
-        container.style.display = "block";
-        if (scroll) win.scrollToBottom(true);
-      }
-      else {
-        container.style.display = "none";
-      }
-    });
-
-    if (data.provider_name == "YouTube") {
-      var id = a.href.match(/v=([^&]+)/)[1];
-      data.html = '<iframe class="youtube-player" type="text/html" width="640"'
-                + ' height="385" src="http://www.youtube.com/embed/'
-                + id + '" frameborder="0"></iframe';
-    }
-
-    div.insert(data.html);
-    container.insert(div);
-    container.insert("<div class='oembed_clearfix'></div>");
-    a.insert({after: container});
-    a.insert({after: ' <em>on <a href="'+a.href+'" class="external" target="_blank">'+data.provider_name+'<img src="/static/image/external.png" /></a></em>'});
+    return "alice.jsonp_callbacks."+id;
   },
 
   actionHandlers: {
@@ -12716,14 +12682,6 @@ if (window == window.parent) {
       },
       function (msg, win) {
         msg.select("a").filter(function(a) {
-          return Alice.RE.twitter.match(a.href);
-        }).each(function(a) {
-          var match = a.href.match(Alice.RE.twitter);
-          a.writeAttribute("img", "http://prettybrd.com/peebone/"+match[1]+".png");
-        });
-      },
-      function (msg, win) {
-        msg.select("a").filter(function(a) {
           var img = a.readAttribute("img") || a.innerHTML;
           return img.match(Alice.RE.img);
         }).each(function(a) {
@@ -12743,37 +12701,19 @@ if (window == window.parent) {
           if (alice.options.images == "show") {
             msg.select("a").each(function(a) {
               var oembed = alice.oembeds.find(function(service) {
-                return service[0].match(a.href);
+                return service.match(a.href);
               });
               if (oembed) {
                 var callback = alice.addOembedCallback(a.identify(), win);
                 var params = {
                   url: a.href,
-                  format: 'json',
                   callback: callback
                 };
-                var src = (oembed[1] || "http://oohembed.com/oohembed/")+ "?"+Object.toQueryString(params);
+                var src = ("http://www.noembed.com/embed")+ "?"+Object.toQueryString(params);
                 var script = new Element('script', {src: src});
                 a.insert(script);
               }
             })
-          }
-        },
-        function (msg, win) {
-          if (alice.options.images == "show") {
-            msg.select("a").filter(function(a) {
-              return Alice.RE.gist.match(a.href);
-            }).each(function(a) {
-              var iframe = new Element('iframe', {src: a.href+".pibb"});
-              iframe.setStyle({width: (msg.getWidth() - 50)+"px"});
-              var data = {
-                provider_name: "gist.github.org",
-                title: a.href.match(/[^\/]*$/),
-                type: "rich",
-                html: iframe
-              };
-              alice.insertOembedContent(a, data, win);
-            });
           }
         }
       ]);

@@ -179,14 +179,6 @@ if (window == window.parent) {
       },
       function (msg, win) {
         msg.select("a").filter(function(a) {
-          return Alice.RE.twitter.match(a.href);
-        }).each(function(a) {
-          var match = a.href.match(Alice.RE.twitter);
-          a.writeAttribute("img", "http://prettybrd.com/peebone/"+match[1]+".png");
-        });
-      },
-      function (msg, win) {
-        msg.select("a").filter(function(a) {
           var img = a.readAttribute("img") || a.innerHTML;
           return img.match(Alice.RE.img);
         }).each(function(a) {
@@ -206,37 +198,19 @@ if (window == window.parent) {
           if (alice.options.images == "show") {
             msg.select("a").each(function(a) {
               var oembed = alice.oembeds.find(function(service) {
-                return service[0].match(a.href);
+                return service.match(a.href);
               });
               if (oembed) {
                 var callback = alice.addOembedCallback(a.identify(), win);
                 var params = {
                   url: a.href,
-                  format: 'json',
                   callback: callback
                 };
-                var src = (oembed[1] || "http://oohembed.com/oohembed/")+ "?"+Object.toQueryString(params);
+                var src = ("http://www.noembed.com/embed")+ "?"+Object.toQueryString(params);
                 var script = new Element('script', {src: src});
                 a.insert(script);
               }
             })
-          }
-        },
-        function (msg, win) {
-          if (alice.options.images == "show") {
-            msg.select("a").filter(function(a) {
-              return Alice.RE.gist.match(a.href);
-            }).each(function(a) {
-              var iframe = new Element('iframe', {src: a.href+".pibb"});
-              iframe.setStyle({width: (msg.getWidth() - 50)+"px"});
-              var data = {
-                provider_name: "gist.github.org",
-                title: a.href.match(/[^\/]*$/),
-                type: "rich",
-                html: iframe
-              };
-              alice.insertOembedContent(a, data, win);
-            });
           }
         }
       ]);

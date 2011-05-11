@@ -44,14 +44,16 @@ Alice.Application = Class.create({
     this.setupMenus();
     
     this.oembeds = [
-      [/https?:\/\/.*\.flickr.com\/.*/i],
-      [/https?:\/\/www\.youtube\.com\/watch.*/i],
-      [/https?:\/\/.*\.wikipedia.org\/wiki\/.*/i],
-      [/https?:\/\/.*\.twitpic\.com\/.*/i],
-      [/https?:\/\/www\.hulu\.com\/watch\/.*/i],
-      [/https?:\/\/(:?www\.)?vimeo\.com\/.*/i],
-      [/https?:\/\/(:?www\.)?vimeo\.com\/groups\/.*\/videos\/.*/i],
-      [/https?:\/\/.*\.funnyordie\.com\/videos\/.*/i]
+      /https?:\/\/.*\.flickr.com\/.*/i,
+      /https?:\/\/www\.youtube\.com\/watch.*/i,
+      /https?:\/\/.*\.wikipedia.org\/wiki\/.*/i,
+      /https?:\/\/.*\.twitpic\.com\/.*/i,
+      /https?:\/\/www\.hulu\.com\/watch\/.*/i,
+      /https?:\/\/(:?www\.)?vimeo\.com\/.*/i,
+      /https?:\/\/(:?www\.)?vimeo\.com\/groups\/.*\/videos\/.*/i,
+      /https?:\/\/.*\.funnyordie\.com\/videos\/.*/i,
+      /https?:\/\/gist\.github\.com\/[0-9a-fA-F]+/i,
+      /https?:\/\/(?:www\.)?twitter\.com\/(?:#!\/)?[^\/]+\/status(?:es)?\/\d+/i,
     ];
     this.jsonp_callbacks = {};
   },
@@ -59,48 +61,14 @@ Alice.Application = Class.create({
   addOembedCallback: function(id, win) {
     this.jsonp_callbacks[id] = function (data) {
       delete this.jsonp_callbacks[id];
-      if (!data) return;
-      if (!data.html && data.type == "photo")
-        data.html = "<a href=\""+data.url+"\" target=\"_blank\">"
-                  + "<img src=\""+this.options.image_prefix+data.url+"\">"
-                  + "</a>";
-      if (!data.html) return;
-      this.insertOembedContent($(id), data, win);
+      if (!data || !data.html) return;
+      var scroll = win.shouldScrollToBottom();
+      $(id).replace('<div class="oembed">'+data.html+'</div>');
+      if (scroll) win.scrollToBottom(true);
     }.bind(this);
-    return "alice.jsonp_callbacks['"+id+"']";
+    return "alice.jsonp_callbacks."+id;
   },
 
-  insertOembedContent: function(a, data, win) {
-    if (data.title) a.update(data.title);
-    var container = new Element("div", {"class": "oembed_container"});
-    var div = new Element("div", {"class": "oembed"});
-    a.observe("click", function(e) {
-      e.stop();
-      var state = container.style.display;
-      if (state != "block") {
-        var scroll = win.shouldScrollToBottom();
-        container.style.display = "block";
-        if (scroll) win.scrollToBottom(true);
-      }
-      else {
-        container.style.display = "none";
-      }
-    });
-
-    if (data.provider_name == "YouTube") {
-      var id = a.href.match(/v=([^&]+)/)[1];
-      data.html = '<iframe class="youtube-player" type="text/html" width="640"'
-                + ' height="385" src="http://www.youtube.com/embed/'
-                + id + '" frameborder="0"></iframe';
-    }
-
-    div.insert(data.html);
-    container.insert(div);
-    container.insert("<div class='oembed_clearfix'></div>");
-    a.insert({after: container});
-    a.insert({after: ' <em>on <a href="'+a.href+'" class="external" target="_blank">'+data.provider_name+'<img src="/static/image/external.png" /></a></em>'});
-  },
-  
   actionHandlers: {
     join: function (action) {
       var win = this.getWindow(action['window'].id);
