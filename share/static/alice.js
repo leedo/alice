@@ -10318,8 +10318,13 @@ Alice.Application = Class.create({
       delete this.jsonp_callbacks[id];
       if (!data || !data.html) return;
       var scroll = win.shouldScrollToBottom();
-      $(id).replace('<div class="oembed">'+data.html+'</div>');
-      if (scroll) win.scrollToBottom(true);
+      var div = new Element("DIV", {"class": "oembed"});
+      div.insert(data.html);
+      $(id).replace(div);
+      setTimeout(function(){
+        div.style.display = "block";
+        if (scroll) win.scrollToBottom(true);
+      }, 10);
     }.bind(this);
     return "alice.jsonp_callbacks."+id;
   },

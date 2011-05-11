@@ -23,8 +23,8 @@ div#tab_bar .dropdown {
   width: 24px;
   height: 23px;
   z-index: 905;
-  -moz-transition: opacity 0.5s ease-in-out;
-  -webkit-transition: opacity 0.5s ease-in-out;
+  //-moz-transition: opacity 0.5s ease-in-out;
+  //-webkit-transition: opacity 0.5s ease-in-out;
 }
 
 div#tab_bar div#tabset_dropdown {
@@ -562,7 +562,6 @@ ul.messages {
   margin: 0;
   padding: 3px 0;
   margin: 0;
-  -webkit-transition: opacity 0.1s ease-in-out;
 }
 
 ul.messages > li {
@@ -643,8 +642,8 @@ li.event div.left {
 
 li.event div.left span.timestamp {
   opacity: 0;
-  -webkit-transition: opacity 0.1s ease-in-out;
-  -moz-transition: opacity 0.1s ease-in-out;
+  //-webkit-transition: opacity 0.1s ease-in-out;
+  //-moz-transition: opacity 0.1s ease-in-out;
 }
 
 ul.messages li.avatar:not(.consecutive) {
@@ -668,8 +667,8 @@ ul.messages li.avatar span.nick {
   background: rgba(0, 0, 0, 0.5);
   color: #fff;
   text-shadow: rgba( 0, 0, 0, 1 ) 0 1px 1px;
-  -webkit-transition: opacity 0.1s ease-in-out;
-  -moz-transition: opacity 0.1s ease-in-out;
+  //-webkit-transition: opacity 0.1s ease-in-out;
+  //-moz-transition: opacity 0.1s ease-in-out;
   opacity: 0;
 }
 
@@ -680,7 +679,7 @@ div.timehint {
   top: 6px;
   color: $timehint_color;
   opacity: 0;
-  -webkit-transition: opacity 0.1s ease-in-out;
+  //-webkit-transition: opacity 0.1s ease-in-out;
 }
 
 li.consecutive div.timehint {
@@ -701,11 +700,11 @@ div.msg {
 }
 
 div.msg div.oembed {
-  font-size: 0.8em;
+  font-size: 12px;
   padding: 5px;
   word-break: default;
   white-space: normal;
-  font-size: 16px;
+  display: none;
 }
 
 a.external img {
@@ -796,7 +795,7 @@ div.image a.hideimg {
   border-radius: 10px; 
   cursor:pointer;
   font-size: 10px;
-  -webkit-transition: opacity 0.1s ease-in-out;
+  //-webkit-transition: opacity 0.1s ease-in-out;
 }
 
 div.image:hover a.hideimg {
@@ -1537,3 +1536,6 @@ span.nickborder {
   -webkit-border-radius: 8px;
 }
 
+div.gist-data {
+  max-height: 300px;
+}

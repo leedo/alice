@@ -29,9 +29,7 @@ div#tab_bar .dropdown {
   opacity: 0;
   width: 24px;
   height: 23px;
-  z-index: 905;
-  -moz-transition: opacity 0.5s ease-in-out;
-  -webkit-transition: opacity 0.5s ease-in-out; }
+  z-index: 905; }
 
 div#tab_bar div#tabset_dropdown {
   position: absolute;
@@ -500,8 +498,7 @@ ul.messages {
   list-style: none;
   margin: 0;
   padding: 3px 0;
-  margin: 0;
-  -webkit-transition: opacity 0.1s ease-in-out; }
+  margin: 0; }
 
 ul.messages > li {
   font-size: 13px;
@@ -567,9 +564,7 @@ li.event div.left {
   width: 95px; }
 
 li.event div.left span.timestamp {
-  opacity: 0;
-  -webkit-transition: opacity 0.1s ease-in-out;
-  -moz-transition: opacity 0.1s ease-in-out; }
+  opacity: 0; }
 
 ul.messages li.avatar:not(.consecutive) {
   z-index: 800; }
@@ -590,8 +585,6 @@ ul.messages li.avatar span.nick {
   background: rgba(0, 0, 0, 0.5);
   color: #fff;
   text-shadow: black 0 1px 1px;
-  -webkit-transition: opacity 0.1s ease-in-out;
-  -moz-transition: opacity 0.1s ease-in-out;
   opacity: 0; }
 
 div.timehint {
@@ -600,8 +593,7 @@ div.timehint {
   right: 5px;
   top: 6px;
   color: #93a1a1;
-  opacity: 0;
-  -webkit-transition: opacity 0.1s ease-in-out; }
+  opacity: 0; }
 
 li.consecutive div.timehint {
   top: auto;
@@ -619,11 +611,11 @@ div.msg {
   border-left: 1px solid #ddd7c5; }
 
 div.msg div.oembed {
-  font-size: 0.8em;
+  font-size: 12px;
   padding: 5px;
   word-break: default;
   white-space: normal;
-  font-size: 16px; }
+  display: none; }
 
 a.external img {
   padding: 0 2px;
@@ -697,8 +689,7 @@ div.image a.hideimg {
   -moz-border-radius: 10px;
   border-radius: 10px;
   cursor: pointer;
-  font-size: 10px;
-  -webkit-transition: opacity 0.1s ease-in-out; }
+  font-size: 10px; }
 
 div.image:hover a.hideimg {
   opacity: 0.5; }
@@ -1401,3 +1392,6 @@ span.nickborder {
   background-color: #657b83;
   border: 1px solid #ddd7c5;
   -webkit-border-radius: 8px; }
+
+div.gist-data {
+  max-height: 300px; }
