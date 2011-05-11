@@ -62,14 +62,29 @@ Alice.Application = Class.create({
     this.jsonp_callbacks[id] = function (data) {
       delete this.jsonp_callbacks[id];
       if (!data || !data.html) return;
-      var scroll = win.shouldScrollToBottom();
-      var div = new Element("DIV", {"class": "oembed"});
-      div.insert(data.html);
-      $(id).replace(div);
-      setTimeout(function(){
-        div.style.display = "block";
-        if (scroll) win.scrollToBottom(true);
-      }, 10);
+
+      var a = $(id);
+      a.update(data.title);
+      a.insert({
+        after: ' on <a class="external" href="'+data.provider_url+'">'
+               +data.provider_name+'</a><div class="oembed"></div>'
+      });
+      var html = data.html;
+
+      a.observe('click', function(e) {
+        e.stop();
+        var scroll = win.shouldScrollToBottom();
+        var div = a.next(".oembed");
+        if (div.innerHTML) {
+          div.innerHTML = "";
+          return;
+        }
+        div.innerHTML = html;
+        setTimeout(function(){
+          div.style.display = "block";
+          if (scroll) win.scrollToBottom(true);
+        }, 10);
+      });
     }.bind(this);
     return "alice.jsonp_callbacks."+id;
   },
