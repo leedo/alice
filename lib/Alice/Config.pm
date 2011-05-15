@@ -96,7 +96,7 @@ has servers => (
 has path => (
   is      => 'ro',
   isa     => 'Str',
-  default => "$ENV{HOME}/.alice",
+  default => sub {$ENV{ALICE_DIR} || "$ENV{HOME}/.alice"},
 );
 
 has file => (
