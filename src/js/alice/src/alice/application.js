@@ -839,11 +839,11 @@ Alice.Application = Class.create({
           var prefix = "";
 
           if (win.type != "privmsg")
-            prefix = li.down("span.nick").innerHTML.stripTags() + " in ";
+            prefix = li.down("span.nick").innerHTML.stripTags().unescapeHTML() + " in ";
 
           var message = {
-            body: li.down(".msg").innerHTML.stripTags(),
-            subject: prefix + win.title
+            body: li.down(".msg").innerHTML.stripTags().unescapeHTML(),
+            subject: prefix + win.title.stripTags().unescapeHTML()
           };
 
           var time = (new Date()).getTime();
