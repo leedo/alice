@@ -21,6 +21,7 @@ requires 'Text::MicroTemplate' => '0.09';
 requires 'JSON' => '2.12';
 requires 'File::ShareDir' => '0.01';
 requires 'File::Copy' => '0';
+requires 'Net::SSLeay' => '0';
 test_requires 'Test::More' => '0.86';
 test_requires 'Test::TCP' => '0';
 install_share 'share';
