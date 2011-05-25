@@ -6,4 +6,4 @@
 	url = git://github.com/madrobby/scriptaculous.git
 [submodule "src/js/wysihat"]
 	path = src/js/wysihat
-	url = http://github.com/josh/wysihat.git
+	url = http://github.com/37signals/wysihat.git

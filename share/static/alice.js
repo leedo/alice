@@ -8398,7 +8398,6 @@ function sprintf() {
 
 
 var WysiHat = {};
-
 WysiHat.Editor = {
   attach: function(textarea) {
     var editArea;
@@ -9291,7 +9290,6 @@ WysiHat.Commands = (function(window) {
   };
 })(window);
 
-
 if (Prototype.Browser.IE) {
   Object.extend(Selection.prototype, (function() {
     function setBookmark() {
@@ -9352,7 +9350,6 @@ if (Prototype.Browser.IE) {
     }
   })());
 }
-
 (function() {
   function cloneWithAllowedAttributes(element, allowedAttributes) {
     var result = new Element(element.tagName), length = allowedAttributes.length, i;
@@ -9434,7 +9431,6 @@ if (Prototype.Browser.IE) {
     }
   });
 })();
-
 (function() {
   function onReadyStateComplete(document, callback) {
     var handler;
@@ -9500,7 +9496,7 @@ if (Prototype.Browser.IE) {
   });
 })();
 document.on("dom:loaded", function() {
-  if ('onselectionchange' in document) {
+  if ('selection' in document && 'onselectionchange' in document) {
     var selectionChangeHandler = function() {
       var range   = document.selection.createRange();
       var element = range.parentElement();
@@ -9538,7 +9534,6 @@ document.on("dom:loaded", function() {
     document.on("keyup", selectionChangeHandler);
   }
 });
-
 WysiHat.Formatting = (function() {
   var ACCUMULATING_LINE      = {};
   var EXPECTING_LIST_ITEM    = {};
@@ -9762,7 +9757,6 @@ WysiHat.Formatting = (function() {
     }
   };
 })();
-
 
 WysiHat.Toolbar = Class.create((function() {
   function initialize(editor) {
