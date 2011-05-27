@@ -632,7 +632,7 @@ div.msg span {
   white-space: pre-wrap; }
 
 li.fold + li div.msg {
-  border-top: 1px solid #93a1a1; }
+  border-top: 1px solid #93a1a1 !important; }
 
 li.event div.msg {
   padding: 5px; }
