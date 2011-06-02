@@ -8,17 +8,17 @@
           <table>
             <tr><td>
               <input type="checkbox"<? if ($app->config->images eq "show") { ?> checked<? } ?> name="images" id="images" />
-              <label title="Show images, audio, and video in the chatroom">Inline media?</label>
+              <label for="images" title="Show images, audio, and video in the chatroom">Inline media?</label>
             </td></tr>
 
             <tr><td>
               <input type="checkbox"<? if ($app->config->avatars eq "show") { ?> checked="checked"<? } ?> name="avatars" id="avatars" />
-              <label>Show avatars?</label>
+              <label for="avatars">Show avatars?</label>
             </td></tr>
 
             <tr><td>
               <input type="checkbox"<? if ($app->config->alerts eq "show") { ?> checked="checked"<? } ?> name="alerts" id="alerts" />
-              <label>Enable alerts?</label>
+              <label for="alerts">Enable alerts?</label>
               <a style="font-size:10px" href="javascript:void(0)" onclick="window.webkitNotifications.requestPermission()">Grant permission</a>
             </td></tr>
 
