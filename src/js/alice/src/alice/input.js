@@ -40,7 +40,6 @@ Alice.Input = Class.create({
     this.focused = false;
     this.focus();
     
-    this.element.observe("keypress", this.onKeyPress.bind(this));
     this.element.observe("blur", this.onBlur.bind(this));
   },
 
@@ -58,6 +57,7 @@ Alice.Input = Class.create({
   onKeyPress: function(event) {
     if (event.keyCode != Event.KEY_TAB) {
       this.completion = false;
+      this.element.stopObserving("keypress");
     }
   },
   
@@ -157,6 +157,7 @@ Alice.Input = Class.create({
     if (this.disabled) return;
     if (!this.completion) {
       this.completion = new Alice.Completion(this.application.activeWindow().getNicknames(), this.editor);
+      this.element.observe("keypress", this.onKeyPress.bind(this));
     }
 
     if (prev)
@@ -169,6 +170,7 @@ Alice.Input = Class.create({
     if (this.completion) {
       this.completion.restore();
       this.completion = false;
+      this.element.stopObserving("keypress");
     }
   },
 
