@@ -27,6 +27,10 @@ Alice.Input = Class.create({
       }.bind(this));
     } else {
       this.element = this.textarea;
+      this.element.observe("keydown", this.resize.bind(this));
+      this.element.observe("cut", this.resize.bind(this));
+      this.element.observe("paste", this.resize.bind(this));
+      this.element.observe("change", this.resize.bind(this));
     }
 
     this.history = [];
@@ -38,11 +42,6 @@ Alice.Input = Class.create({
     
     this.element.observe("keypress", this.onKeyPress.bind(this));
     this.element.observe("blur", this.onBlur.bind(this));
-    this.element.observe("keydown", this.resize.bind(this));
-    this.element.observe("cut", this.resize.bind(this));
-    this.element.observe("paste", this.resize.bind(this));
-    this.element.observe("change", this.resize.bind(this));
-
   },
 
   setValue: function(value) {

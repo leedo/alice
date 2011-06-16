@@ -317,6 +317,7 @@ div#input div.editor,
 div#input textarea {
   line-height: 1.2em;
   min-height: 1.2em;
+  max-height: 150px;
   display: block;
   padding: 3px 0;
   border: none;
