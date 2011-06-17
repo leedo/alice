@@ -12032,7 +12032,12 @@ Alice.Input = Class.create({
   },
 
   setValue: function(value) {
-    this.editor ? this.editor.update(value) : this.textarea.setValue(value);
+    this.textarea.setValue(value);
+    if (this.editor) {
+      this.editor.update(value);
+      var text = document.createTextNode("");
+      this.editor.appendChild(text);
+    }
   },
 
   getValue: function() {
