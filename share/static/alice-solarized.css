@@ -326,7 +326,8 @@ div#input textarea {
   font-size: 12px;
   overflow: hidden;
   resize: none;
-  font-family: "Lucida Grande", Helvetica, sans-serif; }
+  font-family: "Lucida Grande", Helvetica, sans-serif;
+  background: #fdf6e3; }
 
 div#input textarea {
   width: 100%; }
