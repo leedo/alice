@@ -12035,7 +12035,7 @@ Alice.Input = Class.create({
     this.textarea.setValue(value);
     if (this.editor) {
       this.editor.update(value);
-      var text = document.createTextNode("");
+      var text = document.createElement("BR");
       this.editor.appendChild(text);
     }
   },

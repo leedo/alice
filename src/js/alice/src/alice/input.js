@@ -48,7 +48,7 @@ Alice.Input = Class.create({
     if (this.editor) {
       this.editor.update(value);
       // gross hack to work around some chrome redraw bug
-      var text = document.createTextNode("");
+      var text = document.createElement("BR");
       this.editor.appendChild(text);
     }
   },
