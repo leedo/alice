@@ -230,7 +230,7 @@ sub tab_order {
     if (my $window = $self->get_window($window_ids->[$count])) {
       next unless $window->is_channel
            and $self->config->servers->{$window->irc->alias};
-      push @$order, $window->title;
+      push @$order, $window->id;
     }
   }
   $self->config->order($order);
@@ -287,14 +287,17 @@ sub find_or_create_window {
 
 sub sorted_windows {
   my $self = shift;
-  my %o;
-  if ($self->config->order) {
-    %o = map {$self->config->order->[$_] => sprintf "%02d", $_ + 2}
-             0 .. @{$self->config->order} - 1;
-  }
-  $o{info} = "01";
+
+  my %o = map {
+    $self->config->order->[$_] => sprintf "%02d", $_ + 2
+  } (0 .. @{$self->config->order} - 1);
+
+  $o{$self->info_window->id} = "01";
   my $prefix = scalar @{$self->config->order} + 1;
-  sort { ($o{$a->title} || $prefix.$a->sort_name) cmp ($o{$b->title} || $prefix.$b->sort_name) }
+
+  map  {$_->[1]}
+  sort {$a->[0] cmp $b->[0]}
+  map  {[($o{$_->id} || $o{$_->title} || $prefix.$_->sort_name), $_]}
        $self->windows;
 }
 
