@@ -229,6 +229,7 @@ div.window {
   background: $message_background;
   overflow-x: hidden;
   overflow-y: scroll;
+  -webkit-overflow-scrolling: touch;
 }
 
 div.window table {

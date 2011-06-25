@@ -202,7 +202,8 @@ div.window {
   right: 100%;
   background: #fdf6e3;
   overflow-x: hidden;
-  overflow-y: scroll; }
+  overflow-y: scroll;
+  -webkit-overflow-scrolling: touch; }
 
 div.window table {
   width: 100%;
