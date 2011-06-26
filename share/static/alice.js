@@ -10518,19 +10518,18 @@ Alice.Application = Class.create({
 
   applyFilters: function(li, win) {
     if (li.hasClassName("filtered")) return;
+    var length = this.message_filters.length;
 
-    this.base_filters.each(function(f) {
-      try { f.call(this, li, win); }
-      catch (e) { this.log(e.toString()) }
-    }.bind(this));
+    for (var i=0; i < length; i++) {
+      this.base_filters[i].call(this, li, win);
+    }
 
-    if (!this.isPhone) {
-      if (li.hasClassName("message")) {
-        var msg = li.down("div.msg");
-        this.message_filters.each(function(f){
-          try { f.call(this, msg, win); }
-          catch (e) { this.log(e.toString()) }
-        }.bind(this));
+    if (li.hasClassName("message")) {
+      var msg = li.down("div.msg");
+      var length = this.message_filters.length;
+      for (var i=0; i < length; i++) {
+        var stop = this.message_filters[i].call(this, msg, win);
+        if (stop) return;
       }
     }
 
@@ -12683,6 +12682,7 @@ if (window == window.parent) {
       });
     }
 
+    if (alice.isMobile) return;
 
     alice.addFilters([
       function(msg, win) {
@@ -12701,43 +12701,40 @@ if (window == window.parent) {
         });
       },
       function (msg, win) {
+        if (alice.options.images == "show") {
+          var match = false;
+          msg.select("a").each(function(a) {
+            var oembed = alice.oembeds.find(function(service) {
+              return service.match(a.href);
+            });
+            if (oembed) {
+              var callback = alice.addOembedCallback(a.identify(), win);
+              var params = {
+                url: a.href,
+                callback: callback
+              };
+              var src = ("http://www.noembed.com/embed")+ "?"+Object.toQueryString(params);
+              var script = new Element('script', {src: src});
+              a.insert(script);
+              match = true;
+            }
+          });
+          return match;
+        }
+      },
+      function (msg, win) {
         msg.select("a").filter(function(a) {
           var img = a.readAttribute("img") || a.innerHTML;
           return img.match(Alice.RE.img);
         }).each(function(a) {
           var image = a.readAttribute("img") || a.href;
-          var hide = (alice.isMobile && image.match(/\.gif/)) || image.match(/#(nsfw|hide)$/);
-          if (alice.options.images == "show" && !hide)
+          if (alice.options.images == "show" && !image.match(/#(nsfw|hide)$/)
             win.inlineImage(a);
           else
             a.observe("click", function(e){e.stop();win.inlineImage(a)});
         });
-      },
+      }
     ]);
-
-    if (!alice.isMobile) {
-      alice.addFilters([
-        function (msg, win) {
-          if (alice.options.images == "show") {
-            msg.select("a").each(function(a) {
-              var oembed = alice.oembeds.find(function(service) {
-                return service.match(a.href);
-              });
-              if (oembed) {
-                var callback = alice.addOembedCallback(a.identify(), win);
-                var params = {
-                  url: a.href,
-                  callback: callback
-                };
-                var src = ("http://www.noembed.com/embed")+ "?"+Object.toQueryString(params);
-                var script = new Element('script', {src: src});
-                a.insert(script);
-              }
-            })
-          }
-        }
-      ]);
-    }
 
     if (window.navigator.userAgent.match(/chrome/i)) {
       alice.addFilters([

@@ -269,20 +269,18 @@ Alice.Application = Class.create({
   
   applyFilters: function(li, win) {
     if (li.hasClassName("filtered")) return;
+    var length = this.message_filters.length;
 
-    this.base_filters.each(function(f) {
-      try { f.call(this, li, win); }
-      catch (e) { this.log(e.toString()) }
-    }.bind(this));
+    for (var i=0; i < length; i++) {
+      this.base_filters[i].call(this, li, win);
+    }
 
-    // skip all the extra filters on phones
-    if (!this.isPhone) {
-      if (li.hasClassName("message")) {
-        var msg = li.down("div.msg");
-        this.message_filters.each(function(f){
-          try { f.call(this, msg, win); }
-          catch (e) { this.log(e.toString()) }
-        }.bind(this));
+    if (li.hasClassName("message")) {
+      var msg = li.down("div.msg");
+      var length = this.message_filters.length;
+      for (var i=0; i < length; i++) {
+        var stop = this.message_filters[i].call(this, msg, win);
+        if (stop) return;
       }
     }
 
