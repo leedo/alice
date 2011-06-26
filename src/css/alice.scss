@@ -710,9 +710,17 @@ div.msg div.oembed {
   display: none;
 }
 
-sup.external a {
+sup.external {
+  line-height: 0px;
   font-size: 0.8em;
+}
+
+sup.external a {
   text-decoration: none;
+}
+
+sup.external a:hover {
+  text-decoration: underline;
 }
 
 div.oembed iframe {

@@ -620,9 +620,15 @@ div.msg div.oembed {
   white-space: normal;
   display: none; }
 
+sup.external {
+  line-height: 0px;
+  font-size: 0.8em; }
+
 sup.external a {
-  font-size: 0.8em;
   text-decoration: none; }
+
+sup.external a:hover {
+  text-decoration: underline; }
 
 div.oembed iframe {
   min-height: 250px;
