@@ -271,11 +271,13 @@ Alice.Application = Class.create({
   
   applyFilters: function(li, win) {
     if (li.hasClassName("filtered")) return;
-    var length = this.message_filters.length;
+    var length = this.base_filters.length;
 
     for (var i=0; i < length; i++) {
       this.base_filters[i].call(this, li, win);
     }
+
+    li.addClassName("filtered");
 
     if (li.hasClassName("message")) {
       var msg = li.down("div.msg");
@@ -285,8 +287,6 @@ Alice.Application = Class.create({
         if (stop) return;
       }
     }
-
-    li.addClassName("filtered");
   },
   
   nextWindow: function() {

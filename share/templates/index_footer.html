@@ -4,7 +4,7 @@
             alice.options = <?= Text::MicroTemplate::encoded_string(JSON::to_json $options, {ascii => 1}) ?>;
 
             // disable inline media and avatars on phones
-            if (alice.isPhone) {
+            if (alice.isMobile) {
               alice.options.images = "hide";
               alice.options.avatars = "hide";
             }
