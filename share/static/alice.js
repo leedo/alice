@@ -12728,7 +12728,7 @@ if (window == window.parent) {
           return img.match(Alice.RE.img);
         }).each(function(a) {
           var image = a.readAttribute("img") || a.href;
-          if (alice.options.images == "show" && !image.match(/#(nsfw|hide)$/)
+          if (alice.options.images == "show" && !image.match(/#(nsfw|hide)$/))
             win.inlineImage(a);
           else
             a.observe("click", function(e){e.stop();win.inlineImage(a)});
