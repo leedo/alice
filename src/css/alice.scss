@@ -710,9 +710,9 @@ div.msg div.oembed {
   display: none;
 }
 
-a.external img {
-  padding: 0 2px;
-  margin-bottom: -2px;
+sup.external a {
+  font-size: 0.8em;
+  text-decoration: none;
 }
 
 div.oembed iframe {

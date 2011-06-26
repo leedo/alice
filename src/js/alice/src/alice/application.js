@@ -66,22 +66,24 @@ Alice.Application = Class.create({
       var a = $(id);
       a.update(data.title);
       a.insert({
-        after: ' on <a class="external" href="'+data.provider_url+'">'
-               +data.provider_name+'</a><div class="oembed"></div>'
+        after: ' <sup class="external"><a target="_blank" href="'+data.url+'">'
+                +data.provider_name+'</a></sup>'
       });
       var html = data.html;
+      var elem = new Element("DIV", {"class": "oembed"});
+      a.up("div.msg").insert(elem);
 
       a.observe('click', function(e) {
         e.stop();
         var scroll = win.shouldScrollToBottom();
-        var div = a.next(".oembed");
-        if (div.innerHTML) {
-          div.innerHTML = "";
+        if (elem.innerHTML) {
+          elem.innerHTML = "";
+          elem.style.display = "none";
           return;
         }
-        div.innerHTML = html;
+        elem.innerHTML = html;
         setTimeout(function(){
-          div.style.display = "block";
+          elem.style.display = "block";
           if (scroll) win.scrollToBottom(true);
         }, 10);
       });
