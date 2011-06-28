@@ -10293,13 +10293,13 @@ Alice.Application = Class.create({
     this.setupMenus();
 
     this.oembeds = [
-      /https?:\/\/.*\.flickr.com\/.*/i,
+      /https?:\/\/(?:www\.)?flickr.com\/.*/i,
       /https?:\/\/www\.youtube\.com\/watch.*/i,
       /https?:\/\/.*\.wikipedia.org\/wiki\/.*/i,
       /https?:\/\/.*\.twitpic\.com\/.*/i,
       /https?:\/\/www\.hulu\.com\/watch\/.*/i,
-      /https?:\/\/(:?www\.)?vimeo\.com\/.*/i,
-      /https?:\/\/(:?www\.)?vimeo\.com\/groups\/.*\/videos\/.*/i,
+      /https?:\/\/(?:www\.)?vimeo\.com\/.*/i,
+      /https?:\/\/(?:www\.)?vimeo\.com\/groups\/.*\/videos\/.*/i,
       /https?:\/\/.*\.funnyordie\.com\/videos\/.*/i,
       /https?:\/\/gist\.github\.com\/[0-9a-fA-F]+/i,
       /https?:\/\/(?:www\.)?twitter\.com\/(?:#!\/)?[^\/]+\/status(?:es)?\/\d+/i,
