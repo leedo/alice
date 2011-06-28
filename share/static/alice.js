@@ -10315,7 +10315,7 @@ Alice.Application = Class.create({
       var a = $(id);
       a.update(data.title);
       a.insert({
-        after: ' <sup class="external"><a target="_blank" href="'+data.url+'">'
+        after: '<sup class="external"><a target="_blank" href="'+data.url+'">'
                 +data.provider_name+'</a></sup>'
       });
       var html = data.html;

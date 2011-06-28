@@ -713,14 +713,13 @@ div.msg div.oembed {
 sup.external {
   line-height: 0px;
   font-size: 0.7em;
+  letter-spacing: -1px;
+  margin-left: 2px;
+  font-weight: bold;
 }
 
 sup.external a {
   text-decoration: none;
-}
-
-sup.external a:hover {
-  text-decoration: underline;
 }
 
 div.oembed iframe {
