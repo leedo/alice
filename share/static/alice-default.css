@@ -449,7 +449,7 @@ ul#tabs li.active div.hit_area {
   height: 11px;
   padding-top: 4px;
   margin-top: -1px;
-  -webkit-box-shadow: 2px 2px 2px rgba(0, 0, 0, 0.1); }
+  -webkit-box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2); }
 
 ul#tabs li:not(.active) {
   z-index: 900 !important; }
