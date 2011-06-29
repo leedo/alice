@@ -11513,7 +11513,7 @@ Alice.Window = Class.create({
 
     this.tabButton.observe("click", function(e) {
       if (this.active && !this.focusing)
-        if (!this.application.isPhone || confirm("Are you sure you want to close this tab?"))
+        if (this.type != "channel" || confirm("Are you sure you want to leave "+this.title+"?"))
           this.close()
     }.bind(this));
 
