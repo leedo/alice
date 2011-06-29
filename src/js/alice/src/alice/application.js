@@ -833,6 +833,7 @@ Alice.Application = Class.create({
 
       // growls
       function(li, win) {
+        if (this.options.alerts != "show") return;
         if (this.isFocused || win.bulk_insert || li.hasClassName("self")) return;
 
         if (li.hasClassName("highlight") || win.type == "privmsg") {
@@ -850,6 +851,8 @@ Alice.Application = Class.create({
           if (time - this.lastnotify > 5000) {
             this.lastnotify = time;
             Alice.growlNotify(message);
+            if (this.options.audio == "show")
+              (new Audio("/static/beep.mp3")).play();
           }
           this.addMissed();
         }

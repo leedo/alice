@@ -21,7 +21,7 @@ has assetdir => (
   }
 );
 
-has [qw/images avatars alerts/] => (
+has [qw/images avatars alerts audio/] => (
   is      => 'rw',
   isa     => 'Str',
   default => "show",

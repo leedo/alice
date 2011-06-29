@@ -10083,7 +10083,7 @@ Object.extend(Alice, {
     submit: function(form) {
       var options = {highlights: [], monospace_nicks: []};
 
-      ["images", "avatars", "alerts"].each(function (pref) {
+      ["images", "avatars", "alerts", "audio"].each(function (pref) {
         options[pref] = $(pref).checked ? "show" : "hide";
       });
       $A($("highlights").options).each(function(option) {
@@ -11072,6 +11072,7 @@ Alice.Application = Class.create({
       },
 
       function(li, win) {
+        if (this.options.alerts != "show") return;
         if (this.isFocused || win.bulk_insert || li.hasClassName("self")) return;
 
         if (li.hasClassName("highlight") || win.type == "privmsg") {
@@ -11089,6 +11090,8 @@ Alice.Application = Class.create({
           if (time - this.lastnotify > 5000) {
             this.lastnotify = time;
             Alice.growlNotify(message);
+            if (this.options.audio == "show")
+              (new Audio("/static/beep.mp3")).play();
           }
           this.addMissed();
         }

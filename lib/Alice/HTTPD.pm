@@ -303,6 +303,8 @@ sub merged_options {
   return {
    images => $req->param('images') || $config->images,
    avatars => $req->param('avatars') || $config->avatars,
+   alerts => $req->param('alerts') || $config->alerts,
+   audio => $req->param('audio') || $config->audio,
    debug  => $req->param('debug')  || ($config->show_debug ? 'true' : 'false'),
    timeformat => $req->param('timeformat') || $config->timeformat,
    image_prefix => $req->param('image_prefix') || $config->image_prefix,
