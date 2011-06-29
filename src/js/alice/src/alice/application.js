@@ -11,6 +11,7 @@ Alice.Application = Class.create({
     this.overlayVisible = false;
     this.lastnotify = 0;
     this.topic_height = "14px";
+    this.beep = new Audio("/static/beep.mp3");
     this.connection = window.WebSocket ? new Alice.Connection.WebSocket(this) : new Alice.Connection.XHR(this);
 
     this.tabs_width = $('tabs_container').getWidth();
@@ -833,7 +834,7 @@ Alice.Application = Class.create({
 
       // growls
       function(li, win) {
-        if (this.options.alerts != "show") return;
+        if (this.options.alerts != "show" && this.options.audio != "show") return;
         if (this.isFocused || win.bulk_insert || li.hasClassName("self")) return;
 
         if (li.hasClassName("highlight") || win.type == "privmsg") {
@@ -850,14 +851,16 @@ Alice.Application = Class.create({
           var time = (new Date()).getTime();
           if (time - this.lastnotify > 5000) {
             this.lastnotify = time;
-            Alice.growlNotify(message);
-            if (this.options.audio == "show")
-              (new Audio("/static/beep.mp3")).play();
+            if (this.options.alerts == "show")
+              Alice.growlNotify(message);
+            if (this.options.audio == "show") {
+              beep.currentTime = 0;
+              beep.play();
+            }
           }
           this.addMissed();
         }
       }
-
     ];
   },
 
