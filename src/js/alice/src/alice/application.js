@@ -854,8 +854,8 @@ Alice.Application = Class.create({
             if (this.options.alerts == "show")
               Alice.growlNotify(message);
             if (this.options.audio == "show") {
-              beep.currentTime = 0;
-              beep.play();
+              this.beep.currentTime = 0;
+              this.beep.play();
             }
           }
           this.addMissed();
