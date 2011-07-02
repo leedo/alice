@@ -311,6 +311,7 @@ div#input div {
 
 div#input div.editor,
 div#input textarea {
+  color: #073642;
   line-height: 1.2em;
   min-height: 1.2em;
   max-height: 150px;
