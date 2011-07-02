@@ -10262,7 +10262,13 @@ Alice.Application = Class.create({
     this.lastnotify = 0;
     this.topic_height = "14px";
     this.beep = new Audio("/static/beep.mp3");
-    this.connection = window.WebSocket ? new Alice.Connection.WebSocket(this) : new Alice.Connection.XHR(this);
+
+    if (navigator.userAgent.match(/CrOS|wOSBrowser/)) {
+      this.connection = new Alice.Connection.XHR(this);
+    }
+    else {
+      this.connection = window.WebSocket ? new Alice.Connection.WebSocket(this) : new Alice.Connection.XHR(this);
+    }
 
     this.tabs_width = $('tabs_container').getWidth();
     this.tabs_layout = this.tabs.getLayout();
@@ -10272,7 +10278,7 @@ Alice.Application = Class.create({
 
     this.supportsTouch = 'createTouch' in document;
 
-    this.isPhone = window.navigator.userAgent.match(/(android|iphone)/i) ? true : false;
+    this.isPhone = window.navigator.userAgent.match(/(android|iphone|wosbrowser|cros)/i) ? true : false;
     this.isMobile = this.isPhone || Prototype.Browser.MobileSafari;
     this.loadDelay = this.isMobile ? 3000 : 1000;
     if (window.navigator.standalone || window.navigator.userAgent.match(/Fluid/)) this.loadDelay = 0;
