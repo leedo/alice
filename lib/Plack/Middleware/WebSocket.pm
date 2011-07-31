@@ -73,6 +73,25 @@ sub anyevent_read_type {
         $frame->append(delete $_[0]{rbuf});
 
         while (defined(my $message = $frame->next)) {
+          if ($frame->is_close) {
+            $_[0]->push_write(
+              Protocol::WebSocket::Frame->new(
+                type    => 'close',
+                version => $_[0]->{ws_version},
+              )
+            );
+            return;
+          }
+          elsif ($frame->is_ping) {
+            $_[0]->push_write(
+              Protocol::WebSocket::Frame->new(
+                type    => 'ping',
+                version => $_[0]->{ws_version},
+              )
+            );
+            return;
+          }
+
           $cb->($_[0], $message);
         }
 
