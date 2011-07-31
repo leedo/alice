@@ -229,6 +229,7 @@ sub setup_ws_stream {
       fh      => $fh,
       on_read => sub { $app->handle_message(@_) },
       on_error => sub { $app->purge_disconnects },
+      ws_version => $req->env->{'websocket.impl'}->version,
     );
     $stream->send([ map({$_->join_action} $app->windows) ]);
     $app->add_stream($stream);

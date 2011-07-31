@@ -4,6 +4,7 @@ use warnings;
 use parent 'Plack::Middleware';
 
 our $VERSION = '0.01';
+my $MAGIC = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
 
 sub call {
     my ($self, $env) = @_;
@@ -14,10 +15,10 @@ sub call {
 }
 
 package Plack::Middleware::WebSocket::Impl;
-use Plack::Util::Accessor qw(env error_code);
-use Digest::MD5 qw(md5);
+use Plack::Util::Accessor qw(env error_code version);
 use Scalar::Util qw(weaken);
 use IO::Handle;
+use Protocol::WebSocket::Handshake::Server;
 
 sub new {
     my ($class, $env) = @_;
@@ -27,68 +28,54 @@ sub new {
 }
 
 sub handshake {
-    my ($self, $respond) = @_;
+    my $self = shift;
 
     my $env = $self->env;
 
-    unless ($env->{HTTP_CONNECTION} eq 'Upgrade' && $env->{HTTP_UPGRADE} eq 'WebSocket') {
-        $self->error_code(400);
-        return;
-    }
+    my $hs = Protocol::WebSocket::Handshake::Server->new_from_psgi($env);
 
     my $fh = $env->{'psgix.io'};
-    unless ($fh) {
-        $self->error_code(501);
-        return;
+    unless ($fh and $hs->parse($fh)) {
+      $self->error_code(501);
+      return;
     }
 
-    my $key1 = $env->{'HTTP_SEC_WEBSOCKET_KEY1'};
-    my $key2 = $env->{'HTTP_SEC_WEBSOCKET_KEY2'};
-    my $n1 = join '', $key1 =~ /\d+/g;
-    my $n2 = join '', $key2 =~ /\d+/g;
-    my $s1 = $key1 =~ y/ / /;
-    my $s2 = $key2 =~ y/ / /;
-    $n1 = int($n1 / $s1);
-    $n2 = int($n2 / $s2);
-
-    my $len = read $fh, my $chunk, 8;
-    unless (defined $len) {
-        $self->error_code(500);
-        return;
+    if ($hs->is_done) {
+      $fh->autoflush;
+      print $fh $hs->to_string;
+      $self->version($hs->version);
+      return $fh;
     }
 
-    my $string = pack('N', $n1) . pack('N', $n2) . $chunk;
-    my $digest = md5 $string;
-
-    $fh->autoflush;
-
-    print $fh join "\015\012", (
-        'HTTP/1.1 101 Web Socket Protocol Handshake',
-        'Upgrade: WebSocket',
-        'Connection: Upgrade',
-        "Sec-WebSocket-Origin: $env->{HTTP_ORIGIN}",
-        "Sec-WebSocket-Location: ws://$env->{HTTP_HOST}$env->{SCRIPT_NAME}$env->{PATH_INFO}"
-        . ($env->{QUERY_STRING} ? "?$env->{QUERY_STRING}" : ""),
-        '',
-        $digest,
-    );
-
-    return $fh;
+    $self->error_code(500);
 }
 
 package AnyEvent::Handle::Message::WebSocket;
+use Protocol::WebSocket::Frame;
 
 sub anyevent_write_type {
     my ($handle, @args) = @_;
-    return join '', "\x00", @args, "\xff";
+    Protocol::WebSocket::Frame->new(
+      version => $handle->{ws_version},
+      buffer  => (join "", @args),
+    )->to_bytes;
 }
 
 sub anyevent_read_type {
     my ($handle, $cb) = @_;
 
+    $handle->{ws_frame} ||= Protocol::WebSocket::Frame->new(
+      version => $handle->{ws_version}
+    );
+
     return sub {
-        $_[0]{rbuf} =~ s/\x00(.*?)\xff// or return;
-        $cb->($_[0], $1);
+        my $frame = $_[0]->{ws_frame};
+        $frame->append(delete $_[0]{rbuf});
+
+        while (defined(my $message = $frame->next)) {
+          $cb->($_[0], $message);
+        }
+
         1;
     };
 }

@@ -26,6 +26,11 @@ has is_xhr => (
   default => 0,
 );
 
+has ws_version => (
+  is => 'rw',
+  required => 1,
+);
+
 sub BUILD {
   my $self = shift;
 
@@ -33,6 +38,8 @@ sub BUILD {
     fh => $self->fh,
     rbuf_max => 1024 * 10,
   );
+
+  $h->{ws_version} = $self->ws_version;
   
   $h->on_error(sub {
     warn $_[2];
