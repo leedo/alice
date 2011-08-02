@@ -69,7 +69,7 @@ sub send {
 
   my $line = to_json(
     {queue => $messages},
-    {shrink => 1}
+    {utf8 => 1, shrink => 1}
   );
   
   $self->send_raw($line);
