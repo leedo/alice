@@ -1,17 +1,21 @@
 #Installing Alice's dependencies from the CPAN
 
 Alice has a number of dependencies, all of which can be installed from the
-CPAN. The simplest way to get these installed is with the `cpanm` tool.
+CPAN*. The simplest way to get these installed is with the `cpanm` tool.
 
 Install `cpanm` by running
 
     curl -L http://xrl.us/cpanm | perl - --sudo App::cpanminus
 
-Install alice's dependencies with the following command
+Check out alice's git repository
 
-    cpanm --sudo --installdeps App::Alice
+    git clone https://github.com/leedo/alice.git
+    cd alice
 
-If you want to install alice from the CPAN just omit the `--installdeps`
-option.
+Install alice's dependencies into a self-contained directory
 
-If you are in a hurry you can add the --notest option.
+    cpanm --local-lib extlib local::lib
+    cpanm --local-lib extlib https://github.com/vti/protocol-websocket/tarball/master
+    cpanm --local-lib extlib --installdeps --notest .
+
+* Protocol::WebSocket must be installed from git until there is a new release (soon)
