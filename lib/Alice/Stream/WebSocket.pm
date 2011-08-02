@@ -57,7 +57,7 @@ sub BUILD {
   $h->on_read(sub {
     $_[0]->push_read(
       'AnyEvent::Handle::Message::WebSocket',
-      sub { $self->on_read->(decode_json $_[1]) }
+      sub { $self->on_read->(from_json $_[1]) }
     );
   });
     
