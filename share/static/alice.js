@@ -10310,6 +10310,7 @@ Alice.Application = Class.create({
       /https?:\/\/.*\.funnyordie\.com\/videos\/.*/i,
       /https?:\/\/gist\.github\.com\/[0-9a-fA-F]+/i,
       /https?:\/\/(?:www\.)?twitter\.com\/(?:#!\/)?[^\/]+\/status(?:es)?\/\d+/i,
+      /http:\/\/open\.spotify\.com\/track\/[0-9a-fA-F]+/i
     ];
     this.jsonp_callbacks = {};
   },
