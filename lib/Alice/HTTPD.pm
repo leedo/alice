@@ -168,6 +168,7 @@ sub login {
       else {
         $req->env->{"psgix.session"}{is_logged_in} = 0;
         $req->env->{"psgix.session.options"}{expire} = 1;
+        $res->content_type("text/html; charset=utf-8");
         $res->body($self->render("login", $dest, "bad username or password"));
       }
       $res->send;
@@ -176,6 +177,7 @@ sub login {
 
   # render the login page
   else {
+    $res->content_type("text/html; charset=utf-8");
     $res->body($self->render("login", $dest));
     $res->send;
   }
