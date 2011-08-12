@@ -248,6 +248,29 @@ Alice.Input = Class.create({
   pasteHandler: function(e) {
     if (!e.clipboardData) return;
 
+    var items = e.clipboardData.items;
+    if (items) {
+      var output = "";
+      for (var i=0; i < items.length; i++) {
+        var blob = items[i].getAsFile();
+        if (blob && blob.type.match(/image/)) {
+          e.stop();
+          var fd = new FormData();
+          fd.append("image", blob);
+          fd.append("key", "f1f60f1650a07bfe5f402f35205dffd4");
+          var xhr = new XMLHttpRequest();
+          xhr.open("POST", "http://api.imgur.com/2/upload.json");
+          xhr.onload = function() {
+            var url = xhr.responseText.evalJSON();
+            this.editor.insertHTML(url.upload.links.original);
+            this.updateRange();
+          }.bind(this);
+          xhr.send(fd);
+          return;
+        }
+      }
+    }
+
     var url = e.clipboardData.getData("URL");
     if (url) {
       e.preventDefault();
@@ -263,28 +286,6 @@ Alice.Input = Class.create({
       this.editor.insertHTML(text);
       this.updateRange();
       return;
-    }
-
-    var items = e.clipboardData.items;
-    if (items) {
-      var output = "";
-      for (var i=0; i < items.length; i++) {
-        var blob = items[i].getAsFile();
-        if (blob && blob.type.match(/image/)) {
-          var fd = new FormData();
-          fd.append("image", blob);
-          fd.append("key", "f1f60f1650a07bfe5f402f35205dffd4");
-          var xhr = new XMLHttpRequest();
-          xhr.open("POST", "http://api.imgur.com/2/upload.json");
-          xhr.onload = function() {
-            var url = xhr.responseText.evalJSON();
-            this.editor.insertHTML(url.upload.links.original);
-            this.updateRange();
-          }.bind(this);
-          xhr.send(fd);
-          return;
-        }
-      }
     }
   }
 });
