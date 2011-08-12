@@ -264,5 +264,27 @@ Alice.Input = Class.create({
       this.updateRange();
       return;
     }
+
+    var items = e.clipboardData.items;
+    if (items) {
+      var output = "";
+      for (var i=0; i < items.length; i++) {
+        var blob = items[i].getAsFile();
+        if (blob && blob.type.match(/image/)) {
+          var fd = new FormData();
+          fd.append("image", blob);
+          fd.append("key", "f1f60f1650a07bfe5f402f35205dffd4");
+          var xhr = new XMLHttpRequest();
+          xhr.open("POST", "http://api.imgur.com/2/upload.json");
+          xhr.onload = function() {
+            var url = xhr.responseText.evalJSON();
+            this.editor.insertHTML(url.upload.links.original);
+            this.updateRange();
+          }.bind(this);
+          xhr.send(fd);
+          return;
+        }
+      }
+    }
   }
 });
