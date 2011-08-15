@@ -271,6 +271,15 @@ Alice.Input = Class.create({
       }
     }
 
+    var text = e.clipboardData.getData("Text");
+    if (text) {
+      e.preventDefault();
+      text = text.escapeHTML().replace(/\n+/g, "<br>\n");
+      this.editor.insertHTML(text);
+      this.updateRange();
+      return;
+    }
+
     var url = e.clipboardData.getData("URL");
     if (url) {
       e.preventDefault();
@@ -279,13 +288,5 @@ Alice.Input = Class.create({
       return;
     }
 
-    var text = e.clipboardData.getData("Text");
-    if (text) {
-      e.preventDefault();
-      text = text.escapeHTML().replace(/\n+/g, "<br>");
-      this.editor.insertHTML(text);
-      this.updateRange();
-      return;
-    }
   }
 });
