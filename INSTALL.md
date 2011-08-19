@@ -15,7 +15,6 @@ Check out alice's git repository
 Install alice's dependencies into a self-contained directory
 
     cpanm --local-lib extlib local::lib
-    cpanm --local-lib extlib https://github.com/vti/protocol-websocket/tarball/master
     cpanm --local-lib extlib --installdeps --notest .
 
 * Protocol::WebSocket must be installed from git until there is a new release (soon)
