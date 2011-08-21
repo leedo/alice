@@ -487,6 +487,7 @@ ul#tabs li {
   margin-left: -1px;
   color: $tab_text;
   background: url(image/sprites.png) 0px -300px repeat-x $tab_background;
+  opacity: 1 !important;
 }
 
 ul#tabs li.hidden {
@@ -593,7 +594,7 @@ ul.messages li div.msg {
 }
 
 ul.messages li.consecutive div.left {
-  opacity: 0px;
+  opacity: 0;
   height: 0px;
   position: absolute;
   left: -1000px;

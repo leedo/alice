@@ -422,7 +422,8 @@ ul#tabs li {
   margin: 0;
   margin-left: -1px;
   color: #222222;
-  background: url(image/sprites.png) 0px -300px repeat-x #dddddd; }
+  background: url(image/sprites.png) 0px -300px repeat-x #dddddd;
+  opacity: 1 !important; }
 
 ul#tabs li.hidden {
   display: none; }
@@ -513,7 +514,7 @@ ul.messages li div.msg {
   background: white; }
 
 ul.messages li.consecutive div.left {
-  opacity: 0px;
+  opacity: 0;
   height: 0px;
   position: absolute;
   left: -1000px; }
