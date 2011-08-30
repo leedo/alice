@@ -27,11 +27,24 @@ Object.extend(Alice, {
   },
 
   makeLinksClickable: function(elem) {
-    elem.innerHTML = elem.innerHTML.replace(
-      Alice.RE.url, '<a href="$1" target="_blank" rel="noreferrer">$1</a>'
-    );
+    console.log(elem);
+    var children = elem.childNodes;
+    var length = children.length;
+
+    for (var i=0; i < length; i++) {
+      var node = children[i];
+      if (node.nodeName == "#text" && node.nodeValue.match(Alice.RE.url)) {
+        var span = new Element("SPAN");
+        span.innerHTML = node.nodeValue.replace(
+          Alice.RE.url, '<a href="$1" target="_blank" rel="noreferrer">$1</a>');
+        node.parentNode.replaceChild(span, node);
+      }
+      else {
+        Alice.makeLinksClickable(node);
+      }
+    }
   },
- 
+
   growlNotify: function(message) {
     if (window.fluid) {
       window.fluid.showGrowlNotification({

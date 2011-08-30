@@ -9900,9 +9900,22 @@ Object.extend(Alice, {
   },
 
   makeLinksClickable: function(elem) {
-    elem.innerHTML = elem.innerHTML.replace(
-      Alice.RE.url, '<a href="$1" target="_blank" rel="noreferrer">$1</a>'
-    );
+    console.log(elem);
+    var children = elem.childNodes;
+    var length = children.length;
+
+    for (var i=0; i < length; i++) {
+      var node = children[i];
+      if (node.nodeName == "#text" && node.nodeValue.match(Alice.RE.url)) {
+        var span = new Element("SPAN");
+        span.innerHTML = node.nodeValue.replace(
+          Alice.RE.url, '<a href="$1" target="_blank" rel="noreferrer">$1</a>');
+        node.parentNode.replaceChild(span, node);
+      }
+      else {
+        Alice.makeLinksClickable(node);
+      }
+    }
   },
 
   growlNotify: function(message) {
@@ -10321,13 +10334,24 @@ Alice.Application = Class.create({
       if (!data || !data.html) return;
 
       var a = $(id);
+      var html = data.html;
+      var elem = new Element("DIV", {"class": "oembed"});
+
+      if (data.provider_name == "Twitter") {
+        var scroll = win.shouldScrollToBottom();
+        elem.setStyle({display: "block"});
+        elem.update(html);
+        a.replace(elem);
+        if (scroll) win.scrollToBottom(true);
+        Alice.makeLinksClickable(elem);
+        return;
+      }
+
       a.update(data.title);
       a.insert({
         after: '<sup class="external"><a target="_blank" href="'+data.url+'">'
                 +data.provider_name+'</a></sup>'
       });
-      var html = data.html;
-      var elem = new Element("DIV", {"class": "oembed"});
       a.up("div.msg").insert(elem);
 
       a.observe('click', function(e) {
@@ -10339,10 +10363,9 @@ Alice.Application = Class.create({
           return;
         }
         elem.innerHTML = html;
-        setTimeout(function(){
-          elem.style.display = "block";
-          if (scroll) win.scrollToBottom(true);
-        }, 10);
+        elem.style.display = "block";
+        if (scroll) win.scrollToBottom(true);
+        Alice.makeLinksClickable(elem);
       });
     }.bind(this);
     return "alice.jsonp_callbacks."+id;
