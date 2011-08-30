@@ -9900,7 +9900,6 @@ Object.extend(Alice, {
   },
 
   makeLinksClickable: function(elem) {
-    console.log(elem);
     var children = elem.childNodes;
     var length = children.length;
 
