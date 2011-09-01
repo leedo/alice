@@ -138,26 +138,31 @@ if (window == window.parent) {
       active.shiftTab();
     };
 
-    // editing the copy buffer only seems to work with Safari on Mac
+    document.observe("copy", function(e) {
+      if (!e.findElement("ul.messages")) return;
 
-    if (Prototype.Browser.WebKit && !navigator.userAgent.match("Chrome")
-        && navigator.platform.match("Mac")) {
-      document.observe("copy", function(e) {
-        if (e.findElement("ul.messages") && e.clipboardData) {
-          var userSelection = window.getSelection();
-          if (userSelection) {
-            userSelection = String(userSelection);
-            userSelection = userSelection.replace(/\n\s*\d+\:\d{2}[ap]?/g, "");
-            userSelection = userSelection.replace(/\n\s*/g, "\n");
-            userSelection = userSelection.replace(/>\s*\n([^<])/g, "> $1");
-            userSelection = userSelection.replace(/\n([^<])/g, "\n<$1");
+      if(!Prototype.Browser.IE && typeof window.getSelection !== 'undefined') {
+        var buffer = new Element("DIV", {"class": "copybuffer"});
+        document.getElementsByTagName("body")[0].appendChild(buffer);
+        var sel = window.getSelection();
+        var range = sel.getRangeAt(0);
+        buffer.appendChild(range.cloneContents());
+        Alice.cleanupCopy(buffer);
+        sel.selectAllChildren(buffer);
 
-            e.preventDefault();
-            e.clipboardData.setData("Text", userSelection);
+        setTimeout(function() {
+          if(typeof window.getSelection().setBaseAndExtent !== 'undefined') {
+            sel.setBaseAndExtent(
+              range.startContainer,
+              range.startOffset,
+              range.endContainer,
+              range.endOffset
+            );
           }
-        }
-      });
-    }
+        }, 0);
+
+      }
+    });
 
     // no filters for phones
     if (alice.isMobile) return;

@@ -1402,3 +1402,10 @@ span.nickborder {
 
 div.gist-data {
   max-height: 300px; }
+
+div.copybuffer {
+  overflow: hidden;
+  position: absolute;
+  top: 0px;
+  height: 300px;
+  background: #fff; }

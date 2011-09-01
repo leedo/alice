@@ -5,6 +5,37 @@ Object.extend(Alice, {
     url: /(https?:\/\/[^\s<]*)/ig
   },
 
+  cleanupCopy: function(node) {
+    var table = new Element("TABLE");
+    node.select("li.message").each(function(line) {
+      var tr = new Element("TR");
+      var left = line.down("div.left span.nick");
+      var message = line.down("div.msg");
+      var td = new Element("TD");
+      if (left) {
+        var nick = left.innerText.escapeHTML();
+        nick = nick.replace(/\n/g, "");
+        nick = nick.replace(/^\s+/, "");
+        nick = nick.replace(/\s+$/, "");
+        td.innerHTML = nick;
+      }
+      tr.insert(td); 
+      td = new Element("TD");
+      if (message) {
+        var body = message.innerText.escapeHTML();
+        body = body.replace(/\n/g, "");
+        body = body.replace(/^\s+/, "");
+        body = body.replace(/\s+$/, "");
+        td.innerHTML = body;
+      }
+      tr.insert(td);
+      table.insert(tr);
+    });
+    node.update(table);
+    console.log(node);
+    node.cleanWhitespace();
+  },
+
   epochToLocal: function(epoch, format) {
     var date = new Date(parseInt(epoch) * 1000);
     if (!date) return epoch;

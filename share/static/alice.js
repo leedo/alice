@@ -9878,6 +9878,37 @@ Object.extend(Alice, {
     url: /(https?:\/\/[^\s<]*)/ig
   },
 
+  cleanupCopy: function(node) {
+    var table = new Element("TABLE");
+    node.select("li.message").each(function(line) {
+      var tr = new Element("TR");
+      var left = line.down("div.left span.nick");
+      var message = line.down("div.msg");
+      var td = new Element("TD");
+      if (left) {
+        var nick = left.innerText.escapeHTML();
+        nick = nick.replace(/\n/g, "");
+        nick = nick.replace(/^\s+/, "");
+        nick = nick.replace(/\s+$/, "");
+        td.innerHTML = nick;
+      }
+      tr.insert(td);
+      td = new Element("TD");
+      if (message) {
+        var body = message.innerText.escapeHTML();
+        body = body.replace(/\n/g, "");
+        body = body.replace(/^\s+/, "");
+        body = body.replace(/\s+$/, "");
+        td.innerHTML = body;
+      }
+      tr.insert(td);
+      table.insert(tr);
+    });
+    node.update(table);
+    console.log(node);
+    node.cleanWhitespace();
+  },
+
   epochToLocal: function(epoch, format) {
     var date = new Date(parseInt(epoch) * 1000);
     if (!date) return epoch;
@@ -12722,25 +12753,31 @@ if (window == window.parent) {
       active.shiftTab();
     };
 
+    document.observe("copy", function(e) {
+      if (!e.findElement("ul.messages")) return;
 
-    if (Prototype.Browser.WebKit && !navigator.userAgent.match("Chrome")
-        && navigator.platform.match("Mac")) {
-      document.observe("copy", function(e) {
-        if (e.findElement("ul.messages") && e.clipboardData) {
-          var userSelection = window.getSelection();
-          if (userSelection) {
-            userSelection = String(userSelection);
-            userSelection = userSelection.replace(/\n\s*\d+\:\d{2}[ap]?/g, "");
-            userSelection = userSelection.replace(/\n\s*/g, "\n");
-            userSelection = userSelection.replace(/>\s*\n([^<])/g, "> $1");
-            userSelection = userSelection.replace(/\n([^<])/g, "\n<$1");
+      if(!Prototype.Browser.IE && typeof window.getSelection !== 'undefined') {
+        var buffer = new Element("DIV", {"class": "copybuffer"});
+        document.getElementsByTagName("body")[0].appendChild(buffer);
+        var sel = window.getSelection();
+        var range = sel.getRangeAt(0);
+        buffer.appendChild(range.cloneContents());
+        Alice.cleanupCopy(buffer);
+        sel.selectAllChildren(buffer);
 
-            e.preventDefault();
-            e.clipboardData.setData("Text", userSelection);
+        setTimeout(function() {
+          if(typeof window.getSelection().setBaseAndExtent !== 'undefined') {
+            sel.setBaseAndExtent(
+              range.startContainer,
+              range.startOffset,
+              range.endContainer,
+              range.endOffset
+            );
           }
-        }
-      });
-    }
+        }, 0);
+
+      }
+    });
 
     if (alice.isMobile) return;
 
