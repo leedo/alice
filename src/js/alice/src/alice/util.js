@@ -6,33 +6,26 @@ Object.extend(Alice, {
   },
 
   cleanupCopy: function(node) {
-    var table = new Element("TABLE");
+    var lines = [];
     node.select("li.message").each(function(line) {
-      var tr = new Element("TR");
       var left = line.down("div.left span.nick");
       var message = line.down("div.msg");
-      var td = new Element("TD");
+      var clean = "";
       if (left) {
-        var nick = left.innerText.escapeHTML();
-        nick = nick.replace(/\n/g, "");
+        var nick = left.innerText;
         nick = nick.replace(/^\s+/, "");
         nick = nick.replace(/\s+$/, "");
-        td.innerHTML = nick;
+        clean += "<"+nick+">";
       }
-      tr.insert(td); 
-      td = new Element("TD");
       if (message) {
-        var body = message.innerText.escapeHTML();
-        body = body.replace(/\n/g, "");
+        var body = message.innerText;
         body = body.replace(/^\s+/, "");
         body = body.replace(/\s+$/, "");
-        td.innerHTML = body;
+        clean += body;
       }
-      tr.insert(td);
-      table.insert(tr);
+      if (clean) lines.push(clean.replace(/\n/g, "").escapeHTML());
     });
-    node.update(table);
-    console.log(node);
+    node.update(lines.join("<br>"));
     node.cleanWhitespace();
   },
 

@@ -7,7 +7,7 @@
     <div class="timehint timestamp"><?= $msg->{timestamp} ?></div>
     <div class="left">
       <a href="javascript:alice.connection.requestWindow('<?= $msg->{nick} ?>','<?= $msg->{window}{id} ?>')" class="nick"<?= $msg->{source} ? " title=$msg->{source}" : "" ?>>
-        <span class="nick"><span class="nickborder">&lt;</span><?= $msg->{nick} ?><span class="nickborder">&gt;</span></span>
+        <span class="nick"><?= $msg->{nick} ?></span>
 
       </a>
     </div>
