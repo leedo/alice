@@ -12582,7 +12582,7 @@ Alice.Completion = Class.create({
 
   complete: function() {
     var match = this.matches[this.matchIndex];
-    match += this.leftOffset == 0 ? ": " : " ";
+    match += this.leftOffset == 0 ? ":\u00a0" : "\u00a0";
     this.restore(match, this.leftOffset + match.length);
   },
 
