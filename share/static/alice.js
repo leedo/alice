@@ -9875,7 +9875,6 @@ Object.extend(Alice, {
   RE: {
     img: /^http[^\s]*\.(?:jpe?g|gif|png|bmp|svg)[^\/]*$/i,
     audio: /^http[^\s]*\.(?:wav|mp3|ogg|aiff?|m4[ar])[^\/]*$/i,
-    channel: /([\b>\s])(#[^\b<\s]+)/gi,
     url: /(https?:\/\/[^\s<]*)/ig
   },
 
@@ -12746,12 +12745,6 @@ if (window == window.parent) {
     if (alice.isMobile) return;
 
     alice.addFilters([
-      function(msg, win) {
-        if (win.type == "info") return;
-        msg.innerHTML = msg.innerHTML.replace(
-          Alice.RE.channel, '$1<a class="channel" href="javascript:alice.connection.sendMessage({msg: \'/join $2\', source: \'' + win.id + '\'})">$2</a>'
-        );
-      },
       function(msg, win) {
         msg.select("a").filter(function(a) {
           return Alice.RE.audio.match(a.href);

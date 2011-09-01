@@ -164,12 +164,6 @@ if (window == window.parent) {
 
     alice.addFilters([
       function(msg, win) {
-        if (win.type == "info") return;
-        msg.innerHTML = msg.innerHTML.replace(
-          Alice.RE.channel, '$1<a class="channel" href="javascript:alice.connection.sendMessage({msg: \'/join $2\', source: \'' + win.id + '\'})">$2</a>'
-        );
-      },
-      function(msg, win) {
         msg.select("a").filter(function(a) {
           return Alice.RE.audio.match(a.href);
         }).each(function(a) {

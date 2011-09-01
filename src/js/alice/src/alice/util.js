@@ -2,7 +2,6 @@ Object.extend(Alice, {
   RE: { 
     img: /^http[^\s]*\.(?:jpe?g|gif|png|bmp|svg)[^\/]*$/i,
     audio: /^http[^\s]*\.(?:wav|mp3|ogg|aiff?|m4[ar])[^\/]*$/i,
-    channel: /([\b>\s])(#[^\b<\s]+)/gi,
     url: /(https?:\/\/[^\s<]*)/ig
   },
 
