@@ -10,20 +10,21 @@ Object.extend(Alice, {
     node.select("li.message").each(function(line) {
       var left = line.down("div.left span.nick");
       var message = line.down("div.msg");
-      var clean = "";
+      var clean = [];
       if (left) {
         var nick = left.innerText;
         nick = nick.replace(/^\s+/, "");
         nick = nick.replace(/\s+$/, "");
-        clean += "<"+nick+">";
+        clean.push("<"+nick+">");
       }
       if (message) {
         var body = message.innerText;
         body = body.replace(/^\s+/, "");
         body = body.replace(/\s+$/, "");
-        clean += body;
+        clean.push(body);
       }
-      if (clean) lines.push(clean.replace(/\n/g, "").escapeHTML());
+      if (clean.length) lines.push(
+        clean.join(" ").replace(/\n/g, "").escapeHTML());
     });
     node.update(lines.join("<br>"));
     node.cleanWhitespace();
