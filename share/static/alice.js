@@ -12668,7 +12668,7 @@ if (window == window.parent) {
     }
     else {
       window.onkeydown = function (e) {
-        if (!$('config') && !Alice.isSpecialKey(e.which))
+        if (!alice.input.disabled && !Alice.isSpecialKey(e.which))
           alice.input.focus();
       };
 
