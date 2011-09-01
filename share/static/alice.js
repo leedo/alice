@@ -9885,13 +9885,13 @@ Object.extend(Alice, {
       var message = line.down("div.msg");
       var clean = [];
       if (left) {
-        var nick = left.innerText;
+        var nick = left.innerHTML.stripTags();
         nick = nick.replace(/^\s+/, "");
         nick = nick.replace(/\s+$/, "");
         clean.push("<"+nick+">");
       }
       if (message) {
-        var body = message.innerText;
+        var body = message.innerHTML.stripTags();
         body = body.replace(/^\s+/, "");
         body = body.replace(/\s+$/, "");
         clean.push(body);
@@ -9971,7 +9971,8 @@ Object.extend(Alice, {
   isSpecialKey: function(keyCode) {
     var special_keys = [
 			16,27,9,32,13,8,145,20,144,19,45,36,46,35,33,34,37,38,39,
-			40,17,18,91,112,113,114,115,116,117,118,119,120,121,122,123
+			40,17,18,91,112,113,114,115,116,117,118,119,120,121,122,123,
+      224
 		];
 		return special_keys.indexOf(keyCode) > -1;
   },
