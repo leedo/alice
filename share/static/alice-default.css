@@ -320,7 +320,6 @@ div#input textarea {
 
 div#input div.editor {
   margin-right: 75px;
-  white-space: pre-wrap;
   -khtml-nbsp-mode: space; }
 
 div#input div.editor_toolbar {
