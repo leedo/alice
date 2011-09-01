@@ -9898,7 +9898,6 @@ Object.extend(Alice, {
       }
       if (clean) lines.push(clean.replace(/\n/g, "").escapeHTML());
     });
-    console.log(lines);
     node.update(lines.join("<br>"));
     node.cleanWhitespace();
   },

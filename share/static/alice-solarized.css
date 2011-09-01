@@ -1289,6 +1289,12 @@ div.config div.sidebar li.connected {
 .bg-ccc {
   background-color: #ccc; }
 
+span.nickborder {
+  width: 0px;
+  opacity: 0;
+  position: absolute;
+  left: -1000px; }
+
 .dropdown.top ul {
   bottom: auto;
   top: 100%;
