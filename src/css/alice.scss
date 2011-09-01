@@ -725,7 +725,7 @@ div.oembed iframe {
   padding: 0;
 }
 
-div.msg span {
+li.message div.msg > span {
   white-space: pre-wrap;
 }
 
@@ -778,6 +778,10 @@ ul.messages li + li.consecutive div.msg {
 
 div.msg a {
   word-break: break-all;
+}
+
+div.oembed a {
+  word-break: normal;
 }
 
 div.image {
@@ -1546,7 +1550,7 @@ div.gist-data {
   max-height: 300px;
 }
 
-div.copybuffer {
+body > div.copybuffer {
   overflow: hidden;
   position: absolute;
   top: -500px;

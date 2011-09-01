@@ -12280,7 +12280,7 @@ Alice.Input = Class.create({
 
   canContentEditable: function() {
     var element = new Element("div", {contentEditable: "true"});
-    return  ! (element.contentEditable == null || this.application.isMobile || Prototype.Browser.IE || Prototype.Browser.Gecko);
+    return  ! (element.contentEditable == null || this.application.isMobile || Prototype.Browser.IE);
   },
 
   updateRange: function (e) {
