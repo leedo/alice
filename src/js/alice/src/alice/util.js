@@ -6,6 +6,8 @@ Object.extend(Alice, {
   },
 
   cleanupCopy: function(node) {
+    if (!node.select("li.message").length) return;
+
     var lines = [];
     node.select("li.message").each(function(line) {
       var left = line.down("div.left span.nick");
