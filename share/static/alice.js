@@ -10339,6 +10339,7 @@ Alice.Application = Class.create({
     this.setupMenus();
 
     this.oembeds = [
+      /https?:\/\/(?:www\.)?beeradvocate\.com\/beer\/profile\/\d+\/\d+/i,
       /https?:\/\/(?:www\.)?flickr.com\/.*/i,
       /https?:\/\/www\.youtube\.com\/watch.*/i,
       /https?:\/\/.*\.wikipedia.org\/wiki\/.*/i,
@@ -10349,6 +10350,10 @@ Alice.Application = Class.create({
       /https?:\/\/.*\.funnyordie\.com\/videos\/.*/i,
       /https?:\/\/gist\.github\.com\/[0-9a-fA-F]+/i,
       /https?:\/\/(?:www\.)?twitter\.com\/(?:#!\/)?[^\/]+\/status(?:es)?\/\d+/i,
+      /http:\/\/www\.giantbomb\.com\/[^\/]+\/\d+-\d+/i,
+      /http:\/\/(:?www\.)?twitpic\.com\/.*/i,
+      /http:\/\/(:?www\.)?urbandictionary\.com\/define\.php\?term=.*/i,
+      /http:\/\/www\.asciiartfarts\.com\/\d+\.html/i,
       /http:\/\/open\.spotify\.com\/track\/[0-9a-fA-F]+/i
     ];
     this.jsonp_callbacks = {};
@@ -10389,6 +10394,11 @@ Alice.Application = Class.create({
           return;
         }
         elem.innerHTML = html;
+        if (scroll && elem.down("img")) {
+          elem.on("loaded", "img", function(e) {
+            win.scrollToBottom(true);
+          });
+        }
         elem.style.display = "block";
         if (scroll) win.scrollToBottom(true);
         Alice.makeLinksClickable(elem);
