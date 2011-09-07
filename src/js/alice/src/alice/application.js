@@ -106,14 +106,18 @@ Alice.Application = Class.create({
           return;
         }
         elem.innerHTML = html;
-        if (scroll && elem.down("img")) {
-          elem.on("load", "img", function(e) {
-            win.scrollToBottom(true);
+        elem.style.display = "block";
+        Alice.makeLinksClickable(elem);
+        var images = elem.select("img");
+        if (scroll && images.length) {
+          images.each(function(img) {
+            img.observe("load", function(e) {
+              win.scrollToBottom(true);
+              img.stopObserving(img, "load");
+            });
           });
         }
-        elem.style.display = "block";
         if (scroll) win.scrollToBottom(true);
-        Alice.makeLinksClickable(elem);
       });
     }.bind(this);
     return "alice.jsonp_callbacks."+id;
