@@ -10400,7 +10400,6 @@ Alice.Application = Class.create({
         if (scroll && images.length) {
           images.each(function(img) {
             img.observe("load", function(e) {
-              console.log("loaded");
               win.scrollToBottom(true);
               img.stopObserving(img, "load");
             });
