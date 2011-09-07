@@ -10395,7 +10395,7 @@ Alice.Application = Class.create({
         }
         elem.innerHTML = html;
         if (scroll && elem.down("img")) {
-          elem.on("loaded", "img", function(e) {
+          elem.on("load", "img", function(e) {
             win.scrollToBottom(true);
           });
         }
