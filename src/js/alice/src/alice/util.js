@@ -63,7 +63,7 @@ Object.extend(Alice, {
       }
       else if (node.nodeValue.match(Alice.RE.url)) {
         var span = new Element("SPAN");
-        span.innerHTML = node.nodeValue.replace(
+        span.innerHTML = node.nodeValue.escapeHTML().replace(
           Alice.RE.url, '<a href="$1" target="_blank" rel="noreferrer">$1</a>');
         node.parentNode.replaceChild(span, node);
       }
