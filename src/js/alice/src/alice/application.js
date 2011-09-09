@@ -105,8 +105,8 @@ Alice.Application = Class.create({
           elem.style.display = "none";
           return;
         }
-        elem.innerHTML = html;
         elem.style.display = "block";
+        elem.innerHTML = html;
         Alice.makeLinksClickable(elem);
         var images = elem.select("img");
         if (scroll && images.length) {
