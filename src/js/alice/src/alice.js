@@ -179,16 +179,17 @@ if (window == window.parent) {
       },
       function (msg, win) {
         if (alice.options.images == "show") {
-          var matches = msg.select("a").map(function(a) {
+          var matches = msg.select("a").inject(0, function(acc, a) {
             var oembed = alice.oembeds.find(function(service) {
               return service.match(a.href);
             });
             if (oembed) {
               alice.embed(a, win);
-              return true;
+              acc++
             }
+            return acc;
           });
-          return matches.length > 0;
+          return matches > 0;
         }
       },
       function (msg, win) {
