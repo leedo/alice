@@ -13,6 +13,9 @@ Alice.Application = Class.create({
     this.topic_height = "14px";
     this.beep = new Audio("/static/beep.mp3");
 
+    this.oembeds = [];
+    this.jsonp_callbacks = {};
+
     if (navigator.userAgent.match(/CrOS|wOSBrowser/)) {
       this.connection = new Alice.Connection.XHR(this);
     }
@@ -49,26 +52,19 @@ Alice.Application = Class.create({
     this.setupTopic();
     this.setupNicklist();
     this.setupMenus();
+    this.fetchOembeds();
+  },
 
-    this.oembeds = [
-      /https?:\/\/(?:www\.)?beeradvocate\.com\/beer\/profile\/\d+\/\d+/i,
-      /https?:\/\/(?:www\.)?flickr.com\/.*/i,
-      /https?:\/\/www\.youtube\.com\/watch.*/i,
-      /https?:\/\/.*\.wikipedia.org\/wiki\/.*/i,
-      /https?:\/\/.*\.twitpic\.com\/.*/i,
-      /https?:\/\/www\.hulu\.com\/watch\/.*/i,
-      /https?:\/\/(?:www\.)?vimeo\.com\/.*/i,
-      /https?:\/\/(?:www\.)?vimeo\.com\/groups\/.*\/videos\/.*/i,
-      /https?:\/\/.*\.funnyordie\.com\/videos\/.*/i,
-      /https?:\/\/gist\.github\.com\/[0-9a-fA-F]+/i,
-      /https?:\/\/(?:www\.)?twitter\.com\/(?:#!\/)?[^\/]+\/status(?:es)?\/\d+/i,
-      /http:\/\/www\.giantbomb\.com\/[^\/]+\/\d+-\d+/i,
-      /http:\/\/(:?www\.)?twitpic\.com\/.*/i,
-      /http:\/\/(:?www\.)?urbandictionary\.com\/define\.php\?term=.*/i,
-      /http:\/\/www\.asciiartfarts\.com\/\d+\.html/i,
-      /http:\/\/open\.spotify\.com\/track\/[0-9a-fA-F]+/i
-    ];
-    this.jsonp_callbacks = {};
+  fetchOembeds: function() {
+    new Ajax.Request("https://noembed.com/providers", {
+      method: "get",
+      onSuccess: function(transport) {
+        var providers = transport.responseText.evalJSON();
+        this.oembeds = providers.inject([], function(acc, site){
+          return acc.concat(site.patterns.map(function(pat){return new RegExp(pat)}));
+        });
+      }.bind(this)
+    });
   },
 
   addOembedCallback: function(id, win) {
