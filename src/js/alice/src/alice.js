@@ -179,24 +179,16 @@ if (window == window.parent) {
       },
       function (msg, win) {
         if (alice.options.images == "show") {
-          var match = false;
-          msg.select("a").each(function(a) {
+          var matches = msg.select("a").map(function(a) {
             var oembed = alice.oembeds.find(function(service) {
               return service.match(a.href);
             });
             if (oembed) {
-              var callback = alice.addOembedCallback(a.identify(), win);
-              var params = {
-                url: a.href,
-                callback: callback
-              };
-              var src = ("http://www.noembed.com/embed")+ "?"+Object.toQueryString(params);
-              var script = new Element('script', {src: src});
-              a.insert(script);
-              match = true;
+              alice.embed(a, win);
+              return true;
             }
           });
-          return match;
+          return matches.length > 0;
         }
       },
       function (msg, win) {
