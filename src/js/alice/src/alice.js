@@ -185,7 +185,7 @@ if (window == window.parent) {
             });
             if (oembed) {
               alice.embed(a, win);
-              acc++
+              acc++;
             }
             return acc;
           });

@@ -14,7 +14,7 @@ Alice.Application = Class.create({
     this.beep = new Audio("/static/beep.mp3");
 
     this.oembeds = [];
-    this.fetchOembeds();
+    this.jsonp_callbacks = {};
 
     if (navigator.userAgent.match(/CrOS|wOSBrowser/)) {
       this.connection = new Alice.Connection.XHR(this);
@@ -52,6 +52,7 @@ Alice.Application = Class.create({
     this.setupTopic();
     this.setupNicklist();
     this.setupMenus();
+    this.fetchOembeds();
   },
 
   fetchOembeds: function() {
@@ -67,56 +68,64 @@ Alice.Application = Class.create({
   },
 
   embed: function(a, win) {
-    var params = Object.toQueryString({ url: a.href });
-    new Ajax.Request("https://www.noembed.com/embed?" + params, {
-      onSuccess: function(transport) {
-        var data = transport.responseText.evalJSON();
-        if (!data || !data.html) return;
+    var id = a.identify();
 
-        var html = data.html;
-        var elem = new Element("DIV", {"class": "oembed"});
+    this.jsonp_callbacks[id] = function (data) {
+      delete this.jsonp_callbacks[id];
+      if (!data || !data.html) return;
 
-        if (data.provider_name == "Twitter") {
-          var scroll = win.shouldScrollToBottom();
-          elem.setStyle({display: "block"});
-          elem.update(html);
-          a.replace(elem);
-          if (scroll) win.scrollToBottom(true);
-          Alice.makeLinksClickable(elem);
+      var a = $(id);
+      var html = data.html;
+      var elem = new Element("DIV", {"class": "oembed"});
+
+      if (data.provider_name == "Twitter") {
+        var scroll = win.shouldScrollToBottom();
+        elem.setStyle({display: "block"});
+        elem.update(html);
+        a.replace(elem);
+        if (scroll) win.scrollToBottom(true);
+        Alice.makeLinksClickable(elem);
+        return;
+      }
+
+      a.update(data.title);
+      a.insert({
+        after: '<sup class="external"><a target="_blank" href="'+data.url+'">'
+                +data.provider_name+'</a></sup>'
+      });
+      a.up("div.msg").insert(elem);
+
+      a.observe('click', function(e) {
+        e.stop();
+        var scroll = win.shouldScrollToBottom();
+        if (elem.innerHTML) {
+          elem.innerHTML = "";
+          elem.style.display = "none";
           return;
         }
-
-        a.update(data.title);
-        a.insert({
-          after: '<sup class="external"><a target="_blank" href="'+data.url+'">'
-                  +data.provider_name+'</a></sup>'
-        });
-        a.up("div.msg").insert(elem);
-
-        a.observe('click', function(e) {
-          e.stop();
-          var scroll = win.shouldScrollToBottom();
-          if (elem.innerHTML) {
-            elem.innerHTML = "";
-            elem.style.display = "none";
-            return;
-          }
-          elem.style.display = "block";
-          elem.innerHTML = html;
-          Alice.makeLinksClickable(elem);
-          var images = elem.select("img");
-          if (scroll && images.length) {
-            images.each(function(img) {
-              img.observe("load", function(e) {
-                win.scrollToBottom(true);
-                img.stopObserving(img, "load");
-              });
+        elem.style.display = "block";
+        elem.innerHTML = html;
+        Alice.makeLinksClickable(elem);
+        var images = elem.select("img");
+        if (scroll && images.length) {
+          images.each(function(img) {
+            img.observe("load", function(e) {
+              win.scrollToBottom(true);
+              img.stopObserving(img, "load");
             });
-          }
-          if (scroll) win.scrollToBottom(true);
-        });
-      }
-    });
+          });
+        }
+        if (scroll) win.scrollToBottom(true);
+      });
+    }.bind(this);
+
+    var params = {
+      url: a.href,
+      callback: "alice.jsonp_callbacks." + id
+    };
+    var src = "https://www.noembed.com/embed?" + Object.toQueryString(params);
+    var script = new Element('script', {src: src});
+    a.insert(script);
   },
 
   actionHandlers: {
