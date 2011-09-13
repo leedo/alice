@@ -10357,7 +10357,6 @@ Alice.Application = Class.create({
 
   embed: function(a, win) {
     var id = a.identify();
-    console.log(id);
 
     this.jsonp_callbacks[id] = function (data) {
       delete this.jsonp_callbacks[id];
@@ -12814,7 +12813,6 @@ if (window == window.parent) {
             var oembed = alice.oembeds.find(function(service) {
               return service.match(a.href);
             });
-            console.log(a, oembed);
             if (oembed) {
               alice.embed(a, win);
               acc++;
