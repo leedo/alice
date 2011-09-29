@@ -121,6 +121,7 @@ Alice.Application = Class.create({
 
     var params = {
       url: a.href,
+      maxheight: 300,
       callback: "alice.jsonp_callbacks." + id
     };
     var src = "https://www.noembed.com/embed?" + Object.toQueryString(params);
