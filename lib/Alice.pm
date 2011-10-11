@@ -363,6 +363,21 @@ sub format_info {
   $self->info_window->format_message($session, $body, %options);
 }
 
+sub send_message {
+  my ($self, $window, $nick, $body) = @_;
+
+  my $connection = $self->get_irc($window->network);
+  my %options = (
+    mono => $self->is_monospace_nick($nick),
+    self => $connection->nick eq $nick,
+    avatar => $connection->nick_avatar($nick) || "",
+    highlight => $self->is_highlight($connection->nick, $body),
+  );
+
+  my $message = $window->format_message($nick, $body, %options);
+  $self->broadcast($message);
+}
+
 sub broadcast {
   my ($self, @messages) = @_;
   return if $self->no_streams or !@messages;
