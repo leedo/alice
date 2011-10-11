@@ -466,25 +466,23 @@ sub is_monospace_nick {
 }
 
 sub is_ignore {
-  my ($self, $nick) = @_;
-  any {$_ eq $nick} $self->config->ignores;
+  my $self = shift;
+  return $self->config->is_ignore(@_);
 }
 
 sub add_ignore {
-  my ($self, $nick) = @_;
-  $self->config->add_ignore($nick);
-  $self->config->write;
+  my $self = shift;
+  return $self->config->add_ignore(@_);
 }
 
 sub remove_ignore {
-  my ($self, $nick) = @_;
-  $self->config->ignore([ grep {$nick ne $_} $self->config->ignores ]);
-  $self->config->write;
+  my $self = shift;
+  return $self->config->remove_ignore(@_);
 }
 
 sub ignores {
   my $self = shift;
-  return $self->config->ignores;
+  return $self->config->ignores(@_);
 }
 
 sub static_url {

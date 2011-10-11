@@ -81,11 +81,20 @@ has tabsets => (
   default => sub {{}},
 );
 
-has [qw/ignore highlights order monospace_nicks/]=> (
+has [qw/highlights order monospace_nicks/]=> (
   is      => 'rw',
   isa     => 'ArrayRef[Str]',
   default => sub {[]},
 );
+
+has ignore => (
+  is      => 'rw',
+  isa     => 'HashRef[ArrayRef]',
+  default => sub {
+    +{ msg => [], 'join' => [], part => [] }
+  }
+);
+
 
 has servers => (
   is      => 'rw',
@@ -147,9 +156,6 @@ has enable_logging => (
   default => 1,
 );
 
-sub ignores {@{$_[0]->ignore}}
-sub add_ignore {push @{shift->ignore}, @_}
-
 sub BUILD {
   my $self = shift;
   $self->load;
@@ -176,6 +182,12 @@ sub load {
     my $body;
     aio_load $self->fullpath, $body, sub {
       $config = eval $body;
+
+      # upgrade ignore to new format
+      if ($config->{ignore} and ref $config->{ignore} eq "ARRAY") {
+        $config->{ignore} = {msg => $config->{ignore}};
+      }
+
       if ($@) {
         warn "error loading config: $@\n";
       }
@@ -274,6 +286,30 @@ sub serialized {
     } grep {$_->has_write_method}
     $self->meta->get_all_attributes
   };
+}
+
+sub ignores {
+  my ($self, $type) = @_;
+  $type ||= "msg";
+  @{$self->ignore->{$type} || []}
+}
+
+sub is_ignore {
+  my ($self, $type, $nick) = @_;
+  $type ||= "msg";
+  any {$_ eq $nick} $self->ignores($type);
+}
+
+sub add_ignore {
+  my ($self, $type, $nick) = @_;
+  push @{$self->ignore->{$type}}, $nick;
+  $self->write;
+}
+
+sub remove_ignore {
+  my ($self, $type, $nick) = @_;
+  $self->ignore->{$type} = [ grep {$nick ne $_} $self->ignores($type) ];
+  $self->write;
 }
 
 __PACKAGE__->meta->make_immutable;
