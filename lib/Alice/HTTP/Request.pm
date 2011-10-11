@@ -1,4 +1,4 @@
-package Alice::Request;
+package Alice::HTTP::Request;
 
 use parent 'Plack::Request';
 use Encode;

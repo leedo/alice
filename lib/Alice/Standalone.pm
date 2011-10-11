@@ -5,6 +5,8 @@ use AnyEvent;
 
 extends 'Alice';
 
+with 'Alice::Role::HTTPD';
+
 has cv => (
   is       => 'rw',
   isa      => 'AnyEvent::CondVar'
@@ -21,6 +23,7 @@ after run => sub {
 
 after init => sub {
   my $self = shift;
+  $self->httpd;
   print STDERR "Location: http://".$self->config->http_address.":".$self->config->http_port."/\n";
 };
 
@@ -31,7 +34,6 @@ before init_shutdown => sub {
 
 after shutdown => sub {
   my $self = shift;
-  $self->httpd->shutdown;
   $self->cv->send;
 };
 

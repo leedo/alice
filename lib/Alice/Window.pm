@@ -143,7 +143,7 @@ sub serialized {
   };
 }
 
-sub render {shift->app->render(@_)}
+sub render { shift->app->render(@_) }
 
 sub nick {
   my $self = shift;

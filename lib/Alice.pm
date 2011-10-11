@@ -4,7 +4,6 @@ use AnyEvent;
 use Text::MicroTemplate::File;
 use Alice::Window;
 use Alice::InfoWindow;
-use Alice::HTTPD;
 use Alice::IRC;
 use Alice::Config;
 use Alice::Logger;
@@ -24,6 +23,7 @@ use Encode;
 our $VERSION = '0.19';
 
 with 'Alice::Role::IRCCommands';
+with 'Alice::Role::HTTPRoutes';
 
 has config => (
   is       => 'rw',
@@ -43,15 +43,6 @@ sub get_irc {first {$_->alias eq $_[1]} $_[0]->ircs}
 sub remove_irc {$_[0]->_ircs([ grep { $_->alias ne $_[1] } $_[0]->ircs])}
 sub irc_aliases {map {$_->alias} $_[0]->ircs}
 sub connected_ircs {grep {$_->is_connected} $_[0]->ircs}
-
-has httpd => (
-  is      => 'rw',
-  isa     => 'Alice::HTTPD',
-  lazy    => 1,
-  default => sub {
-    Alice::HTTPD->new(app => shift);
-  },
-);
 
 has streams => (
   is      => 'rw',
@@ -146,7 +137,7 @@ sub BUILDARGS {
 
   my $self = {};
 
-  for (qw/logger commands history template user httpd/) {
+  for (qw/logger commands history template user/) {
     if (exists $options{$_}) {
       $self->{$_} = $options{$_};
       delete $options{$_};
@@ -178,7 +169,6 @@ sub init {
   $self->history if $self->config->logging;
   $self->info_window;
   $self->template;
-  $self->httpd;
 
   $self->add_irc_server($_, $self->config->servers->{$_})
     for keys %{$self->config->servers};

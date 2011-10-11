@@ -1,4 +1,4 @@
-package Alice::Middleware::WebSocket;
+package Alice::HTTP::Middleware::WebSocket;
 use strict;
 use warnings;
 use parent 'Plack::Middleware';
@@ -9,12 +9,12 @@ my $MAGIC = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
 sub call {
     my ($self, $env) = @_;
 
-    $env->{'websocket.impl'} = Alice::Middleware::WebSocket::Impl->new($env);
+    $env->{'websocket.impl'} = Alice::HTTP::Middleware::WebSocket::Impl->new($env);
 
     return $self->app->($env);
 }
 
-package Alice::Middleware::WebSocket::Impl;
+package Alice::HTTP::Middleware::WebSocket::Impl;
 use Plack::Util::Accessor qw(env error_code version);
 use Scalar::Util qw(weaken);
 use IO::Handle;
@@ -105,7 +105,7 @@ __END__
 
 =head1 NAME
 
-Alice::Middleware::WebSocket - Support WebSocket implementation
+Alice::HTTP::Middleware::WebSocket - Support WebSocket implementation
 
 =head1 SYNOPSIS
 
@@ -126,7 +126,7 @@ Alice::Middleware::WebSocket - Support WebSocket implementation
 
 =head1 DESCRIPTION
 
-Alice::Middleware::WebSocket provides WebSocket implementation through $env->{'websocket.impl'}.
+Alice::HTTP::Middleware::WebSocket provides WebSocket implementation through $env->{'websocket.impl'}.
 Currently implements draft-ietf-hybi-thewebsocketprotocol-00 <http://tools.ietf.org/html/draft-ietf-hybi-thewebsocketprotocol-00>.
 
 =head1 METHODS
