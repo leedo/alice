@@ -255,9 +255,13 @@ command whois =>  {
   cb => sub  {
     my ($self, $req) = @_;
 
+    my $window = $req->{window};
     my $nick = $req->{opts}[0];
-    $req->{connection}->add_whois($nick);
-  },
+
+    $req->{connection}->add_whois($nick,sub {
+      $window->reply($_[0] ? $_[0] : "No such nick: $nick\n");
+    });
+  }
 };
 
 command me =>  {
