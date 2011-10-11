@@ -3,6 +3,7 @@ package Alice::Config;
 use FindBin;
 use Data::Dumper;
 use File::ShareDir qw/dist_dir/;
+use List::MoreUtils qw/any/;
 use Getopt::Long;
 use Any::Moose;
 use POSIX;

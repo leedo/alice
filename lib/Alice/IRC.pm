@@ -387,7 +387,7 @@ sub publicmsg {
     my ($nick) = split_prefix($msg->{prefix});
     my $text = $msg->{params}[1];
 
-    return if $self->app->is_ignore($nick);
+    return if $self->app->is_ignore(msg => $nick);
 
     $self->app->store(nick => $nick, channel => $channel, body => $text);
     $self->broadcast($window->format_message($nick, $text)); 
@@ -401,7 +401,7 @@ sub privatemsg {
   if ($msg->{command} eq "PRIVMSG") {
     my ($from) = split_prefix($msg->{prefix});
 
-    return if $self->app->is_ignore($from);
+    return if $self->app->is_ignore(msg => $from);
 
     my $window = $self->window($from);
 
@@ -417,7 +417,7 @@ sub privatemsg {
 sub ctcp_action {
   my ($self, $cl, $nick, $channel, $msg, $type) = @_;
   return unless $msg;
-  return if $self->app->is_ignore($nick);
+  return if $self->app->is_ignore(msg => $nick);
 
   my $dest = ($channel eq $self->nick ? $nick : $channel);
 
@@ -457,6 +457,8 @@ sub invite {
 sub _join {
   my ($self, $cl, $nick, $channel, $is_self) = @_;
 
+  return if $self->app->is_ignore("join" => $channel);
+
   if ($is_self) {
 
     # self->window uses find_or_create, so we don't create
@@ -478,6 +480,8 @@ sub _join {
 
 sub part {
   my ($self, $cl, $nick, $channel, $is_self, $msg) = @_;
+
+  return if $self->app->is_ignore(part => $channel);
 
   if ($is_self and my $window = $self->find_window($channel)) {
     $self->log(debug => "leaving $channel");
