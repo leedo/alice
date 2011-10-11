@@ -444,7 +444,8 @@ sub nick_change {
 sub invite {
   my ($self, $cl, $msg) = @_;
 
-  my ($from, $channel) = @{$msg->{params}};
+  my (undef, $channel) = @{$msg->{params}};
+  my ($from) = split_prefix($msg->{prefix});
 
   $self->broadcast({
     type => "action",
