@@ -120,6 +120,7 @@ has type => (
 sub is_channel {$_[0]->type eq "channel"}
 sub irc {$_[0]->_irc}
 sub session {$_[0]->_irc->alias}
+sub network {$_[0]->session}
 
 sub topic_string {
   my $self = shift;
@@ -228,6 +229,11 @@ sub format_event {
 
   $self->buffer->add($message);
   return $message;
+}
+
+sub format_topic {
+  my $self = shift;
+  return $self->format_event("topic", $self->topic->{author} || "", $self->topic_string);
 }
 
 sub format_message {

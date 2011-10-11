@@ -23,6 +23,8 @@ use Encode;
 
 our $VERSION = '0.19';
 
+with 'Alice::Role::IRCCommands';
+
 has config => (
   is       => 'rw',
   isa      => 'Alice::Config',
@@ -60,15 +62,6 @@ has streams => (
 sub add_stream {unshift @{shift->streams}, @_}
 sub no_streams {@{$_[0]->streams} == 0}
 sub stream_count {scalar @{$_[0]->streams}}
-
-has commands => (
-  is      => 'ro',
-  isa     => 'Alice::Commands',
-  lazy    => 1,
-  default => sub {
-    Alice::Commands->new(commands_file => $_[0]->config->assetdir."/commands.pl");
-  }
-);
 
 has history => (
   is      => 'rw',
@@ -352,6 +345,19 @@ sub reload_config {
   }
 }
 
+sub send_announcement {
+  my ($self, $window, $body) = @_;
+  
+  my $message = $window->format_announcement($body);
+  $self->broadcast($message);
+}
+
+sub send_topic {
+  my ($self, $window) = @_;
+  my $message = $window->format_topic;
+  $self->broadcast($message);
+}
+
 sub format_info {
   my ($self, $session, $body, %options) = @_;
   $self->info_window->format_message($session, $body, %options);
@@ -410,12 +416,7 @@ sub handle_message {
     $message->{msg} = html_to_irc($message->{msg}) if $message->{html};
 
     for (split /\n/, $message->{msg}) {
-      eval {
-        $self->commands->handle($self, $_, $window) if length $_;
-      };
-      if ($@) {
-        warn $@;
-      }
+      $self->irc_command($window, $_) if length $_;
     }
   }
 }

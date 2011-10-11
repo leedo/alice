@@ -12,7 +12,6 @@ use Plack::Session::State::Cookie;
 use Alice::Request;
 use Alice::Stream::XHR;
 use Alice::Stream::WebSocket;
-use Alice::Commands;
 use JSON;
 use Encode;
 use Any::Moose;

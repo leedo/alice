@@ -6,7 +6,7 @@
   <div id="topics">
     <dl>
       <h2>Commands</h2>
-      <? for my $command (@{$app->commands->handlers }) { ?>
+      <? for my $command ($app->commands) { ?>
         <? next unless $command->{eg} and $command->{desc}; ?>
         <dt><?= $command->{eg} ?></dt>
         <dd><?= $command->{desc} ?></dd>
