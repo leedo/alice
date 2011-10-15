@@ -12109,7 +12109,8 @@ Alice.Input = Class.create({
     this.buffer = "";
     this.completion = false;
     this.focused = false;
-    this.focus();
+
+    if (!this.application.isMobile) this.focus();
 
     this.element.observe("blur", this.onBlur.bind(this));
   },
