@@ -18,8 +18,6 @@ Alice.Keyboard = Class.create({
       this.shortcut("Cmd+Shift+J");
       this.shortcut("Cmd+Shift+K");
       this.shortcut("Cmd+K");
-      this.shortcut("Cmd+Left");
-      this.shortcut("Cmd+Right");
       this.shortcut("Cmd+Shift+Left");
       this.shortcut("Cmd+Shift+Right");
       this.shortcut("Cmd+Shift+H");
