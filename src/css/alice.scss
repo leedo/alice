@@ -214,7 +214,7 @@ div#windows {
   overflow: hidden;
 }
 
-div.window table {
+div.window > table {
   vertical-align: bottom;
   width: 100%;
   height: 100%;
