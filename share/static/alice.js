@@ -9875,7 +9875,7 @@ Object.extend(Alice, {
   RE: {
     img: /^http[^\s]*\.(?:jpe?g|gif|png|bmp|svg)[^\/]*$/i,
     audio: /^http[^\s]*\.(?:wav|mp3|ogg|aiff?|m4[ar])[^\/]*$/i,
-    url: /(https?:\/\/[^\s<]*)/ig
+    url: /(https?:\/\/[^\s<"']*)/ig
   },
 
   cleanupCopy: function(node) {
