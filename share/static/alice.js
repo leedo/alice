@@ -10340,17 +10340,19 @@ Alice.Application = Class.create({
     this.setupTopic();
     this.setupNicklist();
     this.setupMenus();
-    this.fetchOembeds();
   },
 
-  fetchOembeds: function() {
+  fetchOembeds: function(cb) {
     new Ajax.Request("https://noembed.com/providers", {
       method: "get",
+      onFailure: cb,
       onSuccess: function(transport) {
         var providers = transport.responseText.evalJSON();
         this.oembeds = providers.inject([], function(acc, site){
           return acc.concat(site.patterns.map(function(pat){return new RegExp(pat)}));
         });
+        cb();
+        setTimeout(this.fetchOembeds.bind(this), 1000 * 60 * 5);
       }.bind(this)
     });
   },
@@ -10883,14 +10885,16 @@ Alice.Application = Class.create({
   },
 
   ready: function() {
-    this.connection.connect();
+    this.fetchOembeds(function() {
+      this.connection.connect();
 
-    setTimeout(function(){
-      this.focusHash() || this.activeWindow().focus();
-      this.activeWindow().scrollToBottom(true)
-      this.freeze();
-      setTimeout(this.updateOverflowMenus.bind(this), 1000);
-    }.bind(this), 10);
+      setTimeout(function(){
+        this.focusHash() || this.activeWindow().focus();
+        this.activeWindow().scrollToBottom(true)
+        this.freeze();
+        setTimeout(this.updateOverflowMenus.bind(this), 1000);
+      }.bind(this), 10);
+    }.bind(this));
   },
 
   log: function () {
