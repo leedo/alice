@@ -10343,80 +10343,82 @@ Alice.Application = Class.create({
   },
 
   fetchOembeds: function(cb) {
-    new Ajax.Request("https://noembed.com/providers", {
-      method: "get",
-      onFailure: cb,
-      onSuccess: function(transport) {
-        var providers = transport.responseText.evalJSON();
+    var req = new XMLHttpRequest();
+    req.open("GET", "https://noembed.com/providers");
+    req.onreadystatechange = function(){
+      if (req.readyState == 4) {
+        var providers = req.responseText.evalJSON();
         this.oembeds = providers.inject([], function(acc, site){
           return acc.concat(site.patterns.map(function(pat){return new RegExp(pat)}));
         });
-        cb();
         setTimeout(this.fetchOembeds.bind(this), 1000 * 60 * 5);
-      }.bind(this)
-    });
+        cb();
+      }
+    }.bind(this);
+    req.send();
   },
 
   embed: function(a, win) {
-    var id = a.identify();
-
-    this.jsonp_callbacks[id] = function (data) {
-      delete this.jsonp_callbacks[id];
-      if (!data || !data.html) return;
-
-      var a = $(id);
-      var html = data.html;
-      var elem = new Element("DIV", {"class": "oembed"});
-
-      if (data.provider_name == "Twitter") {
-        var scroll = win.shouldScrollToBottom();
-        elem.setStyle({display: "block"});
-        elem.update(html);
-        a.replace(elem);
-        if (scroll) win.scrollToBottom(true);
-        Alice.makeLinksClickable(elem);
-        return;
-      }
-
-      a.update(data.title);
-      a.insert({
-        after: '<sup class="external"><a target="_blank" href="'+data.url+'">'
-                +data.provider_name+'</a></sup>'
-      });
-      a.up("div.msg").insert(elem);
-
-      a.observe('click', function(e) {
-        e.stop();
-        var scroll = win.shouldScrollToBottom();
-        if (elem.innerHTML) {
-          elem.innerHTML = "";
-          elem.style.display = "none";
-          return;
-        }
-        elem.style.display = "block";
-        elem.innerHTML = html;
-        Alice.makeLinksClickable(elem);
-        var images = elem.select("img");
-        if (scroll && images.length) {
-          images.each(function(img) {
-            img.observe("load", function(e) {
-              win.scrollToBottom(true);
-              img.stopObserving(img, "load");
-            });
-          });
-        }
-        if (scroll) win.scrollToBottom(true);
-      });
-    }.bind(this);
-
     var params = {
       url: a.href,
       maxheight: 300,
-      callback: "alice.jsonp_callbacks." + id
     };
-    var src = "https://www.noembed.com/embed?" + Object.toQueryString(params);
-    var script = new Element('script', {src: src});
-    a.insert(script);
+    var req = new XMLHttpRequest();
+    req.open("GET", "https://www.noembed.com/embed?" + Object.toQueryString(params));
+    req.onreadystatechange = function(){
+      if (req.readyState == 4) {
+        var data = req.responseText.evalJSON();
+        this.embedContent(a, win, data);
+      }
+    }.bind(this);
+    req.send();
+  },
+
+  embedContent: function(a, win, data) {
+    if (!data || !data.html) return;
+
+    var html = data.html;
+    var elem = new Element("DIV", {"class": "oembed"});
+
+    if (data.provider_name == "Twitter") {
+      var scroll = win.shouldScrollToBottom();
+      elem.setStyle({display: "block"});
+      elem.update(html);
+      a.replace(elem);
+      if (scroll) win.scrollToBottom(true);
+      Alice.makeLinksClickable(elem);
+      return;
+    }
+
+    a.update(data.title);
+    a.insert({
+      after: '<sup class="external"><a target="_blank" href="'+data.url+'">'
+             +data.provider_name+'</a></sup>'
+    });
+    a.up("div.msg").insert(elem);
+
+    a.observe('click', function(e) {
+      e.stop();
+      var scroll = win.shouldScrollToBottom();
+      if (elem.innerHTML) {
+        elem.innerHTML = "";
+        elem.style.display = "none";
+        return;
+      }
+      elem.style.display = "block";
+      elem.innerHTML = html;
+      Alice.makeLinksClickable(elem);
+      var images = elem.select("img");
+      if (scroll && images.length) {
+        images.each(function(img) {
+          img.observe("load", function(e) {
+            win.scrollToBottom(true);
+            img.stopObserving(img, "load");
+          });
+        });
+      }
+      if (scroll) win.scrollToBottom(true);
+    });
   },
 
   actionHandlers: {
