@@ -64,7 +64,7 @@ Alice.Application = Class.create({
           return acc.concat(site.patterns.map(function(pat){return new RegExp(pat)}));
         });
         setTimeout(this.fetchOembeds.bind(this), 1000 * 60 * 5);
-        cb() if cb;
+        if (cb) cb();
       }
     }.bind(this);
     req.send();
