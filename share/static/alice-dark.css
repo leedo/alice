@@ -165,9 +165,6 @@ body {
 a:link, a:visited, a:hover, a:active {
   color: #f09740; }
 
-a:hover {
-  text-shadow: none; }
-
 a.channel {
   color: white;
   text-decoration: none; }
@@ -275,8 +272,7 @@ ul#nicklist li {
 ul#nicklist li a {
   cursor: pointer;
   color: white;
-  font-size: 0.8em;
-  text-shadow: none; }
+  font-size: 0.8em; }
 
 div#input {
   background: #333333;
@@ -575,7 +571,6 @@ ul.messages li.avatar span.nick {
   min-width: 28px;
   background: rgba(0, 0, 0, 0.5);
   color: #fff;
-  text-shadow: black 0 1px 1px;
   opacity: 0; }
 
 div.timehint {
@@ -683,7 +678,6 @@ div.image a.hideimg {
   opacity: 0;
   color: #fff;
   background: rgba(0, 0, 0, 0.5);
-  text-shadow: none;
   padding: 1px 10px;
   -webkit-border-radius: 10px;
   -moz-border-radius: 10px;
@@ -728,9 +722,6 @@ ul.messages li.event.notice {
 ul.messages li.event.notice a {
   color: #fffc00;
   text-decoration: none; }
-
-ul.messages li.event.notice a:hover {
-  text-shadow: none; }
 
 ul.messages li.event.happynotice {
   background: #3fc842;
@@ -1094,7 +1085,6 @@ div.config .controls a {
   margin: 0 5px 0 0; }
 
 div.config .controls a:hover {
-  text-shadow: none;
   text-decoration: underline; }
 
 div.config label {
@@ -1340,8 +1330,7 @@ span.nickborder {
   cursor: pointer; }
 
 .dropdown li a:hover {
-  color: white;
-  text-shadow: none; }
+  color: white; }
 
 .dropdown ul li:hover {
   background: #3a3a3a; }

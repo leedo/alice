@@ -195,10 +195,6 @@ body {
 
 a:link, a:visited, a:hover, a:active { color: $links; }
 
-a:hover {
-  text-shadow: $link_hover_shadow;
-}
-
 a.channel {
   color: $default_text;
   text-decoration: none;
@@ -322,7 +318,6 @@ ul#nicklist li a {
   cursor: pointer;
   color: $default_text;
   font-size: 0.8em;
-  text-shadow: none;
 }
 
 div#input {
@@ -664,9 +659,6 @@ ul.messages li.avatar span.nick {
   min-width: 28px;
   background: rgba(0, 0, 0, 0.5);
   color: #fff;
-  text-shadow: rgba( 0, 0, 0, 1 ) 0 1px 1px;
-  //-webkit-transition: opacity 0.1s ease-in-out;
-  //-moz-transition: opacity 0.1s ease-in-out;
   opacity: 0;
 }
 
@@ -797,7 +789,6 @@ div.image a.hideimg {
   opacity: 0;
   color: #fff;
   background: rgba(0,0,0,0.5);
-  text-shadow: none;
   padding: 1px 10px;
   -webkit-border-radius: 10px; 
   -moz-border-radius: 10px; 
@@ -852,10 +843,6 @@ ul.messages li.event.notice {
 ul.messages li.event.notice a {
   color: #fffc00;
   text-decoration: none;
-}
-
-ul.messages li.event.notice a:hover {
-  text-shadow: none;
 }
 
 ul.messages li.event.happynotice {
@@ -1279,7 +1266,6 @@ div.config .controls a {
 }
 
 div.config .controls a:hover {
-  text-shadow: none;
   text-decoration: underline;
 }
 
@@ -1482,7 +1468,6 @@ span.nickborder {
 
 .dropdown li a:hover {
   color: $default_text;
-  text-shadow: none;
 }
 
 .dropdown ul li:hover {
