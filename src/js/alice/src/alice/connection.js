@@ -6,8 +6,16 @@ Alice.Connection = {
   connect: function() {
     if (this.reconnect_count > 3) {
       this.aborting = true;
-      this.application.activeWindow().showAlert("Alice server is not responding (<a href='javascript:alice.connection.reconnect()'>reconnect</a>)");
       this.changeStatus("ok");
+
+      if (this.type == "websocket") {
+        this.application.activeWindow().showAlert("WebSocket connection failed, falling back...");
+        this.application.connection = new Alice.Connection.XHR(this.application);
+        this.application.connection.connect();
+        return;
+      }
+
+      this.application.activeWindow().showAlert("Alice server is not responding (<a href='javascript:alice.connection.reconnect()'>reconnect</a>)");
       return;
     }
     this.pings = [];

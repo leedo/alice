@@ -1,5 +1,6 @@
 Alice.Connection.WebSocket = Class.create(Alice.Connection, {
   initialize: function(application) {
+    this.type = "websocket";
     this.application = application;
     this.connected = false;
     this.aborting = false;

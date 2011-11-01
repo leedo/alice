@@ -1,5 +1,6 @@
 Alice.Connection.XHR = Class.create(Alice.Connection, {
   initialize: function(application) {
+    this.type = "xhr";
     this.pings = [];
     this.pingLimit = 10;
     this.seperator = "--xalicex\n";

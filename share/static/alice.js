@@ -11203,8 +11203,16 @@ Alice.Connection = {
   connect: function() {
     if (this.reconnect_count > 3) {
       this.aborting = true;
-      this.application.activeWindow().showAlert("Alice server is not responding (<a href='javascript:alice.connection.reconnect()'>reconnect</a>)");
       this.changeStatus("ok");
+
+      if (this.type == "websocket") {
+        this.application.activeWindow().showAlert("WebSocket connection failed, falling back...");
+        this.application.connection = new Alice.Connection.XHR(this.application);
+        this.application.connection.connect();
+        return;
+      }
+
+      this.application.activeWindow().showAlert("Alice server is not responding (<a href='javascript:alice.connection.reconnect()'>reconnect</a>)");
       return;
     }
     this.pings = [];
@@ -11309,6 +11317,7 @@ Alice.Connection = {
 };
 Alice.Connection.WebSocket = Class.create(Alice.Connection, {
   initialize: function(application) {
+    this.type = "websocket";
     this.application = application;
     this.connected = false;
     this.aborting = false;
@@ -11386,6 +11395,7 @@ Alice.Connection.WebSocket = Class.create(Alice.Connection, {
 });
 Alice.Connection.XHR = Class.create(Alice.Connection, {
   initialize: function(application) {
+    this.type = "xhr";
     this.pings = [];
     this.pingLimit = 10;
     this.seperator = "--xalicex\n";
