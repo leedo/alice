@@ -15,13 +15,7 @@ Alice.Application = Class.create({
 
     this.oembeds = [];
     this.jsonp_callbacks = {};
-
-    if (navigator.userAgent.match(/CrOS|wOSBrowser/)) {
-      this.connection = new Alice.Connection.XHR(this);
-    }
-    else {
-      this.connection = window.WebSocket ? new Alice.Connection.WebSocket(this) : new Alice.Connection.XHR(this);
-    }
+    this.connection = window.WebSocket ? new Alice.Connection.WebSocket(this) : new Alice.Connection.XHR(this);
 
     this.tabs_width = $('tabs_container').getWidth();
     this.tabs_layout = this.tabs.getLayout();
