@@ -673,17 +673,16 @@ div.image {
 div.image a.hideimg {
   position: absolute;
   white-space: nowrap;
-  top: 2px;
-  left: 2px;
+  top: 0px;
+  left: 0px;
+  right: 0px;
+  text-align: center;
   opacity: 0;
   color: #fff;
   background: rgba(0, 0, 0, 0.5);
-  padding: 1px 10px;
-  -webkit-border-radius: 10px;
-  -moz-border-radius: 10px;
-  border-radius: 10px;
+  padding: 4px 0px;
   cursor: pointer;
-  font-size: 10px; }
+  font-size: 11px; }
 
 div.image:hover a.hideimg {
   opacity: 0.5; }
