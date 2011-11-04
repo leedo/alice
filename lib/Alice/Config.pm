@@ -137,7 +137,7 @@ has static_prefix => (
 has image_prefix => (
   is      => 'rw',
   isa     => 'Str',
-  default => 'https://static.usealice.org/i/',
+  default => 'https://noembed.com/i/',
 );
 
 has message_store => (
