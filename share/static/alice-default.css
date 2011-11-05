@@ -204,7 +204,9 @@ div#nicklist_toggle {
   top: 50%;
   right: 15px;
   background: url(image/slider.png) center center no-repeat;
-  background-color: #efefef;
+  background-color: #dddddd;
+  border: 1px solid #999999;
+  -webkit-box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
   -webkit-transition-property: opacity, width;
   -webkit-transition-duration: 0.3s, 0.2s;
   -webkit-transition-timing-function: ease-in-out;
@@ -217,6 +219,9 @@ div#nicklist_toggle {
   z-index: 902;
   cursor: pointer;
   opacity: 0; }
+
+div#nicklist_toggle:hover {
+  background-color: #cccccc; }
 
 div#windows.nicklist div#nicklist_toggle {
   background-image: url(image/slider-right.png); }
