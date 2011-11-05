@@ -241,7 +241,7 @@ div#nicklist_toggle {
   height: 50px;
   margin-top: -25px;
   top: 50%;
-  right: 15px;
+  right: 0px;
   background: url(image/slider.png) center center no-repeat;
   background-color: $tab_background_active;
   -webkit-transition-property: opacity, width;
@@ -265,23 +265,11 @@ div#windows.nicklist div#nicklist_toggle {
   background-image: url(image/slider-right.png);
 }
 
-div#windows.narrow div#nicklist_toggle {
-  right: 11px;
-}
-
 div#nicklist_toggle.visible,
 div#nicklist_toggle:hover,
 div#nicklist_toggle:active {
   opacity: 1;
   width: 12px;
-}
-
-div#windows.nicklist div#nicklist_toggle {
-  right: 135px;
-}
-
-div#windows.nicklist.narrow div#nicklist_toggle {
-  right: 131px;
 }
 
 div#windows.nicklist div.window.active {

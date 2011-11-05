@@ -12737,6 +12737,11 @@ if (window == window.parent) {
         if (!visible && width - e.pointerX() > left)
           return;
 
+        var win = alice.activeWindow().element;
+        if (toggle.up(".window") != win) {
+          toggle.remove();
+          win.insert(toggle);
+        }
         toggle.addClassName('visible');
 
         var end = function() {
