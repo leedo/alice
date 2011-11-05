@@ -225,7 +225,6 @@ div.window {
   right: 100%;
   background: $message_background;
   overflow-x: hidden;
-  overflow-y: scroll;
   -webkit-overflow-scrolling: touch;
 }
 
@@ -250,10 +249,7 @@ div#nicklist_toggle {
   -moz-transition-property: opacity, width;
   -moz-transition-duration: 0.3s, 0.2s;
   -moz-transition-timing-function: ease-in-out;
-  -webkit-border-top-left-radius: 6px;
-  -webkit-border-bottom-left-radius: 6px;
-  -moz-border-radius-topleft: 6px;
-  -moz-border-radius-bottomleft: 6px;
+  border-radius: 2px;
   color: $tab_text;
   font-size: 14px;
   z-index: 902;
@@ -263,10 +259,6 @@ div#nicklist_toggle {
 
 div#windows.nicklist div#nicklist_toggle {
   background-image: url(image/slider-right.png);
-}
-
-div#windows.narrow div#nicklist_toggle {
-  right: 11px;
 }
 
 div#nicklist_toggle.visible,
@@ -280,15 +272,12 @@ div#windows.nicklist div#nicklist_toggle {
   right: 135px;
 }
 
-div#windows.nicklist.narrow div#nicklist_toggle {
-  right: 131px;
-}
-
 div#windows.nicklist div.window.active {
   right: 120px;
 }
 
 ul#nicklist {
+  border-left: 1px solid $tab_background_active;
   position: absolute;
   list-style: none;
   margin: 0;
@@ -1501,37 +1490,6 @@ span.nickborder {
 
 .dropdown > ul li.submenu:hover ul {
   display: block;
-}
-
-.compact-scroll ::-webkit-scrollbar {
-  width: 11px;
-  height: 11px;
-}
-
-.compact-scroll ::-webkit-scrollbar-button:start:decrement,
-.compact-scroll ::-webkit-scrollbar-button:end:increment {
-  display: block;
-  height: 0;
-  background-color: transparent;
-}
-.compact-scroll ::-webkit-scrollbar-track-piece {
-  background-color: $scrollbar_background;
-  -webkit-border-radius: 0;
-  border: 1px solid $scrollbar_background;
-}
-
-.compact-scroll ::-webkit-scrollbar-thumb {
-  -webkit-background-clip: padding-box;
-  background-clip: padding-box;
-  width: 50px;
-  height: 50px;
-  background-color: $scrollbar_thumb;
-  border: 1px solid $scrollbar_background;
-  -webkit-border-radius: 8px;
-}
-
-div.gist-data {
-  max-height: 300px;
 }
 
 body > div.copybuffer {

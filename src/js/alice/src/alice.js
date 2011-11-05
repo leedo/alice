@@ -26,10 +26,7 @@ if (window == window.parent) {
     // connect close botton for help 
     $('helpclose').observe("click", function () { $('help').hide(); });
     $('nicklist_toggle').observe("click", function () { alice.toggleNicklist() });
-    
-    if (Prototype.Browser.MobileSafari || Prototype.Browser.WebKit)
-      $('windows').addClassName('narrow');
-
+   
     $$('.dropdown').each(function (menu) {
       menu.observe(alice.supportsTouch ? "touchstart" : "mousedown", function (e) {
         var element = e.element('.dropdown');
