@@ -245,7 +245,8 @@ div#windows.nicklist div.window.active {
   right: 120px; }
 
 ul#nicklist {
-  border-left: 1px solid #657b83;
+  background-color: #eee8d5;
+  border-left: 1px solid #ddd7c5;
   position: absolute;
   list-style: none;
   margin: 0;

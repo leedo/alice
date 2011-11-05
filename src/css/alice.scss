@@ -277,7 +277,8 @@ div#windows.nicklist div.window.active {
 }
 
 ul#nicklist {
-  border-left: 1px solid $tab_background_active;
+  background-color: $message_nick_column_background;
+  border-left: 1px solid $nick_column_border;
   position: absolute;
   list-style: none;
   margin: 0;
