@@ -11023,51 +11023,43 @@ Alice.Application = Class.create({
   setupMenus: function() {
     var click = this.supportsTouch ? "touchend" : "mouseup";
 
-    $('config_menu').observe(click, function(e) {
-      var li = e.findElement(".dropdown li");
-      if (li) {
-        e.stop();
-        switch(li.innerHTML) {
-          case "Help":
-            this.toggleHelp();
-            break;
-          case "Preferences":
-            this.togglePrefs();
-            break;
-          case "Connections":
-            this.toggleConfig();
-            break;
-          case "Logout":
-            window.location = "/logout";
-            break;
-        }
-        $$('.dropdown.open').invoke("removeClassName", "open");
+    $('config_menu').on(click, ".dropdown li", function(e,li) {
+      e.stop();
+      switch(li.innerHTML) {
+        case "Help":
+          this.toggleHelp();
+          break;
+        case "Preferences":
+          this.togglePrefs();
+          break;
+        case "Connections":
+          this.toggleConfig();
+          break;
+        case "Logout":
+          window.location = "/logout";
+          break;
       }
+      $$('.dropdown.open').invoke("removeClassName", "open");
     }.bind(this));
 
-    $('tabset_menu').observe(click, function(e) {
-      var li = e.findElement(".dropdown li");
-      if (li) {
-        e.stop();
-        var name = li.innerHTML.unescapeHTML();
+    $('tabset_dropdown').on(click, ".dropdown li", function(e,li) {
+      e.stop();
+      var name = li.innerHTML.unescapeHTML();
 
-        if (name == "Edit Sets")
-          this.toggleTabsets();
-        else if (name == "All tabs")
-          this.clearSet(li);
-        else if (this.tabsets[name])
-          this.showSet(name);
+      if (name == "Edit Sets")
+        this.toggleTabsets();
+      else if (name == "All tabs")
+        this.clearSet(li);
+      else if (this.tabsets[name])
+        this.showSet(name);
 
-        $$('.dropdown.open').invoke("removeClassName", "open");
-      }
+      $$('.dropdown.open').invoke("removeClassName", "open");
     }.bind(this));
 
     ['tab_menu_left', 'tab_menu_right'].each(function(side) {
-      $(side).observe(click, function(e) {
-        var li = e.findElement(".dropdown li");
-        if (!li) return;
-
-        if (li && li.getAttribute("rel")) {
+      $(side).on(click, ".dropdown li", function(e, li) {
+        e.stop();
+        if (li.getAttribute("rel")) {
           $(side).removeClassName("open");
           var win = this.getWindow(li.getAttribute("rel"));
           if (win) win.focus();
