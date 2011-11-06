@@ -276,7 +276,7 @@ div#input {
   border-bottom: 1px solid #222222;
   border-top: 1px solid #444444;
   position: absolute;
-  bottom: 23px;
+  bottom: 24px;
   left: 0px;
   right: 0px;
   z-index: 900; }
@@ -390,7 +390,7 @@ ul#tabs {
   font-size: 11px;
   position: absolute;
   left: 0px;
-  height: 24px;
+  height: 25px;
   overflow: hidden;
   width: 5000px;
   -webkit-transition: left 0.25s ease-in-out;
@@ -400,7 +400,7 @@ div#tab_bar {
   bottom: 0px;
   left: 0px;
   right: 0px;
-  height: 24px;
+  height: 25px;
   position: absolute;
   background: url(image/sprites.png) 0px -300px repeat-x #444444; }
 
@@ -432,22 +432,29 @@ ul#tabs li div.hit_area {
   border-top: none;
   float: left;
   height: 14px;
-  padding: 3px 10px 8px 4px; }
+  padding: 4px 10px 7px 4px; }
 
 ul#tabs li.active div.hit_area {
   border: 1px solid #222222;
   border-top: none;
   background: #333333;
   height: 11px;
-  padding-top: 4px;
+  padding-top: 5px;
   margin-top: -1px;
-  -webkit-box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2); }
+  -webkit-box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
+  -moz-box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
+  -webkit-border-bottom-left-radius: 1px;
+  -webkit-border-bottom-right-radius: 1px;
+  -moz-border-bottom-left-radius: 1px;
+  -moz-border-bottom-right-radius: 1px;
+  border-bottom-right-radius: 1px;
+  border-bottom-left-radius: 1px; }
 
 ul#tabs li:not(.active) {
   z-index: 900 !important; }
 
 ul#tabs li.active {
-  height: 24px;
+  height: 25px;
   z-index: 903;
   background: #444444; }
 
