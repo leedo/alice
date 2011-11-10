@@ -10341,10 +10341,12 @@ Alice.Application = Class.create({
     req.open("GET", "https://noembed.com/providers");
     req.onreadystatechange = function(){
       if (req.readyState == 4) {
-        var providers = req.responseText.evalJSON();
-        this.oembeds = providers.inject([], function(acc, site){
-          return acc.concat(site.patterns.map(function(pat){return new RegExp(pat)}));
-        });
+        try {
+          var providers = req.responseText.evalJSON();
+          this.oembeds = providers.inject([], function(acc, site){
+            return acc.concat(site.patterns.map(function(pat){return new RegExp(pat)}));
+          });
+        } catch (e) {}
         setTimeout(this.fetchOembeds.bind(this), 1000 * 60 * 5);
         if (cb) cb();
       }
