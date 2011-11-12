@@ -4,6 +4,8 @@
 //= require <shortcut>
 //= require <sprintf>
 //= require <wysihat>
+//= require <swfobject>
+//= require <web_socket>
 
 var Alice = { };
 

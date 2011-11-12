@@ -7,3 +7,6 @@
 [submodule "src/js/wysihat"]
 	path = src/js/wysihat
 	url = http://github.com/37signals/wysihat.git
+[submodule "src/js/web-socket-js/src"]
+	path = src/js/web-socket-js/src
+	url = https://github.com/gimite/web-socket-js.git

@@ -12,7 +12,7 @@ requires 'AnyEvent' => '5.2';
 requires 'AnyEvent::AIO';
 requires 'AnyEvent::IRC' => '0.95';
 requires 'AnyEvent::HTTP';
-requires 'Twiggy';
+requires 'Fliggy';
 requires 'Plack';
 requires 'Plack::Session';
 requires 'DBD::SQLite';
@@ -35,7 +35,7 @@ BUILD := share/static
 SOURCE := src
 JS_SOURCE := $(SOURCE)/js
 CSS_SOURCE := $(SOURCE)/css
-SPROCKETS := alice prototype scriptaculous shortcut wysihat sprintf
+SPROCKETS := alice prototype scriptaculous shortcut wysihat sprintf web-socket-js
 INCLUDES := $(foreach sprocket,$(SPROCKETS),$(JS_SOURCE)/$(sprocket)/src)
 INCLUDE := $(foreach dir,$(INCLUDES),-I $(dir))
 JAVASCRIPT_SOURCES := $(foreach dir,$(INCLUDES),$(wildcard $(dir)/*.js))

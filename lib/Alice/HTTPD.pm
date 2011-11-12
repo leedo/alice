@@ -3,7 +3,7 @@ package Alice::HTTPD;
 use AnyEvent;
 use AnyEvent::HTTP;
 
-use Twiggy::Server;
+use Fliggy::Server;
 use Plack::Request;
 use Plack::Builder;
 use Plack::Middleware::Static;
@@ -70,7 +70,7 @@ sub _build_httpd {
 
   # eval in case server can't bind port
   eval {
-    $httpd = Twiggy::Server->new(
+    $httpd = Fliggy::Server->new(
       host => $self->config->http_address,
       port => $self->config->http_port,
     );
