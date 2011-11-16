@@ -25,7 +25,7 @@ Alice.Application = Class.create({
 
     this.supportsTouch = 'createTouch' in document;
 
-    this.isPhone = window.navigator.userAgent.match(/(android|iphone|wosbrowser|cros)/i) ? true : false;
+    this.isPhone = window.navigator.userAgent.match(/(android|iphone|wosbrowser)/i) ? true : false;
     this.isMobile = this.isPhone || Prototype.Browser.MobileSafari;
     this.loadDelay = this.isMobile ? 3000 : 1000;
     if (window.navigator.standalone || window.navigator.userAgent.match(/Fluid/)) this.loadDelay = 0;
