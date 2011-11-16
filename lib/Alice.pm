@@ -4,15 +4,13 @@ use AnyEvent;
 use AnyEvent::Strict;
 use AnyEvent::Log;
 
-use Text::MicroTemplate::File;
 use Any::Moose;
+use Text::MicroTemplate::File;
 use Digest::MD5 qw/md5_hex/;
 use List::Util qw/first/;
-use List::MoreUtils qw/any none/;
+use List::MoreUtils qw/any/;
 use AnyEvent::IRC::Util qw/filter_colors/;
 use IRC::Formatting::HTML qw/html_to_irc/;
-use Try::Tiny;
-use JSON;
 use Encode;
 
 use Alice::Window;
@@ -422,6 +420,7 @@ sub update_window {
       window => $window->serialized,
       type   => "chunk",
       nicks  => $window->all_nicks,
+      range  => [$msgs->[0]{msgid}, $msgs->[-1]{msgid}],
       html   => join "", map {$_->{html}} @$msgs,
     }]);
 

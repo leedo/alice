@@ -12143,8 +12143,14 @@ Alice.Window = Class.create({
 
     var scroll = this.shouldScrollToBottom();
 
-    this.messages.insert({'top': chunk['html']});
+    if (chunk['range'][0] > this.msgid) {
+      this.messages.insert({"bottom": chunk['html']});
+    }
+    else {
+      this.messages.insert({"top": chunk['html']});
+    }
     this.trimMessages();
+
     if (scroll) this.scrollToBottom(true);
 
     this.bulk_insert = true;
