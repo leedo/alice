@@ -14,6 +14,11 @@ has trim => (
   default => sub {{}},
 );
 
+has backlog => (
+  is => 'ro',
+  default => 5000,
+);
+
 has [qw/insert_t trim_t/] => (is => 'rw');
 
 has dsn => (
@@ -102,8 +107,8 @@ sub do_trim {
 sub trim_id {
   my ($self, $window_id) = @_;
   $self->dbi->exec(
-    "SELECT msgid FROM window_buffer WHERE window_id=? ORDER BY msgid DESC LIMIT 100,1",
-    $window_id, sub {
+    "SELECT msgid FROM window_buffer WHERE window_id=? ORDER BY msgid DESC LIMIT ?,1",
+    $window_id, $self->backlog, sub {
       my $rows = $_[1];
       if (@$rows) {
         my $minid = $rows->[0][0];

@@ -19,7 +19,7 @@ Alice.Window = Class.create({
     this.nicks = [];
     this.nicks_order = [];
     this.statuses = [];
-    this.messageLimit = this.application.isMobile ? 50 : 200;
+    this.messageLimit = this.application.isMobile ? 100 : 500;
     this.msgid = 0;
     this.visible = true;
     

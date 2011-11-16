@@ -390,7 +390,7 @@ sub update_stream {
   my ($self, $stream, $req) = @_;
 
   my $min = $req->param('msgid') || 0;
-  my $limit = $req->param('limit') || 100;
+  my $limit = $req->param('limit') || 500;
 
   AE::log debug => "sending stream update";
 
@@ -403,18 +403,26 @@ sub update_stream {
     }
   }
 
+  my $step = 100;
+
+  # TODO convert to idle watchers
   for my $window (@windows) {
     AE::log debug => "updating stream from $min for ".$window->title;
-    $window->buffer->messages($limit, $min, sub {
-      my $msgs = shift;
-      return unless @$msgs;
-      $stream->send([{
-        window => $window->serialized,
-        type   => "chunk",
-        nicks  => $window->all_nicks,
-        html   => join "", map {$_->{html}} @$msgs,
-      }]); 
-    });
+
+    while ($min <= $limit) {
+      $window->buffer->messages($step, $min, sub {
+        my $msgs = shift;
+        return unless @$msgs;
+        $stream->send([{
+          window => $window->serialized,
+          type   => "chunk",
+          nicks  => $window->all_nicks,
+          html   => join "", map {$_->{html}} @$msgs,
+        }]);
+      });
+
+      $min += $step;
+    }
   }
 }
 
