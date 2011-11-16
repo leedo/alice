@@ -106,28 +106,28 @@ sub BUILD {
     connect        => sub{$self->connected(@_)},
     disconnect     => sub{$self->disconnected(@_)},
     irc_invite     => sub{$self->invite(@_)},
-    irc_001        => sub{$self->show_info($_[1])},
+    irc_001        => sub{$self->log_message($_[1])},
     irc_301        => sub{$self->irc_301(@_)}, # AWAY message
-    irc_305        => sub{$self->show_info($_[1])}, # AWAY
-    irc_306        => sub{$self->show_info($_[1])}, # not AWAY
+    irc_305        => sub{$self->log_message($_[1])}, # AWAY
+    irc_306        => sub{$self->log_message($_[1])}, # not AWAY
     irc_352        => sub{$self->irc_352(@_)}, # WHO info
     irc_311        => sub{$self->irc_311(@_)}, # WHOIS info
     irc_312        => sub{$self->irc_312(@_)}, # WHOIS server
     irc_319        => sub{$self->irc_319(@_)}, # WHOIS channels
     irc_318        => sub{$self->irc_318(@_)}, # end of WHOIS
     irc_366        => sub{$self->irc_366(@_)}, # end of NAMES
-    irc_372        => sub{$self->show_info($_[1], mono => 1)}, # MOTD info
-    irc_377        => sub{$self->show_info($_[1], mono => 1)}, # MOTD info
-    irc_378        => sub{$self->show_info($_[1], mono => 1)}, # MOTD info
+    irc_372        => sub{$self->log_message(mono => 1, $_[1])}, # MOTD info
+    irc_377        => sub{$self->log_message(mono => 1, $_[1])}, # MOTD info
+    irc_378        => sub{$self->log_message(mono => 1, $_[1])}, # MOTD info
     irc_401        => sub{$self->irc_401(@_)}, # not a nick
-    irc_471        => sub{$self->show_info($_[1])}, # JOIN fail
-    irc_473        => sub{$self->show_info($_[1])}, # JOIN fail
-    irc_474        => sub{$self->show_info($_[1])}, # JOIN fail
-    irc_475        => sub{$self->show_info($_[1])}, # JOIN fail
-    irc_477        => sub{$self->show_info($_[1])}, # JOIN fail
-    irc_485        => sub{$self->show_info($_[1])}, # JOIN fail
-    irc_432        => sub{$self->nick; $self->show_info($_[1])}, # Bad nick
-    irc_433        => sub{$self->nick; $self->show_info($_[1])}, # Bad nick
+    irc_471        => sub{$self->log_message($_[1])}, # JOIN fail
+    irc_473        => sub{$self->log_message($_[1])}, # JOIN fail
+    irc_474        => sub{$self->log_message($_[1])}, # JOIN fail
+    irc_475        => sub{$self->log_message($_[1])}, # JOIN fail
+    irc_477        => sub{$self->log_message($_[1])}, # JOIN fail
+    irc_485        => sub{$self->log_message($_[1])}, # JOIN fail
+    irc_432        => sub{$self->nick; $self->log_message($_[1])}, # Bad nick
+    irc_433        => sub{$self->nick; $self->log_message($_[1])}, # Bad nick
     irc_464        => sub{$self->disconnect("bad USER/PASS")},
   );
   $self->cl->ctcp_auto_reply ('VERSION', ['VERSION', "alice $Alice::VERSION"]);
@@ -165,16 +165,23 @@ sub broadcast {
   $self->app->broadcast(@_);
 }
 
-sub show_info {
-  my ($self, $message, %options) = @_;
+sub log {
+  my $messages = pop;
+  $messages = [ $messages ] unless ref $messages eq "ARRAY";
 
-  if (ref $message eq "HASH" and @{$message->{params}}) {
-    $message = $message->{params}[-1];
-  }
+  my ($self, $level, %options) = @_;
 
-  if ($message) {
-    my $line = $self->format_info($message, %options);
-    $self->broadcast($line);
+  my @lines = map {$self->format_info($_, %options)} @$messages;
+  $self->broadcast(@lines);
+  $self->app->log($level => "[".$self->alias . "] $_") for @$messages;
+}
+
+sub log_message {
+  my $message = pop;
+
+  my ($self, %options) = @_;
+  if (@{$message->{params}}) {
+    $self->log("debug", %options, [ pop @{$message->{params}} ]);
   }
 }
 
@@ -225,13 +232,13 @@ sub connect {
 
   # some people don't set these, wtf
   if (!$self->config->{host} or !$self->config->{port}) {
-    $self->show_info("can't connect: missing either host or port");
+    $self->log(info => "can't connect: missing either host or port");
     return;
   }
 
   $self->reconnect_count > 1 ? 
-    $self->show_info("reconnecting: attempt " . $self->reconnect_count)
-  : $self->show_info("connecting");
+    $self->log(info => "reconnecting: attempt " . $self->reconnect_count)
+  : $self->log(debug => "connecting");
 
   $self->cl->connect(
     $self->config->{host}, $self->config->{port}
@@ -246,12 +253,12 @@ sub connected {
   }
 
   if (defined $err) {
-    $self->show_info("connect error: $err");
+    $self->log(info => "connect error: $err");
     $self->reconnect();
     return;
   }
 
-  $self->show_info("connected");
+  $self->log(info => "connected");
   $self->reset_reconnect_count;
   $self->connect_time(time);
   $self->is_connected(1);
@@ -269,7 +276,7 @@ sub reconnect {
 
   if ($interval < 15) {
     $time = 15 - $interval;
-    $self->show_info("last attempt was within 15 seconds, delaying $time seconds")
+    $self->log(debug => "last attempt was within 15 seconds, delaying $time seconds")
   }
 
   if (!defined $time) {
@@ -277,7 +284,7 @@ sub reconnect {
     $time = min 60 * 5, 15 * $self->reconnect_count;
   }
 
-  $self->show_info("reconnecting in $time seconds");
+  $self->log(debug => "reconnecting in $time seconds");
   $self->reconnect_timer(
     AnyEvent->timer(after => $time, cb => sub {
       $self->connect unless $self->is_connected;
@@ -293,6 +300,7 @@ sub cancel_reconnect {
 
 sub registered {
   my $self = shift;
+  my @log;
 
   $self->cl->enable_ping (300, sub {
     $self->disconnected("ping timeout");
@@ -305,7 +313,7 @@ sub registered {
   push @commands, map {
     my $command = $_;
     sub {
-      $self->show_info("sending $command");
+      $self->log(debug => "sending $command");
       $self->send_raw($command);
     }
   } @{$self->config->{on_connect}};
@@ -313,7 +321,7 @@ sub registered {
   push @commands, map {
     my $channel = $_;
     sub {
-      $self->show_info("joining $channel");
+      $self->log(debug => "joining $channel");
       $self->send_srv("JOIN", split /\s+/, $channel);
     }
   } @channels; 
@@ -334,7 +342,7 @@ sub disconnected {
   
   $reason = "" unless $reason;
   return if $reason eq "reconnect requested.";
-  $self->show_info("disconnected: $reason");
+  $self->log(info => "disconnected: $reason");
   
   $_->disabled(1) for grep {$_->is_channel} $self->windows;
   
@@ -354,7 +362,7 @@ sub disconnect {
 
   $self->disabled(1);
 
-  $self->show_info("disconnecting: $msg") if $msg;
+  $self->log(debug => "disconnecting: $msg") if $msg;
   $self->send_srv(QUIT => $msg);
 
   $self->{disconnect_timer} = AnyEvent->timer(
@@ -381,6 +389,7 @@ sub publicmsg {
 
     return if $self->app->is_ignore(msg => $nick);
 
+    $self->app->store(nick => $nick, channel => $channel, body => $text);
     $self->broadcast($window->format_message($nick, $text)); 
   }
 }
@@ -396,11 +405,12 @@ sub privatemsg {
 
     my $window = $self->window($from);
 
+    $self->app->store(nick => $from, channel => $from, body => $text);
     $self->broadcast($window->format_message($from, $text)); 
     $self->send_srv(WHO => $from) unless $self->nick_avatar($from);
   }
   elsif ($msg->{command} eq "NOTICE") {
-    $self->show_info($text);
+    $self->log(debug => $text);
   }
 }
 
@@ -413,6 +423,7 @@ sub ctcp_action {
 
   if (my $window = $self->window($dest)) {
     my $text = "\x{2022} $msg";
+    $self->app->store(nick => $nick, channel => $channel, body => $text);
     $self->broadcast($window->format_message($nick, $text));
   }
 }
@@ -473,7 +484,7 @@ sub part {
   return if $self->app->is_ignore(part => $channel);
 
   if ($is_self and my $window = $self->find_window($channel)) {
-    $self->show_info("leaving $channel");
+    $self->log(debug => "leaving $channel");
     $self->app->close_window($window);
   }
 }
@@ -769,9 +780,9 @@ Send the command to the server and format any parameters.
 Send the $line as-is to the server.
 
 
-=item $irc->show_info ($text, %options)
+=item $irc->log ($text, %options)
 
-=item $irc->show_info ([$text, $text, ... $text], %options)
+=item $irc->log ([$text, $text, ... $text], %options)
 
 Takes one or more lines to log and an options hash. This lines
 will be sent to the client and printed in the "info" tab.

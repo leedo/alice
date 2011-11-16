@@ -1,11 +1,17 @@
 package Alice;
 
 use AnyEvent;
-use AnyEvent::Strict;
-use AnyEvent::Log;
-
 use Text::MicroTemplate::File;
+use Alice::Window;
+use Alice::InfoWindow;
+use Alice::HTTPD;
+use Alice::IRC;
+use Alice::Config;
+use Alice::Logger;
+use Alice::History;
+use Alice::Tabset;
 use Any::Moose;
+use File::Copy;
 use Digest::MD5 qw/md5_hex/;
 use List::Util qw/first/;
 use List::MoreUtils qw/any none/;
@@ -14,15 +20,6 @@ use IRC::Formatting::HTML qw/html_to_irc/;
 use Try::Tiny;
 use JSON;
 use Encode;
-
-use Alice::Window;
-use Alice::InfoWindow;
-use Alice::HTTPD;
-use Alice::IRC;
-use Alice::Config;
-use Alice::Tabset;
-use Alice::MessageBuffer;
-use Alice::MessageStore;
 
 our $VERSION = '0.19';
 
@@ -66,19 +63,36 @@ sub add_stream {unshift @{shift->streams}, @_}
 sub no_streams {@{$_[0]->streams} == 0}
 sub stream_count {scalar @{$_[0]->streams}}
 
-has message_store => (
-  is      => 'ro',
+has history => (
+  is      => 'rw',
   lazy    => 1,
   default => sub {
     my $self = shift;
-    my $buffer = $self->config->path."/buffer.db";
-    if (! -e  $buffer) {
-      require File::Copy;
-      File::Copy::copy($self->config->assetdir."/buffer.db", $buffer);
-    }
-    Alice::MessageStore->new(dsn => ["dbi:SQLite:dbname=$buffer", "", ""]);
-  }
+    my $config = $self->config->path."/log.db";
+    copy($self->config->assetdir."/log.db", $config) unless -e $config;
+    Alice::History->new(dbfile => $config);
+  },
 );
+
+sub store {
+  my ($self, @args) = @_;
+  return unless $self->config->logging;
+  my $idle_w; $idle_w = AE::idle sub {
+    $self->history->store(
+      @args,
+      user => $self->user,
+      time => time,
+    );
+    undef $idle_w;
+  };
+}
+
+has logger => (
+  is        => 'ro',
+  default   => sub {Alice::Logger->new},
+);
+
+sub log {$_[0]->logger->log($_[1] => $_[2]) if $_[0]->config->show_debug}
 
 has _windows => (
   is        => 'rw',
@@ -112,10 +126,9 @@ has 'info_window' => (
   lazy => 1,
   default => sub {
     my $self = shift;
-    my $id = $self->_build_window_id("info", "info");
     my $info = Alice::InfoWindow->new(
-      id       => $id,
-      buffer   => $self->_build_window_buffer($id),
+      id       => $self->_build_window_id("info", "info"),
+      assetdir => $self->config->assetdir,
       app      => $self,
     );
     $self->add_window($info);
@@ -133,7 +146,7 @@ sub BUILDARGS {
 
   my $self = {};
 
-  for (qw/template user httpd/) {
+  for (qw/logger commands history template user httpd/) {
     if (exists $options{$_}) {
       $self->{$_} = $options{$_};
       delete $options{$_};
@@ -162,6 +175,7 @@ sub run {
 sub init {
   my $self = shift;
   $self->commands;
+  $self->history if $self->config->logging;
   $self->info_window;
   $self->template;
   $self->httpd;
@@ -173,6 +187,7 @@ sub init {
 sub init_shutdown {
   my ($self, $cb, $msg) = @_;
 
+  $self->history(undef);
   $self->alert("Alice server is shutting down");
   $_->disconnect($msg) for $self->connected_ircs;
 
@@ -236,25 +251,15 @@ sub alert {
 
 sub create_window {
   my ($self, $title, $connection) = @_;
-  my $id = $self->_build_window_id($title, $connection->alias);
   my $window = Alice::Window->new(
     title    => $title,
-    type     => $connection->is_channel($title) ? "channel" : "privmsg",
     irc      => $connection,
+    assetdir => $self->config->assetdir,
     app      => $self,
-    id       => $id,
-    buffer   => $self->_build_window_buffer($id),
+    id       => $self->_build_window_id($title, $connection->alias), 
   );
   $self->add_window($window);
   return $window;
-}
-
-sub _build_window_buffer {
-  my ($self, $id) = @_;
-  Alice::MessageBuffer->new(
-    id => $id,
-    store => $self->message_store,
-  );
 }
 
 sub _build_window_id {
@@ -292,7 +297,8 @@ sub sorted_windows {
 sub close_window {
   my ($self, $window) = @_;
   $self->broadcast($window->close_action);
-  AE::log debug => "sending a request to close a tab: " . $window->title;
+  $self->log(debug => "sending a request to close a tab: " . $window->title)
+    if $self->stream_count;
   $self->remove_window($window->id) if $window->type ne "info";
 }
 
@@ -392,7 +398,7 @@ sub update_stream {
   my $min = $req->param('msgid') || 0;
   my $limit = $req->param('limit') || 100;
 
-  AE::log debug => "sending stream update";
+  $self->log(debug => "sending stream update");
 
   my @windows = $self->windows;
 
@@ -404,7 +410,7 @@ sub update_stream {
   }
 
   for my $window (@windows) {
-    AE::log debug => "updating stream from $min for ".$window->title;
+    $self->log(debug => "updating stream from $min for ".$window->title);
     $window->buffer->messages($limit, $min, sub {
       my $msgs = shift;
       return unless @$msgs;
@@ -438,7 +444,7 @@ sub send_highlight {
 
 sub purge_disconnects {
   my ($self) = @_;
-  AE::log debug => "removing broken streams";
+  $self->log(debug => "removing broken streams");
   $self->streams([grep {!$_->closed} @{$self->streams}]);
 }
 

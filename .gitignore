@@ -14,5 +14,3 @@ README
 #extlib
 *.acorn
 t/alice/test_config
-alice.log
-inc

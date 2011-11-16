@@ -145,9 +145,8 @@ command nick => {
 
     my $nick = $req->{opts}[0];
     my $connection = $req->{connection};
-    my $window = $req->{window};
 
-    $window->reply("now known as $nick on " . $connection->alias);
+    $self->log(info => "now known as $nick", from => $connection->alias);
     $connection->send_srv(NICK => $nick);
   }
 };
@@ -175,7 +174,7 @@ command qr{join|j} => {
 
     my $connection = $req->{connection};
 
-    $req->{window}->reply("joining $req->{opts}[0] on ". $connection->alias);
+    $self->log(info => "joining ".$req->{opts}[0], from => $connection->alias);
     $connection->send_srv(JOIN => @{$req->{opts}});
   },
 };
@@ -218,7 +217,7 @@ command clear =>  {
   desc => "Clears lines from current window.",
   cb => sub {
     my ($self, $req) = @_;
-    $req->{window}->buffer->clear;
+    $req->{window}->clear;
     $self->broadcast($req->{window}->clear_action);
   },
 };
@@ -258,10 +257,9 @@ command whois =>  {
 
     my $window = $req->{window};
     my $nick = $req->{opts}[0];
-    my $connection = $req->{connection};
 
-    $connection->add_whois($nick,sub {
-      $window->reply($_[0] ? $_[0] : "No such nick: $nick on " . $connection->alias);
+    $req->{connection}->add_whois($nick,sub {
+      $window->reply($_[0] ? $_[0] : "No such nick: $nick\n");
     });
   }
 };
@@ -318,7 +316,7 @@ command disconnect => {
       }
       elsif ($connection->reconnect_timer) {
         $connection->cancel_reconnect;
-        $window->reply("Canceled reconnect timer for " . $connection->alias);
+        $self->log(info => "Canceled reconnect timer", from => $connection->alias);
       }
       else {
         $self->send_announcement($window, "Already disconnected");
@@ -348,7 +346,7 @@ command 'connect' => {
       }
       elsif ($connection->reconnect_timer) {
         $connection->cancel_reconnect;
-        $window->reply("Canceled reconnect timer for " . $connection->alias);
+        $self->log(info => "Canceled reconnect timer", from => $connection->alias);
         $connection->connect;
       }
       else {

@@ -21,13 +21,12 @@ after run => sub {
 
 after init => sub {
   my $self = shift;
-  AE::log info => "Location: http://".$self->config->http_address.":".$self->config->http_port."/";
+  print STDERR "Location: http://".$self->config->http_address.":".$self->config->http_port."/\n";
 };
 
 before init_shutdown => sub {
   my $self = shift;
-  undef $self->{message_store};
-  AE::log(info => "Disconnecting, please wait") if $self->connected_ircs;
+  print STDERR ($self->connected_ircs ? "\nDisconnecting, please wait\n" : "\n");
 };
 
 after shutdown => sub {
