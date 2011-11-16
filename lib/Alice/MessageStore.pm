@@ -51,12 +51,11 @@ sub clear {
 }
 
 sub messages {
-  my ($self, $id, $limit, $max, $cb) = @_;
+  my ($self, $id, $max, $min, $limit, $cb) = @_;
   $self->dbi->exec(
-    "SELECT message, msgid FROM window_buffer WHERE window_id=? AND msgid < ? ORDER BY msgid DESC LIMIT ?",
-    $id, $max, $limit, sub {
-      my $min = min map {$_->[1]} @{$_[1]};
-      $cb->([map {decode_json $_->[0]} reverse @{$_[1]}], $min);
+    "SELECT message FROM window_buffer WHERE window_id=? AND msgid < ? AND msgid > ? ORDER BY msgid DESC LIMIT ?",
+    $id, $max, $min, $limit, sub {
+      $cb->([map {decode_json $_->[0]} reverse @{$_[1]}]);
     }
   );
 }

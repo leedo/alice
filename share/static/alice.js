@@ -11671,7 +11671,7 @@ Alice.Connection.WebSocket = Class.create(Alice.Connection, {
     this.application.log("opening new websocket connection starting at "+msgid);
     this.changeStatus("ok");
     var parameters = Object.toQueryString({
-      msgid: msgid,
+      min: msgid,
       t: now.getTime() / 1000,
       tab: this.application.activeWindow().id
     });

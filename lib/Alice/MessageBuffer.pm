@@ -39,13 +39,14 @@ sub add {
 }
 
 sub messages {
-  my ($self, $limit, $max, $cb) = @_;
+  my ($self, $max, $min, $limit, $cb) = @_;
 
   my $msgid = $self->store->msgid;
   $max = $msgid if $max > $msgid;
+  $min = 0 if $min < 0;
   $limit = 0 if $limit < 0;
 
-  return $self->store->messages($self->id, $limit, $max, $cb);
+  return $self->store->messages($self->id, $max, $min, $limit, $cb);
 }
 
 __PACKAGE__->meta->make_immutable;

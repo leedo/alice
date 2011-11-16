@@ -390,6 +390,8 @@ sub update_stream {
   my ($self, $stream, $req) = @_;
 
   my $limit = $req->param('limit') || 500;
+  my $max   = $req->param('max')   || $self->message_store->msgid;
+  my $min   = $req->param('min')   || 0;
 
   AE::log debug => "sending stream update";
 
@@ -402,20 +404,18 @@ sub update_stream {
     }
   }
 
-  my $step = 50;
-
   for my $window (@windows) {
     AE::log debug => "updating stream for ".$window->title;
-    $self->update_window($stream, $window, $self->message_store->msgid, $limit);
+    $self->update_window($stream, $window, $max, $min, $limit);
   }
 }
 
 sub update_window {
-  my ($self, $stream, $window, $max, $limit, $total) = @_;
+  my ($self, $stream, $window, $max, $min, $limit, $total) = @_;
   $total ||= 0;
 
-  $window->buffer->messages(50, $max, sub {
-    my ($msgs, $min) = @_;
+  $window->buffer->messages($max, $min, 50, sub {
+    my $msgs = shift;
     return unless @$msgs;
 
     $stream->send([{
@@ -425,8 +425,9 @@ sub update_window {
       html   => join "", map {$_->{html}} @$msgs,
     }]);
 
-    if (@$msgs and $total <= $limit) {
-      $self->update_window($stream, $window, $min, $limit, $total + scalar @$msgs);
+    if (@$msgs == 50 and $total <= $limit) {
+      $max = $msgs->[0]->{msgid};
+      $self->update_window($stream, $window, $max, $min, $limit, $total + scalar @$msgs);
     }
   });
 }
