@@ -1,6 +1,7 @@
 package Alice::MessageStore;
 
 use AnyEvent::DBI;
+use List::Util qw/min/;
 use Any::Moose;
 use JSON;
 
@@ -50,10 +51,13 @@ sub clear {
 }
 
 sub messages {
-  my ($self, $id, $limit, $msgid, $cb) = @_;
+  my ($self, $id, $limit, $max, $cb) = @_;
   $self->dbi->exec(
-    "SELECT message FROM window_buffer WHERE window_id=? AND msgid > ? ORDER BY msgid DESC LIMIT ?",
-    $id, $msgid, $limit, sub { $cb->([map {decode_json $_->[0]} reverse @{$_[1]}]) }
+    "SELECT message, msgid FROM window_buffer WHERE window_id=? AND msgid < ? ORDER BY msgid DESC LIMIT ?",
+    $id, $max, $limit, sub {
+      my $min = min map {$_->[1]} @{$_[1]};
+      $cb->([map {decode_json $_->[0]} reverse @{$_[1]}], $min);
+    }
   );
 }
 

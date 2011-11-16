@@ -389,7 +389,6 @@ sub ping {
 sub update_stream {
   my ($self, $stream, $req) = @_;
 
-  my $min = $req->param('msgid') || 0;
   my $limit = $req->param('limit') || 500;
 
   AE::log debug => "sending stream update";
@@ -406,16 +405,17 @@ sub update_stream {
   my $step = 50;
 
   for my $window (@windows) {
-    AE::log debug => "updating stream from $min for ".$window->title;
-    $self->update_window($stream, $window, $min, $limit);
+    AE::log debug => "updating stream for ".$window->title;
+    $self->update_window($stream, $window, $self->message_store->msgid, $limit);
   }
 }
 
 sub update_window {
-  my ($self, $stream, $window, $min, $limit) = @_;
+  my ($self, $stream, $window, $max, $limit, $total) = @_;
+  $total ||= 0;
 
-  $window->buffer->messages(50, $min, sub {
-    my $msgs = shift;
+  $window->buffer->messages(50, $max, sub {
+    my ($msgs, $min) = @_;
     return unless @$msgs;
 
     $stream->send([{
@@ -425,9 +425,8 @@ sub update_window {
       html   => join "", map {$_->{html}} @$msgs,
     }]);
 
-    my $min += scalar @$msgs;
-    if (@$msgs and $min <= $limit) {
-      $self->update_window($window, $min, $limit);
+    if (@$msgs and $total <= $limit) {
+      $self->update_window($stream, $window, $min, $limit, $total + scalar @$msgs);
     }
   });
 }

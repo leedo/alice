@@ -265,7 +265,7 @@ Alice.Window = Class.create({
 
     var scroll = this.shouldScrollToBottom();
 
-    this.messages.insert({bottom: chunk.html});
+    this.messages.insert({'top': chunk['html']});
     this.trimMessages();
     if (scroll) this.scrollToBottom(true);
 
