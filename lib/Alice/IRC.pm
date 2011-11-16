@@ -446,8 +446,6 @@ sub invite {
 sub _join {
   my ($self, $cl, $nick, $channel, $is_self) = @_;
 
-  return if $self->app->is_ignore("join" => $channel);
-
   if ($is_self) {
 
     # self->window uses find_or_create, so we don't create
@@ -462,6 +460,7 @@ sub _join {
     $self->send_srv("WHO" => $channel) if $cl->isupport("UHNAMES");
   }
   elsif (my $window = $self->find_window($channel)) {
+    return if $self->app->is_ignore("join" => $channel);
     $self->send_srv("WHO" => $nick) unless $self->nick_avatar($nick);
     $self->broadcast($window->format_event("joined", $nick));
   }
