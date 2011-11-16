@@ -178,10 +178,10 @@ sub init_shutdown {
 
   my ($w, $t);
   my $shutdown = sub {
-    $self->shutdown;
-    $cb->() if $cb;
     undef $w;
     undef $t;
+    $self->shutdown;
+    $cb->() if $cb;
   };
 
   $w = AE::idle sub {$shutdown->() unless $self->connected_ircs};
