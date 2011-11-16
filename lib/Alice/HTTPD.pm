@@ -103,6 +103,8 @@ sub dispatch {
   my $req = Alice::Request->new($env, $cb);
   my $res = $req->new_response(200);
 
+  AE::log debug => $req->path;
+
   if ($self->auth_enabled) {
     unless ($req->path eq "/login" or $self->is_logged_in($req)) {
       $self->auth_failed($req, $res);
@@ -203,7 +205,8 @@ sub shutdown {
 sub setup_xhr_stream {
   my ($self, $req, $res) = @_;
   my $app = $self->app;
-  $app->log(info => "opening new stream");
+
+  AE::log debug => "opening new stream";
 
   $res->headers([@Alice::Stream::XHR::headers]);
   my $stream = Alice::Stream::XHR->new(
@@ -222,7 +225,8 @@ sub setup_xhr_stream {
 sub setup_ws_stream {
   my ($self, $req, $res) = @_;
   my $app = $self->app;
-  $app->log(info => "opening new websocket stream");
+
+  AE::log debug => "opening new websocket stream";
 
   if (my $fh = $req->env->{'websocket.impl'}->handshake) {
     my $stream = Alice::Stream::WebSocket->new(
@@ -307,7 +311,6 @@ sub merged_options {
    avatars => $req->param('avatars') || $config->avatars,
    alerts => $req->param('alerts') || $config->alerts,
    audio => $req->param('audio') || $config->audio,
-   debug  => $req->param('debug')  || ($config->show_debug ? 'true' : 'false'),
    timeformat => $req->param('timeformat') || $config->timeformat,
    image_prefix => $req->param('image_prefix') || $config->image_prefix,
   };
@@ -327,7 +330,8 @@ sub template {
 
 sub save_tabsets {
   my ($self, $req, $res) = @_;
-  $self->app->log(info => "saving tabsets");
+
+  AE::log debug => "saving tabsets";
 
   my $tabsets = {};
 
@@ -346,7 +350,8 @@ sub save_tabsets {
 
 sub server_config {
   my ($self, $req, $res) = @_;
-  $self->app->log(info => "serving blank server config");
+
+  AE::log debug => "serving blank server config";
   
   my $name = $req->param('name');
   $name =~ s/\s+//g;
@@ -364,7 +369,8 @@ sub server_config {
 
 sub save_config {
   my ($self, $req, $res) = @_;
-  $self->app->log(info => "saving config");
+
+  AE::log debug => "saving config";
   
   my $new_config = {};
   if ($req->param('has_servers')) {
@@ -400,7 +406,8 @@ sub save_config {
 
 sub tab_order  {
   my ($self, $req, $res) = @_;
-  $self->app->log(debug => "updating tab order");
+
+  AE::log debug => "updating tab order";
   
   $self->app->tab_order([grep {defined $_} $req->param('tabs')]);
   $res->ok;

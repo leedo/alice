@@ -1,7 +1,0 @@
-- Highlight active colors on color picker
-- Autogenerate command POD from commands.pl
-  - Separate file is fine for this (App/Alice/Commands.pod)
-- Some perl-side plugin system, need to add hooks
-- More tests
-
-- Make info tab highlights links to the transcript window
