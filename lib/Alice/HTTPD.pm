@@ -306,14 +306,9 @@ sub send_index {
 sub merged_options {
   my ($self, $req) = @_;
   my $config = $self->app->config;
-  return {
-   images => $req->param('images') || $config->images,
-   avatars => $req->param('avatars') || $config->avatars,
-   alerts => $req->param('alerts') || $config->alerts,
-   audio => $req->param('audio') || $config->audio,
-   timeformat => $req->param('timeformat') || $config->timeformat,
-   image_prefix => $req->param('image_prefix') || $config->image_prefix,
-  };
+
+  +{ map { $_ => ($req->param($_) || $config->$_) }
+      qw/images avatars alerts audio timeformat image_prefix/ };
 }
 
 sub template {
