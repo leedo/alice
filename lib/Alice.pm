@@ -407,29 +407,29 @@ sub update_stream {
 
   for my $window (@windows) {
     AE::log debug => "updating stream from $min for ".$window->title;
-
-    my $current = $min;
-
-    my $idle_w; $idle_w = AE::idle sub {
-      if ($current >= $limit) {
-        undef $idle_w;
-        return;
-      }
-
-      $window->buffer->messages($step, $current, sub {
-        my $msgs = shift;
-        return unless @$msgs;
-        $stream->send([{
-          window => $window->serialized,
-          type   => "chunk",
-          nicks  => $window->all_nicks,
-          html   => join "", map {$_->{html}} @$msgs,
-        }]);
-      });
-
-      $current += $step;
-    };
+    $self->update_window($stream, $window, $min, $limit);
   }
+}
+
+sub update_window {
+  my ($self, $stream, $window, $min, $limit) = @_;
+
+  $window->buffer->messages(50, $min, sub {
+    my $msgs = shift;
+    return unless @$msgs;
+
+    $stream->send([{
+      window => $window->serialized,
+      type   => "chunk",
+      nicks  => $window->all_nicks,
+      html   => join "", map {$_->{html}} @$msgs,
+    }]);
+
+    my $min += scalar @$msgs;
+    if (@$msgs and $min <= $limit) {
+      $self->update_window($window, $min, $limit);
+    }
+  });
 }
 
 sub handle_message {
