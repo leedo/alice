@@ -133,7 +133,7 @@ sub BUILDARGS {
 
   my $self = {};
 
-  for (qw/template user httpd/) {
+  for (qw/template user httpd message_store/) {
     if (exists $options{$_}) {
       $self->{$_} = $options{$_};
       delete $options{$_};
