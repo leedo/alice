@@ -480,6 +480,9 @@ sub part {
 
 sub multiple_left {
   my ($self, $cl, $msg, $channel, @nicks) = @_;
+
+  return if $self->app->is_ignore(part => $channel);
+
   if (my $window = $self->find_window($channel)) {
     $self->broadcast(map {$window->format_event("left", $_, $msg->{params}[0])} @nicks);
   }
