@@ -403,14 +403,20 @@ sub update_stream {
     }
   }
 
-  my $step = 100;
+  my $step = 50;
 
-  # TODO convert to idle watchers
   for my $window (@windows) {
     AE::log debug => "updating stream from $min for ".$window->title;
 
-    while ($min <= $limit) {
-      $window->buffer->messages($step, $min, sub {
+    my $current = $min;
+
+    my $idle_w; $idle_w = AE::idle sub {
+      if ($current >= $limit) {
+        undef $idle_w;
+        return;
+      }
+
+      $window->buffer->messages($step, $current, sub {
         my $msgs = shift;
         return unless @$msgs;
         $stream->send([{
@@ -421,8 +427,8 @@ sub update_stream {
         }]);
       });
 
-      $min += $step;
-    }
+      $current += $step;
+    };
   }
 }
 
