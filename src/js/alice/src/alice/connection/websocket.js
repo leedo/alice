@@ -19,7 +19,8 @@ Alice.Connection.WebSocket = Class.create(Alice.Connection, {
       t: now.getTime() / 1000,
       tab: this.application.activeWindow().id
     });
-    var url = "ws://" + window.location.host + "/wsstream?" + parameters;
+    var protocol = (window.location.protocol == "https" ? "wss://" : "ws://");
+    var url = protocol + window.location.host + "/wsstream?" + parameters;
     this.request = new WebSocket(url);
     this.request.onopen = function(){this.connected = true}.bind(this);
     this.request.onmessage = this.handleUpdate.bind(this);
