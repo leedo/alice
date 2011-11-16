@@ -195,8 +195,6 @@ sub read_commandline_args {
   GetOptions("port=i" => \$port, "debug=s" => \$debug, "address=s" => \$address);
   $self->commandline->{port} = $port if $port and $port =~ /\d+/;
   $self->commandline->{address} = $address if $address;
-
-  $AnyEvent::Log::FILTER->level($debug or "info");
 }
 
 sub http_port {
