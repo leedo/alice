@@ -191,10 +191,19 @@ sub load {
 
 sub read_commandline_args {
   my $self = shift;
-  my ($port, $debug, $address, $nologs);
-  GetOptions("port=i" => \$port, "debug=s" => \$debug, "address=s" => \$address);
+  my ($port, $debug, $address, $log);
+  GetOptions("port=i" => \$port, "debug=s" => \$debug, "log=s" => \$log, "address=s" => \$address);
   $self->commandline->{port} = $port if $port and $port =~ /\d+/;
   $self->commandline->{address} = $address if $address;
+
+  $AnyEvent::Log::FILTER->level($debug || "info");
+
+  if ($log) {
+    $AnyEvent::Log::COLLECT->attach(AnyEvent::Log::Ctx->new(
+      level => ($debug || "info"),
+      log_to_file => $log
+    ));
+  }
 }
 
 sub http_port {
