@@ -365,12 +365,12 @@ Alice.Window = Class.create({
   },
 
   removeImage: function(e) {
-    var div = e.findElement('div.image');
+    e.stop();
+    var div = e.findElement('div.image').up();
     if (div) {
       var img = div.down('img');
       var a = img.up('a');
-      if (img) img.replace(a.href);
-      e.element().remove();
+      a.update(a.href);
       a.observe("click", function(e){e.stop();this.inlineImage(a)}.bind(this));
     }
   },
@@ -387,7 +387,7 @@ Alice.Window = Class.create({
     var hide = new Element("A", {"class": "hideimg"});
 
     img.observe("load", function(){
-      a.update(div);
+      a.update(div.remove());
       div.style.display = "inline-block";
       if (scroll) this.scrollToBottom(true);
     }.bind(this));
