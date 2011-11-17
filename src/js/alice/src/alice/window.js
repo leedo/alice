@@ -382,22 +382,22 @@ Alice.Window = Class.create({
 
     var src = a.readAttribute("img") || a.innerHTML;
     var img = new Element("IMG", {src: alice.options.image_prefix + src});
-    img.observe("load", function(){
-      img.up("div.image").style.display = "inline-block";
-      if (scroll) this.scrollToBottom(true);
-    }.bind(this));
-
     var wrap = new Element("DIV");
     var div = new Element("DIV", {"class": "image"});
     var hide = new Element("A", {"class": "hideimg"});
 
+    img.observe("load", function(){
+      a.update(div);
+      div.style.display = "inline-block";
+      if (scroll) this.scrollToBottom(true);
+    }.bind(this));
+
     hide.observe("click", this.removeImage.bind(this));
     hide.update("hide");
-    wrap.insert(div);
 
-    a = a.replace(wrap);
-    div.insert(a);
+    wrap.insert(div);
+    div.insert(img);
     div.insert(hide);
-    a.update(img);
+    a.up("div.msg").insert(wrap);
   }
 });
