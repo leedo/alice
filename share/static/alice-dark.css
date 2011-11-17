@@ -670,11 +670,10 @@ div.msg a {
 div.oembed a {
   word-break: normal; }
 
-div.image {
-  position: relative;
-  display: none; }
+div.image a {
+  position: relative; }
 
-div.image a.hideimg {
+div.image a a.hideimg {
   position: absolute;
   white-space: nowrap;
   top: 0px;

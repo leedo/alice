@@ -12241,39 +12241,44 @@ Alice.Window = Class.create({
 
   removeImage: function(e) {
     e.stop();
-    var div = e.findElement('div.image').up();
+    var div = e.findElement('div.image');
     if (div) {
-      var img = div.down('img');
-      var a = img.up('a');
+      var a = div.down("a");
+      var id = a.identify();
       a.update(a.href);
+      a.style.display = "inline";
+      div.replace(a);
+      var contain = a.up();
+      contain.innerHTML = contain.innerHTML.replace("\n", "");
+      var a = $(id);
       a.observe("click", function(e){e.stop();this.inlineImage(a)}.bind(this));
     }
   },
 
   inlineImage: function(a) {
     a.stopObserving("click");
-
     var scroll = this.shouldScrollToBottom();
-
     var src = a.readAttribute("img") || a.innerHTML;
     var img = new Element("IMG", {src: alice.options.image_prefix + src});
-    var wrap = new Element("DIV");
-    var div = new Element("DIV", {"class": "image"});
-    var hide = new Element("A", {"class": "hideimg"});
+    img.hide();
 
     img.observe("load", function(){
-      a.update(wrap.remove());
-      div.style.display = "inline-block";
+      var wrap = new Element("DIV", {"class": "image"});
+      var hide = new Element("A", {"class": "hideimg"});
+
+      img.show();
+      a.replace(wrap);
+      wrap.insert(a);
+      a.update(img);
+      a.insert(hide);
+      a.style.display = "inline-block";
+      hide.observe("click", this.removeImage.bind(this));
+      hide.update("hide");
+
       if (scroll) this.scrollToBottom(true);
     }.bind(this));
 
-    hide.observe("click", this.removeImage.bind(this));
-    hide.update("hide");
-
-    wrap.insert(div);
-    div.insert(img);
-    div.insert(hide);
-    a.up("div.msg").insert(wrap);
+    a.insert({after: img});
   }
 });
 

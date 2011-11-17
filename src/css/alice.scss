@@ -779,12 +779,11 @@ div.oembed a {
   word-break: normal;
 }
 
-div.image {
+div.image a {
   position: relative;
-  display: none;
 }
 
-div.image a.hideimg {
+div.image a a.hideimg {
   position: absolute;
   white-space: nowrap;
   top: 0px;
