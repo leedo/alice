@@ -147,11 +147,6 @@ div#config_menu > ul {
   }
 }
 
-div#config_menu > ul > li{
-  padding-left: 10px;
-  padding-right: 10px;
-}
-
 div#config_menu ul ul {
   left: 100%;
   right: auto;
@@ -1458,9 +1453,15 @@ span.nickborder {
 
 .dropdown li {
   display: block;
+  padding: 0;
+}
+
+.dropdown li span,
+.dropdown li a {
+  color: $tab_text;
+  display: block;
   padding: 4px 10px;
   text-decoration: none;
-  color: $tab_text;
 }
 
 .dropdown li {

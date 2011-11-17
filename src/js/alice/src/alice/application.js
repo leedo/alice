@@ -366,12 +366,12 @@ Alice.Application = Class.create({
       if (pos.left) {
         var classes = win.status_class();
         left.addClassName(classes);
-        left_menu.innerHTML += sprintf('<li rel="%s" class="%s">%s</a>', win.id, classes, win.title)
+        left_menu.innerHTML += sprintf('<li rel="%s" class="%s"><span>%s</span></a>', win.id, classes, win.title)
       }
       else if (pos.right) {
         var classes = win.status_class();
         right.addClassName(classes);
-        right_menu.innerHTML += sprintf('<li rel="%s" class="%s">%s</a>', win.id, classes, win.title)
+        right_menu.innerHTML += sprintf('<li rel="%s" class="%s"><span>%s</span></a>', win.id, classes, win.title)
       }
 
     }.bind(this));
@@ -742,24 +742,20 @@ Alice.Application = Class.create({
 
     $('config_menu').on(click, ".dropdown li", function(e,li) {
       e.stop();
-      switch(li.innerHTML) {
-        case "Help":
-          this.toggleHelp();
-          break;
-        case "Preferences":
-          this.togglePrefs();
-          break;
-        case "Connections":
-          this.toggleConfig();
-          break;
-        case "Logout":
-          window.location = "/logout";
-          break;
+      var text = li.innerText;
+
+      if (text.match(/Help/)) {
+        this.toggleHelp();
+      } else if (text.match(/Preferences/)) {
+        this.togglePrefs();
+      } else if (text.match(/Connections/)) {
+        this.toggleConfig();
       }
+
       $$('.dropdown.open').invoke("removeClassName", "open");
     }.bind(this));
 
-    $('tabset_dropdown').on(click, ".dropdown li", function(e,li) {
+    $('tabset_dropdown').on(click, ".dropdown li span", function(e,li) {
       e.stop();
       var name = li.innerHTML.unescapeHTML();
 

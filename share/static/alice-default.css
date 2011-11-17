@@ -119,11 +119,6 @@ div#config_menu > ul {
     -webkit-background-size: 33px 13px;
     background-color: #999999;
     width: 53px; } }
-
-div#config_menu > ul > li {
-  padding-left: 10px;
-  padding-right: 10px; }
-
 div#config_menu ul ul {
   left: 100%;
   right: auto;
@@ -981,7 +976,6 @@ div.color_picker div.toggle span#bg.active {
     border: none;
     max-width: 150px;
     max-height: 150px; } }
-
 div.config {
   position: absolute;
   top: 50%;
@@ -1322,9 +1316,14 @@ span.nickborder {
 
 .dropdown li {
   display: block;
+  padding: 0; }
+
+.dropdown li span,
+.dropdown li a {
+  color: #222222;
+  display: block;
   padding: 4px 10px;
-  text-decoration: none;
-  color: #222222; }
+  text-decoration: none; }
 
 .dropdown li {
   cursor: pointer; }

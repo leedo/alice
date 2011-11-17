@@ -1,11 +1,11 @@
 ? my $app = shift;
 
       <ul>
-        <li>Preferences</li>
-        <li>Connections</li>
-        <li>Help</li>
+        <li><span>Preferences</span></li>
+        <li><span>Connections</span></li>
+        <li><span>Help</span></li>
         <? if ($app->auth_enabled) { ?>
-        <li class="separate-bottom">Logout</li>
+        <li class="separate-bottom"><a href="/logout">Logout</a></li>
         <? } ?>
       </ul>
 
