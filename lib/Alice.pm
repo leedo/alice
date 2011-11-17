@@ -402,19 +402,27 @@ sub update_stream {
     }
   }
 
-  for my $window (@windows) {
-    AE::log debug => "updating stream for ".$window->title;
-    $self->update_window($stream, $window, $max, $min, $limit);
-  }
+  my $args = [$max, $min, $limit, 0];
+
+  my $next; $next = sub {
+    if (my $window = shift @windows) {
+      $self->update_window($stream, $window, @$args, $next);
+    }
+  };
+
+  $next->();
 }
 
 sub update_window {
-  my ($self, $stream, $window, $max, $min, $limit, $total) = @_;
+  my ($self, $stream, $window, $max, $min, $limit, $total, $cb) = @_;
   $total ||= 0;
 
   $window->buffer->messages($max, $min, 50, sub {
     my $msgs = shift;
-    return unless @$msgs;
+    unless (@$msgs) {
+      $cb->();
+      return;
+    }
 
     $stream->send([{
       window => $window->serialized,
@@ -426,10 +434,14 @@ sub update_window {
 
     if (@$msgs == 50 and $total <= $limit) {
       $max = $msgs->[0]->{msgid};
-      my $t; $t = AE::timer 0.5, 0, sub {
+      my $t; $t = AE::timer 0.25, 0, sub {
         undef $t;
         $self->update_window($stream, $window, $max, $min, $limit, $total + 50);
       };
+    }
+    else {
+      $cb->();
+      return;
     }
   });
 }
