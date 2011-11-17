@@ -56,13 +56,15 @@ sub run_irc_command {
     throw ChannelRequired "Must be in a $types for /$command->{name}.";
   }
 
-  # determine the connection if it is required
-  if ($command->{connection}) {
-    my $network = $window->network;
-    if ($args =~ s/^$SRVOPT//) {
-      $network = $1;
-    }
+  my $network = $window->network;
 
+  # determine the network can be overridden
+  if ($command->{network} and $args =~ s/^$SRVOPT//) {
+    $network = $1;
+  }
+
+  # command requires a connected network
+  if ($command->{connection}) {
     throw NetworkRequired $command->{eg} unless $network; 
 
     my $connection = $self->get_irc($network);
@@ -118,6 +120,7 @@ command msg => {
   eg => "/MSG [-<network>] <nick> [<msg>]",
   desc => "Sends a message to a nick.",
   connection => 1,
+  network => 1,
   cb => sub  {
     my ($self, $req) = @_;
 
@@ -138,6 +141,7 @@ command nick => {
   name => "nick",
   opts => qr{(\S+)},
   connection => 1,
+  network => 1,
   eg => "/NICK [-<network>] <new nick>",
   desc => "Changes your nick.",
   cb => sub {
@@ -168,6 +172,7 @@ command qr{join|j} => {
   name => "join",
   opts => qr{(\S+)\s*(\S+)?},
   connection => 1,
+  network => 1,
   eg => "/JOIN [-<network>] <channel> [<password>]",
   desc => "Joins the specified channel.",
   cb => sub  {
@@ -184,6 +189,7 @@ command create => {
   name => "create",
   opts => qr{(\S+)},
   connection => 1,
+  network => 1,
   cb => sub  {
     my ($self, $req) = @_;
 
@@ -228,6 +234,7 @@ command qr{topic|t} => {
   opts => qr{(.+)?},
   window_type => ['channel'],
   connection => 1,
+  network => 1,
   eg => "/TOPIC [<topic>]",
   desc => "Shows and/or changes the topic of the current channel.",
   cb => sub  {
@@ -250,6 +257,7 @@ command qr{topic|t} => {
 command whois =>  {
   name => 'whois',
   connection => 1,
+  network => 1,
   opts => qr{(\S+)},
   eg => "/WHOIS [-<network>] <nick>",
   desc => "Shows info about the specified nick",
@@ -290,6 +298,7 @@ command quote => {
   name => 'quote',
   opts => qr{(.+)},
   connection => 1,
+  network => 1,
   eg => "/QUOTE [-<network>] <data>",
   desc => "Sends the server raw data without parsing.",
   cb => sub  {
@@ -480,6 +489,7 @@ command qr{avatar|realname} => {
   name => 'avatar',
   eg => "/AVATAR [-<network>] <image-url>",
   connection => 1,
+  network => 1,
   desc => "Changes your avatar. Requires a reconnect on most servers.",
   opts => qr{(\S+)},
   cb => sub {
