@@ -12262,7 +12262,7 @@ Alice.Window = Class.create({
     var hide = new Element("A", {"class": "hideimg"});
 
     img.observe("load", function(){
-      a.update(div.remove());
+      a.update(wrap.remove());
       div.style.display = "inline-block";
       if (scroll) this.scrollToBottom(true);
     }.bind(this));
