@@ -367,7 +367,7 @@ Alice.Window = Class.create({
   removeImage: function(e) {
     var div = e.findElement('div.image');
     if (div) {
-      var img = div.down('a img');
+      var img = div.down('img');
       var a = img.up('a');
       if (img) img.replace(a.href);
       e.element().remove();
