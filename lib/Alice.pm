@@ -426,7 +426,7 @@ sub update_window {
 
     if (@$msgs == 50 and $total <= $limit) {
       $max = $msgs->[0]->{msgid};
-      my $t; $t = AE::timer 0.2, 0, sub {
+      my $t; $t = AE::timer 0.5, 0, sub {
         undef $t;
         $self->update_window($stream, $window, $max, $min, $limit, $total + 50);
       };
