@@ -434,5 +434,4 @@ sub export_config {
   $res->send;
 }
 
-__PACKAGE__->meta->make_immutable;
 1;

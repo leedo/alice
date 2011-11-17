@@ -56,5 +56,4 @@ sub hashtag {
   return "/info";
 }
 
-__PACKAGE__->meta->make_immutable;
 1;

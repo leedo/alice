@@ -351,5 +351,4 @@ sub show {
   $self->app->broadcast($self->format_message($self->nick, $message));
 }
 
-__PACKAGE__->meta->make_immutable;
 1;

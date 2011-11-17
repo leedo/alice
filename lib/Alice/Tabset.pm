@@ -20,5 +20,4 @@ sub includes {
   return any {$_ eq $window_id} @{$self->windows};
 }
 
-__PACKAGE__->meta->make_immutable;
 1;

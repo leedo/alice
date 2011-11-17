@@ -17,5 +17,4 @@ has is_xhr => (
   default => 1,
 );
 
-__PACKAGE__->meta->make_immutable;
 1;
