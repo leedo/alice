@@ -125,14 +125,22 @@ Alice.Connection.XHR = Class.create(Alice.Connection, {
     new Ajax.Request('/say', {
       method: 'post',
       on401: this.gotoLogin,
-      parameters: {source: win.id, msg: "/close"}
+      parameters: {
+        source: win.id,
+        msg: "/close",
+        stream: this.id
+      }
     });
   },
 
   requestWindow: function(title, windowId, message) {
     new Ajax.Request('/say', {
       method: 'post',
-      parameters: {source: windowId, msg: "/create " + title},
+      parameters: {
+        source: windowId,
+        msg: "/create " + title,
+        stream: this.id
+      },
       on401: this.gotoLogin,
       onSuccess: function (transport) {
         this.handleUpdate(transport);

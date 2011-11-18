@@ -234,6 +234,10 @@ sub create_window {
     id       => $id,
     buffer   => $self->_build_window_buffer($id),
   );
+  if ($window->is_channel) {
+    $connection->config->{channels} = [ $connection->channels ];
+    $self->config->write;
+  }
   $self->add_window($window);
   return $window;
 }
@@ -282,6 +286,12 @@ sub close_window {
   my ($self, $window) = @_;
   $self->broadcast($window->close_action);
   AE::log debug => "sending a request to close a tab: " . $window->title;
+  if ($window->is_channel) {
+    $window->irc->config->{channels} = [
+      grep {$_ ne $window->title} $window->irc->channels
+    ];
+    $self->config->write;
+  }
   $self->remove_window($window->id) if $window->type ne "info";
 }
 

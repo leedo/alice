@@ -11706,9 +11706,7 @@ Alice.Connection.WebSocket = Class.create(Alice.Connection, {
   },
 
   closeWindow: function(win) {
-    this.request.send(Object.toJSON(
-      {source: win.id, msg: "/close"}
-    ));
+    this.sendMessage({source: win.id, msg: "/close"});
   },
 
   handleException: function(exception) {
@@ -11858,14 +11856,22 @@ Alice.Connection.XHR = Class.create(Alice.Connection, {
     new Ajax.Request('/say', {
       method: 'post',
       on401: this.gotoLogin,
-      parameters: {source: win.id, msg: "/close"}
+      parameters: {
+        source: win.id,
+        msg: "/close",
+        stream: this.id
+      }
     });
   },
 
   requestWindow: function(title, windowId, message) {
     new Ajax.Request('/say', {
       method: 'post',
-      parameters: {source: windowId, msg: "/create " + title},
+      parameters: {
+        source: windowId,
+        msg: "/create " + title,
+        stream: this.id
+      },
       on401: this.gotoLogin,
       onSuccess: function (transport) {
         this.handleUpdate(transport);

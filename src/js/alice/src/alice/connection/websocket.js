@@ -53,9 +53,7 @@ Alice.Connection.WebSocket = Class.create(Alice.Connection, {
   },
 
   closeWindow: function(win) {
-    this.request.send(Object.toJSON(
-      {source: win.id, msg: "/close"}
-    ));
+    this.sendMessage({source: win.id, msg: "/close"});
   },
 
   handleException: function(exception) {

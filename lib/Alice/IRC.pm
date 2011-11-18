@@ -298,8 +298,6 @@ sub registered {
     $self->disconnected("ping timeout");
   });
   
-  # merge auto-joined channel list with existing channels
-  my @channels = uniq @{$self->config->{channels}}, $self->channels;
   my @commands = ();
 
   push @commands, map {
@@ -316,7 +314,7 @@ sub registered {
       $self->show_info("joining $channel");
       $self->send_srv("JOIN", split /\s+/, $channel);
     }
-  } @channels; 
+  } @{$self->config->{channels}};
     
   my $t; $t = AE::timer 1, 0.5, sub {
     if (my $command = shift @commands) {
