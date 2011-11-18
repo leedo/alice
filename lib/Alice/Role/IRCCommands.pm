@@ -204,8 +204,8 @@ command qr{close|wc|part} => {
 
     $self->close_window($window);
 
-    if ($window->is_channel) {
-      $req->send_srv(PART => $window->title);
+    if ($window->is_channel and $window->irc->is_connected) {
+      $window->irc->send_srv(PART => $window->title);
     }
   },
 };
