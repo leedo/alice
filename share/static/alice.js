@@ -12172,11 +12172,14 @@ Alice.Window = Class.create({
   addChunk: function(chunk) {
     if (chunk.nicks) this.updateNicks(chunk.nicks);
 
-    var scroll = this.shouldScrollToBottom();
-    var top_scroll = 0;
+    var scroll_bottom = this.shouldScrollToBottom();
+    var scroll_top = 0;
+
     var div = new Element("DIV", {'class': 'chunk'});
     div.innerHTML = chunk['html'];
     var messages = div.select("li");
+
+    this.bulk_insert = true;
 
     messages.each(function (li) {
       this.application.applyFilters(li, this);
@@ -12189,18 +12192,20 @@ Alice.Window = Class.create({
       if (last && last.id) this.msgid = last.id.replace("msg-", "");
     }
     else {
-      if (scroll) {
+      if (scroll_bottom) {
         this.messages.insert({"top": div.innerHTML});
       }
       else {
         this.messages.insert({"top": div});
-        top_scroll = div.getHeight();
+        scroll_top = div.getHeight();
         div.replace(div.innerHTML);
       }
     }
 
-    if (scroll) this.scrollToBottom(true);
-    else if (top_scroll) this.element.scrollTop = top_scroll;
+    this.bulk_insert = false;
+
+    if (scroll_bottom) this.scrollToBottom(true);
+    else if (scroll_top) this.element.scrollTop = scroll_top;
 
   },
 
