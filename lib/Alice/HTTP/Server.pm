@@ -40,7 +40,24 @@ has ping => (
   },
 );
 
-sub config {$_[0]->app->config}
+has port => (
+  is => 'ro',
+  default => 8080,
+);
+
+has address => (
+  is => 'ro',
+  default => "127.0.0.1",
+);
+
+has session => (
+  is => 'ro'
+);
+
+has assets => (
+  is => 'ro',
+  required => 1,
+);
 
 my $url_handlers = [
   [ "say"          => "handle_message" ],
@@ -72,20 +89,16 @@ sub _build_httpd {
   # eval in case server can't bind port
   eval {
     $httpd = Fliggy::Server->new(
-      host => $self->config->http_address,
-      port => $self->config->http_port,
+      host => $self->address,
+      port => $self->port,
     );
     $httpd->register_service(
       builder {
-        if ($self->auth_enabled) {
-          mkdir $self->config->path."/sessions"
-            unless -d $self->config->path."/sessions";
-          enable "Session",
-            store => Plack::Session::Store::File->new(dir => $self->config->path."/sessions"),
-            state => Plack::Session::State::Cookie->new(expires => 60 * 60 * 24 * 7);
-        }
-        enable "Static", path => qr{^/static/}, root => $self->config->assetdir;
-        enable "+Alice::Middleware::WebSocket";
+        enable "Session",
+          store => $self->session,
+          state => Plack::Session::State::Cookie->new(expires => 60 * 60 * 24 * 7);
+        enable "Static", path => qr{^/static/}, root => $self->assets;
+        enable "+Alice::HTTP::WebSocket";
         sub {
           my $env = shift;
           return sub {$self->dispatch($env, shift)}
@@ -196,11 +209,6 @@ sub logout {
     $res->redirect("/login");
   }
   $res->send;
-}
-
-sub shutdown {
-  my $self = shift;
-  $self->httpd(undef);
 }
 
 sub setup_xhr_stream {

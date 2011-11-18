@@ -46,15 +46,6 @@ sub remove_irc {$_[0]->_ircs([ grep { $_->alias ne $_[1] } $_[0]->ircs])}
 sub irc_aliases {map {$_->alias} $_[0]->ircs}
 sub connected_ircs {grep {$_->is_connected} $_[0]->ircs}
 
-has httpd => (
-  is      => 'rw',
-  isa     => 'Alice::HTTP::Server',
-  lazy    => 1,
-  default => sub {
-    Alice::HTTP::Server->new(app => shift);
-  },
-);
-
 has streams => (
   is      => 'rw',
   isa     => 'ArrayRef',
@@ -132,7 +123,7 @@ sub BUILDARGS {
 
   my $self = {};
 
-  for (qw/template user httpd message_store/) {
+  for (qw/template user message_store/) {
     if (exists $options{$_}) {
       $self->{$_} = $options{$_};
       delete $options{$_};
@@ -163,7 +154,6 @@ sub init {
   $self->commands;
   $self->info_window;
   $self->template;
-  $self->httpd;
 
   $self->add_irc_server($_, $self->config->servers->{$_})
     for keys %{$self->config->servers};
