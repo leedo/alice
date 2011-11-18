@@ -279,31 +279,35 @@ Alice.Window = Class.create({
     if (chunk.nicks) this.updateNicks(chunk.nicks);
 
     var scroll = this.shouldScrollToBottom();
+    var top_scroll = 0;
+    var div = new Element("DIV", {'class': 'chunk'});
+    div.innerHTML = chunk['html'];
+    var messages = div.select("li");
 
-    if (chunk['range'][0] > this.msgid) {
-      this.messages.insert({"bottom": chunk['html']});
-    }
-    else {
-      this.messages.insert({"top": chunk['html']});
-    }
-    this.trimMessages();
-
-    if (scroll) this.scrollToBottom(true);
-
-    // so the tab doesn't get highlighted :|
-    this.bulk_insert = true;
-
-    var messages = this.messages.select("li");
     messages.each(function (li) {
       this.application.applyFilters(li, this);
     }.bind(this));
 
-    this.bulk_insert = false;
+    if (chunk['range'][0] > this.msgid) {
+      this.messages.insert({"bottom": div.innerHTML});
+      this.trimMessages();
+      var last = messages.last();
+      if (last && last.id) this.msgid = last.id.replace("msg-", "");
+    }
+    else {
+      if (scroll) {
+        this.messages.insert({"top": div.innerHTML});
+      }
+      else {
+        this.messages.insert({"top": div});
+        top_scroll = div.getHeight();
+        div.replace(div.innerHTML);
+      }
+    }
 
     if (scroll) this.scrollToBottom(true);
+    else if (top_scroll) this.element.scrollTop = top_scroll;
 
-    var last = messages.last();
-    if (last && last.id) this.msgid = last.id.replace("msg-", "");
   },
 
   addMessage: function(message) {
