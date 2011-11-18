@@ -265,7 +265,7 @@ Alice.Application = Class.create({
   },
   
   openWindow: function(serialized, msgid) {
-    if (!msgid) msgid = this.msgid;
+    if (!msgid) msgid = this.msgid();
     var win = new Alice.Window(this, serialized, msgid);
     this.addWindow(win);
     return win;

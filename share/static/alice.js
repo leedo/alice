@@ -10901,7 +10901,7 @@ Alice.Application = Class.create({
   },
 
   openWindow: function(serialized, msgid) {
-    if (!msgid) msgid = this.msgid;
+    if (!msgid) msgid = this.msgid();
     var win = new Alice.Window(this, serialized, msgid);
     this.addWindow(win);
     return win;
@@ -12184,18 +12184,11 @@ Alice.Window = Class.create({
 
     var div = new Element("DIV", {'class': 'chunk'});
     div.innerHTML = chunk['html'];
-    var messages = div.select("li");
-
-    this.bulk_insert = true;
-
-    messages.each(function (li) {
-      this.application.applyFilters(li, this);
-    }.bind(this));
 
     if (chunk['range'][0] > this.msgid) {
       this.messages.insert({"bottom": div.innerHTML});
       this.trimMessages();
-      var last = messages.last();
+      var last = div.select("li").last();
       if (last && last.id) this.msgid = last.id.replace("msg-", "");
     }
     else {
@@ -12208,6 +12201,12 @@ Alice.Window = Class.create({
         div.replace(div.innerHTML);
       }
     }
+
+    this.bulk_insert = true;
+
+    this.messages.select("li:not(.filtered)").each(function (li) {
+      this.application.applyFilters(li, this);
+    }.bind(this));
 
     this.bulk_insert = false;
 
