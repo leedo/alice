@@ -22,6 +22,7 @@ Alice.Window = Class.create({
     this.messageLimit = this.application.isMobile ? 50 : 100;
     this.msgid = msgid || 0;
     this.visible = true;
+    this.forceScroll = false;
     
     this.setupEvents();
     this.setupScrollBack();
@@ -308,12 +309,14 @@ Alice.Window = Class.create({
     }
 
     this.bulk_insert = true;
+    if (scroll_bottom) this.forceScroll = true;
 
     this.messages.select("li:not(.filtered)").each(function (li) {
       this.application.applyFilters(li, this);
     }.bind(this));
 
     this.bulk_insert = false;
+    this.forceScroll = false;
 
     if (scroll_bottom) this.scrollToBottom(true);
     else if (scroll_top) this.element.scrollTop = scroll_top;
@@ -359,6 +362,7 @@ Alice.Window = Class.create({
 
   shouldScrollToBottom: function() {
     if (!this.active) return false;
+    if (this.forceScroll) return true;
 
     var bottom = this.element.scrollTop + this.element.offsetHeight;
     var height = this.element.scrollHeight;
