@@ -25,7 +25,7 @@ requires 'JSON' => '2.12';
 requires 'File::ShareDir';
 requires 'File::Copy';
 requires 'Net::SSLeay';
-requires 'Protocol::WebSocket' => '0.00905';
+requires 'Protocol::WebSocket' => '0.00906';
 
 test_requires 'Test::More' => '0.86';
 test_requires 'Test::TCP' => '0';
