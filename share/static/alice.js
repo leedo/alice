@@ -10684,7 +10684,8 @@ Alice.Application = Class.create({
     this.setupMenus();
   },
 
-  getBacklog: function (win, max, limit) {
+  getBacklog: function (win, max) {
+    var limit = (this.isMobile ? 20 : 50);
     this.connection.requestChunk(win.id, limit, max);
   },
 
@@ -11980,7 +11981,7 @@ Alice.Window = Class.create({
   setupScrollBack: function() {
     clearInterval(this.scrollListener);
     this.scrollListener = setInterval(function(){
-      if (this.active && this.msgid && this.element.scrollTop < 50) {
+      if (this.active && this.msgid && this.element.scrollTop < 10) {
         clearInterval(this.scrollListener);
         var first = this.messages.down("li");
         if (first) {
@@ -11989,7 +11990,7 @@ Alice.Window = Class.create({
         else {
           first = this.msgid;
         }
-        this.application.getBacklog(this, first, 50);
+        this.application.getBacklog(this, first);
         this.messageLimit += 50;
         setTimeout(this.setupScrollBack.bind(this), 1000);
       }
@@ -12259,8 +12260,6 @@ Alice.Window = Class.create({
 
     var bottom = this.element.scrollTop + this.element.offsetHeight;
     var height = this.element.scrollHeight;
-
-    console.log(bottom, height);
 
     return bottom + 100 >= height;
   },
