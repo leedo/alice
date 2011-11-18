@@ -19,11 +19,12 @@ Alice.Window = Class.create({
     this.nicks = [];
     this.nicks_order = [];
     this.statuses = [];
-    this.messageLimit = this.application.isMobile ? 100 : 500;
+    this.messageLimit = this.application.isMobile ? 50 : 100;
     this.msgid = 0;
     this.visible = true;
     
     this.setupEvents();
+    this.setupScrollBack();
   },
 
   hide: function() {
@@ -77,6 +78,20 @@ Alice.Window = Class.create({
     }.bind(this));
 
     this.messages.observe("mouseover", this.showNick.bind(this));
+  },
+
+  setupScrollBack: function() {
+    clearInterval(this.scrollListener);
+    this.scrollListener = setInterval(function(){
+      if (this.active && this.msgid && this.element.scrollTop < 50) {
+        clearInterval(this.scrollListener);
+        var first = this.messages.down("li").id.replace("msg-", "");
+        this.application.getBacklog(this, first, 50);
+        this.messageLimit += 50;
+        setTimeout(this.setupScrollBack.bind(this), 1000);
+      }
+    }.bind(this), 1000);
+
   },
 
   updateTabLayout: function() {

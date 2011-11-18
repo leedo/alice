@@ -505,4 +505,13 @@ command help => {
   }
 };
 
+command chunk => {
+  name => 'chunk',
+  opts => qr{(\d+) (\d+)},
+  cb => sub {
+    my ($self, $req, $opts) = @_;
+    $self->update_window($req->stream, $req->window, $opts->[1], 0, $opts->[0], 0);
+  }
+};
+
 1;

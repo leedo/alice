@@ -388,7 +388,7 @@ sub ping {
 sub update_stream {
   my ($self, $stream, $req) = @_;
 
-  my $limit = $req->param('limit') || 500;
+  my $limit = $req->param('limit') || 100;
   my $max   = $req->param('max')   || $self->message_store->msgid;
   my $min   = $req->param('min')   || 0;
 
@@ -416,12 +416,16 @@ sub update_stream {
 
 sub update_window {
   my ($self, $stream, $window, $max, $min, $limit, $total, $cb) = @_;
-  $total ||= 0;
 
-  $window->buffer->messages($max, $min, 50, sub {
+  my $step = 20;
+  if ($limit - $total <  20) {
+    $step = $limit - $total;
+  }
+
+  $window->buffer->messages($max, $min, 20, sub {
     my $msgs = shift;
     unless (@$msgs) {
-      $cb->();
+      $cb->() if $cb;
       return;
     }
 
@@ -433,15 +437,14 @@ sub update_window {
       html   => join "", map {$_->{html}} @$msgs,
     }]);
 
-    if (@$msgs == 50 and $total <= $limit) {
+    $total += $step;
+
+    if (@$msgs == $step and $total < $limit) {
       $max = $msgs->[0]->{msgid};
-      my $t; $t = AE::timer 0.25, 0, sub {
-        undef $t;
-        $self->update_window($stream, $window, $max, $min, $limit, $total + 50, $cb);
-      };
+      $self->update_window($stream, $window, $max, $min, $limit, $total, $cb);
     }
     else {
-      $cb->();
+      $cb->() if $cb;
       return;
     }
   });

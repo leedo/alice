@@ -10684,6 +10684,10 @@ Alice.Application = Class.create({
     this.setupMenus();
   },
 
+  getBacklog: function (win, max, limit) {
+    this.connection.requestChunk(win.id, limit, max);
+  },
+
   fetchOembeds: function(cb) {
     var req = new XMLHttpRequest();
     req.open("GET", "https://noembed.com/providers");
@@ -11592,7 +11596,6 @@ Alice.Connection = {
       for (var i=0; i<length; i++) {
         if (queue[i].type == "identify") {
           this.id = queue[i].id;
-          console.log(this.id);
         }
         else if (queue[i].type == "action")
           this.application.handleAction(queue[i]);
@@ -11650,6 +11653,13 @@ Alice.Connection = {
       parameters: {tabs: windows}
     });
   },
+
+  requestChunk: function (win, limit, max) {
+    this.sendMessage({
+      source: win,
+      msg: "/chunk " + limit + " " + max,
+    });
+  }
 };
 Alice.Connection.WebSocket = Class.create(Alice.Connection, {
   initialize: function(application) {
@@ -11906,11 +11916,12 @@ Alice.Window = Class.create({
     this.nicks = [];
     this.nicks_order = [];
     this.statuses = [];
-    this.messageLimit = this.application.isMobile ? 100 : 500;
+    this.messageLimit = this.application.isMobile ? 50 : 100;
     this.msgid = 0;
     this.visible = true;
 
     this.setupEvents();
+    this.setupScrollBack();
   },
 
   hide: function() {
@@ -11962,6 +11973,21 @@ Alice.Window = Class.create({
     }.bind(this));
 
     this.messages.observe("mouseover", this.showNick.bind(this));
+  },
+
+  setupScrollBack: function() {
+    clearInterval(this.scrollListener);
+    this.scrollListener = setInterval(function(){
+      if (this.active && this.msgid && this.element.scrollTop < 50) {
+        clearInterval(this.scrollListener);
+        var first = this.messages.down("li").id.replace("msg-", "");
+        console.log("requesting chunk.");
+        this.application.getBacklog(this, first, 50);
+        this.messageLimit += 50;
+        setTimeout(this.setupScrollBack.bind(this), 1000);
+      }
+    }.bind(this), 1000);
+
   },
 
   updateTabLayout: function() {
@@ -12146,6 +12172,7 @@ Alice.Window = Class.create({
 
   addChunk: function(chunk) {
     if (chunk.nicks) this.updateNicks(chunk.nicks);
+    console.log("adding chunk");
 
     var scroll = this.shouldScrollToBottom();
 

@@ -48,6 +48,10 @@ Alice.Application = Class.create({
     this.setupMenus();
   },
 
+  getBacklog: function (win, max, limit) {
+    this.connection.requestChunk(win.id, limit, max);
+  },
+
   fetchOembeds: function(cb) {
     var req = new XMLHttpRequest();
     req.open("GET", "https://noembed.com/providers");
