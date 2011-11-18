@@ -13,7 +13,6 @@ Alice.Application = Class.create({
     this.topic_height = "14px";
     this.beep = new Audio("/static/beep.mp3");
 
-    this.filterQueue = [];
     this.oembeds = [];
     this.jsonp_callbacks = {};
     this.connection = window.WebSocket ? new Alice.Connection.WebSocket(this) : new Alice.Connection.XHR(this);
@@ -308,21 +307,7 @@ Alice.Application = Class.create({
     this.message_filters = this.message_filters.concat(list);
   },
   
-  filterMessage: function() {
-    this.filterQueue.push(arguments);
-    if (!this.filterWatcher) this.processFilterQueue();
-  },
-
-  processFilterQueue: function() {
-    if (!this.filterQueue.length) {
-      this.filterWatcher = null;
-      return;
-    }
-    this.applyFilters.apply(this, this.filterQueue.shift());
-    setTimeout(this.processFilterQueue.bind(this), 50);
-  },
-
-  applyFilters: function(li, win, scroll, cb) {
+  applyFilters: function(li, win) {
     if (li.hasClassName("filtered")) return;
     var length = this.base_filters.length;
 
@@ -340,8 +325,6 @@ Alice.Application = Class.create({
         if (stop) return;
       }
     }
-
-    if (scroll) win.scrollToBottom(true);
   },
   
   nextWindow: function() {

@@ -10650,7 +10650,6 @@ Alice.Application = Class.create({
     this.topic_height = "14px";
     this.beep = new Audio("/static/beep.mp3");
 
-    this.filterQueue = [];
     this.oembeds = [];
     this.jsonp_callbacks = {};
     this.connection = window.WebSocket ? new Alice.Connection.WebSocket(this) : new Alice.Connection.XHR(this);
@@ -10944,21 +10943,7 @@ Alice.Application = Class.create({
     this.message_filters = this.message_filters.concat(list);
   },
 
-  filterMessage: function() {
-    this.filterQueue.push(arguments);
-    if (!this.filterWatcher) this.processFilterQueue();
-  },
-
-  processFilterQueue: function() {
-    if (!this.filterQueue.length) {
-      this.filterWatcher = null;
-      return;
-    }
-    this.applyFilters.apply(this, this.filterQueue.shift());
-    setTimeout(this.processFilterQueue.bind(this), 50);
-  },
-
-  applyFilters: function(li, win, scroll, cb) {
+  applyFilters: function(li, win) {
     if (li.hasClassName("filtered")) return;
     var length = this.base_filters.length;
 
@@ -10976,8 +10961,6 @@ Alice.Application = Class.create({
         if (stop) return;
       }
     }
-
-    if (scroll) win.scrollToBottom(true);
   },
 
   nextWindow: function() {
@@ -11609,6 +11592,7 @@ Alice.Connection = {
       for (var i=0; i<length; i++) {
         if (queue[i].type == "identify") {
           this.id = queue[i].id;
+          console.log(this.id);
         }
         else if (queue[i].type == "action")
           this.application.handleAction(queue[i]);
@@ -12178,11 +12162,13 @@ Alice.Window = Class.create({
     this.bulk_insert = true;
 
     var messages = this.messages.select("li");
-    messages.reverse().each(function (li) {
-      this.application.filterMessage(li, this, scroll);
+    messages.each(function (li) {
+      this.application.applyFilters(li, this);
     }.bind(this));
 
     this.bulk_insert = false;
+
+    if (scroll) this.scrollToBottom(true);
 
     var last = messages.last();
     if (last && last.id) this.msgid = last.id.replace("msg-", "");
@@ -12201,7 +12187,9 @@ Alice.Window = Class.create({
     if (scroll) this.scrollToBottom(true);
 
     var li = this.messages.select("li").last();
-    this.application.filterMessage(li, this, scroll);
+    this.application.applyFilters(li, this);
+
+    if (scroll) this.scrollToBottom(true);
 
     if (message.event == "topic") {
       this.topic = message.body;
