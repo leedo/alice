@@ -279,13 +279,11 @@ Alice.Window = Class.create({
     this.bulk_insert = true;
 
     var messages = this.messages.select("li");
-    messages.each(function (li) {
-      this.application.applyFilters(li, this);
+    messages.reverse().each(function (li) {
+      this.application.filterMessage(li, this, scroll);
     }.bind(this));
 
     this.bulk_insert = false;
-
-    if (scroll) this.scrollToBottom(true);
 
     var last = messages.last();
     if (last && last.id) this.msgid = last.id.replace("msg-", "");
@@ -304,9 +302,7 @@ Alice.Window = Class.create({
     if (scroll) this.scrollToBottom(true);
 
     var li = this.messages.select("li").last();
-    this.application.applyFilters(li, this);
-
-    if (scroll) this.scrollToBottom(true);
+    this.application.filterMessage(li, this, scroll);
 
     if (message.event == "topic") {
       this.topic = message.body;

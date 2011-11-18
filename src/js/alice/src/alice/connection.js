@@ -63,7 +63,6 @@ Alice.Connection = {
       for (var i=0; i<length; i++) {
         if (queue[i].type == "identify") {
           this.id = queue[i].id;
-          console.log(this.id);
         }
         else if (queue[i].type == "action")
           this.application.handleAction(queue[i]);
