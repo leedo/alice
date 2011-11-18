@@ -317,7 +317,7 @@ sub merged_options {
   my $config = $self->app->config;
 
   +{ map { $_ => ($req->param($_) || $config->$_) }
-      qw/images avatars alerts audio timeformat image_prefix/ };
+      qw/animate images avatars alerts audio timeformat image_prefix/ };
 }
 
 sub template {

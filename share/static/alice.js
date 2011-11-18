@@ -10473,7 +10473,7 @@ Object.extend(Alice, {
     submit: function(form) {
       var options = {highlights: [], monospace_nicks: []};
 
-      ["images", "avatars", "alerts", "audio"].each(function (pref) {
+      ["images", "animate", "avatars", "alerts", "audio"].each(function (pref) {
         options[pref] = $(pref).checked ? "show" : "hide";
       });
       $A($("highlights").options).each(function(option) {
@@ -12311,7 +12311,12 @@ Alice.Window = Class.create({
     a.stopObserving("click");
     var scroll = this.shouldScrollToBottom();
     var src = a.readAttribute("img") || a.innerHTML;
-    var img = new Element("IMG", {src: alice.options.image_prefix + src});
+    var prefix = alice.options.image_prefix;
+
+    if (alice.options.animate == "hide") {
+      prefix = prefix + "still/";
+    }
+    var img = new Element("IMG", {src: prefix + src});
     img.hide();
 
     img.observe("load", function(){

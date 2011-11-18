@@ -249,7 +249,7 @@ Object.extend(Alice, {
     submit: function(form) {
       var options = {highlights: [], monospace_nicks: []};
 
-      ["images", "avatars", "alerts", "audio"].each(function (pref) {
+      ["images", "animate", "avatars", "alerts", "audio"].each(function (pref) {
         options[pref] = $(pref).checked ? "show" : "hide";
       });
       $A($("highlights").options).each(function(option) {
