@@ -228,7 +228,6 @@ sub setup_xhr_stream {
   );
 
   $app->add_stream($stream);
-  $app->update_stream($stream, $req);
 }
 
 sub setup_ws_stream {
@@ -247,7 +246,6 @@ sub setup_ws_stream {
     );
     $stream->send([ map({$_->join_action} $app->windows) ]);
     $app->add_stream($stream);
-    $app->update_stream($stream, $req);
   }
   else {
     my $code = $req->env->{'websocket.impl'}->error_code;

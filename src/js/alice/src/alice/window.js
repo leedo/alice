@@ -1,5 +1,5 @@
 Alice.Window = Class.create({
-  initialize: function(application, serialized) {
+  initialize: function(application, serialized, msgid) {
     this.application = application;
     
     this.element = $(serialized['id']);
@@ -20,7 +20,7 @@ Alice.Window = Class.create({
     this.nicks_order = [];
     this.statuses = [];
     this.messageLimit = this.application.isMobile ? 50 : 100;
-    this.msgid = 0;
+    this.msgid = msgid || 0;
     this.visible = true;
     
     this.setupEvents();
@@ -85,7 +85,13 @@ Alice.Window = Class.create({
     this.scrollListener = setInterval(function(){
       if (this.active && this.msgid && this.element.scrollTop < 50) {
         clearInterval(this.scrollListener);
-        var first = this.messages.down("li").id.replace("msg-", "");
+        var first = this.messages.down("li");
+        if (first) {
+          first = first.id.replace("msg-", "");
+        }
+        else {
+          first = this.msgid;
+        }
         this.application.getBacklog(this, first, 50);
         this.messageLimit += 50;
         setTimeout(this.setupScrollBack.bind(this), 1000);

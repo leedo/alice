@@ -385,35 +385,6 @@ sub ping {
   $_->ping for grep {$_->is_xhr} @{$self->streams};
 }
 
-sub update_stream {
-  my ($self, $stream, $req) = @_;
-
-  my $limit = $req->param('limit') || 100;
-  my $max   = $req->param('max')   || $self->message_store->msgid;
-  my $min   = $req->param('min')   || 0;
-
-  AE::log debug => "sending stream update";
-
-  my @windows = $self->windows;
-
-  if (my $id = $req->param('tab')) {
-    if (my $active = $self->get_window($id)) {
-      @windows = grep {$_->id ne $id} @windows;
-      unshift @windows, $active;
-    }
-  }
-
-  my $args = [$max, $min, $limit, 0];
-
-  my $next; $next = sub {
-    if (my $window = shift @windows) {
-      $self->update_window($stream, $window, @$args, $next);
-    }
-  };
-
-  $next->();
-}
-
 sub update_window {
   my ($self, $stream, $window, $max, $min, $limit, $total, $cb) = @_;
 
