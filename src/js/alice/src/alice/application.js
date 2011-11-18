@@ -48,8 +48,7 @@ Alice.Application = Class.create({
     this.setupMenus();
   },
 
-  getBacklog: function (win, max) {
-    var limit = (this.isMobile ? 20 : 50);
+  getBacklog: function (win, max, limit) {
     this.connection.requestChunk(win.id, limit, max);
   },
 

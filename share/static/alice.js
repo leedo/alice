@@ -10684,8 +10684,7 @@ Alice.Application = Class.create({
     this.setupMenus();
   },
 
-  getBacklog: function (win, max) {
-    var limit = (this.isMobile ? 20 : 50);
+  getBacklog: function (win, max, limit) {
     this.connection.requestChunk(win.id, limit, max);
   },
 
@@ -11919,6 +11918,7 @@ Alice.Window = Class.create({
     this.nicks_order = [];
     this.statuses = [];
     this.messageLimit = this.application.isMobile ? 50 : 100;
+    this.chunkSize = this.messageLimit / 2;
     this.msgid = msgid || 0;
     this.visible = true;
     this.forceScroll = false;
@@ -11990,8 +11990,7 @@ Alice.Window = Class.create({
         else {
           first = this.msgid;
         }
-        this.application.getBacklog(this, first);
-        this.messageLimit += 50;
+        this.application.getBacklog(this, first, this.chunkSize / 2);
         setTimeout(this.setupScrollBack.bind(this), 1000);
       }
     }.bind(this), 1000);
