@@ -1,11 +1,11 @@
-package Alice::Stream::WebSocket;
+package Alice::HTTP::Stream::WebSocket;
 
 use JSON;
 use Any::Moose;
 use Digest::MD5 qw/md5/;
 use Time::HiRes qw/time/;
 
-extends 'Alice::Stream';
+extends 'Alice::HTTP::Stream';
 
 has fh => (
   is => 'ro',
@@ -62,10 +62,13 @@ sub BUILD {
   });
     
   $self->handle($h);
+  $self->send([{type => "identify", id => $self->id}]);
 }
 
 sub send {
   my ($self, $messages) = @_;
+
+  $messages = [$messages] unless ref $messages eq "ARRAY";
 
   my $line = to_json(
     {queue => $messages},

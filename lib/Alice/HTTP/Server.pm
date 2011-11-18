@@ -1,17 +1,18 @@
-package Alice::HTTPD;
+package Alice::HTTP::Server;
 
 use AnyEvent;
 use AnyEvent::HTTP;
 
 use Fliggy::Server;
-use Plack::Request;
 use Plack::Builder;
 use Plack::Middleware::Static;
 use Plack::Session::Store::File;
 use Plack::Session::State::Cookie;
-use Alice::Request;
-use Alice::Stream::XHR;
-use Alice::Stream::WebSocket;
+
+use Alice::HTTP::Request;
+use Alice::HTTP::Stream::XHR;
+use Alice::HTTP::Stream::WebSocket;
+
 use JSON;
 use Encode;
 use Any::Moose;
@@ -100,7 +101,7 @@ sub _build_httpd {
 sub dispatch {
   my ($self, $env, $cb) = @_;
 
-  my $req = Alice::Request->new($env, $cb);
+  my $req = Alice::HTTP::Request->new($env, $cb);
   my $res = $req->new_response(200);
 
   AE::log debug => $req->path;
@@ -208,8 +209,8 @@ sub setup_xhr_stream {
 
   AE::log debug => "opening new stream";
 
-  $res->headers([@Alice::Stream::XHR::headers]);
-  my $stream = Alice::Stream::XHR->new(
+  $res->headers([@Alice::HTTP::Stream::XHR::headers]);
+  my $stream = Alice::HTTP::Stream::XHR->new(
     queue      => [ map({$_->join_action} $app->windows) ],
     writer     => $res->writer,
     start_time => $req->param('t'),
@@ -229,7 +230,7 @@ sub setup_ws_stream {
   AE::log debug => "opening new websocket stream";
 
   if (my $fh = $req->env->{'websocket.impl'}->handshake) {
-    my $stream = Alice::Stream::WebSocket->new(
+    my $stream = Alice::HTTP::Stream::WebSocket->new(
       start_time => $req->param('t') || time,
       fh      => $fh,
       on_read => sub { $app->handle_message(@_) },
@@ -252,11 +253,13 @@ sub handle_message {
   my $msg = $req->param('msg');
   my $html = $req->param('html');
   my $source = $req->param('source');
+  my $stream = $req->param('stream');
 
   $self->app->handle_message({
     msg    => defined $msg ? $msg : "",
     html   => defined $html ? $html : "",
     source => defined $source ? $source : "",
+    stream => defined $stream ? $stream : "",
   });
   
   $res->ok;

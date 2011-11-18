@@ -15,10 +15,11 @@ use Encode;
 
 use Alice::Window;
 use Alice::InfoWindow;
-use Alice::HTTPD;
+use Alice::HTTP::Server;
 use Alice::IRC;
 use Alice::Config;
 use Alice::Tabset;
+use Alice::Request;
 use Alice::MessageBuffer;
 use Alice::MessageStore;
 
@@ -47,10 +48,10 @@ sub connected_ircs {grep {$_->is_connected} $_[0]->ircs}
 
 has httpd => (
   is      => 'rw',
-  isa     => 'Alice::HTTPD',
+  isa     => 'Alice::HTTP::Server',
   lazy    => 1,
   default => sub {
-    Alice::HTTPD->new(app => shift);
+    Alice::HTTP::Server->new(app => shift);
   },
 );
 
@@ -450,10 +451,21 @@ sub handle_message {
   my ($self, $message) = @_;
 
   if (my $window = $self->get_window($message->{source})) {
+    my $stream = first {$_->id == $message->{stream}} @{$self->streams};
+    return unless $stream;
+
     $message->{msg} = html_to_irc($message->{msg}) if $message->{html};
 
-    for (split /\n/, $message->{msg}) {
-      $self->irc_command($window, $_) if length $_;
+    for my $line (split /\n/, $message->{msg}) {
+      next unless $line;
+
+      my $input = Alice::Request->new(
+        window => $window,
+        stream => $stream,
+        line   => $line,
+      );
+
+      $self->irc_command($input);
     }
   }
 }

@@ -1,10 +1,10 @@
-package Alice::Stream::XHR;
+package Alice::HTTP::Stream::XHR;
 
 use JSON;
 use Time::HiRes qw/time/;
 use Any::Moose;
 
-extends 'Alice::Stream';
+extends 'Alice::HTTP::Stream';
 
 use strict;
 use warnings;
@@ -68,11 +68,15 @@ sub BUILD {
 
   $hdl->on_eof($close);
   $hdl->on_error($close);
+
+  $self->send({type => "identify", id => $self->id});
 }
 
 sub send {
   my ($self, $messages) = @_;
   return if $self->closed;
+
+  $messages = [$messages] unless ref $messages eq "ARRAY";
 
   $self->enqueue(@$messages) if $messages and @$messages;
   return if $self->delayed or $self->queue_empty;

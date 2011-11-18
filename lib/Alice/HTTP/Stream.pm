@@ -1,4 +1,6 @@
-package Alice::Stream;
+package Alice::HTTP::Stream;
+
+our $NEXT_ID = 1;
 
 use Any::Moose;
 
@@ -15,6 +17,11 @@ has on_error => (
 has is_xhr => (
   is => 'ro',
   default => 1,
+);
+
+has id => (
+  is => 'rw',
+  default => sub { $NEXT_ID++ }
 );
 
 1;

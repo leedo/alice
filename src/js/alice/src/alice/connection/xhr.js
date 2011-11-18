@@ -100,6 +100,8 @@ Alice.Connection.XHR = Class.create(Alice.Connection, {
       params = form;
     }
 
+    params['stream'] = this.id;
+
     new Ajax.Request('/say', {
       method: 'post',
       parameters: params,

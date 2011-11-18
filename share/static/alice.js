@@ -10615,12 +10615,9 @@ Object.extend(Alice, {
     },
 
     serverConnection: function(alias, action) {
-      new Ajax.Request('/say', {
-        method: 'get',
-        parameters: {
-          msg: '/' + action + ' ' + alias,
-          source: alice.activeWindow().id
-        }
+      alice.connection.sendMessage({
+        msg: '/' + action + ' ' + alias,
+        source: alice.activeWindow().id,
       });
 
       return false;
@@ -11379,6 +11376,7 @@ Alice.Application = Class.create({
     $('config_menu').on(click, ".dropdown li", function(e,li) {
       e.stop();
       var text = li.innerText;
+
       if (text.match(/Help/)) {
         this.toggleHelp();
       } else if (text.match(/Preferences/)) {
@@ -11386,6 +11384,7 @@ Alice.Application = Class.create({
       } else if (text.match(/Connections/)) {
         this.toggleConfig();
       }
+
       $$('.dropdown.open').invoke("removeClassName", "open");
     }.bind(this));
 
@@ -11591,7 +11590,11 @@ Alice.Connection = {
       var queue = data.queue;
       var length = queue.length;
       for (var i=0; i<length; i++) {
-        if (queue[i].type == "action")
+        if (queue[i].type == "identify") {
+          this.id = queue[i].id;
+          console.log(this.id);
+        }
+        else if (queue[i].type == "action")
           this.application.handleAction(queue[i]);
         else if (queue[i].type == "message") {
           if (queue[i].timestamp)
@@ -11691,6 +11694,7 @@ Alice.Connection.WebSocket = Class.create(Alice.Connection, {
       params = Form.serialize(form, true);
     }
 
+    params['stream'] = this.id;
     this.request.send(Object.toJSON(params));
     return true;
   },
@@ -11828,6 +11832,8 @@ Alice.Connection.XHR = Class.create(Alice.Connection, {
     else {
       params = form;
     }
+
+    params['stream'] = this.id;
 
     new Ajax.Request('/say', {
       method: 'post',

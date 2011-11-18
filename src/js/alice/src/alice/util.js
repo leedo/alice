@@ -392,12 +392,9 @@ Object.extend(Alice, {
     },
 
     serverConnection: function(alias, action) {
-      new Ajax.Request('/say', {
-        method: 'get',
-        parameters: {
-          msg: '/' + action + ' ' + alias,
-          source: alice.activeWindow().id
-        }
+      alice.connection.sendMessage({
+        msg: '/' + action + ' ' + alias,
+        source: alice.activeWindow().id,
       });
 
       return false;
