@@ -21,7 +21,7 @@ sub next_msgid {
   my $self = shift;
   my $msgid = $self->store->msgid;
   $self->store->msgid($msgid + 1);
-  return $msgid;
+  return $msgid + 1;
 }
 
 sub clear {
