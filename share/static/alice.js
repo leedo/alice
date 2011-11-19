@@ -10473,7 +10473,7 @@ Object.extend(Alice, {
     submit: function(form) {
       var options = {highlights: [], monospace_nicks: []};
 
-      ["images", "avatars", "alerts", "audio"].each(function (pref) {
+      ["images", "animate", "avatars", "alerts", "audio"].each(function (pref) {
         options[pref] = $(pref).checked ? "show" : "hide";
       });
       $A($("highlights").options).each(function(option) {
@@ -10615,12 +10615,9 @@ Object.extend(Alice, {
     },
 
     serverConnection: function(alias, action) {
-      new Ajax.Request('/say', {
-        method: 'get',
-        parameters: {
-          msg: '/' + action + ' ' + alias,
-          source: alice.activeWindow().id
-        }
+      alice.connection.sendMessage({
+        msg: '/' + action + ' ' + alias,
+        source: alice.activeWindow().id,
       });
 
       return false;
@@ -10685,6 +10682,10 @@ Alice.Application = Class.create({
     this.setupTopic();
     this.setupNicklist();
     this.setupMenus();
+  },
+
+  getBacklog: function (win, max, limit) {
+    this.connection.requestChunk(win.id, limit, max);
   },
 
   fetchOembeds: function(cb) {
@@ -10899,8 +10900,9 @@ Alice.Application = Class.create({
     });
   },
 
-  openWindow: function(serialized) {
-    var win = new Alice.Window(this, serialized);
+  openWindow: function(serialized, msgid) {
+    if (!msgid) msgid = this.msgid();
+    var win = new Alice.Window(this, serialized, msgid);
     this.addWindow(win);
     return win;
   },
@@ -11005,12 +11007,12 @@ Alice.Application = Class.create({
       if (pos.left) {
         var classes = win.status_class();
         left.addClassName(classes);
-        left_menu.innerHTML += sprintf('<li rel="%s" class="%s">%s</a>', win.id, classes, win.title)
+        left_menu.innerHTML += sprintf('<li rel="%s" class="%s"><span>%s</span></a>', win.id, classes, win.title)
       }
       else if (pos.right) {
         var classes = win.status_class();
         right.addClassName(classes);
-        right_menu.innerHTML += sprintf('<li rel="%s" class="%s">%s</a>', win.id, classes, win.title)
+        right_menu.innerHTML += sprintf('<li rel="%s" class="%s"><span>%s</span></a>', win.id, classes, win.title)
       }
 
     }.bind(this));
@@ -11378,24 +11380,20 @@ Alice.Application = Class.create({
 
     $('config_menu').on(click, ".dropdown li", function(e,li) {
       e.stop();
-      switch(li.innerHTML) {
-        case "Help":
-          this.toggleHelp();
-          break;
-        case "Preferences":
-          this.togglePrefs();
-          break;
-        case "Connections":
-          this.toggleConfig();
-          break;
-        case "Logout":
-          window.location = "/logout";
-          break;
+      var text = li.innerText;
+
+      if (text.match(/Help/)) {
+        this.toggleHelp();
+      } else if (text.match(/Preferences/)) {
+        this.togglePrefs();
+      } else if (text.match(/Connections/)) {
+        this.toggleConfig();
       }
+
       $$('.dropdown.open').invoke("removeClassName", "open");
     }.bind(this));
 
-    $('tabset_dropdown').on(click, ".dropdown li", function(e,li) {
+    $('tabset_dropdown').on(click, ".dropdown li span", function(e,li) {
       e.stop();
       var name = li.innerHTML.unescapeHTML();
 
@@ -11597,7 +11595,10 @@ Alice.Connection = {
       var queue = data.queue;
       var length = queue.length;
       for (var i=0; i<length; i++) {
-        if (queue[i].type == "action")
+        if (queue[i].type == "identify") {
+          this.id = queue[i].id;
+        }
+        else if (queue[i].type == "action")
           this.application.handleAction(queue[i]);
         else if (queue[i].type == "message") {
           if (queue[i].timestamp)
@@ -11653,6 +11654,13 @@ Alice.Connection = {
       parameters: {tabs: windows}
     });
   },
+
+  requestChunk: function (win, limit, max) {
+    this.sendMessage({
+      source: win,
+      msg: "/chunk " + limit + " " + max,
+    });
+  }
 };
 Alice.Connection.WebSocket = Class.create(Alice.Connection, {
   initialize: function(application) {
@@ -11671,11 +11679,12 @@ Alice.Connection.WebSocket = Class.create(Alice.Connection, {
     this.application.log("opening new websocket connection starting at "+msgid);
     this.changeStatus("ok");
     var parameters = Object.toQueryString({
-      msgid: msgid,
+      min: msgid,
       t: now.getTime() / 1000,
       tab: this.application.activeWindow().id
     });
-    var url = "ws://" + window.location.host + "/wsstream?" + parameters;
+    var protocol = (window.location.protocol.match(/^https/) ? "wss://" : "ws://");
+    var url = protocol + window.location.host + "/wsstream?" + parameters;
     this.request = new WebSocket(url);
     this.request.onopen = function(){this.connected = true}.bind(this);
     this.request.onmessage = this.handleUpdate.bind(this);
@@ -11696,6 +11705,7 @@ Alice.Connection.WebSocket = Class.create(Alice.Connection, {
       params = Form.serialize(form, true);
     }
 
+    params['stream'] = this.id;
     this.request.send(Object.toJSON(params));
     return true;
   },
@@ -11707,9 +11717,7 @@ Alice.Connection.WebSocket = Class.create(Alice.Connection, {
   },
 
   closeWindow: function(win) {
-    this.request.send(Object.toJSON(
-      {source: win.id, msg: "/close"}
-    ));
+    this.sendMessage({source: win.id, msg: "/close"});
   },
 
   handleException: function(exception) {
@@ -11834,6 +11842,8 @@ Alice.Connection.XHR = Class.create(Alice.Connection, {
       params = form;
     }
 
+    params['stream'] = this.id;
+
     new Ajax.Request('/say', {
       method: 'post',
       parameters: params,
@@ -11857,14 +11867,22 @@ Alice.Connection.XHR = Class.create(Alice.Connection, {
     new Ajax.Request('/say', {
       method: 'post',
       on401: this.gotoLogin,
-      parameters: {source: win.id, msg: "/close"}
+      parameters: {
+        source: win.id,
+        msg: "/close",
+        stream: this.id
+      }
     });
   },
 
   requestWindow: function(title, windowId, message) {
     new Ajax.Request('/say', {
       method: 'post',
-      parameters: {source: windowId, msg: "/create " + title},
+      parameters: {
+        source: windowId,
+        msg: "/create " + title,
+        stream: this.id
+      },
       on401: this.gotoLogin,
       onSuccess: function (transport) {
         this.handleUpdate(transport);
@@ -11879,7 +11897,7 @@ Alice.Connection.XHR = Class.create(Alice.Connection, {
 
 });
 Alice.Window = Class.create({
-  initialize: function(application, serialized) {
+  initialize: function(application, serialized, msgid) {
     this.application = application;
 
     this.element = $(serialized['id']);
@@ -11899,11 +11917,14 @@ Alice.Window = Class.create({
     this.nicks = [];
     this.nicks_order = [];
     this.statuses = [];
-    this.messageLimit = this.application.isMobile ? 50 : 200;
-    this.msgid = 0;
+    this.messageLimit = this.application.isMobile ? 50 : 100;
+    this.chunkSize = this.messageLimit / 2;
+    this.msgid = msgid || 0;
     this.visible = true;
+    this.forceScroll = false;
 
     this.setupEvents();
+    this.setupScrollBack();
   },
 
   hide: function() {
@@ -11955,6 +11976,25 @@ Alice.Window = Class.create({
     }.bind(this));
 
     this.messages.observe("mouseover", this.showNick.bind(this));
+  },
+
+  setupScrollBack: function() {
+    clearInterval(this.scrollListener);
+    this.scrollListener = setInterval(function(){
+      if (this.active && this.msgid && this.element.scrollTop < 10) {
+        clearInterval(this.scrollListener);
+        var first = this.messages.down("li");
+        if (first) {
+          first = first.id.replace("msg-", "");
+        }
+        else {
+          first = this.msgid;
+        }
+        this.application.getBacklog(this, first, this.chunkSize / 2);
+        setTimeout(this.setupScrollBack.bind(this), 1000);
+      }
+    }.bind(this), 1000);
+
   },
 
   updateTabLayout: function() {
@@ -12140,25 +12180,42 @@ Alice.Window = Class.create({
   addChunk: function(chunk) {
     if (chunk.nicks) this.updateNicks(chunk.nicks);
 
-    var scroll = this.shouldScrollToBottom();
+    var scroll_bottom = this.shouldScrollToBottom();
+    var scroll_top = 0;
 
-    this.messages.insert({bottom: chunk.html});
-    this.trimMessages();
-    if (scroll) this.scrollToBottom(true);
+    var div = new Element("DIV", {'class': 'chunk'});
+    div.innerHTML = chunk['html'];
+
+    if (chunk['range'][0] > this.msgid) {
+      this.messages.insert({"bottom": div.innerHTML});
+      this.trimMessages();
+      var last = div.select("li").last();
+      if (last && last.id) this.msgid = last.id.replace("msg-", "");
+    }
+    else {
+      if (scroll_bottom) {
+        this.messages.insert({"top": div.innerHTML});
+      }
+      else {
+        this.messages.insert({"top": div});
+        scroll_top = div.getHeight();
+        div.replace(div.innerHTML);
+      }
+    }
 
     this.bulk_insert = true;
+    if (scroll_bottom) this.forceScroll = true;
 
-    var messages = this.messages.select("li");
-    messages.each(function (li) {
+    this.messages.select("li:not(.filtered)").each(function (li) {
       this.application.applyFilters(li, this);
     }.bind(this));
 
     this.bulk_insert = false;
+    this.forceScroll = false;
 
-    if (scroll) this.scrollToBottom(true);
+    if (scroll_bottom) this.scrollToBottom(true);
+    else if (scroll_top) this.element.scrollTop = scroll_top;
 
-    var last = messages.last();
-    if (last && last.id) this.msgid = last.id.replace("msg-", "");
   },
 
   addMessage: function(message) {
@@ -12198,6 +12255,7 @@ Alice.Window = Class.create({
 
   shouldScrollToBottom: function() {
     if (!this.active) return false;
+    if (this.forceScroll) return true;
 
     var bottom = this.element.scrollTop + this.element.offsetHeight;
     var height = this.element.scrollHeight;
@@ -12233,40 +12291,50 @@ Alice.Window = Class.create({
   },
 
   removeImage: function(e) {
+    e.stop();
     var div = e.findElement('div.image');
     if (div) {
-      var img = div.down('a img');
-      var a = img.up('a');
-      if (img) img.replace(a.href);
-      e.element().remove();
+      var a = div.down("a");
+      var id = a.identify();
+      a.update(a.href);
+      a.style.display = "inline";
+      div.replace(a);
+      var contain = a.up();
+      contain.innerHTML = contain.innerHTML.replace("\n", "");
+      var a = $(id);
       a.observe("click", function(e){e.stop();this.inlineImage(a)}.bind(this));
     }
   },
 
   inlineImage: function(a) {
     a.stopObserving("click");
-
     var scroll = this.shouldScrollToBottom();
-
     var src = a.readAttribute("img") || a.innerHTML;
-    var img = new Element("IMG", {src: alice.options.image_prefix + src});
+    var prefix = alice.options.image_prefix;
+
+    if (alice.options.animate == "hide") {
+      prefix = prefix + "still/";
+    }
+    var img = new Element("IMG", {src: prefix + src});
+    img.hide();
+
     img.observe("load", function(){
-      img.up("div.image").style.display = "inline-block";
+      var wrap = new Element("DIV", {"class": "image"});
+      var hide = new Element("A", {"class": "hideimg"});
+
+      img.show();
+      a.replace(wrap);
+      wrap.insert(a);
+      a.update(img);
+      a.insert(hide);
+      a.style.display = "inline-block";
+      hide.observe("click", this.removeImage.bind(this));
+      hide.update("hide");
+
       if (scroll) this.scrollToBottom(true);
     }.bind(this));
 
-    var wrap = new Element("DIV");
-    var div = new Element("DIV", {"class": "image"});
-    var hide = new Element("A", {"class": "hideimg"});
-
-    hide.observe("click", this.removeImage.bind(this));
-    hide.update("hide");
-    wrap.insert(div);
-
-    a = a.replace(wrap);
-    div.insert(a);
-    div.insert(hide);
-    a.update(img);
+    a.insert({after: img});
   }
 });
 
@@ -12740,6 +12808,7 @@ Alice.Keyboard = Class.create({
       this.shortcut("Cmd+Shift+L");
       this.shortcut("Cmd+U");
       this.shortcut("Esc");
+      this.shortcut("Cmd", { propagate: true });
       this.shortcut("Tab", { propagate: true });
       this.shortcut("Shift+Tab", { propagate: true });
       for (var i = 0; i < 10; i++) {
@@ -12770,6 +12839,13 @@ Alice.Keyboard = Class.create({
         delete this.activeWindow;
       }
     }.bind(this), options);
+  },
+
+  onCmd: function(e) {
+    if (e.keyCode == 186) {
+      e.stop();
+      this.application.nextUnreadWindow();
+    }
   },
 
   onNumeric: function(event, number) {

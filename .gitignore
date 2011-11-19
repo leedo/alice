@@ -16,3 +16,4 @@ README
 t/alice/test_config
 alice.log
 inc
+MYMETA.yml

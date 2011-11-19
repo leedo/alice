@@ -15,11 +15,12 @@ Alice.Connection.WebSocket = Class.create(Alice.Connection, {
     this.application.log("opening new websocket connection starting at "+msgid);
     this.changeStatus("ok");
     var parameters = Object.toQueryString({
-      msgid: msgid,
+      min: msgid,
       t: now.getTime() / 1000,
       tab: this.application.activeWindow().id
     });
-    var url = "ws://" + window.location.host + "/wsstream?" + parameters;
+    var protocol = (window.location.protocol.match(/^https/) ? "wss://" : "ws://");
+    var url = protocol + window.location.host + "/wsstream?" + parameters;
     this.request = new WebSocket(url);
     this.request.onopen = function(){this.connected = true}.bind(this);
     this.request.onmessage = this.handleUpdate.bind(this);
@@ -40,6 +41,7 @@ Alice.Connection.WebSocket = Class.create(Alice.Connection, {
       params = Form.serialize(form, true);
     }
 
+    params['stream'] = this.id;
     this.request.send(Object.toJSON(params));
     return true;
   },
@@ -51,9 +53,7 @@ Alice.Connection.WebSocket = Class.create(Alice.Connection, {
   },
 
   closeWindow: function(win) {
-    this.request.send(Object.toJSON(
-      {source: win.id, msg: "/close"}
-    ));
+    this.sendMessage({source: win.id, msg: "/close"});
   },
 
   handleException: function(exception) {

@@ -298,8 +298,6 @@ sub registered {
     $self->disconnected("ping timeout");
   });
   
-  # merge auto-joined channel list with existing channels
-  my @channels = uniq @{$self->config->{channels}}, $self->channels;
   my @commands = ();
 
   push @commands, map {
@@ -316,7 +314,7 @@ sub registered {
       $self->show_info("joining $channel");
       $self->send_srv("JOIN", split /\s+/, $channel);
     }
-  } @channels; 
+  } @{$self->config->{channels}};
     
   my $t; $t = AE::timer 1, 0.5, sub {
     if (my $command = shift @commands) {
@@ -446,8 +444,6 @@ sub invite {
 sub _join {
   my ($self, $cl, $nick, $channel, $is_self) = @_;
 
-  return if $self->app->is_ignore("join" => $channel);
-
   if ($is_self) {
 
     # self->window uses find_or_create, so we don't create
@@ -462,6 +458,7 @@ sub _join {
     $self->send_srv("WHO" => $channel) if $cl->isupport("UHNAMES");
   }
   elsif (my $window = $self->find_window($channel)) {
+    return if $self->app->is_ignore("join" => $channel);
     $self->send_srv("WHO" => $nick) unless $self->nick_avatar($nick);
     $self->broadcast($window->format_event("joined", $nick));
   }
@@ -480,6 +477,9 @@ sub part {
 
 sub multiple_left {
   my ($self, $cl, $msg, $channel, @nicks) = @_;
+
+  return if $self->app->is_ignore(part => $channel);
+
   if (my $window = $self->find_window($channel)) {
     $self->broadcast(map {$window->format_event("left", $_, $msg->{params}[0])} @nicks);
   }
@@ -710,134 +710,4 @@ sub mk_msg {
   encode "utf8", AnyEvent::IRC::Util::mk_msg(@_);
 }
 
-__PACKAGE__->meta->make_immutable;
 1;
-
-=pod
-
-=head1 NAME
-
-Alice::IRC - an Altogether Lovely Internet Chatting Experience
-
-=head2 METHODS
-
-=over 4
-
-=item $irc->connect
-
-Connect to the server. This will not force a reconnect if already
-connected.
-
-
-=item $irc->disconnect
-
-=item $irc->disconnect ($quitmsg)
-
-Sends QUIT with an optional $quitmsg to the server and disconnects.
-
-
-=item $irc->reconnect
-=item $irc->reconnect ($seconds)
-
-Reconnects to the IRC server with an optional $second delay. It will
-continue attempting to reconnect until it succeeds, increasing the
-delay by 15 seconds each time (maxing out at 5 minutes).
-
-
-=item $irc->alias
-
-A short name used to describe this server.
-
-
-=item $irc->is_connected
-
-Returns true if connected to the server.
-
-
-=item $irc->get_nick_info ($nick)
-
-Get WHOIS related information about $nick.
-
-
-=item $irc->send_srv ($cmd, @params)
-
-Send the command to the server and format any parameters.
-
-
-=item $irc->send_raw ($line)
-
-Send the $line as-is to the server.
-
-
-=item $irc->show_info ($text, %options)
-
-=item $irc->show_info ([$text, $text, ... $text], %options)
-
-Takes one or more lines to log and an options hash. This lines
-will be sent to the client and printed in the "info" tab.
-
-
-=item $irc->window ($title)
-
-Returns an Alice::Window for this server using $title.
-If one already exists it will be returned, otherwise a new
-Window will be created.
-
-
-=item $irc->find_window ($title)
-
-Find an Alice::Window from this server by $title.
-
-
-=item $irc->nick
-
-The nick being used on this server.
-
-
-=item $irc->windows
-
-Returns a list of Alice::Windows for this server.
-
-
-=item $irc->channels
-
-Returns a list of channel names currently joined for this server.
-
-
-=item $irc->is_channel ($channelname)
-
-This will return a true value if $channelname is a valid channel name
-on this server (e.g. starts with #). This uses the CHANTYPES list
-provided by the server's ISUPPORT line.
-
-
-=item $irc->channel_nicks  ($channelname)
-
-Returns a list of nicks that are in the given $channelname.
-
-
-=item $irc->nick_channels ($nick)
-
-Returns a list of channel names that $nick is in.
-
-
-=item $irc->nick_windows ($nick)
-
-Returns a list of Alice::Windows that $nick is in.
-
-
-=item $irc->nick_avatar ($nick)
-
-Returns the avatar (image URL) for $nick, or undef if there is no avatar. 
-
-
-=item $irc->update_realname ($new_realname)
-
-Update this connection's REALNAME, which will tchange your avatar
-for other alice users. Sends a REALNAME command to the server.
-This command is only understood by the hector IRC server, and
-will be ignored by others.
-
-=back
-
-=cut

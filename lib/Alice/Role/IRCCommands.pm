@@ -15,18 +15,19 @@ sub commands {
 }
 
 sub irc_command {
-  my ($self, $window, $line) = @_;
+  my ($self, $req) = @_;
+
   try {
-    my ($command, $args) = $self->match_irc_command($line);
+    my ($command, $args) = $self->match_irc_command($req->line);
     if ($command) {
-      $self->run_irc_command($window, $command, $args);
+      $self->run_irc_command($command, $req, $args);
     }
     else {
-      throw UnknownCommand "$line does not match any known commands. Try /help";
+      throw UnknownCommand $req->line ." does not match any known commands. Try /help";
     }
   }
   catch {
-    $self->send_announcement($window, "$_");
+    $req->reply($_);
   }
 }
 
@@ -45,48 +46,50 @@ sub match_irc_command {
 }
 
 sub run_irc_command {
-  my ($self, $window, $name, $args) = @_;
+  my ($self, $name, $req, $args) = @_;
   my $command = $COMMANDS{$name};
-
-  my $req = {window => $window};
+  my $opts = [];
 
   # must be in a channel
-  if ($command->{window_type} and none {$_ eq $window->type} @{$command->{window_type}}) {
+  my $type = $req->window->type;
+  if ($command->{window_type} and none {$_ eq $type} @{$command->{window_type}}) {
     my $types = join " or ", @{$command->{window_type}};
     throw ChannelRequired "Must be in a $types for /$command->{name}.";
   }
 
-  # determine the connection if it is required
-  if ($command->{connection}) {
-    my $network = $window->network;
-    if ($args =~ s/^$SRVOPT//) {
-      $network = $1;
-    }
+  my $network = $req->window->network;
 
+  # determine the network can be overridden
+  if ($command->{network} and $args =~ s/^$SRVOPT//) {
+    $network = $1;
+  }
+
+  # command requires a connected network
+  if ($command->{connection}) {
     throw NetworkRequired $command->{eg} unless $network; 
 
-    my $connection = $self->get_irc($network);
+    my $irc = $self->get_irc($network);
 
     throw InvalidNetwork "The $network network does not exist."
-      unless $connection;
+      unless $irc;
 
     throw InvalidNetwork "The $network network is not connected"
-      unless $connection->is_connected;
+      unless $irc->is_connected;
 
-    $req->{connection} = $connection;
+    $req->irc($irc);
   }
 
   # gather any options
   if (my $opt_re = $command->{opts}) {
     if (my (@opts) = ($args =~ /$opt_re/)) {
-      $req->{opts} = \@opts;
+      $opts = \@opts;
     }
     else {
       throw InvalidArguments $command->{eg};
     }
   }
 
-  $command->{cb}->($self, $req);
+  $command->{cb}->($self, $req, $opts);
 }
 
 sub command {
@@ -101,14 +104,11 @@ command say => {
   eg => "/SAY <msg>",
   opts => qr{(.+)},
   cb => sub {
-    my ($self, $req) = @_;
+    my ($self, $req, $opts) = @_;
 
-    my $msg = $req->{opts}[0];
-    my $window = $req->{window};
-    my $connection = $req->{connection};
-
-    $self->send_message($window, $connection->nick, $msg);
-    $connection->send_long_line(PRIVMSG => $window->title, $msg);
+    my $msg = $opts->[0];
+    $self->send_message($req->window, $req->irc->nick, $msg);
+    $req->irc->send_long_line(PRIVMSG => $req->window->title, $msg);
   },
 };
 
@@ -118,18 +118,18 @@ command msg => {
   eg => "/MSG [-<network>] <nick> [<msg>]",
   desc => "Sends a message to a nick.",
   connection => 1,
+  network => 1,
   cb => sub  {
-    my ($self, $req) = @_;
+    my ($self, $req, $opts) = @_;
 
-    my ($nick, $msg) = @{ $req->{opts} };
+    my ($nick, $msg) = @$opts;
 
-    my $new_window = $self->find_or_create_window($nick, $req->{connection});
+    my $new_window = $self->find_or_create_window($nick, $req->irc);
     $self->broadcast($new_window->join_action);
 
     if ($msg) {
-      my $connection = $req->{connection};
-      $self->send_message($new_window, $connection->nick, $msg);
-      $connection->send_srv(PRIVMSG => $nick, $msg);
+      $self->send_message($new_window, $req->nick, $msg);
+      $req->send_srv(PRIVMSG => $nick, $msg);
     }
   }
 };
@@ -138,17 +138,16 @@ command nick => {
   name => "nick",
   opts => qr{(\S+)},
   connection => 1,
+  network => 1,
   eg => "/NICK [-<network>] <new nick>",
   desc => "Changes your nick.",
   cb => sub {
-    my ($self, $req) = @_;
+    my ($self, $req, $opts) = @_;
 
-    my $nick = $req->{opts}[0];
-    my $connection = $req->{connection};
-    my $window = $req->{window};
+    my $nick = $opts->[0];
 
-    $window->reply("now known as $nick on " . $connection->alias);
-    $connection->send_srv(NICK => $nick);
+    $req->reply("changing nick to $nick on " . $req->irc->alias);
+    $req->irc->send_srv(NICK => $nick);
   }
 };
 
@@ -159,8 +158,7 @@ command qr{names|n} => {
   desc => "Lists nicks in current channel.",
   cb => sub  {
     my ($self, $req) = @_;
-    my $window = $req->{window};
-    $self->send_announcement($window, $window->nick_table);
+    $req->reply($req->window->nick_table);
   },
 };
 
@@ -168,15 +166,15 @@ command qr{join|j} => {
   name => "join",
   opts => qr{(\S+)\s*(\S+)?},
   connection => 1,
+  network => 1,
   eg => "/JOIN [-<network>] <channel> [<password>]",
   desc => "Joins the specified channel.",
   cb => sub  {
-    my ($self, $req) = @_;
+    my ($self, $req, $opts) = @_;
 
-    my $connection = $req->{connection};
-
-    $req->{window}->reply("joining $req->{opts}[0] on ". $connection->alias);
-    $connection->send_srv(JOIN => @{$req->{opts}});
+    my $channel = $opts->[0];
+    $req->reply("joining $channel on ". $req->irc->alias);
+    $req->send_srv(JOIN => @$opts);
   },
 };
 
@@ -184,12 +182,13 @@ command create => {
   name => "create",
   opts => qr{(\S+)},
   connection => 1,
+  network => 1,
   cb => sub  {
-    my ($self, $req) = @_;
+    my ($self, $req, $opts) = @_;
 
-    my $name = $req->{opts}[0];
+    my $name = $opts->[0];
 
-    my $new_window = $self->find_or_create_window($name, $req->{connection});
+    my $new_window = $self->find_or_create_window($name, $req->irc);
     $self->broadcast($new_window->join_action);
   }
 };
@@ -201,13 +200,12 @@ command qr{close|wc|part} => {
   desc => "Leaves and closes the focused window.",
   cb => sub  {
     my ($self, $req) = @_;
+    my $window = $req->window;
 
-    my $window = $req->{window};
     $self->close_window($window);
 
-    if ($window->is_channel) {
-      my $connection = $self->get_irc($window->network);
-      $connection->send_srv(PART => $window->title) if $connection->is_connected;
+    if ($window->is_channel and $window->irc->is_connected) {
+      $window->irc->send_srv(PART => $window->title);
     }
   },
 };
@@ -218,8 +216,8 @@ command clear =>  {
   desc => "Clears lines from current window.",
   cb => sub {
     my ($self, $req) = @_;
-    $req->{window}->buffer->clear;
-    $self->broadcast($req->{window}->clear_action);
+    $req->window->buffer->clear;
+    $self->broadcast($req->window->clear_action);
   },
 };
 
@@ -228,21 +226,20 @@ command qr{topic|t} => {
   opts => qr{(.+)?},
   window_type => ['channel'],
   connection => 1,
+  network => 1,
   eg => "/TOPIC [<topic>]",
   desc => "Shows and/or changes the topic of the current channel.",
   cb => sub  {
-    my ($self, $req) = @_;
+    my ($self, $req, $opts) = @_;
 
-    my $new_topic = $req->{opts}[0];
-    my $window = $req->{window};
+    my $new_topic = $opts->[0];
 
     if ($new_topic) {
-      my $connection = $req->{connection};
-      $window->topic({string => $new_topic, nick => $connection->nick, time => time});
-      $connection->send_srv(TOPIC => $window->title, $new_topic);
+      $req->window->topic({string => $new_topic, nick => $req->nick, time => time});
+      $req->send_srv(TOPIC => $req->window->title, $new_topic);
     }
     else {
-      $self->send_topic($window);
+      $req->stream->send($req->window->format_topic);
     }
   }
 };
@@ -250,18 +247,18 @@ command qr{topic|t} => {
 command whois =>  {
   name => 'whois',
   connection => 1,
+  network => 1,
   opts => qr{(\S+)},
   eg => "/WHOIS [-<network>] <nick>",
   desc => "Shows info about the specified nick",
   cb => sub  {
-    my ($self, $req) = @_;
+    my ($self, $req, $opts) = @_;
 
-    my $window = $req->{window};
-    my $nick = $req->{opts}[0];
-    my $connection = $req->{connection};
+    my $nick = $opts->[0];
+    my $irc = $req->irc;
 
-    $connection->add_whois($nick,sub {
-      $window->reply($_[0] ? $_[0] : "No such nick: $nick on " . $connection->alias);
+    $irc->add_whois($nick,sub {
+      $req->reply($_[0] ? $_[0] : "No such nick: $nick on " . $irc->alias);
     });
   }
 };
@@ -274,15 +271,12 @@ command me =>  {
   connection => 1,
   desc => "Sends a CTCP ACTION to the current window.",
   cb => sub {
-    my ($self, $req) = @_;
-    my $action = $req->{opts}[0];
+    my ($self, $req, $opts) = @_;
+    my $action = $opts->[0];
 
-    my $window = $req->{window};
-    my $connection = $req->{connection};
-
-    $self->send_message($window, $connection->nick, "\x{2022} $action");
+    $self->send_message($req->window, $req->nick, "\x{2022} $action");
     $action = AnyEvent::IRC::Util::encode_ctcp(["ACTION", $action]);
-    $connection->send_srv(PRIVMSG => $window->title, $action);
+    $req->send_srv(PRIVMSG => $req->window->title, $action);
   },
 };
 
@@ -290,13 +284,12 @@ command quote => {
   name => 'quote',
   opts => qr{(.+)},
   connection => 1,
+  network => 1,
   eg => "/QUOTE [-<network>] <data>",
   desc => "Sends the server raw data without parsing.",
   cb => sub  {
-    my ($self, $req) = @_;
-
-    my $command = $req->{opts}[0];
-    $req->{connection}->send_raw($command);
+    my ($self, $req, $opts) = @_;
+    $req->irc->send_raw($opts->[0]);
   },
 };
 
@@ -306,26 +299,25 @@ command disconnect => {
   eg => "/DISCONNECT <network>",
   desc => "Disconnects from the specified server.",
   cb => sub  {
-    my ($self, $req) = @_;
+    my ($self, $req, $opts) = @_;
 
-    my $network = $req->{opts}[0];
-    my $connection = $self->get_irc($network);
-    my $window = $req->{window};
+    my $network = $opts->[0];
+    my $irc = $self->get_irc($network);
 
-    if ($connection) {
-      if ($connection->is_connected) {
-        $connection->disconnect;
+    if ($irc) {
+      if ($irc->is_connected) {
+        $irc->disconnect;
       }
-      elsif ($connection->reconnect_timer) {
-        $connection->cancel_reconnect;
-        $window->reply("Canceled reconnect timer for " . $connection->alias);
+      elsif ($irc->reconnect_timer) {
+        $irc->cancel_reconnect;
+        $req->reply("Canceled reconnect timer for " . $irc->alias);
       }
       else {
-        $self->send_announcement($window, "Already disconnected");
+        $req->reply("Already disconnected");
       }
     }
     else {
-      $self->send_announcement($window, "$network isn't one of your networks!");
+      $req->reply("$network isn't one of your networks!");
     }
   },
 };
@@ -336,27 +328,26 @@ command 'connect' => {
   eg => "/CONNECT <network>",
   desc => "Connects to the specified server.",
   cb => sub {
-    my ($self, $req) = @_;
+    my ($self, $req, $opts) = @_;
 
-    my $network = $req->{opts}[0];
-    my $connection = $self->get_irc($network);
-    my $window = $req->{window};
+    my $network = $opts->[0];
+    my $irc = $self->get_irc($network);
 
-    if ($connection) {
-      if ($connection->is_connected) {
-        $self->send_announcement($window, "Already connected");
+    if ($irc) {
+      if ($irc->is_connected) {
+        $req->reply("Already connected");
       }
-      elsif ($connection->reconnect_timer) {
-        $connection->cancel_reconnect;
-        $window->reply("Canceled reconnect timer for " . $connection->alias);
-        $connection->connect;
+      elsif ($irc->reconnect_timer) {
+        $irc->cancel_reconnect;
+        $req->reply("Canceled reconnect timer for " . $irc->alias);
+        $irc->connect;
       }
       else {
-        $connection->connect;
+        $irc->connect;
       }
     }
     else {
-      $self->send_announcement($window, "$network isn't one of your networks");
+      $req->reply("$network isn't one of your networks");
     }
   }
 };
@@ -367,17 +358,16 @@ command ignore =>  {
   eg => "/IGNORE [<type>] <target>",
   desc => "Adds a nick or channel to ignore list. Types include 'msg', 'part', 'join'. Defaults to 'msg'.",
   cb => sub  {
-    my ($self, $req) = @_;
+    my ($self, $req, $opts) = @_;
     
-    if (!$req->{opts}[1]) {
-      unshift @{$req->{opts}}, "msg";
+    if (!$opts->[1]) {
+      unshift @$opts, "msg";
     }
 
-    my ($type, $nick) = @{$req->{opts}};
+    my ($type, $nick) = @$opts;
 
-    my $window = $req->{window};
     $self->add_ignore($type, $nick);
-    $self->send_announcement($window, "Ignoring $type from $nick");
+    $req->reply("Ignoring $type from $nick");
   },
 };
 
@@ -387,17 +377,16 @@ command unignore =>  {
   eg => "/UNIGNORE [<type>] <nick>",
   desc => "Removes nick from ignore list. Types include 'msg', 'part', 'join'. Defaults to 'msg'.",
   cb => sub {
-    my ($self, $req) = @_;
+    my ($self, $req, $opts) = @_;
     
-    if (!$req->{opts}[1]) {
-      unshift @{$req->{opts}}, "msg";
+    if (!$opts->[1]) {
+      unshift @$opts, "msg";
     }
 
-    my ($type, $nick) = @{$req->{opts}};
+    my ($type, $nick) = @$opts;
 
-    my $window = $req->{window};
     $self->remove_ignore($type, $nick);
-    $self->send_announcement($window, "No longer ignoring $nick");
+    $req->reply("No longer ignoring $nick");
   },
 };
 
@@ -416,8 +405,7 @@ command ignores => {
       $msg .= "\n";
     }
 
-    my $window = $req->{window};
-    $self->send_announcement($window, "Ignoring\n$msg");
+    $req->reply("Ignoring\n$msg");
   },
 };
 
@@ -427,13 +415,12 @@ command qr{window|w} =>  {
   eg => "/WINDOW <window number>",
   desc => "Focuses the provided window number",
   cb => sub  {
-    my ($self, $req) = @_;
+    my ($self, $req, $opts) = @_;
     
-    my $window_number = $req->{opts}[0];
-    $self->broadcast({
+    $req->stream->send({
       type => "action",
       event => "focus",
-      window_number => $window_number,
+      window_number => $opts->[0],
     });
   }
 };
@@ -444,16 +431,14 @@ command away =>  {
   eg => "/AWAY [<message>]",
   desc => "Set or remove an away message",
   cb => sub {
-    my ($self, $req) = @_;
+    my ($self, $req, $opts) = @_;
 
-    my $window = $req->{window};
-
-    if (my $message = $req->{opts}[0]) {
-      $self->send_announcement($window, "Setting away status: $message");
+    if (my $message = $opts->[0]) {
+      $req->reply("Setting away status: $message");
       $self->set_away($message);
     }
     else {
-      $self->send_announcement($window, "Removing away status.");
+      $req->reply("Removing away status.");
       $self->set_away;
     }
   }
@@ -466,13 +451,12 @@ command invite =>  {
   eg => "/INVITE <nickname> <channel>",
   desc => "Invite a user to a channel you're in",
   cb => sub {
-    my ($self, $req) = @_;
+    my ($self, $req, $opts) = @_;
 
-    my ($nick, $channel) = @{ $req->{opts} };
-    my $window = $req->{window};
+    my ($nick, $channel) = @$opts;
 
-    $self->send_announcement($window, "Inviting $nick to $channel");
-    $req->{connection}->send_srv(INVITE => $nick, $channel);   
+    $req->reply("Inviting $nick to $channel");
+    $req->send_srv(INVITE => $nick, $channel);   
   },
 };
 
@@ -480,16 +464,16 @@ command qr{avatar|realname} => {
   name => 'avatar',
   eg => "/AVATAR [-<network>] <image-url>",
   connection => 1,
+  network => 1,
   desc => "Changes your avatar. Requires a reconnect on most servers.",
   opts => qr{(\S+)},
   cb => sub {
-    my ($self, $req) = @_;
+    my ($self, $req, $opts) = @_;
 
-    my $url = $req->{opts}[0];
-    my $connection = $req->{connection};
+    my $url = $opts->[0];
 
-    $connection->update_realname($url);
-    $self->send_announcement($req->{window}, "realname changed to $url");
+    $req->irc->update_realname($url);
+    $req->reply("realname changed to $url");
   }
 };
 
@@ -499,26 +483,34 @@ command help => {
   desc => "Shows list of commands or overview of a specific command.",
   opts => qr{(\S+)?},
   cb => sub {
-    my ($self, $req) = @_;
+    my ($self, $req, $opts) = @_;
 
-    my $window = $req->{window};
-    my $command = $req->{opts}[0];
+    my $command = $opts->[0];
 
     if (!$command) {
       my $commands = join " ", map {uc $_->{name}} grep {$_->{eg}} values %COMMANDS;
-      $self->send_announcement($window, '/HELP <command> for help with a specific command');
-      $self->send_announcement($window, "Available commands: $commands");
+      $req->reply('/HELP <command> for help with a specific command');
+      $req->reply("Available commands: $commands");
       return;
     }
 
     for (values %COMMANDS) {
       if ($_->{name} eq lc $command) {
-        $self->send_announcement($window, "$_->{eg}\n$_->{desc}");
+        $req->reply("$_->{eg}\n$_->{desc}");
         return;
       }
     }
 
-    $self->send_announcement($window, "No help for ".uc $command);
+    $req->reply("No help for ".uc $command);
+  }
+};
+
+command chunk => {
+  name => 'chunk',
+  opts => qr{(\d+) (\d+)},
+  cb => sub {
+    my ($self, $req, $opts) = @_;
+    $self->update_window($req->stream, $req->window, $opts->[1], 0, $opts->[0], 0);
   }
 };
 

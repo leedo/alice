@@ -147,11 +147,6 @@ div#config_menu > ul {
   }
 }
 
-div#config_menu > ul > li{
-  padding-left: 10px;
-  padding-right: 10px;
-}
-
 div#config_menu ul ul {
   left: 100%;
   right: auto;
@@ -779,12 +774,11 @@ div.oembed a {
   word-break: normal;
 }
 
-div.image {
+div.image a {
   position: relative;
-  display: none;
 }
 
-div.image a.hideimg {
+div.image a a.hideimg {
   position: absolute;
   white-space: nowrap;
   top: 0px;
@@ -799,12 +793,12 @@ div.image a.hideimg {
   text-shadow: 1px 1px 1px rgba(0,0,0,0.5);
 }
 
-div.image:hover a.hideimg {
+div.image a:hover a.hideimg {
   opacity: 1;
   background: rgba(0,0,0,0.25);
 }
 
-div.image a.hideimg:hover {
+div.image a a.hideimg:hover {
   background: rgba(0,0,0,0.5);
   opacity: 1;
 }
@@ -1459,9 +1453,15 @@ span.nickborder {
 
 .dropdown li {
   display: block;
+  padding: 0;
+}
+
+.dropdown li span,
+.dropdown li a {
+  color: $tab_text;
+  display: block;
   padding: 4px 10px;
   text-decoration: none;
-  color: $tab_text;
 }
 
 .dropdown li {

@@ -1,10 +1,10 @@
 ? my $app = shift;
 
 <ul id="tabset_menu">
-  <li class="separate-bottom">Edit Sets</li>
-  <li>All tabs</li>
+  <li class="separate-bottom"><span>Edit Sets</span></li>
+  <li><span>All tabs</span></li>
   <? for my $set ($app->tabsets) { ?>
-    <li><?= $set->name ?></li>
+    <li><span><?= $set->name ?></span></li>
   <? } ?>
   <script type="text/javascript">
     if (window.alice) {

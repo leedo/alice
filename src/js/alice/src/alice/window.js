@@ -1,5 +1,5 @@
 Alice.Window = Class.create({
-  initialize: function(application, serialized) {
+  initialize: function(application, serialized, msgid) {
     this.application = application;
     
     this.element = $(serialized['id']);
@@ -19,11 +19,14 @@ Alice.Window = Class.create({
     this.nicks = [];
     this.nicks_order = [];
     this.statuses = [];
-    this.messageLimit = this.application.isMobile ? 50 : 200;
-    this.msgid = 0;
+    this.messageLimit = this.application.isMobile ? 50 : 100;
+    this.chunkSize = this.messageLimit / 2;
+    this.msgid = msgid || 0;
     this.visible = true;
+    this.forceScroll = false;
     
     this.setupEvents();
+    this.setupScrollBack();
   },
 
   hide: function() {
@@ -77,6 +80,25 @@ Alice.Window = Class.create({
     }.bind(this));
 
     this.messages.observe("mouseover", this.showNick.bind(this));
+  },
+
+  setupScrollBack: function() {
+    clearInterval(this.scrollListener);
+    this.scrollListener = setInterval(function(){
+      if (this.active && this.msgid && this.element.scrollTop < 10) {
+        clearInterval(this.scrollListener);
+        var first = this.messages.down("li");
+        if (first) {
+          first = first.id.replace("msg-", "");
+        }
+        else {
+          first = this.msgid;
+        }
+        this.application.getBacklog(this, first, this.chunkSize / 2);
+        setTimeout(this.setupScrollBack.bind(this), 1000);
+      }
+    }.bind(this), 1000);
+
   },
 
   updateTabLayout: function() {
@@ -263,26 +285,42 @@ Alice.Window = Class.create({
   addChunk: function(chunk) {
     if (chunk.nicks) this.updateNicks(chunk.nicks);
 
-    var scroll = this.shouldScrollToBottom();
+    var scroll_bottom = this.shouldScrollToBottom();
+    var scroll_top = 0;
 
-    this.messages.insert({bottom: chunk.html});
-    this.trimMessages();
-    if (scroll) this.scrollToBottom(true);
+    var div = new Element("DIV", {'class': 'chunk'});
+    div.innerHTML = chunk['html'];
 
-    // so the tab doesn't get highlighted :|
+    if (chunk['range'][0] > this.msgid) {
+      this.messages.insert({"bottom": div.innerHTML});
+      this.trimMessages();
+      var last = div.select("li").last();
+      if (last && last.id) this.msgid = last.id.replace("msg-", "");
+    }
+    else {
+      if (scroll_bottom) {
+        this.messages.insert({"top": div.innerHTML});
+      }
+      else {
+        this.messages.insert({"top": div});
+        scroll_top = div.getHeight();
+        div.replace(div.innerHTML);
+      }
+    }
+
     this.bulk_insert = true;
+    if (scroll_bottom) this.forceScroll = true;
 
-    var messages = this.messages.select("li");
-    messages.each(function (li) {
+    this.messages.select("li:not(.filtered)").each(function (li) {
       this.application.applyFilters(li, this);
     }.bind(this));
 
     this.bulk_insert = false;
+    this.forceScroll = false;
 
-    if (scroll) this.scrollToBottom(true);
+    if (scroll_bottom) this.scrollToBottom(true);
+    else if (scroll_top) this.element.scrollTop = scroll_top;
 
-    var last = messages.last();
-    if (last && last.id) this.msgid = last.id.replace("msg-", "");
   },
 
   addMessage: function(message) {
@@ -324,6 +362,7 @@ Alice.Window = Class.create({
 
   shouldScrollToBottom: function() {
     if (!this.active) return false;
+    if (this.forceScroll) return true;
 
     var bottom = this.element.scrollTop + this.element.offsetHeight;
     var height = this.element.scrollHeight;
@@ -359,39 +398,49 @@ Alice.Window = Class.create({
   },
 
   removeImage: function(e) {
+    e.stop();
     var div = e.findElement('div.image');
     if (div) {
-      var img = div.down('a img');
-      var a = img.up('a');
-      if (img) img.replace(a.href);
-      e.element().remove();
+      var a = div.down("a");
+      var id = a.identify();
+      a.update(a.href);
+      a.style.display = "inline";
+      div.replace(a);
+      var contain = a.up();
+      contain.innerHTML = contain.innerHTML.replace("\n", "");
+      var a = $(id);
       a.observe("click", function(e){e.stop();this.inlineImage(a)}.bind(this));
     }
   },
 
   inlineImage: function(a) {
     a.stopObserving("click");
-
     var scroll = this.shouldScrollToBottom();
-
     var src = a.readAttribute("img") || a.innerHTML;
-    var img = new Element("IMG", {src: alice.options.image_prefix + src});
+    var prefix = alice.options.image_prefix;
+
+    if (alice.options.animate == "hide") {
+      prefix = prefix + "still/";
+    }
+    var img = new Element("IMG", {src: prefix + src});
+    img.hide();
+
     img.observe("load", function(){
-      img.up("div.image").style.display = "inline-block";
+      var wrap = new Element("DIV", {"class": "image"});
+      var hide = new Element("A", {"class": "hideimg"});
+
+      img.show();
+      a.replace(wrap);
+      wrap.insert(a);
+      a.update(img);
+      a.insert(hide);
+      a.style.display = "inline-block";
+      hide.observe("click", this.removeImage.bind(this));
+      hide.update("hide");
+
       if (scroll) this.scrollToBottom(true);
     }.bind(this));
 
-    var wrap = new Element("DIV");
-    var div = new Element("DIV", {"class": "image"});
-    var hide = new Element("A", {"class": "hideimg"});
-
-    hide.observe("click", this.removeImage.bind(this));
-    hide.update("hide");
-    wrap.insert(div);
-
-    a = a.replace(wrap);
-    div.insert(a);
-    div.insert(hide);
-    a.update(img);
+    a.insert({after: img});
   }
 });

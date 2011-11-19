@@ -61,7 +61,10 @@ Alice.Connection = {
       var queue = data.queue;
       var length = queue.length;
       for (var i=0; i<length; i++) {
-        if (queue[i].type == "action")
+        if (queue[i].type == "identify") {
+          this.id = queue[i].id;
+        }
+        else if (queue[i].type == "action")
           this.application.handleAction(queue[i]);
         else if (queue[i].type == "message") {
           if (queue[i].timestamp)
@@ -117,4 +120,11 @@ Alice.Connection = {
       parameters: {tabs: windows}
     });
   },
+
+  requestChunk: function (win, limit, max) {
+    this.sendMessage({
+      source: win,
+      msg: "/chunk " + limit + " " + max,
+    });
+  }
 };

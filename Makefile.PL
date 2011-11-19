@@ -3,6 +3,7 @@ name 'Alice';
 perl_version '5.008';
 author 'Lee Aylward <leedo@cpan.org>';
 all_from 'lib/Alice.pm';
+
 requires 'Class::Throwable';
 requires 'List::MoreUtils';
 requires 'Any::Moose';
@@ -24,7 +25,8 @@ requires 'JSON' => '2.12';
 requires 'File::ShareDir';
 requires 'File::Copy';
 requires 'Net::SSLeay';
-requires 'Protocol::WebSocket' => '0.00905';
+requires 'Protocol::WebSocket' => '0.00906';
+
 test_requires 'Test::More' => '0.86';
 test_requires 'Test::TCP' => '0';
 install_share 'share';

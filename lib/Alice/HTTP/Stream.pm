@@ -1,4 +1,6 @@
-package Alice::Stream;
+package Alice::HTTP::Stream;
+
+our $NEXT_ID = 1;
 
 use Any::Moose;
 
@@ -17,5 +19,9 @@ has is_xhr => (
   default => 1,
 );
 
-__PACKAGE__->meta->make_immutable;
+has id => (
+  is => 'rw',
+  default => sub { $NEXT_ID++ }
+);
+
 1;

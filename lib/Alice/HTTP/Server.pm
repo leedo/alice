@@ -1,17 +1,18 @@
-package Alice::HTTPD;
+package Alice::HTTP::Server;
 
 use AnyEvent;
 use AnyEvent::HTTP;
 
 use Fliggy::Server;
-use Plack::Request;
 use Plack::Builder;
 use Plack::Middleware::Static;
 use Plack::Session::Store::File;
 use Plack::Session::State::Cookie;
-use Alice::Request;
-use Alice::Stream::XHR;
-use Alice::Stream::WebSocket;
+
+use Alice::HTTP::Request;
+use Alice::HTTP::Stream::XHR;
+use Alice::HTTP::Stream::WebSocket;
+
 use JSON;
 use Encode;
 use Any::Moose;
@@ -39,7 +40,24 @@ has ping => (
   },
 );
 
-sub config {$_[0]->app->config}
+has port => (
+  is => 'ro',
+  default => 8080,
+);
+
+has address => (
+  is => 'ro',
+  default => "127.0.0.1",
+);
+
+has session => (
+  is => 'ro'
+);
+
+has assets => (
+  is => 'ro',
+  required => 1,
+);
 
 my $url_handlers = [
   [ "say"          => "handle_message" ],
@@ -71,20 +89,16 @@ sub _build_httpd {
   # eval in case server can't bind port
   eval {
     $httpd = Fliggy::Server->new(
-      host => $self->config->http_address,
-      port => $self->config->http_port,
+      host => $self->address,
+      port => $self->port,
     );
     $httpd->register_service(
       builder {
-        if ($self->auth_enabled) {
-          mkdir $self->config->path."/sessions"
-            unless -d $self->config->path."/sessions";
-          enable "Session",
-            store => Plack::Session::Store::File->new(dir => $self->config->path."/sessions"),
-            state => Plack::Session::State::Cookie->new(expires => 60 * 60 * 24 * 7);
-        }
-        enable "Static", path => qr{^/static/}, root => $self->config->assetdir;
-        enable "+Alice::Middleware::WebSocket";
+        enable "Session",
+          store => $self->session,
+          state => Plack::Session::State::Cookie->new(expires => 60 * 60 * 24 * 7);
+        enable "Static", path => qr{^/static/}, root => $self->assets;
+        enable "+Alice::HTTP::WebSocket";
         sub {
           my $env = shift;
           return sub {$self->dispatch($env, shift)}
@@ -100,7 +114,7 @@ sub _build_httpd {
 sub dispatch {
   my ($self, $env, $cb) = @_;
 
-  my $req = Alice::Request->new($env, $cb);
+  my $req = Alice::HTTP::Request->new($env, $cb);
   my $res = $req->new_response(200);
 
   AE::log debug => $req->path;
@@ -197,19 +211,14 @@ sub logout {
   $res->send;
 }
 
-sub shutdown {
-  my $self = shift;
-  $self->httpd(undef);
-}
-
 sub setup_xhr_stream {
   my ($self, $req, $res) = @_;
   my $app = $self->app;
 
   AE::log debug => "opening new stream";
 
-  $res->headers([@Alice::Stream::XHR::headers]);
-  my $stream = Alice::Stream::XHR->new(
+  $res->headers([@Alice::HTTP::Stream::XHR::headers]);
+  my $stream = Alice::HTTP::Stream::XHR->new(
     queue      => [ map({$_->join_action} $app->windows) ],
     writer     => $res->writer,
     start_time => $req->param('t'),
@@ -219,7 +228,6 @@ sub setup_xhr_stream {
   );
 
   $app->add_stream($stream);
-  $app->update_stream($stream, $req);
 }
 
 sub setup_ws_stream {
@@ -229,7 +237,7 @@ sub setup_ws_stream {
   AE::log debug => "opening new websocket stream";
 
   if (my $fh = $req->env->{'websocket.impl'}->handshake) {
-    my $stream = Alice::Stream::WebSocket->new(
+    my $stream = Alice::HTTP::Stream::WebSocket->new(
       start_time => $req->param('t') || time,
       fh      => $fh,
       on_read => sub { $app->handle_message(@_) },
@@ -238,7 +246,6 @@ sub setup_ws_stream {
     );
     $stream->send([ map({$_->join_action} $app->windows) ]);
     $app->add_stream($stream);
-    $app->update_stream($stream, $req);
   }
   else {
     my $code = $req->env->{'websocket.impl'}->error_code;
@@ -252,11 +259,13 @@ sub handle_message {
   my $msg = $req->param('msg');
   my $html = $req->param('html');
   my $source = $req->param('source');
+  my $stream = $req->param('stream');
 
   $self->app->handle_message({
     msg    => defined $msg ? $msg : "",
     html   => defined $html ? $html : "",
     source => defined $source ? $source : "",
+    stream => defined $stream ? $stream : "",
   });
   
   $res->ok;
@@ -306,14 +315,9 @@ sub send_index {
 sub merged_options {
   my ($self, $req) = @_;
   my $config = $self->app->config;
-  return {
-   images => $req->param('images') || $config->images,
-   avatars => $req->param('avatars') || $config->avatars,
-   alerts => $req->param('alerts') || $config->alerts,
-   audio => $req->param('audio') || $config->audio,
-   timeformat => $req->param('timeformat') || $config->timeformat,
-   image_prefix => $req->param('image_prefix') || $config->image_prefix,
-  };
+
+  +{ map { $_ => ($req->param($_) || $config->$_) }
+      qw/animate images avatars alerts audio timeformat image_prefix/ };
 }
 
 sub template {
@@ -439,5 +443,4 @@ sub export_config {
   $res->send;
 }
 
-__PACKAGE__->meta->make_immutable;
 1;

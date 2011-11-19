@@ -12,6 +12,11 @@
             </td></tr>
 
             <tr><td>
+              <input type="checkbox"<? if ($app->config->animate eq "show") { ?> checked<? } ?> name="animate" id="animate" />
+              <label for="animate">Animate gifs?</label>
+            </td></tr>
+
+            <tr><td>
               <input type="checkbox"<? if ($app->config->avatars eq "show") { ?> checked="checked"<? } ?> name="avatars" id="avatars" />
               <label for="avatars">Show avatars?</label>
             </td></tr>

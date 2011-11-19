@@ -19,8 +19,8 @@ has id => (
 
 sub next_msgid {
   my $self = shift;
-  my $msgid = $self->store->msgid;
-  $self->store->msgid($msgid + 1);
+  my $msgid = $self->store->msgid + 1;
+  $self->store->msgid($msgid);
   return $msgid;
 }
 
@@ -39,17 +39,14 @@ sub add {
 }
 
 sub messages {
-  my ($self, $limit, $min, $cb) = @_;
+  my ($self, $max, $min, $limit, $cb) = @_;
+
   my $msgid = $self->store->msgid;
-
-  $min = 0 unless $min > 0;
-  $min = $msgid if $min > $msgid;
-
-  $limit = $msgid - $min if $min + $limit > $msgid;
+  $max = $msgid if $max > $msgid;
+  $min = 0 if $min < 0;
   $limit = 0 if $limit < 0;
 
-  return $self->store->messages($self->id, $limit, $min, $cb);
+  return $self->store->messages($self->id, $max, $min, $limit, $cb);
 }
 
-__PACKAGE__->meta->make_immutable;
 1;

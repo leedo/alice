@@ -249,7 +249,7 @@ Object.extend(Alice, {
     submit: function(form) {
       var options = {highlights: [], monospace_nicks: []};
 
-      ["images", "avatars", "alerts", "audio"].each(function (pref) {
+      ["images", "animate", "avatars", "alerts", "audio"].each(function (pref) {
         options[pref] = $(pref).checked ? "show" : "hide";
       });
       $A($("highlights").options).each(function(option) {
@@ -392,12 +392,9 @@ Object.extend(Alice, {
     },
 
     serverConnection: function(alias, action) {
-      new Ajax.Request('/say', {
-        method: 'get',
-        parameters: {
-          msg: '/' + action + ' ' + alias,
-          source: alice.activeWindow().id
-        }
+      alice.connection.sendMessage({
+        msg: '/' + action + ' ' + alias,
+        source: alice.activeWindow().id,
       });
 
       return false;

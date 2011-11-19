@@ -24,6 +24,7 @@ Alice.Keyboard = Class.create({
       this.shortcut("Cmd+Shift+L");
       this.shortcut("Cmd+U");
       this.shortcut("Esc");
+      this.shortcut("Cmd", { propagate: true });
       this.shortcut("Tab", { propagate: true });
       this.shortcut("Shift+Tab", { propagate: true });
       for (var i = 0; i < 10; i++) {
@@ -55,6 +56,13 @@ Alice.Keyboard = Class.create({
         delete this.activeWindow;
       }
     }.bind(this), options);
+  },
+
+  onCmd: function(e) {
+    if (e.keyCode == 186) {
+      e.stop();
+      this.application.nextUnreadWindow();
+    }
   },
 
   onNumeric: function(event, number) {
