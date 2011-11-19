@@ -11981,8 +11981,7 @@ Alice.Window = Class.create({
   setupScrollBack: function() {
     clearInterval(this.scrollListener);
     this.scrollListener = setInterval(function(){
-      if (this.active && this.msgid && this.element.scrollTop < 10) {
-        clearInterval(this.scrollListener);
+      if (this.active && this.element.scrollTop == 0) {
         var first = this.messages.down("li");
         if (first) {
           first = first.id.replace("msg-", "") - 1;
@@ -11991,7 +11990,6 @@ Alice.Window = Class.create({
           first = this.msgid;
         }
         this.application.getBacklog(this, first, this.chunkSize / 2);
-        setTimeout(this.setupScrollBack.bind(this), 1000);
       }
     }.bind(this), 1000);
 
@@ -12179,6 +12177,11 @@ Alice.Window = Class.create({
 
   addChunk: function(chunk) {
     if (chunk.nicks) this.updateNicks(chunk.nicks);
+
+    if (chunk.range.length == 0) {
+      clearInterval(this.scrollListener);
+      return;
+    }
 
     var scroll_bottom = this.shouldScrollToBottom();
     var scroll_top = 0;

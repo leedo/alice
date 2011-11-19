@@ -395,16 +395,12 @@ sub update_window {
 
   $window->buffer->messages($max, $min, 20, sub {
     my $msgs = shift;
-    unless (@$msgs) {
-      $cb->() if $cb;
-      return;
-    }
 
     $stream->send([{
       window => $window->serialized,
       type   => "chunk",
       nicks  => $window->all_nicks,
-      range  => [$msgs->[0]{msgid}, $msgs->[-1]{msgid}],
+      range  => (@$msgs ? [$msgs->[0]{msgid}, $msgs->[-1]{msgid}] : []),
       html   => join "", map {$_->{html}} @$msgs,
     }]);
 
