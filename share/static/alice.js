@@ -11990,7 +11990,7 @@ Alice.Window = Class.create({
         else {
           first = this.msgid;
         }
-        this.application.getBacklog(this, first, this.chunkSize / 2);
+        this.application.getBacklog(this, first - 1, this.chunkSize / 2);
         setTimeout(this.setupScrollBack.bind(this), 1000);
       }
     }.bind(this), 1000);
