@@ -11,15 +11,8 @@ use AnyEvent;
 my $url_regex = qr/\b(https?:\/\/(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'".,<>?«»“”‘’]))/i;
 
 has buffer => (
-  is      => 'rw',
-  isa     => 'Alice::MessageBuffer',
-  lazy    => 1,
-  default => sub {
-    Alice::MessageBuffer->new(
-      id => $_[0]->id,
-      store_class => $_[0]->app->config->message_store,
-    );
-  },
+  is       => 'rw',
+  required => 1,
 );
 
 has title => (
@@ -111,10 +104,7 @@ sub pretty_name {
 
 has type => (
   is => 'ro',
-  lazy => 1,
-  default => sub {
-    $_[0]->irc->is_channel($_[0]->title) ? "channel" : "privmsg";
-  },
+  required => 1,
 );
 
 sub is_channel {$_[0]->type eq "channel"}
