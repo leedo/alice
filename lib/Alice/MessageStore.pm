@@ -34,7 +34,13 @@ has dbi => (
     my $self = shift;
     my $dbi = AnyEvent::DBI->new(@{$self->dsn});
     $dbi->exec("SELECT msgid FROM window_buffer ORDER BY msgid DESC LIMIT 1", sub {
-      $self->msgid($_[1]->[0][0] + 1) if $_[1];
+      my (undef, $row) = @_;
+      if (@$row) {
+        $self->msgid($row->[0][0]);
+      }
+      else {
+        $self->msgid(0);
+      }
     });
     $dbi;
   }
@@ -53,7 +59,7 @@ sub clear {
 sub messages {
   my ($self, $id, $max, $min, $limit, $cb) = @_;
   $self->dbi->exec(
-    "SELECT message FROM window_buffer WHERE window_id=? AND msgid < ? AND msgid > ? ORDER BY msgid DESC LIMIT ?",
+    "SELECT message FROM window_buffer WHERE window_id=? AND msgid <= ? AND msgid >= ? ORDER BY msgid DESC LIMIT ?",
     $id, $max, $min, $limit, sub {
       $cb->([map {decode_json $_->[0]} reverse @{$_[1]}]);
     }
