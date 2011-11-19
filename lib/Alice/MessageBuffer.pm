@@ -19,9 +19,9 @@ has id => (
 
 sub next_msgid {
   my $self = shift;
-  my $msgid = $self->store->msgid;
-  $self->store->msgid($msgid + 1);
-  return $msgid + 1;
+  my $msgid = $self->store->msgid + 1;
+  $self->store->msgid($msgid);
+  return $msgid;
 }
 
 sub clear {
