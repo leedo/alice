@@ -11924,7 +11924,6 @@ Alice.Window = Class.create({
     this.forceScroll = false;
 
     this.setupEvents();
-    this.setupScrollBack();
   },
 
   hide: function() {
@@ -11992,7 +11991,6 @@ Alice.Window = Class.create({
         this.application.getBacklog(this, first, this.chunkSize / 2);
       }
     }.bind(this), 1000);
-
   },
 
   updateTabLayout: function() {
@@ -12034,6 +12032,7 @@ Alice.Window = Class.create({
     this.active = false;
     this.element.removeClassName('active');
     this.tab.removeClassName('active');
+    clearInterval(this.scrollListener);
     this.addFold();
   },
 
@@ -12103,6 +12102,7 @@ Alice.Window = Class.create({
     this.application.displayTopic(this.topic);
     document.title = this.title;
 
+    this.setupScrollBack();
     return this;
   },
 
