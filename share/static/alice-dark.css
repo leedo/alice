@@ -550,9 +550,6 @@ li.event div.left {
   padding: 5px 0;
   width: 95px; }
 
-li.event div.left span.timestamp {
-  opacity: 0; }
-
 ul.messages li.avatar:not(.consecutive) {
   z-index: 800; }
 
@@ -575,21 +572,18 @@ ul.messages li.avatar span.nick {
 
 div.timehint {
   font-size: 10px;
-  position: absolute;
-  right: 5px;
-  top: 6px;
+  float: right;
+  padding: 6px 5px 0 5px;
   color: #666666;
   opacity: 0; }
 
 li.consecutive div.timehint {
-  top: auto;
-  bottom: 3px; }
+  padding: 3px 5px 0 5px; }
 
 div.msg {
   margin-left: 100px;
   min-height: 1.2em;
   padding: 3px 5px;
-  padding-right: 45px;
   word-wrap: break-word;
   -khtml-line-break: after-white-space;
   -khtml-nbsp-mode: space;
