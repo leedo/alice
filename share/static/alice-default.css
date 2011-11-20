@@ -601,7 +601,9 @@ div.msg div.oembed {
   display: none; }
 
 sup.external {
-  line-height: 0px; }
+  line-height: 0px;
+  vertical-align: 2px;
+  padding-left: 1px; }
 
 sup.external a {
   text-decoration: none;
@@ -611,11 +613,11 @@ sup.external a {
   font-size: 0.7em;
   background-color: #CCC;
   border-radius: 3px;
-  padding: 0 2px;
+  padding: 1px 2px 1px 3px;
   font-weight: normal;
   letter-spacing: 0;
-  border-right: 1px solid #999;
-  border-bottom: 1px solid #999; }
+  border-right: 1px solid #aaa;
+  border-bottom: 1px solid #aaa; }
 
 sup.external a:after {
   content: " ▸"; }
