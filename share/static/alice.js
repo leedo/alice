@@ -11985,7 +11985,6 @@ Alice.Window = Class.create({
         else {
           first = this.msgid;
         }
-        console.log("requesting backlog from "+first+" limit "+this.chunkSize);
         this.application.getBacklog(this, first, this.chunkSize);
       }
     }.bind(this), 1000);
