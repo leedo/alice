@@ -20,7 +20,7 @@ Alice.Window = Class.create({
     this.nicks_order = [];
     this.statuses = [];
     this.messageLimit = this.application.isMobile ? 50 : 100;
-    this.chunkSize = this.messageLimit / 2;
+    this.chunkSize = this.messageLimit / 4;
     this.msgid = msgid || 0;
     this.visible = true;
     this.forceScroll = false;
@@ -88,11 +88,12 @@ Alice.Window = Class.create({
         var first = this.messages.down("li");
         if (first) {
           first = first.id.replace("msg-", "") - 1;
+          this.messageLimit += this.chunkSize;
         }
         else {
           first = this.msgid;
         }
-        this.application.getBacklog(this, first, this.chunkSize / 2);
+        this.application.getBacklog(this, first, this.chunkSize);
       }
     }.bind(this), 1000);
   },
