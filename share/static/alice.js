@@ -11675,11 +11675,9 @@ Alice.Connection.WebSocket = Class.create(Alice.Connection, {
 
   _connect: function() {
     var now = new Date();
-    var msgid = this.application.msgid();
-    this.application.log("opening new websocket connection starting at "+msgid);
+    this.application.log("opening new websocket stream");
     this.changeStatus("ok");
     var parameters = Object.toQueryString({
-      min: msgid,
       t: now.getTime() / 1000,
       tab: this.application.activeWindow().id
     });
@@ -11759,14 +11757,12 @@ Alice.Connection.XHR = Class.create(Alice.Connection, {
   _connect: function() {
     setTimeout(function () {
     var now = new Date();
-    var msgid = this.application.msgid();
-    this.application.log("opening new connection starting at "+msgid);
+    this.application.log("opening new xhr stream");
     this.changeStatus("ok");
     this.connected = true;
     this.request = new Ajax.Request('/stream', {
       method: 'get',
       parameters: {
-        msgid: msgid,
         t: now.getTime() / 1000,
         tab: this.application.activeWindow().id
       },
@@ -11989,6 +11985,7 @@ Alice.Window = Class.create({
         else {
           first = this.msgid;
         }
+        console.log("requesting backlog from "+first+" limit "+this.chunkSize);
         this.application.getBacklog(this, first, this.chunkSize);
       }
     }.bind(this), 1000);

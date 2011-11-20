@@ -393,7 +393,7 @@ sub update_window {
     $step = $limit - $total;
   }
 
-  $window->buffer->messages($max, $min, 20, sub {
+  $window->buffer->messages($max, $min, $step, sub {
     my $msgs = shift;
 
     $stream->send([{
@@ -407,7 +407,7 @@ sub update_window {
     $total += $step;
 
     if (@$msgs == $step and $total < $limit) {
-      $max = $msgs->[0]->{msgid};
+      $max = $msgs->[0]->{msgid} - 1;
       $self->update_window($stream, $window, $max, $min, $limit, $total, $cb);
     }
     else {
