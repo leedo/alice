@@ -697,14 +697,26 @@ div.msg div.oembed {
 
 sup.external {
   line-height: 0px;
-  font-size: 0.7em;
-  letter-spacing: -1px;
-  margin-left: 2px;
-  font-weight: bold;
 }
 
 sup.external a {
   text-decoration: none;
+  color: #444;
+  text-shadow: 1px 1px 1px white;
+  margin-left: 1px;
+  font-size: 0.7em;
+  background-color: #CCC;
+  border-radius: 3px;
+  padding: 0 2px;
+  font-weight: normal;
+  letter-spacing: 0;
+  border-right: 1px solid #999;
+  border-bottom: 1px solid #999;
+
+}
+
+sup.external a:after {
+  content: " ▸";
 }
 
 div.oembed iframe {
