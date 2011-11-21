@@ -93,6 +93,7 @@ Alice.Window = Class.create({
         else {
           first = this.msgid;
         }
+        clearInterval(this.scrollListener);
         this.application.getBacklog(this, first, this.chunkSize);
       }
     }.bind(this), 1000);
@@ -325,6 +326,7 @@ Alice.Window = Class.create({
     if (scroll_bottom) this.scrollToBottom(true);
     else if (scroll_top) this.element.scrollTop = scroll_top;
 
+    this.setupScrollBack();
   },
 
   addMessage: function(message) {
