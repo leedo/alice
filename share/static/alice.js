@@ -12291,7 +12291,6 @@ Alice.Window = Class.create({
 
   inlineImage: function(a) {
     a.stopObserving("click");
-    var position = this.captureScrollPosition();
     var src = a.readAttribute("img") || a.innerHTML;
     var prefix = alice.options.image_prefix;
 
@@ -12304,6 +12303,7 @@ Alice.Window = Class.create({
     img.observe("load", function(){
       var wrap = new Element("DIV", {"class": "image"});
       var hide = new Element("A", {"class": "hideimg"});
+      var position = this.captureScrollPosition();
 
       img.show();
       a.replace(wrap);
