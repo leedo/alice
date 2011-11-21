@@ -120,7 +120,7 @@ Alice.Keyboard = Class.create({
   },
   
   onCmdShiftJ: function() {
-    this.activeWindow.scrollToBottom(1);
+    this.activeWindow.scrollToPosition(0);
   },
   
   onCmdShiftK: function() {
