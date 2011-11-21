@@ -67,13 +67,13 @@ if (window == window.parent) {
 
       var resize = function () {
         var active = alice.activeWindow();
-        var scroll = active.shouldScrollToBottom();
+        var position = active.captureScrollPosition();
 
         var end = function(){
           alice.freeze();
           alice.tabs_width = $('tabs_container').getWidth();
           alice.updateOverflowMenus();
-          if (scroll) active.scrollToBottom(true);
+          active.scrollToPosition(position);
           active.shiftTab();
           window.onresize = resize;
         };
@@ -132,7 +132,7 @@ if (window == window.parent) {
 
     window.onorientationchange = function() {
       var active = alice.activeWindow();
-      active.scrollToBottom(true);
+      active.scrollToPosition(0);
       alice.freeze();
       active.shiftTab();
     };

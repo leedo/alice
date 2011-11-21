@@ -93,11 +93,11 @@ Alice.Application = Class.create({
     var elem = new Element("DIV", {"class": "oembed"});
 
     if (data.provider_name == "Twitter") {
-      var scroll = win.shouldScrollToBottom();
+      var position = win.captureScrollPosition();
       elem.setStyle({display: "block"});
       elem.update(html);
       a.replace(elem);
-      if (scroll) win.scrollToBottom(true);
+      win.scrollToPosition(position);
       Alice.makeLinksClickable(elem);
       return;
     }
@@ -111,7 +111,7 @@ Alice.Application = Class.create({
 
     a.observe('click', function(e) {
       e.stop();
-      var scroll = win.shouldScrollToBottom();
+      var position = win.captureScrollPosition();
       if (elem.innerHTML) {
         elem.innerHTML = "";
         elem.style.display = "none";
@@ -121,15 +121,15 @@ Alice.Application = Class.create({
       elem.innerHTML = html;
       Alice.makeLinksClickable(elem);
       var images = elem.select("img");
-      if (scroll && images.length) {
+      if (images.length) {
         images.each(function(img) {
           img.observe("load", function(e) {
-            win.scrollToBottom(true);
+            win.scrollToPosition(position);
             img.stopObserving(img, "load");
           });
         });
       }
-      if (scroll) win.scrollToBottom(true);
+      win.scrollToPosition(position);
     });
   },
 
@@ -608,7 +608,7 @@ Alice.Application = Class.create({
       // required due to browser weirdness with scrolltobottom on initial focus
       setTimeout(function(){
         this.focusHash() || this.activeWindow().focus();
-        this.activeWindow().scrollToBottom(true)
+        this.activeWindow().scrollToPosition(0)
         this.freeze();
         setTimeout(this.updateOverflowMenus.bind(this), 1000);
       }.bind(this), 10);
@@ -713,12 +713,12 @@ Alice.Application = Class.create({
   toggleNicklist: function() {
     var windows = $('windows');
     var win = this.activeWindow();
-    var scroll = win.shouldScrollToBottom();
+    var position = win.captureScrollPosition();
     if (windows.hasClassName('nicklist'))
       windows.removeClassName('nicklist');
     else
       windows.addClassName('nicklist');
-    if (scroll) win.scrollToBottom(true);
+    win.scrollToPosition(position);
   },
 
   setupNicklist: function() {

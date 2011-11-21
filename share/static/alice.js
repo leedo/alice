@@ -10729,11 +10729,11 @@ Alice.Application = Class.create({
     var elem = new Element("DIV", {"class": "oembed"});
 
     if (data.provider_name == "Twitter") {
-      var scroll = win.shouldScrollToBottom();
+      var position = win.captureScrollPosition();
       elem.setStyle({display: "block"});
       elem.update(html);
       a.replace(elem);
-      if (scroll) win.scrollToBottom(true);
+      win.scrollToPosition(position);
       Alice.makeLinksClickable(elem);
       return;
     }
@@ -10747,7 +10747,7 @@ Alice.Application = Class.create({
 
     a.observe('click', function(e) {
       e.stop();
-      var scroll = win.shouldScrollToBottom();
+      var position = win.captureScrollPosition();
       if (elem.innerHTML) {
         elem.innerHTML = "";
         elem.style.display = "none";
@@ -10757,15 +10757,15 @@ Alice.Application = Class.create({
       elem.innerHTML = html;
       Alice.makeLinksClickable(elem);
       var images = elem.select("img");
-      if (scroll && images.length) {
+      if (images.length) {
         images.each(function(img) {
           img.observe("load", function(e) {
-            win.scrollToBottom(true);
+            win.scrollToPosition(position);
             img.stopObserving(img, "load");
           });
         });
       }
-      if (scroll) win.scrollToBottom(true);
+      win.scrollToPosition(position);
     });
   },
 
@@ -11241,7 +11241,7 @@ Alice.Application = Class.create({
 
       setTimeout(function(){
         this.focusHash() || this.activeWindow().focus();
-        this.activeWindow().scrollToBottom(true)
+        this.activeWindow().scrollToPosition(0)
         this.freeze();
         setTimeout(this.updateOverflowMenus.bind(this), 1000);
       }.bind(this), 10);
@@ -11346,12 +11346,12 @@ Alice.Application = Class.create({
   toggleNicklist: function() {
     var windows = $('windows');
     var win = this.activeWindow();
-    var scroll = win.shouldScrollToBottom();
+    var position = win.captureScrollPosition();
     if (windows.hasClassName('nicklist'))
       windows.removeClassName('nicklist');
     else
       windows.addClassName('nicklist');
-    if (scroll) win.scrollToBottom(true);
+    win.scrollToPosition(position);
   },
 
   setupNicklist: function() {
@@ -12082,7 +12082,6 @@ Alice.Window = Class.create({
 
     this.element.addClassName('active');
     this.tab.addClassName('active');
-    this.scrollToBottom(true);
 
     this.active = true;
 
@@ -12152,21 +12151,21 @@ Alice.Window = Class.create({
     this.messages.insert(
       "<li class='event happynotice'><div class='msg'>"+message+"</div></li>"
     );
-    this.scrollToBottom();
+    this.scrollToPosition(0);
   },
 
   showAlert: function (message) {
     this.messages.insert(
       "<li class='event notice'><div class='msg'>"+message+"</div></li>"
     );
-    this.scrollToBottom();
+    this.scrollToPosition(0);
   },
 
   announce: function (message) {
     this.messages.insert(
       "<li class='message announce'><div class='msg'>"+message+"</div></li>"
     );
-    this.scrollToBottom();
+    this.scrollToPosition(0);
   },
 
   trimMessages: function() {
@@ -12181,42 +12180,26 @@ Alice.Window = Class.create({
       return;
     }
 
-    var scroll_bottom = this.shouldScrollToBottom();
-    var scroll_top = 0;
-
-    var div = new Element("DIV", {'class': 'chunk'});
-    div.innerHTML = chunk['html'];
+    var position = this.captureScrollPosition();
 
     if (chunk['range'][0] > this.msgid) {
-      this.messages.insert({"bottom": div.innerHTML});
+      this.messages.insert({"bottom": chunk['html']});
       this.trimMessages();
-      var last = div.select("li").last();
-      if (last && last.id) this.msgid = last.id.replace("msg-", "");
+      var last = chunk['range'][1];
     }
     else {
-      if (scroll_bottom) {
-        this.messages.insert({"top": div.innerHTML});
-      }
-      else {
-        this.messages.insert({"top": div});
-        scroll_top = div.getHeight();
-        div.replace(div.innerHTML);
-      }
+      this.messages.insert({"top": chunk['html']});
     }
 
     this.bulk_insert = true;
-    if (scroll_bottom) this.forceScroll = true;
 
     this.messages.select("li:not(.filtered)").each(function (li) {
       this.application.applyFilters(li, this);
     }.bind(this));
 
     this.bulk_insert = false;
-    this.forceScroll = false;
 
-    if (scroll_bottom) this.scrollToBottom(true);
-    else if (scroll_top) this.element.scrollTop = scroll_top;
-
+    this.scrollToPosition(position);
     this.setupScrollBack();
   },
 
@@ -12226,16 +12209,17 @@ Alice.Window = Class.create({
     if (message.msgid) this.msgid = message.msgid;
     if (message.nicks) this.updateNicks(message.nicks);
 
-    var scroll = this.shouldScrollToBottom();
+    var position = this.captureScrollPosition();
 
     this.messages.insert(message.html);
     this.trimMessages();
-    if (scroll) this.scrollToBottom(true);
+
+    this.scrollToPosition(position);
 
     var li = this.messages.select("li").last();
     this.application.applyFilters(li, this);
 
-    if (scroll) this.scrollToBottom(true);
+    this.scrollToPosition(position);
 
     if (message.event == "topic") {
       this.topic = message.body;
@@ -12255,20 +12239,17 @@ Alice.Window = Class.create({
     this.nicks_order.push(nick);
   },
 
-  shouldScrollToBottom: function() {
-    if (!this.active) return false;
-    if (this.forceScroll) return true;
+  captureScrollPosition: function() {
+    if (this.forceScroll) return 0;
 
     var bottom = this.element.scrollTop + this.element.offsetHeight;
     var height = this.element.scrollHeight;
 
-    return bottom + 100 >= height;
+    return height - bottom;
   },
 
-  scrollToBottom: function(force) {
-    if (force || this.shouldScrollToBottom()) {
-      this.element.scrollTop = this.element.scrollHeight;
-    }
+  scrollToPosition: function(position) {
+    this.element.scrollTop = this.element.scrollHeight - this.element.offsetHeight - position;
   },
 
   getNicknames: function () {
@@ -12310,7 +12291,7 @@ Alice.Window = Class.create({
 
   inlineImage: function(a) {
     a.stopObserving("click");
-    var scroll = this.shouldScrollToBottom();
+    var position = this.captureScrollPosition();
     var src = a.readAttribute("img") || a.innerHTML;
     var prefix = alice.options.image_prefix;
 
@@ -12333,7 +12314,7 @@ Alice.Window = Class.create({
       hide.observe("click", this.removeImage.bind(this));
       hide.update("hide");
 
-      if (scroll) this.scrollToBottom(true);
+      this.scrollToPosition(position);
     }.bind(this));
 
     a.insert({after: img});
@@ -13129,13 +13110,13 @@ if (window == window.parent) {
 
       var resize = function () {
         var active = alice.activeWindow();
-        var scroll = active.shouldScrollToBottom();
+        var position = active.captureScrollPosition();
 
         var end = function(){
           alice.freeze();
           alice.tabs_width = $('tabs_container').getWidth();
           alice.updateOverflowMenus();
-          if (scroll) active.scrollToBottom(true);
+          active.scrollToPosition(position);
           active.shiftTab();
           window.onresize = resize;
         };
@@ -13194,7 +13175,7 @@ if (window == window.parent) {
 
     window.onorientationchange = function() {
       var active = alice.activeWindow();
-      active.scrollToBottom(true);
+      active.scrollToPosition(0);
       alice.freeze();
       active.shiftTab();
     };
