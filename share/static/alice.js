@@ -12294,9 +12294,6 @@ Alice.Window = Class.create({
     var src = a.readAttribute("img") || a.innerHTML;
     var prefix = alice.options.image_prefix;
 
-    if (alice.options.animate == "hide") {
-      prefix = prefix + "still/";
-    }
     var img = new Element("IMG", {src: prefix + src});
     img.hide();
 

@@ -316,8 +316,14 @@ sub merged_options {
   my ($self, $req) = @_;
   my $config = $self->app->config;
 
-  +{ map { $_ => ($req->param($_) || $config->$_) }
-      qw/animate images avatars alerts audio timeformat image_prefix/ };
+  my $options = { map { $_ => ($req->param($_) || $config->$_) }
+      qw/images avatars alerts audio timeformat image_prefix/ };
+
+  if ($config->animate eq "hide") {
+    $options->{image_prefix} = "https://noembed.com/i/still/";
+  }
+
+  return $options;
 }
 
 sub template {
