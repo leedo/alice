@@ -1,3 +1,4 @@
+@charset "UTF-8";
 tr.input, div.msg {
   -webkit-font-smoothing: antialiased; }
 
@@ -29,11 +30,11 @@ div#join_button {
   right: 12px;
   width: 24px;
   height: 24px;
-  background: url(image/sprites.png) -32px -37px no-repeat;
+  background: url(image/sprites.png) -32px -36px no-repeat;
   cursor: pointer; }
 
 div#join_button:hover {
-  background: url(image/sprites.png) -32px -57px no-repeat; }
+  background: url(image/sprites.png) -32px -56px no-repeat; }
 
 div#tab_bar div#tabset_dropdown {
   position: absolute;
@@ -134,7 +135,6 @@ div#config_menu > ul {
     -webkit-background-size: 33px 13px;
     background-color: #555555;
     width: 53px; } }
-
 div#config_menu ul ul {
   left: 100%;
   right: auto;
@@ -998,7 +998,6 @@ div.color_picker div.toggle span#bg.active {
     border: none;
     max-width: 150px;
     max-height: 150px; } }
-
 div.config {
   position: absolute;
   top: 50%;

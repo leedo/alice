@@ -10360,6 +10360,7 @@ Object.extend(Alice, {
       source: win.id,
       msg: "/join -"+network+" "+channel
     });
+    alice.input.disabled = false;
     $('join').remove();
   },
 
