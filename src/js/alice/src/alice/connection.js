@@ -81,32 +81,8 @@ Alice.Connection = {
     }
   },
 
-  getConfig: function(callback) {
-    new Ajax.Request('/config', {
-      method: 'get',
-      on401: this.gotoLogin,
-      onSuccess: callback
-    });
-  },
-
-  getTabsets: function(callback) {
-    new Ajax.Request('/tabsets', {
-      method: 'get',
-      on401: this.gotoLogin,
-      onSuccess: callback
-    });
-  },
-  
-  getPrefs: function(callback) {
-    new Ajax.Request('/prefs', {
-      method: 'get',
-      on401: this.gotoLogin,
-      onSuccess: callback
-    });
-  },
-  
-  getLog: function(callback) {
-    new Ajax.Request('/logs', {
+  get: function(path, callback) {
+    new Ajax.Request(path, {
       method: 'get',
       on401: this.gotoLogin,
       onSuccess: callback

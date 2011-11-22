@@ -107,7 +107,7 @@ sub _build_httpd {
     );
   };
 
-  warn $@ if $@;
+  AE::log(debug => $@) if $@;
   return $httpd;
 }
 
@@ -335,7 +335,13 @@ sub template {
     $res->body($self->render($path));
   };
 
-  $@ ? $res->notfound : $res->send;
+  if ($@) {
+    AE::log(debug => $@);
+    $res->notfound;
+  }
+  else {
+    $res->send;
+  }
 }
 
 sub save_tabsets {

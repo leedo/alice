@@ -212,14 +212,21 @@ Alice.Application = Class.create({
       }
     }
   },
-  
+ 
   toggleHelp: function() {
     var help = $('help');
     help.visible() ? help.hide() : help.show();
   },
+ 
+  toggleJoin: function() {
+    this.connection.get("/join", function (transport) {
+      this.input.disabled = true;
+      $('windows').insert(transport.responseText);
+    }.bind(this));
+  },
 
   toggleConfig: function(e) {
-    this.connection.getConfig(function (transport) {
+    this.connection.get("/config", function (transport) {
       this.input.disabled = true;
       $('windows').insert(transport.responseText);
     }.bind(this));
@@ -228,7 +235,7 @@ Alice.Application = Class.create({
   },
   
   togglePrefs: function(e) {
-    this.connection.getPrefs(function (transport) {
+    this.connection.get("/prefs", function (transport) {
       this.input.disabled = true;
       $('windows').insert(transport.responseText);
     }.bind(this));
@@ -237,7 +244,7 @@ Alice.Application = Class.create({
   },
 
   toggleTabsets: function(e) {
-    this.connection.getTabsets(function (transport) {
+    this.connection.get("/tabsets", function (transport) {
       this.input.disabled = true;
       $('windows').insert(transport.responseText);
       Alice.tabsets.focusIndex(0);
@@ -572,6 +579,7 @@ Alice.Application = Class.create({
       overlap: 'horizontal',
       constraint: 'horizontal',
       format: /(.+)/,
+      only: ["info_tab", "channel_tab", "privmsg_tab"],
       onUpdate: function (res) {
         var tabs = res.childElements();
         var order = tabs.collect(function(t){
@@ -744,6 +752,11 @@ Alice.Application = Class.create({
 
   setupMenus: function() {
     var click = this.supportsTouch ? "touchend" : "mouseup";
+
+    $('join_button').observe(click, function (e) {
+      e.stop();
+      this.toggleJoin();
+    }.bind(this));
 
     $('config_menu').on(click, ".dropdown li", function(e,li) {
       e.stop();
