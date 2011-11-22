@@ -124,6 +124,21 @@ Object.extend(Alice, {
     };
   },
 
+  joinChannel: function() {
+    var network = $('join_network').value;
+    var channel = $('join_channel').value;
+    if (!network || !channel) {
+      alert("Must select a channel and network!");
+      return;
+    }
+    var win = alice.activeWindow();
+    alice.connection.sendMessage({
+      source: win.id,
+      msg: "/join -"+network+" "+channel
+    });
+    $('join').remove();
+  },
+
   tabsets: {
     addSet: function () {
 			var name = prompt("Please enter a name for this tab set.");
