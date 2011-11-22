@@ -421,7 +421,7 @@ sub handle_message {
   my ($self, $message) = @_;
 
   if (my $window = $self->get_window($message->{source})) {
-    my $stream = first {$_->id == $message->{stream}} @{$self->streams};
+    my $stream = first {$_->id eq $message->{stream}} @{$self->streams};
     return unless $stream;
 
     $message->{msg} = html_to_irc($message->{msg}) if $message->{html};

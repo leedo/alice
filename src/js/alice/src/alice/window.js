@@ -86,7 +86,7 @@ Alice.Window = Class.create({
     clearInterval(this.scrollListener);
     this.scrollListener = setInterval(function(){
       if (this.active && this.element.scrollTop == 0) {
-        var first = this.messages.down("li");
+        var first = this.messages.down("li[id]");
         if (first) {
           first = first.id.replace("msg-", "") - 1;
           this.messageLimit += this.chunkSize;
