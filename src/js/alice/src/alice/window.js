@@ -24,6 +24,7 @@ Alice.Window = Class.create({
     this.msgid = msgid || 0;
     this.visible = true;
     this.forceScroll = false;
+    this.lastScrollPosition = 0;
     
     this.setupEvents();
   },
@@ -135,6 +136,7 @@ Alice.Window = Class.create({
   },
 
   unFocus: function() {
+    this.lastScrollPosition = this.captureScrollPosition();
     this.active = false;
     this.element.removeClassName('active');
     this.tab.removeClassName('active');
@@ -208,6 +210,7 @@ Alice.Window = Class.create({
     this.application.displayTopic(this.topic);
     document.title = this.title;
 
+    this.scrollToPosition(this.lastScrollPosition);
     this.setupScrollBack();
     return this;
   },
@@ -351,6 +354,7 @@ Alice.Window = Class.create({
   },
 
   captureScrollPosition: function() {
+    if (!this.active) return;
     if (this.forceScroll) return 0;
 
     var bottom = this.element.scrollTop + this.element.offsetHeight;
@@ -360,6 +364,7 @@ Alice.Window = Class.create({
   },
   
   scrollToPosition: function(position) {
+    if (!this.active) return;
     this.element.scrollTop = this.element.scrollHeight - this.element.offsetHeight - position;
   },
 
