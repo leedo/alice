@@ -76,13 +76,7 @@ sub new_client {
   $client->reg_cb(%$events);
   $client->ctcp_auto_reply ('VERSION', ['VERSION', "alice $Alice::VERSION"]);
 
-  $self->unreg_cb;
   $self->cl($client);
-}
-
-sub unreg_cb {
-  my $self = shift;
-  $self->cl->remove_all_callbacks if $self->cl;
 }
 
 sub send_srv {

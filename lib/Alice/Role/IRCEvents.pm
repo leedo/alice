@@ -117,7 +117,9 @@ irc_event disconnect => sub {
   return if $reason eq "reconnect requested.";
   $self->send_info($irc->name, "disconnected: $reason");
   
-  $irc->unreg_cb;
+  # TODO - Object::Event bug that prevents object from getting destroyed
+  delete $irc->cl->{change_nick_cb_guard};
+
   $irc->cl(undef);
 
   $self->reconnect($irc, 0) unless $irc->disabled;
