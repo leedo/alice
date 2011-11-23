@@ -5,12 +5,15 @@ use Any::Moose 'Role';
 use IRC::Formatting::HTML qw/irc_to_html/;
 use AnyEvent::IRC::Util qw/split_prefix/;
 use List::Util qw/min/;
+use Scalar::Util qw/weaken/;
 
 our %EVENTS;
 
 sub build_events {
   my ($self, $irc) = @_;
-  
+
+  weaken $irc;
+
   return +{
     map {
       my $event = $_;
@@ -108,8 +111,11 @@ irc_event disconnect => sub {
   return if $reason eq "reconnect requested.";
   $self->send_info($irc->name, "disconnected: $reason");
   
+  $irc->unreg_cb;
+  $irc->cl(undef);
+
   $self->reconnect($irc, 0) unless $irc->disabled;
-  
+
   if ($irc->removed) {
     $self->remove_irc($irc->name);
   }
@@ -404,7 +410,6 @@ sub disconnect {
     $self->send_info($irc->name, "disconnecting: $msg") if $msg;
     $irc->cl->disconnect($msg);
   }
-
 }
 
 sub cancel_reconnect {
@@ -425,8 +430,7 @@ sub connect {
   }
 
   my $events = $self->build_events($irc);
-  $irc->cl($irc->new_client($events, $config));
-
+  $irc->new_client($events, $config);
   $irc->disabled(0);
   $irc->increase_reconnect_count;
    

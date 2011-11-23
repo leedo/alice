@@ -303,7 +303,6 @@ sub add_irc_server {
   my ($self, $name, $config) = @_;
   $self->config->servers->{$name} = $config;
   my $irc = Alice::IRC->new(name => $name);
-  warn "adding $name";
   $self->add_irc($irc);
   $self->connect($irc) if $config->{autoconnect};
 }
@@ -334,9 +333,8 @@ sub reload_config {
   }
   for my $irc ($self->ircs) {
     if (!$self->config->servers->{$irc->name}) {
+      $irc->removed(1);
       $self->disconnect($irc);
-      warn $irc;
-      $self->remove_irc($irc->name);
     }
   }
 }
