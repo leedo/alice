@@ -10803,7 +10803,9 @@ Alice.Application = Class.create({
           }
         }
       }
-      win.updateNicks(action.nicks);
+      else {
+        win.enable();
+      }
     },
     part: function (action) {
       this.closeWindow(action['window'].id);
@@ -10826,12 +10828,6 @@ Alice.Application = Class.create({
       this.activeWindow().announce(action['body']);
     },
     connect: function (action) {
-      action.windows.each(function (win_info) {
-        var win = this.getWindow(win_info.id);
-        if (win) {
-          win.enable();
-        }
-      }.bind(this));
       if ($('servers')) {
         Alice.connections.connectServer(action.session);
       }

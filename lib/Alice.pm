@@ -8,7 +8,7 @@ use Any::Moose;
 use Text::MicroTemplate::File;
 use Digest::MD5 qw/md5_hex/;
 use List::Util qw/first/;
-use List::MoreUtils qw/any/;
+use List::MoreUtils qw/any uniq/;
 use AnyEvent::IRC::Util qw/filter_colors/;
 use IRC::Formatting::HTML qw/html_to_irc/;
 use Encode;
@@ -25,7 +25,8 @@ use Alice::MessageStore;
 
 our $VERSION = '0.19';
 
-with 'Alice::Role::IRCCommands';
+with 'Alice::Role::Commands';
+with 'Alice::Role::IRCEvents';
 
 has config => (
   is       => 'rw',
@@ -41,9 +42,9 @@ has _ircs => (
 sub ircs {@{$_[0]->_ircs}}
 sub add_irc {push @{$_[0]->_ircs}, $_[1]}
 sub has_irc {$_[0]->get_irc($_[1])}
-sub get_irc {first {$_->alias eq $_[1]} $_[0]->ircs}
-sub remove_irc {$_[0]->_ircs([ grep { $_->alias ne $_[1] } $_[0]->ircs])}
-sub irc_aliases {map {$_->alias} $_[0]->ircs}
+sub get_irc {first {$_->name eq $_[1]} $_[0]->ircs}
+sub remove_irc {$_[0]->_ircs([ grep { $_->name ne $_[1] } $_[0]->ircs])}
+sub irc_names {map {$_->name} $_[0]->ircs}
 sub connected_ircs {grep {$_->is_connected} $_[0]->ircs}
 
 has streams => (
@@ -106,7 +107,7 @@ has 'info_window' => (
     my $info = Alice::InfoWindow->new(
       id       => $id,
       buffer   => $self->_build_window_buffer($id),
-      app      => $self,
+      render   => sub { $self->render(@_) }
     );
     $self->add_window($info);
     return $info;
@@ -163,7 +164,7 @@ sub init_shutdown {
   my ($self, $cb, $msg) = @_;
 
   $self->alert("Alice server is shutting down");
-  $_->disconnect($msg) for $self->connected_ircs;
+  $self->disconnect($_, $msg) for $self->connected_ircs;
 
   my ($w, $t);
   my $shutdown = sub {
@@ -195,8 +196,7 @@ sub tab_order {
   my $order = [];
   for my $count (0 .. scalar @$window_ids - 1) {
     if (my $window = $self->get_window($window_ids->[$count])) {
-      next unless $window->is_channel
-           and $self->config->servers->{$window->irc->alias};
+      next unless $window->is_channel;
       push @$order, $window->id;
     }
   }
@@ -205,9 +205,9 @@ sub tab_order {
 }
 
 sub find_window {
-  my ($self, $title, $connection) = @_;
+  my ($self, $title, $irc) = @_;
   return $self->info_window if $title eq "info";
-  my $id = $self->_build_window_id($title, $connection->alias);
+  my $id = $self->_build_window_id($title, $irc->name);
   if (my $window = $self->get_window($id)) {
     return $window;
   }
@@ -224,18 +224,19 @@ sub alert {
 }
 
 sub create_window {
-  my ($self, $title, $connection) = @_;
-  my $id = $self->_build_window_id($title, $connection->alias);
+  my ($self, $title, $irc) = @_;
+  my $id = $self->_build_window_id($title, $irc->name);
   my $window = Alice::Window->new(
     title    => $title,
-    type     => $connection->is_channel($title) ? "channel" : "privmsg",
-    irc      => $connection,
-    app      => $self,
+    type     => $irc->is_channel($title) ? "channel" : "privmsg",
+    network  => $irc->name,
     id       => $id,
     buffer   => $self->_build_window_buffer($id),
+    render   => sub { $self->render(@_) },
   );
   if ($window->is_channel) {
-    $connection->config->{channels} = [ $connection->channels ];
+    my $config = $self->config->servers->{$window->network};
+    $config->{channels} = [uniq $title, @{$config->{channels}}];
     $self->config->write;
   }
   $self->add_window($window);
@@ -251,19 +252,19 @@ sub _build_window_buffer {
 }
 
 sub _build_window_id {
-  my ($self, $title, $session) = @_;
-  md5_hex(encode_utf8(lc $self->user."-$title-$session"));
+  my ($self, $title, $network) = @_;
+  md5_hex(encode_utf8(lc $self->user."-$title-$network"));
 }
 
 sub find_or_create_window {
-  my ($self, $title, $connection) = @_;
+  my ($self, $title, $irc) = @_;
   return $self->info_window if $title eq "info";
 
-  if (my $window = $self->find_window($title, $connection)) {
+  if (my $window = $self->find_window($title, $irc)) {
     return $window;
   }
 
-  $self->create_window($title, $connection);
+  $self->create_window($title, $irc);
 }
 
 sub sorted_windows {
@@ -284,25 +285,27 @@ sub sorted_windows {
 
 sub close_window {
   my ($self, $window) = @_;
-  $self->broadcast($window->close_action);
+
   AE::log debug => "sending a request to close a tab: " . $window->title;
+  $self->broadcast($window->close_action);
+
   if ($window->is_channel) {
-    $window->irc->config->{channels} = [
-      grep {$_ ne $window->title} $window->irc->channels
-    ];
+    my $irc = $self->get_irc($window->network);
+    my $config = $self->config->servers->{$window->network};
+    $config->{channels} = [grep {$_ ne $window->title} @{$config->{channels}}];
     $self->config->write;
   }
+
   $self->remove_window($window->id) if $window->type ne "info";
 }
 
 sub add_irc_server {
   my ($self, $name, $config) = @_;
   $self->config->servers->{$name} = $config;
-  my $irc = Alice::IRC->new(
-    app    => $self,
-    alias  => $name
-  );
+  my $irc = Alice::IRC->new(name => $name);
+  warn "adding $name";
   $self->add_irc($irc);
+  $self->connect($irc) if $config->{autoconnect};
 }
 
 sub reload_config {
@@ -327,20 +330,19 @@ sub reload_config {
       if ($config->{ircname} ne $prev{$network}) {
         $irc->update_realname($config->{ircname});
       }
-      $irc->config($config);
     }
   }
   for my $irc ($self->ircs) {
-    if (!$self->config->servers->{$irc->alias}) {
-      $self->remove_window($_->id) for $irc->windows;
-      $irc->remove;
+    if (!$self->config->servers->{$irc->name}) {
+      $self->disconnect($irc);
+      warn $irc;
+      $self->remove_irc($irc->name);
     }
   }
 }
 
 sub send_announcement {
   my ($self, $window, $body) = @_;
-  
   my $message = $window->format_announcement($body);
   $self->broadcast($message);
 }
@@ -351,23 +353,24 @@ sub send_topic {
   $self->broadcast($message);
 }
 
-sub format_info {
-  my ($self, $session, $body, %options) = @_;
-  $self->info_window->format_message($session, $body, %options);
-}
-
 sub send_message {
   my ($self, $window, $nick, $body) = @_;
 
-  my $connection = $self->get_irc($window->network);
+  my $irc = $self->get_irc($window->network);
   my %options = (
-    mono => $self->is_monospace_nick($nick),
-    self => $connection->nick eq $nick,
-    avatar => $connection->nick_avatar($nick) || "",
-    highlight => $self->is_highlight($connection->nick, $body),
+    monospaced => $self->is_monospace_nick($nick),
+    self => $irc->nick eq $nick,
+    avatar => $irc->nick_avatar($nick) || "",
+    highlight => $self->is_highlight($irc->nick, $body),
   );
 
   my $message = $window->format_message($nick, $body, %options);
+  $self->broadcast($message);
+}
+
+sub send_info {
+  my ($self, $network, $body, %options) = @_;
+  my $message = $self->info_window->format_message($network, $body, %options);
   $self->broadcast($message);
 }
 
@@ -399,7 +402,6 @@ sub update_window {
     $stream->send([{
       window => $window->serialized,
       type   => "chunk",
-      nicks  => $window->all_nicks,
       range  => (@$msgs ? [$msgs->[0]{msgid}, $msgs->[-1]{msgid}] : []),
       html   => join "", map {$_->{html}} @$msgs,
     }]);
@@ -442,7 +444,9 @@ sub handle_message {
 
 sub send_highlight {
   my ($self, $nick, $body, $source) = @_;
-  my $message = $self->info_window->format_message($nick, $body, self => 1, source => $source);
+  my $message = $self->info_window->format_message(
+    $nick, $body, self => 1, source => $source
+  );
   $self->broadcast($message);
 }
 

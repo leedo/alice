@@ -412,11 +412,7 @@ sub save_config {
   }
 
   $self->app->reload_config($new_config);
-
-  $self->app->broadcast(
-    $self->app->format_info("config", "saved")
-  );
-
+  $self->app->send_info("config", "saved");
   $res->ok;
 }
 

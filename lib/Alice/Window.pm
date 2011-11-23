@@ -36,57 +36,15 @@ has id => (
   required => 1,
 );
 
-has _irc => (
-  is       => 'ro',
-  isa      => 'Alice::IRC',
-  required => 1,
-  weak_ref => 1,
-);
-
 has disabled => (
   is       => 'rw',
-  isa      => 'Bool',
   default  => 0,
 );
 
-has app => (
-  is      => 'ro',
-  isa     => 'Alice',
-  weak_ref => 1,
+has render => (
+  is       => 'ro',
   required => 1,
 );
-
-around disabled => sub {
-  my $orig = shift;
-  my $self = shift;
-
-  if (@_) {
-    if ($_[0]) {
-      $self->app->broadcast(
-        $self->format_event("disconnect", $self->nick, $self->session),
-        $self->disconnect_action
-      );
-    }
-    else {
-      $self->app->broadcast(
-        $self->connect_action,
-        $self->format_event("reconnect", $self->nick, $self->session),
-      );
-    }
-  }
-  $self->$orig(@_);
-};
-
-# move irc arg to _irc, which is wrapped in a method
-# because infowindow has logic to choose which irc
-# connection to return
-sub BUILDARGS {
-  my $class = shift;
-  my $args = ref $_[0] ? $_[0] : {@_};
-  $args->{_irc} = $args->{irc};
-  delete $args->{irc};
-  return $args;
-}
 
 sub sort_name {
   my $name = lc $_[0]->title;
@@ -107,10 +65,12 @@ has type => (
   required => 1,
 );
 
+has network => (
+  is => 'ro',
+  required => 1,
+);
+
 sub is_channel {$_[0]->type eq "channel"}
-sub irc {$_[0]->_irc}
-sub session {$_[0]->_irc->alias}
-sub network {$_[0]->session}
 
 sub topic_string {
   my $self = shift;
@@ -124,7 +84,7 @@ sub serialized {
   my ($self) = @_;
   return {
     id         => $self->id, 
-    session    => $self->session,
+    session    => $self->network,
     title      => $self->title,
     is_channel => $self->is_channel,
     type       => $self->type,
@@ -133,61 +93,25 @@ sub serialized {
   };
 }
 
-sub render {shift->app->render(@_)}
-
-sub nick {
-  my $self = shift;
-  return $self->irc->nick;
-}
-
-sub all_nicks {
-  my ($self, $modes) = @_;
-
-  return $self->is_channel ?
-         [ $self->irc->channel_nicks($self->title, $modes) ]
-       : [ $self->title, $self->nick ];
-}
-
-sub connect_action {
-  my $self = shift;
-  return {
-    type => "action",
-    event => "connect",
-    session => $self->session,
-    windows => [$self->serialized],
-  };
-}
-
-sub disconnect_action {
-  my $self = shift;
-  return {
-    type => "action",
-    event => "disconnect",
-    session => $self->session,
-    windows => [$self->serialized],
-  };
-}
-
 sub join_action {
   my $self = shift;
   return {
     type      => "action",
     event     => "join",
-    nicks     => $self->all_nicks,
     window    => $self->serialized,
     html => {
-      window  => $self->render("window", $self),
-      tab     => $self->render("tab", $self),
+      window  => $self->render->("window", $self),
+      tab     => $self->render->("tab", $self),
     },
   };
 }
 
 sub nicks_action {
-  my $self = shift;
+  my ($self, @nicks) = @_;
   return {
     type   => "action",
     event  => "nicks",
-    nicks  => $self->all_nicks,
+    nicks  => \@nicks,
     window => $self->serialized,
   };
 }
@@ -211,10 +135,9 @@ sub format_event {
     body      => $body,
     msgid     => $self->buffer->next_msgid,
     timestamp => time,
-    nicks     => $self->all_nicks,
   };
 
-  my $html = $self->render("event", $message);
+  my $html = $self->render->("event", $message);
   $message->{html} = $html;
 
   $self->buffer->add($message);
@@ -227,37 +150,24 @@ sub format_topic {
 }
 
 sub format_message {
-  my ($self, $nick, $body) = @_;
+  my ($self, $nick, $body, %options) = @_;
 
-  my $monospace = $self->app->is_monospace_nick($nick);
   # pass the inverse => italic option if this is NOT monospace
-  my $html = irc_to_html($body, classes => 1, ($monospace ? () : (invert => "italic")));
+  my $html = irc_to_html($body, classes => 1, ($options{monospaced} ? () : (invert => "italic")));
 
-  my $own_nick = $self->nick;
   my $message = {
     type      => "message",
     event     => "say",
     nick      => $nick,
-    avatar    => $self->irc->nick_avatar($nick),
     window    => $self->serialized,
     html      => encoded_string($html),
-    self      => $own_nick eq $nick,
     msgid     => $self->buffer->next_msgid,
     timestamp => time,
-    monospaced => $monospace,
     consecutive => $nick eq $self->buffer->previous_nick,
+    %options,
   };
 
-  unless ($message->{self}) {
-    if ($message->{highlight} = $self->is_highlight($body)) {
-      my $idle_w; $idle_w = AE::idle sub {
-        undef $idle_w;
-        $self->app->send_highlight($nick, $body, $self->title);
-      };
-    }
-  }
-
-  $message->{html} = $self->render("message", $message);
+  $message->{html} = $self->render->("message", $message);
 
   $self->buffer->add($message);
   return $message;
@@ -271,7 +181,7 @@ sub format_announcement {
     window  => $self->serialized,
     message => $msg,
   };
-  $message->{html} = $self->render('announcement', $message);
+  $message->{html} = $self->render->('announcement', $message);
   $message->{message} = "$message->{message}";
   $self->reset_previous_nick;
   return $message;
@@ -288,24 +198,18 @@ sub close_action {
 }
 
 sub nick_table {
-  my ($self, $avatars) = @_;
-  if ($avatars) {
-    return encoded_string($self->render("avatargrid", $self));
-  }
-  return _format_nick_table($self->all_nicks(1));
-}
+  my ($self, @nicks) = @_;
 
-sub _format_nick_table {
-  my $nicks = shift;
-  return "" unless @$nicks;
+  return "" unless @nicks;
+
   my $maxlen = 0;
-  for (@$nicks) {
+  for (@nicks) {
     my $length = length $_;
     $maxlen = $length if $length > $maxlen;
   }
   my $cols = int(74  / $maxlen + 2);
   my (@rows, @row);
-  for (sort {lc $a cmp lc $b} @$nicks) {
+  for (sort {lc $a cmp lc $b} @nicks) {
     push @row, $_ . " " x ($maxlen - length $_);
     if (@row >= $cols) {
       push @rows, [@row];
@@ -333,7 +237,7 @@ sub hashtag {
   $name =~ s/[#&~@]//g;
   my $path = $self->type eq "privmsg" ? "users" : "channels";
   
-  return "/" . $self->session . "/$path/" . $name;
+  return "/" . $self->network . "/$path/" . $name;
 }
 
 sub is_highlight {
@@ -341,15 +245,6 @@ sub is_highlight {
   return $self->app->is_highlight($self->nick, $body);
 }
 
-sub reply {
-  my ($self, $message) = @_;
-  $self->app->broadcast($self->format_announcement($message));
-}
-
-sub show {
-  my ($self, $message) = @_;
-  $self->app->broadcast($self->format_message($self->nick, $message));
-}
 
 __PACKAGE__->meta->make_immutable;
 1;
