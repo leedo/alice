@@ -84,7 +84,7 @@ sub serialized {
   my ($self) = @_;
   return {
     id         => $self->id, 
-    session    => $self->network,
+    network    => $self->network,
     title      => $self->title,
     is_channel => $self->is_channel,
     type       => $self->type,

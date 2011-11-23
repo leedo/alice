@@ -55,6 +55,12 @@ irc_event connect => sub {
   $irc->reset_reconnect_count;
   $irc->connect_time(time);
 
+  $self->broadcast({
+    type => "action",
+    event => "connect",
+    network => $irc->name,
+  });
+
   my $config = $self->config->servers->{$irc->name};
 
   $irc->cl->register(
@@ -65,7 +71,7 @@ irc_event connect => sub {
 irc_event registered => sub {
   my ($self, $irc) = @_;
   my $config = $self->config->servers->{$irc->name};
-  
+
   my @commands = ();
 
   push @commands, map {
@@ -102,7 +108,7 @@ irc_event disconnect => sub {
   $self->broadcast({
     type => "action",
     event => "disconnect",
-    session => $irc->name,
+    network => $irc->name,
     windows => [map {$_->serialized} @windows],
   });
   $self->remove_window($_) for map {$_->id} @windows;
