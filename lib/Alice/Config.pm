@@ -292,4 +292,5 @@ sub remove_ignore {
   $self->write;
 }
 
+__PACKAGE__->meta->make_immutable;
 1;

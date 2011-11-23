@@ -24,4 +24,6 @@ has id => (
   default => sub { $NEXT_ID++ }
 );
 
+__PACKAGE__->meta->make_immutable;
+
 1;

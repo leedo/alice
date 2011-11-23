@@ -49,4 +49,5 @@ sub messages {
   return $self->store->messages($self->id, $max, $min, $limit, $cb);
 }
 
+__PACKAGE__->meta->make_immutable;
 1;

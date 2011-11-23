@@ -710,4 +710,5 @@ sub mk_msg {
   encode "utf8", AnyEvent::IRC::Util::mk_msg(@_);
 }
 
+__PACKAGE__->meta->make_immutable;
 1;

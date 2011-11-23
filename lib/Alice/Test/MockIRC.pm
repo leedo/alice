@@ -109,4 +109,5 @@ sub is_channel_name {
   return $name =~ /^[#&]/;
 }
 
+__PACKAGE__->meta->make_immutable;
 1;

@@ -535,4 +535,5 @@ sub tabsets {
   } sort keys %{$self->config->tabsets};
 }
 
+__PACKAGE__->meta->make_immutable;
 1;
