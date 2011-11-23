@@ -47,4 +47,5 @@ after shutdown => sub {
   $self->cv->send;
 };
 
+__PACKAGE__->meta->make_immutable;
 1;
