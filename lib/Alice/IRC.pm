@@ -73,15 +73,16 @@ sub new_client {
 
   my $client = AnyEvent::IRC::Client->new(send_initial_whois => 1);
   $client->enable_ssl if $config->{ssl};
-  $self->unreg_cb;
-  $self->{cb_guard} = $client->reg_cb(%$events);
+  $client->reg_cb(%$events);
   $client->ctcp_auto_reply ('VERSION', ['VERSION', "alice $Alice::VERSION"]);
+
+  $self->unreg_cb;
   $self->cl($client);
 }
 
 sub unreg_cb {
   my $self = shift;
-  $self->{cb_guard} = undef;
+  $self->cl->remove_all_callbacks if $self->cl;
 }
 
 sub send_srv {
