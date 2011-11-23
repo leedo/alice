@@ -39,5 +39,4 @@ sub writer {
   return $self->{cb}->([@$response[0,1]]);
 }
 
-__PACKAGE__->meta->make_immutable;
 1;
