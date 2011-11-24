@@ -343,7 +343,10 @@ irc_event part => sub {
 
   return if $self->is_ignore(part => $channel);
 
-  if ($is_self and my $window = $self->find_window($channel, $irc)) {
+  my $window = $self->find_window($channel, $irc);
+  return unless $window;
+
+  if ($is_self) {
     $self->send_info($irc->name, "leaving $channel");
     $self->close_window($window);
   }
