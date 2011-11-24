@@ -1,5 +1,5 @@
 ? my $app = shift;
-? my @connections = $app->ircs;
+? my @ircs = $app->ircs;
 
 <div class="config" id="servers">
 
@@ -8,12 +8,12 @@
     <h2>Connections</h2>
     
     <ul id="connections">
-      <? for my $index (0 .. @connections - 1) { ?>
-        <? my $connection = $connections[$index]; ?>
-        <? my $alias = $connection->alias; ?>
-        <li class="<?= $connection->is_connected ? "connected" : "disconnected" ?> <? if ($index == 0) {?> active<?}?>"
-            onclick="Alice.connections.showConnection('<?= $alias ?>')" id="menu_<?= $alias ?>">
-          <?= $alias ?>
+      <? for my $index (0 .. @ircs - 1) { ?>
+        <? my $irc = $ircs[$index]; ?>
+        <? my $network = $irc->name; ?>
+        <li class="<?= $irc->is_connected ? "connected" : "disconnected" ?> <? if ($index == 0) {?> active<?}?>"
+            onclick="Alice.connections.showConnection('<?= $network ?>')" id="menu_<?= $network ?>">
+          <?= $network ?>
         </li>
       <? } ?>
     </ul>
@@ -31,15 +31,16 @@
 
       <input type="hidden" name="has_servers" value="1" />
     
-? for my $index (0 .. @connections - 1) {
-?   my $connection = $connections[$index];
-?   my $alias = $connection->alias;
+? for my $index (0 .. @ircs - 1) {
+?   my $irc = $ircs[$index];
+?   my $network = $irc->name;
+?   my $config = $app->config->servers->{$network};
 
 ?   my ($action, $status);
-?   if ($connection->is_connected) {
+?   if ($irc->is_connected) {
 ?     $status = "connected";
 ?     $action = "disconnect";
-?   } elsif ($connection->reconnect_timer) {
+?   } elsif ($irc->reconnect_timer) {
 ?     $status = "reconnecting";
 ?     $action = "disconnect";
 ?   } else {
@@ -47,29 +48,29 @@
 ?     $action = "connect";
 ?   }
 
-    <table class="<? if ($index == 0) {?>active<?}?>" id="setting_<?= $alias ?>">
+    <table class="<? if ($index == 0) {?>active<?}?>" id="setting_<?= $network ?>">
 
       <tr>
         <td>
           <label>Name</label>
-          <span><?= $alias ?></span>
-          <input type="hidden" name="<?= $alias ?>_name" value="<?= $alias ?>" />
+          <span><?= $network ?></span>
+          <input type="hidden" name="<?= $network ?>_name" value="<?= $network ?>" />
         </td>
 
         <td>
           <label>Status</label>
-          <span class="<?= $status ?>" id="<?= $alias ?>_status"><?= $status ?></span>
+          <span class="<?= $status ?>" id="<?= $network ?>_status"><?= $status ?></span>
         </td>
       </tr>
 
       <tr>
         <td>
           <label>Auto-connect?</label>
-          <input type="checkbox"<? if ($connection->config->{autoconnect}) {?> checked="checked"<?}?> name="<?= $alias ?>_autoconnect" />
+          <input type="checkbox"<? if ($config->{autoconnect}) {?> checked="checked"<?}?> name="<?= $network ?>_autoconnect" />
         </td>
 
         <td>
-          <button id="<?= $alias ?>_connection" onclick="return Alice.connections.serverConnection('<?= $connection->alias ?>', '<?= $action ?>')">
+          <button id="<?= $network ?>_connection" onclick="return Alice.connections.serverConnection('<?= $irc->name ?>', '<?= $action ?>')">
             <?= $action ?>
           </button>
         </td>
@@ -78,14 +79,14 @@
       <tr>
         <td>
           <label>Server address</label>
-          <input type="text" name="<?= $alias ?>_host" value="<?= $connection->config->{host} || "" ?>" size="15"/>
+          <input type="text" name="<?= $network ?>_host" value="<?= $config->{host} || "" ?>" size="15"/>
         </td>
 
         <td>
           <label>Port</label>
-          <input type="text" name="<?= $alias ?>_port" value="<?= $connection->config->{port} || "" ?>" size="6" style="float:left"/>
+          <input type="text" name="<?= $network ?>_port" value="<?= $config->{port} || "" ?>" size="6" style="float:left"/>
 
-            <input type="checkbox" name="<?= $alias ?>_ssl"<? if ($connection->config->{ssl}) { ?> checked="checked"<? } ?> />
+            <input type="checkbox" name="<?= $network ?>_ssl"<? if ($config->{ssl}) { ?> checked="checked"<? } ?> />
             <span style="font-size:0.7em">SSL</span>
         </td>
       </tr>
@@ -93,24 +94,24 @@
       <tr>
         <td>
           <label>Nick</label>
-          <input type="text" name="<?= $alias ?>_nick" value="<?= $connection->config->{nick} || ""?>" size="15" />
+          <input type="text" name="<?= $network ?>_nick" value="<?= $config->{nick} || ""?>" size="15" />
         </td>
 
         <td>
           <label>Name or Avatar URL</label>
-          <input type="text" name="<?= $alias ?>_ircname" value="<?= $connection->config->{ircname} || ""?>" size="15" />
+          <input type="text" name="<?= $network ?>_ircname" value="<?= $config->{ircname} || ""?>" size="15" />
         </td>
       </tr>
 
       <tr>
         <td>
           <label>Username</label>
-          <input type="text" name="<?= $alias ?>_username" value="<?= $connection->config->{username} || ""?>" size="15" />
+          <input type="text" name="<?= $network ?>_username" value="<?= $config->{username} || ""?>" size="15" />
         </td>
 
         <td>
           <label>Password</label>
-          <input type="text" name="<?= $alias ?>_password" value="<?= $connection->config->{password} || ""?>" size="15" />
+          <input type="text" name="<?= $network ?>_password" value="<?= $config->{password} || ""?>" size="15" />
         </td>
       </tr>
 
@@ -119,27 +120,27 @@
           <label>Channels
             <span style="font-size:0.8em">(e.g. <span style="font-family:monospace;font-size:1em">#alice</span>)</span>
           </label>
-          <select name="<?= $alias ?>_channels" multiple="multiple" id="channels_<?= $alias ?>" class="channelselect">
-            <? for my $channel (@{$connection->config->{channels}}) { ?>
+          <select name="<?= $network ?>_channels" multiple="multiple" id="channels_<?= $network ?>" class="channelselect">
+            <? for my $channel (@{$config->{channels}}) { ?>
             <option value="<?= $channel ?>"><?= $channel ?></option>
             <? } ?>
           </select>
           <div class="controls">
-            <a href="#" onclick="return Alice.connections.addChannel('<?= $alias ?>')">Add</a>
-            <a href="#" onclick="return Alice.connections.removeChannels('<?= $alias ?>')">Remove</a>
+            <a href="#" onclick="return Alice.connections.addChannel('<?= $network ?>')">Add</a>
+            <a href="#" onclick="return Alice.connections.removeChannels('<?= $network ?>')">Remove</a>
           </div>
         </td>
 
         <td>
           <label>Commands</label>
-          <select name="<?= $alias ?>_on_connect" multiple="multiple" id="on_connect_<?= $alias ?>" class="channelselect">
-            <? for my $command (@{ $connection->config->{on_connect} }) { ?>
+          <select name="<?= $network ?>_on_connect" multiple="multiple" id="on_connect_<?= $network ?>" class="channelselect">
+            <? for my $command (@{ $config->{on_connect} }) { ?>
             <option value="<?= $command ?>"><?= $command ?></option>
             <? } ?>
           </select>
           <div class="controls">
-            <a href="#" onclick="return Alice.connections.addCommand('<?= $alias ?>')">Add</a>
-            <a href="#" onclick="return Alice.connections.removeCommands('<?= $alias ?>')">Remove</a>
+            <a href="#" onclick="return Alice.connections.addCommand('<?= $network ?>')">Add</a>
+            <a href="#" onclick="return Alice.connections.removeCommands('<?= $network ?>')">Remove</a>
           </div>
         </td>
       </tr>

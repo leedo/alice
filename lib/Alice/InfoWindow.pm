@@ -9,7 +9,7 @@ extends 'Alice::Window';
 
 has '+title' => (required => 0, default => 'info');
 has 'topic' => (is => 'ro', isa => 'HashRef', default => sub {{string => ''}});
-has '+_irc' => (required => 0, isa => 'Any');
+has '+network' => (is => 'ro', default => "");
 has '+type' => (is => 'ro', default => "info");
 
 #
@@ -18,13 +18,10 @@ has '+type' => (is => 'ro', default => "info");
 #
 
 sub is_channel {0}
-sub session {""}
-sub all_nicks {[]}
 
-sub irc {
+sub hashtag {
   my $self = shift;
-  return ($self->app->connected_ircs)[0] if $self->app->connected_ircs == 1;
-  return undef;
+  return "/info";
 }
 
 sub format_message {
@@ -45,15 +42,10 @@ sub format_message {
     consecutive => $from eq $self->buffer->previous_nick ? 1 : 0,
   };
 
-  $message->{html} = $self->render("message", $message);
+  $message->{html} = $self->render->("message", $message);
 
   $self->buffer->add($message);
   return $message;
-}
-
-sub hashtag {
-  my $self = shift;
-  return "/info";
 }
 
 __PACKAGE__->meta->make_immutable;
