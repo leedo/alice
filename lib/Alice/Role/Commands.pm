@@ -516,13 +516,7 @@ command chunk => {
     my ($self, $req, $opts) = @_;
     my $window = $req->window;
 
-    if (my $irc = $self->get_irc($window->title)) {
-      $self->broadcast(
-        $window->nicks_action($irc->channel_nicks($window->title))
-      );
-    }
-
-    $self->update_window($req->stream, $req->window, $opts->[1], 0, $opts->[0], 0);
+    $self->update_window($req->stream, $window, $opts->[1], 0, $opts->[0], 0);
   }
 };
 

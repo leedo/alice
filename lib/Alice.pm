@@ -204,6 +204,27 @@ sub tab_order {
   $self->config->write;
 }
 
+sub window_nicks {
+  my ($self, $window) = @_;
+  my $irc = $self->get_irc($window->network);
+  if ($irc and $irc->is_connected) {
+    if ($window->type eq "channel") {
+      return $irc->channel_nicks($window->title);
+    }
+    else {
+      return ($irc->nick, $window->title);
+    }
+  }
+}
+
+sub connect_actions {
+  my $self = shift;
+  map {
+    $_->join_action,
+    $_->nicks_action($self->window_nicks($_))
+  } $self->windows;
+}
+
 sub find_window {
   my ($self, $title, $irc) = @_;
   return $self->info_window if $title eq "info";
