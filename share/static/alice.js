@@ -11685,7 +11685,10 @@ Alice.Connection.WebSocket = Class.create(Alice.Connection, {
     var protocol = (window.location.protocol.match(/^https/) ? "wss://" : "ws://");
     var url = protocol + window.location.host + "/wsstream?" + parameters;
     this.request = new WebSocket(url);
-    this.request.onopen = function(){this.connected = true}.bind(this);
+    this.request.onopen = function(){
+      this.connected = true;
+      this.application.windows().invoke("setupScrollBack");
+    }.bind(this);
     this.request.onmessage = this.handleUpdate.bind(this);
     this.request.onerror = this.handleException.bind(this);
     this.request.onclose = this.handleComplete.bind(this);

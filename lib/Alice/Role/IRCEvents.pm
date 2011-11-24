@@ -188,8 +188,8 @@ irc_event nick_change => sub {
     } @channels
   );
 
-  if ($self->avatars->{$old_nick}) {
-    $self->avatars->{$new_nick} = delete $self->avatars->{$old_nick};
+  if ($irc->avatars->{$old_nick}) {
+    $irc->avatars->{$new_nick} = delete $irc->avatars->{$old_nick};
   }
 };
 
