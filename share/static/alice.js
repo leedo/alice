@@ -10533,6 +10533,8 @@ Object.extend(Alice, {
 
   connections: {
     disconnectServer: function (alias) {
+      $("menu_" + alias).addClassName("disconnected");
+      $("menu_" + alias).removeClassName("connected");
 		  $(alias + "_status").className = "disconnected";
 		  $(alias + "_status").innerHTML = "disconnected";
 		  $(alias + "_connection").innerHTML = "connect";
@@ -10543,6 +10545,8 @@ Object.extend(Alice, {
 		},
 
     connectServer: function (alias) {
+      $("menu_" + alias).removeClassName("disconnected");
+      $("menu_" + alias).addClassName("connected");
 		  $(alias + "_status").className = "connected";
 		  $(alias + "_status").innerHTML = "connected";
 		  $(alias + "_connection").innerHTML = "disconnect";

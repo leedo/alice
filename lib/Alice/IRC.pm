@@ -81,7 +81,7 @@ sub new_client {
 
 sub send_srv {
   my $self = shift;
-  $self->cl->send_srv(@_);
+  $self->cl->send_srv(@_) if $self->cl;
 }
 
 sub send_long_line {
