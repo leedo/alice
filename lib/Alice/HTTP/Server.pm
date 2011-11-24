@@ -107,7 +107,7 @@ sub _build_httpd {
     );
   };
 
-  AE::log(debug => $@) if $@;
+  AE::log(warn => $@) if $@;
   return $httpd;
 }
 
@@ -117,7 +117,7 @@ sub dispatch {
   my $req = Alice::HTTP::Request->new($env, $cb);
   my $res = $req->new_response(200);
 
-  AE::log debug => $req->path;
+  AE::log trace => $req->path;
 
   if ($self->auth_enabled) {
     unless ($req->path eq "/login" or $self->is_logged_in($req)) {
@@ -338,7 +338,7 @@ sub template {
   };
 
   if ($@) {
-    AE::log(debug => $@);
+    AE::log(warn => $@);
     $res->notfound;
   }
   else {

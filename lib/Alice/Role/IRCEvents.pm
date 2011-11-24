@@ -16,7 +16,7 @@ sub build_events {
       my $event = $_;
       $event => sub {
         shift; # we don't need the client
-        AE::log debug => "$event event for " . $irc->name;
+        AE::log trace => "$event event for " . $irc->name;
         $EVENTS{$event}->($self, $irc, @_)
       }
     } keys %EVENTS
