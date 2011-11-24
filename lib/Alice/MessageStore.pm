@@ -33,7 +33,7 @@ has dsn => (
   required => 1,
 );
 
-has writer => (
+has dbi => (
   is => 'ro',
   lazy => 1,
   default => sub {
@@ -42,39 +42,28 @@ has writer => (
   }
 );
 
-has reader => (
-  is => 'ro',
-  lazy => 1,
-  default => sub {
-    my $self = shift;
-    my $dbi = AnyEvent::DBI->new(@{$self->dsn});
-    $dbi->exec("SELECT msgid FROM window_buffer ORDER BY msgid DESC LIMIT 1", sub {
-      my (undef, $row) = @_;
-      if (@$row) {
-        $self->msgid($row->[0][0]);
-      }
-      else {
-        $self->msgid(0);
-      }
-    });
-    $dbi;
-  }
-);
-
 has msgid => (
   is => 'rw',
   default => 0,
 );
 
+sub BUILD {
+  my $self = shift;
+  $self->dbi->exec("SELECT msgid FROM window_buffer ORDER BY msgid DESC LIMIT 1", sub {
+    my (undef, $row) = @_;
+    $self->msgid( @$row ? $row->[0][0] : 0);
+  });
+}
+
 sub clear {
   my ($self, $id) = @_;
-  $self->writer->exec("DELETE FROM window_buffer WHERE window_id = ?", $id, sub {});
+  $self->dbi->exec("DELETE FROM window_buffer WHERE window_id = ?", $id, sub {});
 }
 
 sub messages {
   my ($self, $id, $max, $min, $limit, $cb) = @_;
 
-  $self->reader->exec(
+  $self->dbi->exec(
     "SELECT message FROM window_buffer WHERE window_id=? " .
     "AND msgid <= ? AND msgid >= ? ORDER BY msgid DESC LIMIT ?",
     $id, $max, $min, $limit,
@@ -85,7 +74,7 @@ sub messages {
 sub add {
   my ($self, $id, $message) = @_;
 
-  $self->writer->exec(
+  $self->dbi->exec(
     "INSERT INTO window_buffer (window_id,msgid,message) VALUES (?,?,?)",
     $id, $message->{msgid}, encode_json($message), sub {});
 
@@ -110,13 +99,13 @@ sub do_trim {
 
 sub trim_id {
   my ($self, $window_id) = @_;
-  $self->writer->exec(
+  $self->dbi->exec(
     "SELECT msgid FROM window_buffer WHERE window_id=? ORDER BY msgid DESC LIMIT ?,1",
     $window_id, $self->backlog, sub {
       my $rows = $_[1];
       if (@$rows) {
         my $minid = $rows->[0][0];
-        $self->writer->exec(
+        $self->dbi->exec(
           "DELETE FROM window_buffer WHERE window_id=? AND msgid < ?",
           $window_id, $minid, sub{}
         );
