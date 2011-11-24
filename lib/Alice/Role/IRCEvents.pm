@@ -353,7 +353,7 @@ irc_event part => sub {
   else {
     $self->broadcast(
       $window->nicks_action($irc->channel_nicks($channel)),
-      $self->format_event("left", $nick, $msg),
+      $window->format_event("left", $nick, $msg),
     );
   }
 };
