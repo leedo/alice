@@ -12089,6 +12089,11 @@ Alice.Window = Class.create({
     this.element.addClassName('active');
     this.tab.addClassName('active');
 
+    if (!this.active) {
+      this.scrollToPosition(this.lastScrollPosition);
+      this.setupScrollBack();
+    }
+
     this.active = true;
 
     this.application.setSource(this.id);
@@ -12104,9 +12109,6 @@ Alice.Window = Class.create({
 
     this.application.displayTopic(this.topic);
     document.title = this.title;
-
-    this.scrollToPosition(this.lastScrollPosition);
-    this.setupScrollBack();
     return this;
   },
 
