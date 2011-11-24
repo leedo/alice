@@ -27,7 +27,16 @@ has dsn => (
   required => 1,
 );
 
-has dbi => (
+has writer => (
+  is => 'ro',
+  lazy => 1,
+  default => sub {
+    my $self = shift;
+    AnyEvent::DBI->new(@{$self->dsn});
+  }
+);
+
+has reader => (
   is => 'ro',
   lazy => 1,
   default => sub {
@@ -53,12 +62,12 @@ has msgid => (
 
 sub clear {
   my ($self, $id) = @_;
-  $self->dbi->exec("DELETE FROM window_buffer WHERE window_id = ?", $id, sub {});
+  $self->writer->exec("DELETE FROM window_buffer WHERE window_id = ?", $id, sub {});
 }
 
 sub messages {
   my ($self, $id, $max, $min, $limit, $cb) = @_;
-  $self->dbi->exec(
+  $self->reader->exec(
     "SELECT message FROM window_buffer WHERE window_id=? AND msgid <= ? AND msgid >= ? ORDER BY msgid DESC LIMIT ?",
     $id, $max, $min, $limit, sub {
       $cb->([map {decode_json $_->[0]} reverse @{$_[1]}]);
@@ -83,7 +92,7 @@ sub do_insert {
 
   my $idle_w; $idle_w = AE::idle sub {
     if (my $row = shift @{$self->insert}) {
-      $self->dbi->exec("INSERT INTO window_buffer (window_id, msgid, message) VALUES (?,?,?)", @$row, sub{});
+      $self->writer->exec("INSERT INTO window_buffer (window_id, msgid, message) VALUES (?,?,?)", @$row, sub{});
     }
     else {
       undef $idle_w;
@@ -115,13 +124,13 @@ sub do_trim {
 
 sub trim_id {
   my ($self, $window_id) = @_;
-  $self->dbi->exec(
+  $self->writer->exec(
     "SELECT msgid FROM window_buffer WHERE window_id=? ORDER BY msgid DESC LIMIT ?,1",
     $window_id, $self->backlog, sub {
       my $rows = $_[1];
       if (@$rows) {
         my $minid = $rows->[0][0];
-        $self->dbi->exec(
+        $self->writer->exec(
           "DELETE FROM window_buffer WHERE window_id=? AND msgid < ?",
           $window_id, $minid, sub{}
         );
