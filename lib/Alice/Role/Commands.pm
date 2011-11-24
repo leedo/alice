@@ -94,7 +94,12 @@ sub run_irc_command {
 
 sub command {
   my ($name, $opts) = @_;
-  $COMMANDS{$name} = $opts;
+
+  if ($opts) 
+    $COMMANDS{$name} = $opts;
+  }
+
+  return $COMMANDS{$name};
 }
 
 command say => {

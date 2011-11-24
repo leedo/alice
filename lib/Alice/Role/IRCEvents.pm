@@ -5,14 +5,11 @@ use Any::Moose 'Role';
 use IRC::Formatting::HTML qw/irc_to_html/;
 use AnyEvent::IRC::Util qw/split_prefix/;
 use List::Util qw/min/;
-use Scalar::Util qw/weaken/;
 
 our %EVENTS;
 
 sub build_events {
   my ($self, $irc) = @_;
-
-  weaken $irc;
 
   return +{
     map {
@@ -28,12 +25,15 @@ sub build_events {
 sub irc_event {
   my ($name, $code) = @_;
 
-  if (ref $name eq 'ARRAY') {
-    irc_event($_, $code) for @$name;
-    return;
+  if ($code) {
+    if (ref $name eq 'ARRAY') {
+      irc_event($_, $code) for @$name;
+      return;
+    }
+
+    $name = "irc_$name" if $name =~ /^\d+$/;
   }
 
-  $name = "irc_$name" if $name =~ /^\d+$/;
   $EVENTS{$name} = $code;
 }
 
