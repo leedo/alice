@@ -318,8 +318,7 @@ command disconnect => {
         $self->disconnect($irc);
       }
       elsif ($irc->reconnect_timer) {
-        $irc->cancel_reconnect;
-        $req->reply("Canceled reconnect timer for " . $irc->name);
+        $self->cancel_reconnect($irc);
       }
       else {
         $req->reply("Already disconnected");
@@ -347,8 +346,7 @@ command 'connect' => {
         $req->reply("Already connected");
       }
       elsif ($irc->reconnect_timer) {
-        $irc->cancel_reconnect;
-        $req->reply("Canceled reconnect timer for " . $irc->netork);
+        $self->cancel_reconnect($irc);
         $self->connect($irc);
       }
       else {

@@ -425,6 +425,13 @@ sub disconnect {
 
 sub cancel_reconnect {
   my ($self, $irc) = @_;
+  $self->send_info($irc->name, "canceled reconnect");
+  $self->broadcast({
+    type => "action",
+    event => "disconnect",
+    network => $irc->name,
+    windows => [], #shouldn't be any windows if we're not connected.
+  });
   $irc->reconnect_timer(undef);
   $irc->reset_reconnect_count;
 }
