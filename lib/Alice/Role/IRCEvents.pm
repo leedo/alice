@@ -118,7 +118,7 @@ irc_event disconnect => sub {
   $self->send_info($irc->name, "disconnected: $reason");
   
   # TODO - Object::Event bug that prevents object from getting destroyed
-  delete $irc->cl->{change_nick_cb_guard};
+  delete $irc->cl->{change_nick_cb_guard} if $irc->cl;
 
   $irc->cl(undef);
 
@@ -394,7 +394,7 @@ sub reconnect {
 
   if ($interval < 15) {
     $time = 15 - $interval;
-    $self->show_info("last attempt was within 15 seconds, delaying $time seconds")
+    $self->send_info($irc->name, "last attempt was within 15 seconds, delaying $time seconds")
   }
 
   if (!defined $time) {
@@ -402,7 +402,7 @@ sub reconnect {
     $time = min 60 * 5, 15 * $self->{reconnect_count};
   }
 
-  $self->show_info("reconnecting in $time seconds");
+  $self->send_info($irc->name, "reconnecting in $time seconds");
   $self->reconnect_timer(AE::timer $time, 0, sub {
     $self->connect unless $self->cl->is_connected;
   });
