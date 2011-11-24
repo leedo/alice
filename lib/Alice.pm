@@ -206,6 +206,8 @@ sub tab_order {
 
 sub window_nicks {
   my ($self, $window) = @_;
+  return () if $window->type eq "info";
+
   my $irc = $self->get_irc($window->network);
   if ($irc and $irc->is_connected) {
     if ($window->type eq "channel") {
