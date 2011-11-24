@@ -86,7 +86,7 @@ has ignore => (
   is      => 'rw',
   isa     => 'HashRef[ArrayRef]',
   default => sub {
-    +{ msg => [], 'join' => [], part => [] }
+    +{ msg => [], 'join' => [], part => [], nick => [] }
   }
 );
 

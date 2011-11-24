@@ -183,7 +183,9 @@ irc_event nick_change => sub {
     grep {$_}
     map  {
       if (my $window = $self->find_window($_, $irc)) {
-        $window->format_event("nick", $old_nick, $new_nick);
+        $window->nicks_action($irc->channel_nicks($window->title)),
+        $self->is_ignore(nick => $_) ? ()
+          : $window->format_event("nick", $old_nick, $new_nick)
       }
     } @channels
   );
