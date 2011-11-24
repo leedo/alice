@@ -6,11 +6,9 @@
       <td>
         <label for="join_network">Network</label>
         <select id="join_network">
-          <? my @ircs = sort {$a->alias cmp $b->alias} $app->connected_ircs ?>
+          <? my @ircs = sort {$a->name cmp $b->name} $app->connected_ircs ?>
           <? for my $irc (@ircs) { ?>
-            <option name="<?= $irc->alias ?>"<?= $irc->is_connected ? "" : "disabled" ?>>
-              <?= $irc->alias ?>
-            </option>
+            <option name="<?= $irc->name ?>"><?= $irc->name ?></option>
           <? } ?>
         </select>
       </td>
