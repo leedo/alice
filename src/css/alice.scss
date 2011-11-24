@@ -1111,7 +1111,7 @@ div.color_picker div.toggle span#bg.active {
   color: $textentry_toolbar_toggle_active_color;
 }
 
-@media screen and (max-device-width: 480px) {
+@media screen and (max-width: 480px) {
   div#topic {
     padding-left: 58px;
   }
@@ -1138,6 +1138,14 @@ div.color_picker div.toggle span#bg.active {
   div#input div {
     margin-right: 58px;
     background: none;
+  }
+
+  div#input div.editor_toolbar {
+    display: none;
+  }
+  
+  div#input div.editor {
+    margin-right: 0;
   }
 
   div#input input.send {

@@ -197,8 +197,10 @@ Alice.Window = Class.create({
     // scroll position jump to its position from its last
     // unfocus. doh.
     if (!this.active) {
-      this.scrollToPosition(this.lastScrollPosition);
-      this.setupScrollBack();
+      setTimeout(function(){
+        this.scrollToPosition(this.lastScrollPosition);
+        this.setupScrollBack();
+      }.bind(this), 0);
     }
 
     this.active = true;

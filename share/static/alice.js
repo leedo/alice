@@ -12094,8 +12094,10 @@ Alice.Window = Class.create({
     this.tab.addClassName('active');
 
     if (!this.active) {
-      this.scrollToPosition(this.lastScrollPosition);
-      this.setupScrollBack();
+      setTimeout(function(){
+        this.scrollToPosition(this.lastScrollPosition);
+        this.setupScrollBack();
+      }.bind(this), 0);
     }
 
     this.active = true;
