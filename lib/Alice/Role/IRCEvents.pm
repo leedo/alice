@@ -16,6 +16,7 @@ sub build_events {
       my $event = $_;
       $event => sub {
         shift; # we don't need the client
+        AE::log debug => "$event event for " . $irc->name;
         $EVENTS{$event}->($self, $irc, @_)
       }
     } keys %EVENTS
@@ -41,8 +42,7 @@ irc_event connect => sub {
   my ($self, $irc, $err) = @_;
 
   if ($irc->cl->{socket}) {
-    $irc->cl->{socket}->{rbuf_max} = 1024 * 10; # 10K max read buffer
-    $irc->cl->{connected} = 1;
+    $irc->cl->{socket}->rbuf_max(1024 * 10); # 10K max read buffer
   }
 
   if (defined $err) {
@@ -72,6 +72,8 @@ irc_event registered => sub {
   my ($self, $irc) = @_;
   my $config = $self->config->servers->{$irc->name};
 
+  $irc->cl->{connected} = 1; # AE::IRC seems broken here...
+
   my @commands = ();
 
   push @commands, map {
@@ -99,6 +101,7 @@ irc_event registered => sub {
     }
   };
 
+  $irc->cl->enable_ping(300 => sub { $self->reconnect($irc) });
 };
 
 irc_event disconnect => sub {
@@ -401,13 +404,11 @@ sub reconnect {
 
   if (!defined $time) {
     # increase timer by 15 seconds each time, until it hits 5 minutes
-    $time = min 60 * 5, 15 * $self->{reconnect_count};
+    $time = min 60 * 5, 15 * $irc->reconnect_count;
   }
 
   $self->send_info($irc->name, "reconnecting in $time seconds");
-  $self->reconnect_timer(AE::timer $time, 0, sub {
-    $self->connect unless $self->cl->is_connected;
-  });
+  $irc->reconnect_timer(AE::timer $time, 0, sub {$self->connect($irc)});
 }
 
 sub disconnect {
@@ -444,8 +445,7 @@ sub connect {
   $irc->disabled(0);
   $irc->increase_reconnect_count;
    
-  my $message = $irc->reconnect_count > 1 ? "reconnecting" : "connecting";
-  $self->send_info($irc->name, $message);
+  $self->send_info($irc->name, "connecting (attempt " . $irc->reconnect_count .")");
   
   $irc->cl->connect($config->{host}, $config->{port});
 }
