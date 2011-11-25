@@ -421,6 +421,11 @@ sub disconnect {
     $self->send_info($irc->name, "disconnecting: $msg") if $msg;
     $irc->cl->disconnect($msg);
   }
+  elsif ($irc->removed) {
+    $irc->reconnect_timer(undef);
+    $irc->cl(undef);
+    $self->remove_irc($irc->name);
+  }
 }
 
 sub cancel_reconnect {

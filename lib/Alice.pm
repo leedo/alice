@@ -350,14 +350,9 @@ sub reload_config {
   }
   for my $irc ($self->ircs) {
     unless (exists $self->config->servers->{$irc->name}) {
-      if ($irc->is_connected) {
-        $irc->removed(1);
-        $self->disconnect($irc);
-      }
-      else {
-        $self->send_info("config", "removing ".$irc->name." server");
-        $self->remove_irc($irc->name);
-      }
+      $self->send_info("config", "removing ".$irc->name." server");
+      $irc->removed(1);
+      $self->disconnect($irc);
     }
   }
 }
