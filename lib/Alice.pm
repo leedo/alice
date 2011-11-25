@@ -355,17 +355,26 @@ sub reload_config {
     }
   }
   for my $irc ($self->ircs) {
-    if (!$self->config->servers->{$irc->name}) {
-      $irc->removed(1);
-      $self->disconnect($irc);
+    unless (exists $self->config->servers->{$irc->name}) {
+      if ($irc->is_connected) {
+        $irc->removed(1);
+        $self->disconnect($irc);
+      }
+      else {
+        $self->send_info("config", "removing ".$irc->name." server");
+        $self->remove_irc($irc->name);
+      }
     }
   }
 }
 
-sub send_announcement {
+sub announce {
   my ($self, $window, $body) = @_;
-  my $message = $window->format_announcement($body);
-  $self->broadcast($message);
+  $self->broadcast({
+    type => "action",
+    event => "announce",
+    body => $body
+  });
 }
 
 sub send_topic {

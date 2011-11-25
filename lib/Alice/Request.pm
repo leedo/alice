@@ -21,9 +21,11 @@ has window => (
 
 sub reply {
   my ($self, $line) = @_;
-  $self->stream->send(
-    $self->window->format_announcement($line)
-  );
+  $self->stream->send({
+    type => "action",
+    event => "announce",
+    body => $line,
+  });
 }
 
 sub send_srv {

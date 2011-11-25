@@ -306,7 +306,7 @@ irc_event 401 => sub {
   my $nick = $msg->{params}[1];
 
   if (my $window = $self->find_window($nick, $irc)) {
-    $self->broadcast($window->format_announcement("No such nick."));
+    $self->announce("No such nick.");
   }
   
   if ($irc->whois->{$nick}) {
@@ -373,11 +373,8 @@ irc_event irc_invite => sub {
   my (undef, $channel) = @{$msg->{params}};
   my ($from) = split_prefix($msg->{prefix});
 
-  $self->broadcast({
-    type => "action",
-    event => "announce",
-    body => "$from has invited you to $channel.",
-  });
+  my $message = "$from has invited you to $channel on ".$irc->name;
+  $self->announce($message);
 };
 
 irc_event 464 => sub{

@@ -173,20 +173,6 @@ sub format_message {
   return $message;
 }
 
-sub format_announcement {
-  my ($self, $msg) = @_;
-  my $message = {
-    type    => "message",
-    event   => "announce",
-    window  => $self->serialized,
-    message => $msg,
-  };
-  $message->{html} = $self->render->('announcement', $message);
-  $message->{message} = "$message->{message}";
-  $self->reset_previous_nick;
-  return $message;
-}
-
 sub close_action {
   my $self = shift;
   my $action = {
