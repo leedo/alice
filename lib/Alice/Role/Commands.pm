@@ -27,7 +27,7 @@ sub irc_command {
     }
   }
   catch {
-    $req->reply($_);
+    $req->reply("$_");
   }
 }
 
