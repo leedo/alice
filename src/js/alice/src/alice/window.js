@@ -304,15 +304,18 @@ Alice.Window = Class.create({
     if (chunk['range'][0] > this.msgid) {
       this.messages.insert({"bottom": chunk['html']});
       this.trimMessages();
-      var last = chunk['range'][1];
+      this.msgid = chunk['range'][1];
     }
     else {
+      this.bulk_insert = true;
       this.messages.insert({"top": chunk['html']});
     }
 
     this.messages.select("li:not(.filtered)").each(function (li) {
       this.application.applyFilters(li, this);
     }.bind(this));
+
+    this.bulk_insert = false;
 
     this.scrollToPosition(position);
     this.setupScrollBack();

@@ -12208,9 +12208,13 @@ Alice.Window = Class.create({
       this.messages.insert({"top": chunk['html']});
     }
 
+    this.bulk_insert = true;
+
     this.messages.select("li:not(.filtered)").each(function (li) {
       this.application.applyFilters(li, this);
     }.bind(this));
+
+    this.bulk_insert = false;
 
     this.scrollToPosition(position);
     this.setupScrollBack();
