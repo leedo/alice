@@ -152,7 +152,6 @@ sub run {
 
 sub init {
   my $self = shift;
-  $self->commands;
   $self->info_window;
   $self->template;
 
@@ -184,11 +183,6 @@ sub shutdown {
   $self->_ircs([]);
   $_->close for @{$self->streams};
   $self->streams([]);
-}
-
-sub reload_commands {
-  my $self = shift;
-  $self->commands->reload_handlers;
 }
 
 sub tab_order {
