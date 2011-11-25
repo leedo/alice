@@ -38,7 +38,7 @@ has 'reconnect_timer' => (
   is => 'rw'
 );
 
-has [qw/reconnect_count connect_time/] => (
+has [qw/is_connecting reconnect_count connect_time/] => (
   is  => 'rw',
   default   => 0,
 );
@@ -108,6 +108,11 @@ sub send_raw {
 sub is_connected {
   my $self = shift;
   $self->cl ? $self->cl->is_connected : 0;
+}
+
+sub is_disconnected {
+  my $self = shift;
+  return !($self->is_connected or $self->is_connecting);
 }
 
 sub nick {

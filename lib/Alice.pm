@@ -163,7 +163,7 @@ sub init_shutdown {
   my ($self, $cb, $msg) = @_;
 
   $self->alert("Alice server is shutting down");
-  $self->disconnect($_, $msg) for $self->connected_ircs;
+  $self->disconnect_irc($_->name, $msg) for $self->connected_ircs;
 
   my ($w, $t);
   my $shutdown = sub {
@@ -321,7 +321,7 @@ sub add_irc_server {
   $self->config->servers->{$name} = $config;
   my $irc = Alice::IRC->new(name => $name);
   $self->add_irc($irc);
-  $self->connect($irc) if $config->{autoconnect};
+  $self->connect_irc($name) if $config->{autoconnect};
 }
 
 sub reload_config {
@@ -349,10 +349,18 @@ sub reload_config {
     }
   }
   for my $irc ($self->ircs) {
-    unless (exists $self->config->servers->{$irc->name}) {
-      $self->send_info("config", "removing ".$irc->name." server");
+    my $name = $irc->name;
+    unless (exists $self->config->servers->{$name}) {
+      $self->send_info("config", "removing $name server");
       $irc->removed(1);
-      $self->disconnect($irc);
+      if ($irc->is_disconnected) {
+        $irc->cancel_reconnect($name);
+        $irc->cl(undef);
+        $self->remove_irc($name);
+      }
+      else {
+        $self->disconnect_irc($name);
+      }
     }
   }
 }

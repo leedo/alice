@@ -309,24 +309,8 @@ command disconnect => {
   desc => "Disconnects from the specified server.",
   cb => sub  {
     my ($self, $req, $opts) = @_;
-
     my $network = $opts->[0];
-    my $irc = $self->get_irc($network);
-
-    if ($irc) {
-      if ($irc->is_connected) {
-        $self->disconnect($irc);
-      }
-      elsif ($irc->reconnect_timer) {
-        $self->cancel_reconnect($irc);
-      }
-      else {
-        $req->reply("Already disconnected");
-      }
-    }
-    else {
-      $req->reply("$network isn't one of your networks!");
-    }
+    $self->disconnect_irc($network);
   },
 };
 
@@ -337,25 +321,8 @@ command 'connect' => {
   desc => "Connects to the specified server.",
   cb => sub {
     my ($self, $req, $opts) = @_;
-
     my $network = $opts->[0];
-    my $irc = $self->get_irc($network);
-
-    if ($irc) {
-      if ($irc->is_connected) {
-        $req->reply("Already connected");
-      }
-      elsif ($irc->reconnect_timer) {
-        $self->cancel_reconnect($irc);
-        $self->connect($irc);
-      }
-      else {
-        $self->connect($irc);
-      }
-    }
-    else {
-      $req->reply("$network isn't one of your networks");
-    }
+    $self->connect_irc($network);
   }
 };
 

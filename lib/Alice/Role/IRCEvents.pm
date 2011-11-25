@@ -5,6 +5,8 @@ use Any::Moose 'Role';
 use IRC::Formatting::HTML qw/irc_to_html/;
 use AnyEvent::IRC::Util qw/split_prefix/;
 use List::Util qw/min/;
+use Try::Tiny;
+use Class::Throwable qw/InvalidNetwork DisconnectError ConnectError/;
 
 our %EVENTS;
 
@@ -40,6 +42,7 @@ sub irc_event {
 
 irc_event connect => sub {
   my ($self, $irc, $err) = @_;
+  $irc->is_connecting(0);
 
   if ($irc->cl->{socket}) {
     $irc->cl->{socket}->rbuf_max(1024 * 10); # 10K max read buffer
@@ -47,7 +50,7 @@ irc_event connect => sub {
 
   if (defined $err) {
     $self->send_info($irc->name, "connect error: $err");
-    $self->reconnect($irc);
+    $self->reconnect_irc($irc->name);
     return;
   }
 
@@ -101,7 +104,8 @@ irc_event registered => sub {
     }
   };
 
-  $irc->cl->enable_ping(300 => sub { $self->reconnect($irc) });
+  my $name = $irc->name;
+  $irc->cl->enable_ping(300 => sub { $self->reconnect_irc($name) });
 };
 
 irc_event disconnect => sub {
@@ -125,7 +129,7 @@ irc_event disconnect => sub {
 
   $irc->cl(undef);
 
-  $self->reconnect($irc, 0) unless $irc->disabled;
+  $self->reconnect_irc($irc->name, 0) unless $irc->disabled;
 
   if ($irc->removed) {
     $self->remove_irc($irc->name);
@@ -379,7 +383,7 @@ irc_event irc_invite => sub {
 
 irc_event 464 => sub{
   my ($self, $irc, $msg) = @_;
-  $self->disconnect($irc, "bad USER/PASS")
+  $self->disconnect_irc($irc->name, "bad USER/PASS")
 };
 
 irc_event [qw/001 305 306 401 471 473 474 475 477 485 432 433/] => sub {
@@ -392,8 +396,10 @@ irc_event [qw/372 377 378/] => sub {
   $self->send_info($irc->name, $msg->{params}[1], mono => 1);
 };
 
-sub reconnect {
-  my ($self, $irc, $time) = @_;
+sub reconnect_irc {
+  my ($self, $name, $time) = @_;
+  my $irc = $self->get_irc($name);
+  throw InvalidNetwork "$name isn't one of your networks" unless $irc;
 
   my $interval = time - $irc->connect_time;
 
@@ -408,28 +414,33 @@ sub reconnect {
   }
 
   $self->send_info($irc->name, "reconnecting in $time seconds");
-  $irc->reconnect_timer(AE::timer $time, 0, sub {$self->connect($irc)});
+  $irc->reconnect_timer(AE::timer $time, 0, sub {$self->connect_irc($name)});
 }
 
-sub disconnect {
-  my ($self, $irc, $msg) = @_;
+sub disconnect_irc {
+  my ($self, $name, $msg) = @_;
+  my $irc = $self->get_irc($name);
+  throw InvalidNetwork "$name isn't one of your networks" unless $irc;
 
+  if ($irc->reconnect_timer) {
+    $self->cancel_reconnect($name);
+    return;
+  }
+
+  throw DisconnectError "$name is already disconnected" if $irc->is_disconnected;
+
+  $self->send_info($irc->name, "disconnecting: $msg") if $msg;
+  $irc->is_connecting(0);
   $irc->disabled(1);
-
-  if ($irc->is_connected) {
-    $msg ||= $self->config->quitmsg;
-    $self->send_info($irc->name, "disconnecting: $msg") if $msg;
-    $irc->cl->disconnect($msg);
-  }
-  elsif ($irc->removed) {
-    $irc->reconnect_timer(undef);
-    $irc->cl(undef);
-    $self->remove_irc($irc->name);
-  }
+  $msg ||= $self->config->quitmsg;
+  $irc->cl->disconnect($msg);
 }
 
 sub cancel_reconnect {
-  my ($self, $irc) = @_;
+  my ($self, $name) = @_;
+  my $irc = $self->get_irc($name);
+  throw InvalidNetwork "$name isn't one of your networks" unless $irc;
+
   $self->send_info($irc->name, "canceled reconnect");
   $self->broadcast({
     type => "action",
@@ -441,9 +452,15 @@ sub cancel_reconnect {
   $irc->reset_reconnect_count;
 }
 
-sub connect {
-  my ($self, $irc) = @_;
-  
+sub connect_irc {
+  my ($self, $name) = @_;
+  my $irc = $self->get_irc($name);
+
+  throw InvalidNetwork "$name isn't one of your networks" unless $irc;
+  throw ConnectError "$name is already connected" if $irc->is_connected;
+  throw ConnectError "$name is already connecting" if $irc->is_connecting;
+
+  $irc->reconnect_timer(undef);
   my $config = $self->config->servers->{$irc->name};
  
   # some people don't set these, wtf
@@ -459,6 +476,7 @@ sub connect {
    
   $self->send_info($irc->name, "connecting (attempt " . $irc->reconnect_count .")");
   
+  $irc->is_connecting(1);
   $irc->cl->connect($config->{host}, $config->{port});
 }
 

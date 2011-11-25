@@ -40,6 +40,9 @@
 ?   if ($irc->is_connected) {
 ?     $status = "connected";
 ?     $action = "disconnect";
+?   } elsif ($irc->is_connecting) {
+?     $status = "connecting";
+?     $action = "disconnect";
 ?   } elsif ($irc->reconnect_timer) {
 ?     $status = "reconnecting";
 ?     $action = "disconnect";
