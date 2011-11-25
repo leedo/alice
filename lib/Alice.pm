@@ -353,7 +353,7 @@ sub reload_config {
     unless (exists $self->config->servers->{$name}) {
       $self->send_info("config", "removing $name server");
       if ($irc->is_disconnected) {
-        $irc->cancel_reconnect($name);
+        $self->cancel_reconnect($name);
         $irc->cl(undef);
         $self->remove_irc($name);
       }
