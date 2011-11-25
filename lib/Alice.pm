@@ -381,15 +381,19 @@ sub send_message {
   my ($self, $window, $nick, $body) = @_;
 
   my $irc = $self->get_irc($window->network);
-  my %options = (
+  my @messages = $window->format_message($nick, $body,
     monospaced => $self->is_monospace_nick($nick),
     self => $irc->nick eq $nick,
     avatar => $irc->nick_avatar($nick) || "",
     highlight => $self->is_highlight($irc->nick, $body),
   );
 
-  my $message = $window->format_message($nick, $body, %options);
-  $self->broadcast($message);
+  if ($messages[0]->{highlight}) {
+    push @messages, $self->info_window->format_message(
+      $nick, $body, self => 1, source => $nick);
+  }
+
+  $self->broadcast(@messages);
 }
 
 sub send_info {
@@ -464,14 +468,6 @@ sub handle_message {
       $self->irc_command($input);
     }
   }
-}
-
-sub send_highlight {
-  my ($self, $nick, $body, $source) = @_;
-  my $message = $self->info_window->format_message(
-    $nick, $body, self => 1, source => $source
-  );
-  $self->broadcast($message);
 }
 
 sub purge_disconnects {

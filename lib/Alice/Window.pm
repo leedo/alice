@@ -226,11 +226,5 @@ sub hashtag {
   return "/" . $self->network . "/$path/" . $name;
 }
 
-sub is_highlight {
-  my ($self, $body) = @_;
-  return $self->app->is_highlight($self->nick, $body);
-}
-
-
 __PACKAGE__->meta->make_immutable;
 1;
