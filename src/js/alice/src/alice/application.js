@@ -102,12 +102,14 @@ Alice.Application = Class.create({
       return;
     }
 
+    var position = win.captureScrollPosition();
     a.update(data.title);
     a.insert({
       after: '<sup class="external"><a target="_blank" href="'+data.url+'">'
              +data.provider_name+'</a></sup>'
     });
     a.up("div.msg").insert(elem);
+    win.scrollToPosition(position);
 
     a.observe('click', function(e) {
       e.stop();

@@ -10758,12 +10758,14 @@ Alice.Application = Class.create({
       return;
     }
 
+    var position = win.captureScrollPosition();
     a.update(data.title);
     a.insert({
       after: '<sup class="external"><a target="_blank" href="'+data.url+'">'
              +data.provider_name+'</a></sup>'
     });
     a.up("div.msg").insert(elem);
+    win.scrollToPosition(position);
 
     a.observe('click', function(e) {
       e.stop();
@@ -12094,10 +12096,8 @@ Alice.Window = Class.create({
     this.tab.addClassName('active');
 
     if (!this.active) {
-      setTimeout(function(){
-        this.scrollToPosition(this.lastScrollPosition);
-        this.setupScrollBack();
-      }.bind(this), 0);
+      this.scrollToPosition(this.lastScrollPosition);
+      this.setupScrollBack();
     }
 
     this.active = true;
@@ -12262,7 +12262,9 @@ Alice.Window = Class.create({
 
   scrollToPosition: function(position) {
     if (!this.active) return;
-    this.element.scrollTop = this.element.scrollHeight - this.element.offsetHeight - position;
+    setTimeout(function(){
+      this.element.scrollTop = this.element.scrollHeight - this.element.offsetHeight - position;
+    }, 0);
   },
 
   getNicknames: function () {

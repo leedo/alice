@@ -197,10 +197,8 @@ Alice.Window = Class.create({
     // scroll position jump to its position from its last
     // unfocus. doh.
     if (!this.active) {
-      setTimeout(function(){
-        this.scrollToPosition(this.lastScrollPosition);
-        this.setupScrollBack();
-      }.bind(this), 0);
+      this.scrollToPosition(this.lastScrollPosition);
+      this.setupScrollBack();
     }
 
     this.active = true;
@@ -368,7 +366,9 @@ Alice.Window = Class.create({
   
   scrollToPosition: function(position) {
     if (!this.active) return;
-    this.element.scrollTop = this.element.scrollHeight - this.element.offsetHeight - position;
+    setTimeout(function(){
+      this.element.scrollTop = this.element.scrollHeight - this.element.offsetHeight - position;
+    }, 0);
   },
 
   getNicknames: function () {

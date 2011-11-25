@@ -879,44 +879,6 @@ ul.messages li.announce div.msg {
   white-space: pre-wrap;
 }
 
-ul.messages li.announce div.msg ul.avatar_grid {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  width: 100%;
-  overflow: hidden;
-  word-wrap: normal;
-  white-space: normal;
-}
-ul.messages li.announce div.msg ul.avatar_grid li {
-  width: 50px;
-  height: 50px;
-  float: left;
-  margin: 0;
-  padding: 0;
-  text-align: center;
-  clear: none;
-  display: block;
-  overflow: hidden;
-  font-size: 10px;
-  text-overflow: ellipsis;
-}
-
-ul.messages li.announce div.msg ul.avatar_grid li div.gridimg {
-  width: 32px;
-  height: 32px;
-  margin: 0 auto;
-}
-
-ul.messages li.announce div.msg ul.avatar_grid li img {
-  max-width: 32px;
-  max-height: 32px;
-  margin: 0 auto;
-  padding: 0;
-  position: relative;
-  display: block;
-}
-
 div.msg img.audio {
   cursor: pointer;
   display: inline;
