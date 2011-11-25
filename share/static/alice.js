@@ -12096,8 +12096,10 @@ Alice.Window = Class.create({
     this.tab.addClassName('active');
 
     if (!this.active) {
-      this.scrollToPosition(this.lastScrollPosition);
-      this.setupScrollBack();
+      setTimeout(function(){
+        this.scrollToPosition(this.lastScrollPosition);
+        this.setupScrollBack();
+      }.bind(this), 0);
     }
 
     this.active = true;
@@ -12262,9 +12264,7 @@ Alice.Window = Class.create({
 
   scrollToPosition: function(position) {
     if (!this.active) return;
-    setTimeout(function(){
-      this.element.scrollTop = this.element.scrollHeight - this.element.offsetHeight - position;
-    }, 0);
+    this.element.scrollTop = this.element.scrollHeight - this.element.offsetHeight - position;
   },
 
   getNicknames: function () {
