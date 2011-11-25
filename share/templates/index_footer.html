@@ -25,7 +25,7 @@
 
             alice.ready();
 
-            <? if (!$app->connected_ircs) { ?>
+            <? if (!grep {$_->is_connected or $_->is_connecting} $app->ircs) { ?>
             alice.toggleConfig();
             <? } ?>
             <? if ($app->config->first_run) { ?>
