@@ -165,7 +165,7 @@ irc_event privatemsg => sub {
 
     return if $self->is_ignore(msg => $from);
 
-    my $window = $self->find_or_create_window($from);
+    my $window = $self->find_or_create_window($from, $irc);
     $self->send_message($window, $from, $text); 
     $irc->send_srv(WHO => $from) unless $irc->nick_avatar($from);
   }
