@@ -214,4 +214,6 @@ if (window == window.parent) {
       ]);
     }
   });
+
+  setInterval(function(){new Ajax.Request("/say")}, 1000 * 60 * 5);
 }
