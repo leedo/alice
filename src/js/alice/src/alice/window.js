@@ -262,6 +262,7 @@ Alice.Window = Class.create({
   },
   
   showHappyAlert: function (message) {
+    message = message.escapeHTML();
     this.messages.insert(
       "<li class='event happynotice'><div class='msg'>"+message+"</div></li>"
     );
@@ -269,6 +270,7 @@ Alice.Window = Class.create({
   },
   
   showAlert: function (message) {
+    message = message.escapeHTML();
     this.messages.insert(
       "<li class='event notice'><div class='msg'>"+message+"</div></li>"
     );
@@ -276,6 +278,7 @@ Alice.Window = Class.create({
   },
 
   announce: function (message) {
+    message = message.escapeHTML();
     this.messages.insert(
       "<li class='message monospaced announce'><div class='msg'>"+message+"</div></li>"
     );
