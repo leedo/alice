@@ -175,12 +175,7 @@ sub realname_avatar {
 sub update_realname {
   my ($self, $realname) = @_;
   $self->send_srv(REALNAME => $realname);
-
   $self->avatars->{$self->nick} = $self->realname_avatar($realname);
-
-  for (grep {$_->previous_nick eq $self->nick} $self->windows) {
-    $_->reset_previous_nick;
-  }
 }
 
 sub is_channel {
