@@ -42,7 +42,6 @@ sub BUILD {
   $h->{ws_version} = $self->ws_version;
   
   $h->on_error(sub {
-    warn $_[2];
     $self->close;
     undef $h;
     $self->on_error->();
