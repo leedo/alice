@@ -11030,14 +11030,14 @@ Alice.Application = Class.create({
       var pos = win.getTabPosition();
 
       if (pos.left) {
-        var classes = win.status_class();
-        left.addClassName(classes);
-        left_menu.innerHTML += sprintf('<li rel="%s" class="%s"><span>%s</span></a>', win.id, classes, win.title)
+        var classes = win.statuses;
+        classes.each(function(c){left.addClassName(c)});
+        left_menu.innerHTML += sprintf('<li rel="%s" class="%s">%s</a>', win.id, classes.join(" "), win.title)
       }
       else if (pos.right) {
-        var classes = win.status_class();
-        right.addClassName(classes);
-        right_menu.innerHTML += sprintf('<li rel="%s" class="%s"><span>%s</span></a>', win.id, classes, win.title)
+        var classes = win.statuses;
+        classes.each(function(c){right.addClassName(c)});
+        right_menu.innerHTML += sprintf('<li rel="%s" class="%s">%s</a>', win.id, classes.join(" "), win.title)
       }
 
     }.bind(this));
@@ -12137,16 +12137,11 @@ Alice.Window = Class.create({
 
   markUnread: function(classname) {
     var classes = ["unread"];
-    if (classname && classname != "unread") classes.push(classname);
+    if (classname) classes.push(classname);
 
+    classes.each(function(c){this.tab.addClassName(c)}.bind(this));
+    this.application.highlightChannelSelect(this.id, classes);
     this.statuses = classes;
-    this.tab.addClassName(this.status_class());
-
-    this.application.highlightChannelSelect(this.id, this.status_class());
-  },
-
-  status_class: function() {
-    return this.statuses.join(" ");
   },
 
   disable: function () {
@@ -12202,13 +12197,12 @@ Alice.Window = Class.create({
     if (chunk['range'][0] > this.msgid) {
       this.messages.insert({"bottom": chunk['html']});
       this.trimMessages();
-      var last = chunk['range'][1];
+      this.msgid = chunk['range'][1];
     }
     else {
+      this.bulk_insert = true;
       this.messages.insert({"top": chunk['html']});
     }
-
-    this.bulk_insert = true;
 
     this.messages.select("li:not(.filtered)").each(function (li) {
       this.application.applyFilters(li, this);

@@ -374,14 +374,14 @@ Alice.Application = Class.create({
       var pos = win.getTabPosition();
 
       if (pos.left) {
-        var classes = win.status_class();
-        left.addClassName(classes);
-        left_menu.innerHTML += sprintf('<li rel="%s" class="%s"><span>%s</span></a>', win.id, classes, win.title)
+        var classes = win.statuses;
+        classes.each(function(c){left.addClassName(c)});
+        left_menu.innerHTML += sprintf('<li rel="%s" class="%s">%s</a>', win.id, classes.join(" "), win.title)
       }
       else if (pos.right) {
-        var classes = win.status_class();
-        right.addClassName(classes);
-        right_menu.innerHTML += sprintf('<li rel="%s" class="%s"><span>%s</span></a>', win.id, classes, win.title)
+        var classes = win.statuses;
+        classes.each(function(c){right.addClassName(c)});
+        right_menu.innerHTML += sprintf('<li rel="%s" class="%s">%s</a>', win.id, classes.join(" "), win.title)
       }
 
     }.bind(this));

@@ -239,16 +239,11 @@ Alice.Window = Class.create({
 
   markUnread: function(classname) {
     var classes = ["unread"];
-    if (classname && classname != "unread") classes.push(classname);
+    if (classname) classes.push(classname);
 
+    classes.each(function(c){this.tab.addClassName(c)}.bind(this));
+    this.application.highlightChannelSelect(this.id, classes);
     this.statuses = classes;
-    this.tab.addClassName(this.status_class());
-
-    this.application.highlightChannelSelect(this.id, this.status_class());
-  },
-
-  status_class: function() {
-    return this.statuses.join(" ");
   },
   
   disable: function () {
