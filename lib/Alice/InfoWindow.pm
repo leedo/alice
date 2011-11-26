@@ -26,7 +26,8 @@ sub hashtag {
 
 sub format_message {
   my ($self, $from, $body, %options) = @_;
-  my $html = irc_to_html($body, classes => 1);
+  my $html = irc_to_html($body, classes => 1, ($options{monospaced} ? () : (invert => "italic")));
+
   my $message = {
     type   => "message",
     event  => "say",
