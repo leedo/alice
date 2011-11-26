@@ -11411,7 +11411,7 @@ Alice.Application = Class.create({
 
     $('config_menu').on(click, ".dropdown li", function(e,li) {
       e.stop();
-      var text = li.innerText;
+      var text = li.textContent;
 
       if (text.match(/Help/)) {
         this.toggleHelp();
