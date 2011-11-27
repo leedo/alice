@@ -374,12 +374,6 @@ sub announce {
   });
 }
 
-sub send_topic {
-  my ($self, $window) = @_;
-  my $message = $window->format_topic;
-  $self->broadcast($message);
-}
-
 sub send_message {
   my ($self, $window, $nick, $body) = @_;
 

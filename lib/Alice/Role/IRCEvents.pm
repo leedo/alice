@@ -326,7 +326,7 @@ irc_event 401 => sub {
   }
 };
 
-irc_event 'join' => sub {
+irc_event join => sub {
   my ($self, $irc, $nick, $channel, $is_self) = @_;
 
   if ($is_self) {
@@ -338,34 +338,56 @@ irc_event 'join' => sub {
     );
     $irc->send_srv("WHO" => $channel) if $irc->cl->isupport("UHNAMES");
   }
+};
 
-  elsif (my $window = $self->find_window($channel, $irc)) {
-    return if $self->is_ignore("join" => $channel);
-    $irc->send_srv("WHO" => $nick) unless $irc->nick_avatar($nick);
+irc_event channel_add => sub {
+  my ($self, $irc, $msg, $channel, @nicks) = @_;
+
+  if (my $window = $self->find_window($channel, $irc)) {
     $self->broadcast(
-      $window->format_event("joined", $nick),
-      $window->nicks_action($irc->channel_nicks($channel)),
+      $window->nicks_action($irc->channel_nicks($channel))
     );
+
+    unless ($self->is_ignore("join" => $channel)) {
+      $self->broadcast(
+        map {$window->format_event("joined", $_)} @nicks
+      );
+    }
+
+    for my $nick (@nicks) {
+      $irc->send_srv("WHO" => $nick) unless $irc->nick_avatar($nick);
+    }
   }
 };
 
 irc_event part => sub {
   my ($self, $irc, $nick, $channel, $is_self, $msg) = @_;
 
-  return if $self->is_ignore(part => $channel);
-
-  my $window = $self->find_window($channel, $irc);
-  return unless $window;
-
-  if ($is_self) {
+  if ($is_self and my $window = $self->find_window($channel, $irc)) {
     $self->send_info($irc->name, "leaving $channel");
     $self->close_window($window);
   }
-  else {
+};
+
+irc_event channel_remove => sub {
+  my ($self, $irc, $msg, $channel, @nicks) = @_;
+
+  if (my $window = $self->find_window($channel, $irc)) {
     $self->broadcast(
-      $window->nicks_action($irc->channel_nicks($channel)),
-      $window->format_event("left", $nick, $msg),
+      $window->nicks_action($irc->channel_nicks($channel))
     );
+
+    unless ($self->is_ignore(part => $channel)) {
+      my $reason = "";
+
+      if ($msg->{command} eq "QUIT") {
+        $reason = "Quit: $msg->{params}[-1]";
+      }
+
+      $self->broadcast(
+        map {$window->format_event(left => $_, $reason)} @nicks
+      );
+    }
   }
 };
 
