@@ -1,3 +1,4 @@
+@charset "UTF-8";
 tr.input, div.msg {
   -webkit-font-smoothing: antialiased; }
 
@@ -111,8 +112,9 @@ div#config_menu {
   cursor: pointer;
   position: absolute;
   z-index: 902;
-  background: url(image/logo.png) center center no-repeat;
+  background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEIAAAAaCAYAAAADiYpyAAADG0lEQVRYw+2ZS0hVURSGr9qVBipGDysaZUIRRQ9u70FlgwYZFTRp0ItIgqKixEERBE2i6A1FWUjSKKGoBiVZEEnRw8oKa9KLoIcQZWqW5teg/8DicM6596gHruiBhey19tp7r+/svfY61xgQGxBiAxAiBpEJtLpkRn8F0Sj5zf9nVl8FUQ3UJpEhKUzyOgmIDGA+MDRdQXwm+VPQCyBOyf4DyE9HEFOAhAnkiv7+AubKNqgXQLwwYOeka44o0gLbgeFml6wIMUkyECWCcTKdk+U+BVGt9mGzO3oLRNony0zgvYJYKt00tTuAEf0FRLEC+ArEPc709v4CokoBHHXpy6V/1kMQE4B7LglKviOBg0Ad0AZ8AK4Bi5LMPxM4AzxVom8AKoHpqYDIVTWI2wEYA/yVbWoPQCQ8ruO4zxhLtDOdW6se+Gb8zqkecdcnZTrGKNE/BL6r/cfuar/Fr1fnlz72m7If6QGITCBHbzoIxGyB7wD2Atkm0GIDZJvLb6P0nwTS2lYDzbIvDAJxR53KfexrfPJHd3JETgCIbJOTdvr435b9rtHlA01Ap2oeLz8HVIMfiEKgywx+1UNqzeKXRQhiufSNQJaH72Cz1c8afal0NQHryjLHf5RXh72Eey5FCMKpY04HjD8P2AzkGd1x+V3XkfGTj+pX7PUB9FbGXSqz/WSTSTrDIgJxOeRV7ciNkC+zxD3AAlNSJ/sAiuscAmyNCMQx6Q+EBFFhdlIiBclxD1CpAS6mOOEJ9a+PCMRa6etCgtgiv1vdKahygBZXSR1LoVhxnskRgBitz3OAVSFAjNeR7XSuxzAgHPpNKVyJXoEeigCErWladATdt0cesFsJ0+r3mHhWehRcccVc4YDYIXpOtdgJ/JSMDQDwRX2cyq1L41SqWHokaZf9ldol8p+o9hMD4rF041xz7de6nAqxRp8AD8wVWOoR6AUz9htd/eeB+6agqnZAlAVk08IAEK0+PlUC4fesCyixg45ZQvVLs6vvc2CDagqvdS5W4G0uv3faSQV99ef8DL2gSTpWYX5QLhLk3IH/a/jIP85xca5/LmLXAAAAAElFTkSuQmCC) center center no-repeat;
   background-color: #555555;
+  background-size: 33px 13px;
   width: 50px; }
 
 div#config_menu > ul {
@@ -134,7 +136,6 @@ div#config_menu > ul {
     -webkit-background-size: 33px 13px;
     background-color: #555555;
     width: 53px; } }
-
 div#config_menu ul ul {
   left: 100%;
   right: auto;
@@ -969,7 +970,6 @@ div.color_picker div.toggle span#bg.active {
     border: none;
     max-width: 150px;
     max-height: 150px; } }
-
 div.config {
   position: absolute;
   top: 50%;
