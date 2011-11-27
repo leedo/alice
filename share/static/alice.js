@@ -10708,6 +10708,23 @@ Alice.Application = Class.create({
     this.connection.requestChunk(win.id, limit, max);
   },
 
+  hideLoading: function() {
+    var loading = $('loading');
+    loading.setStyle({opacity: 0});
+    var end = function () {
+      loading.hide();
+      loading.stopObserving();
+    };
+    loading.observe("webkitTransitionEnd", end);
+    loading.observe("transitionend", end);
+  },
+
+  showLoading: function() {
+    var loading = $('loading');
+    loading.show();
+    loading.setStyle({opacity: 1});
+  },
+
   fetchOembeds: function(cb) {
     var req = new XMLHttpRequest();
     req.open("GET", "https://noembed.com/providers");
@@ -11997,6 +12014,7 @@ Alice.Window = Class.create({
           first = this.msgid;
         }
         clearInterval(this.scrollListener);
+        this.application.showLoading();
         this.application.getBacklog(this, first, this.chunkSize);
       }
     }.bind(this), 1000);
@@ -12189,6 +12207,8 @@ Alice.Window = Class.create({
 
   addChunk: function(chunk) {
     if (chunk.nicks) this.updateNicks(chunk.nicks);
+
+    this.application.hideLoading();
 
     if (chunk.range.length == 0) {
       clearInterval(this.scrollListener);

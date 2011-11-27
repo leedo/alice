@@ -1510,3 +1510,18 @@ body > div.copybuffer {
   top: -500px;
   height: 1px;
 }
+
+div#loading {
+  z-index: 999;
+  position: absolute;
+  width: 100px;
+  top: 0px;
+  left: 50%;
+  margin-left: -50px;
+  text-align: center;
+  font-size: 0.8em;
+  color: $tab_text;
+  padding: 5px 0;
+  -moz-transition: opacity 0.75s ease-in-out;
+  -webkit-transition: opacity 0.75s ease-in-out;
+}
