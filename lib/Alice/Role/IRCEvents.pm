@@ -17,10 +17,11 @@ sub build_events {
     map {
       my $event = $_;
       $event => sub {
-        shift; # we don't need the client
+        my @args = @_; # we don't need the client
+        shift @args;
         AE::log trace => "$event event for " . $irc->name;
         try {
-          $EVENTS{$event}->($self, $irc, @_);
+          $EVENTS{$event}->($self, $irc, @args);
         }
         catch {
           AE::log debug => "Error in $event: $_";
