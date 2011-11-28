@@ -1,3 +1,4 @@
+@charset "UTF-8";
 input[type="hidden"] {
   display: none; }
 
@@ -132,7 +133,6 @@ div#config_menu > ul {
     -webkit-background-size: 33px 13px;
     background-color: #999999;
     width: 53px; } }
-
 div#config_menu ul ul {
   left: 100%;
   right: auto;
@@ -967,7 +967,6 @@ div.color_picker div.toggle span#bg.active {
     border: none;
     max-width: 150px;
     max-height: 150px; } }
-
 div.config {
   position: absolute;
   top: 50%;
@@ -1372,6 +1371,9 @@ div#loading {
   text-align: center;
   font-size: 0.8em;
   color: #222222;
-  padding: 5px 0;
+  background: white;
+  border: 1px solid #eeeeee;
+  border-top: none;
   -moz-transition: opacity 0.75s ease-in-out;
-  -webkit-transition: opacity 0.75s ease-in-out; }
+  -webkit-transition: opacity 0.75s ease-in-out;
+  padding: 4px; }

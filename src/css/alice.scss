@@ -1521,7 +1521,10 @@ div#loading {
   text-align: center;
   font-size: 0.8em;
   color: $tab_text;
-  padding: 5px 0;
+  background: $message_background;
+  border: 1px solid $message_border;
+  border-top: none;
   -moz-transition: opacity 0.75s ease-in-out;
   -webkit-transition: opacity 0.75s ease-in-out;
+  padding: 4px;
 }

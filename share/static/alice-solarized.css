@@ -1,3 +1,4 @@
+@charset "UTF-8";
 div.msg a {
   color: #cb4b16; }
 
@@ -143,7 +144,6 @@ div#config_menu > ul {
     -webkit-background-size: 33px 13px;
     background-color: #657b83;
     width: 53px; } }
-
 div#config_menu ul ul {
   left: 100%;
   right: auto;
@@ -978,7 +978,6 @@ div.color_picker div.toggle span#bg.active {
     border: none;
     max-width: 150px;
     max-height: 150px; } }
-
 div.config {
   position: absolute;
   top: 50%;
@@ -1383,6 +1382,9 @@ div#loading {
   text-align: center;
   font-size: 0.8em;
   color: white;
-  padding: 5px 0;
+  background: #fdf6e3;
+  border: 1px solid #eee8d5;
+  border-top: none;
   -moz-transition: opacity 0.75s ease-in-out;
-  -webkit-transition: opacity 0.75s ease-in-out; }
+  -webkit-transition: opacity 0.75s ease-in-out;
+  padding: 4px; }
