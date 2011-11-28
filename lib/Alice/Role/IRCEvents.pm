@@ -216,7 +216,7 @@ irc_event 301 => sub {
 
   if (my $window = $self->find_window($from, $irc)) {
     $awaymsg = "$from is away ($awaymsg)";
-    $window->reply($awaymsg);
+    $self->announce($awaymsg);
   }
 };
 
