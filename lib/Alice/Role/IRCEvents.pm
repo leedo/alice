@@ -62,7 +62,6 @@ irc_event connect => sub {
   }
 
   $self->send_info($irc->name, "connected");
-  $irc->reset_reconnect_count;
   $irc->connect_time(time);
 
   $self->broadcast({
@@ -82,6 +81,7 @@ irc_event registered => sub {
   my ($self, $irc) = @_;
   my $config = $self->config->servers->{$irc->name};
 
+  $irc->reset_reconnect_count;
   $irc->cl->{connected} = 1; # AE::IRC seems broken here...
 
   my @commands = ();
