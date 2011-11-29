@@ -376,7 +376,6 @@ irc_event channel_remove => sub {
     unless ($self->is_ignore(part => $channel)) {
       my $reason = "";
 
-      my $reason = "";
       if ($msg and $msg->{command} eq "QUIT") {
         $reason = $msg->{params}[-1] || "Quit";
       }
