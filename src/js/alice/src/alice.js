@@ -31,6 +31,7 @@ if (window == window.parent) {
    
     $$('.dropdown').each(function (menu) {
       menu.observe(alice.supportsTouch ? "touchstart" : "mousedown", function (e) {
+        e.stop();
         var element = e.element('.dropdown');
         if (element.hasClassName("dropdown")) {
           if (menu.hasClassName("open")) {
@@ -40,7 +41,6 @@ if (window == window.parent) {
             $$(".dropdown.open").invoke("removeClassName", "open");
             menu.addClassName("open");
           }
-          e.stop();
         }
       });
     });

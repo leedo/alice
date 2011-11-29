@@ -10828,10 +10828,7 @@ Alice.Application = Class.create({
     },
     clear: function (action) {
       var win = this.getWindow(action['window'].id);
-      if (win) {
-        win.messages.update("");
-        win.lastNick = "";
-      }
+      if (win) win.clearMessages();
     },
     announce: function (action) {
       this.activeWindow().announce(action['body']);
@@ -11035,12 +11032,12 @@ Alice.Application = Class.create({
       if (pos.left) {
         var classes = win.statuses;
         classes.each(function(c){left.addClassName(c)});
-        left_menu.innerHTML += sprintf('<li rel="%s" class="%s">%s</a>', win.id, classes.join(" "), win.title)
+        left_menu.innerHTML += sprintf('<li rel="%s" class="%s"><span>%s</span></a>', win.id, classes.join(" "), win.title)
       }
       else if (pos.right) {
         var classes = win.statuses;
         classes.each(function(c){right.addClassName(c)});
-        right_menu.innerHTML += sprintf('<li rel="%s" class="%s">%s</a>', win.id, classes.join(" "), win.title)
+        right_menu.innerHTML += sprintf('<li rel="%s" class="%s"><span>%s</span></a>', win.id, classes.join(" "), win.title)
       }
 
     }.bind(this));
@@ -12008,6 +12005,12 @@ Alice.Window = Class.create({
     }
   },
 
+  clearMessages: function() {
+    clearInterval(this.scrollListener);
+    this.messages.update("");
+    this.lastNick = "";
+  },
+
   updateTabLayout: function() {
     this.tab_layout = this.tab.getLayout();
   },
@@ -12194,11 +12197,10 @@ Alice.Window = Class.create({
   addChunk: function(chunk) {
     if (chunk.nicks) this.updateNicks(chunk.nicks);
 
-    this.tab.removeClassName("loading");
-
     if (chunk.range.length == 0) {
       clearInterval(this.scrollListener);
       this.scrollBackEmpty = true;
+      this.tab.removeClassName("loading");
       return;
     }
 
@@ -12221,6 +12223,7 @@ Alice.Window = Class.create({
     this.bulk_insert = false;
 
     this.scrollToPosition(position);
+    setTimeout(function(){this.removeClassName("loading")}.bind(this.tab), 1000);
     this.scrollListener = setInterval(this.checkScrollBack.bind(this), 1000);
   },
 
@@ -12868,8 +12871,7 @@ Alice.Keyboard = Class.create({
   },
 
   onCmdK: function() {
-    this.activeWindow.messages.update("");
-    this.activeWindow.lastNick = "";
+    this.activeWindow.clearMessages();
     this.application.connection.sendMessage({
       msg: "/clear",
       source: this.activeWindow.id,
@@ -13095,6 +13097,7 @@ if (window == window.parent) {
 
     $$('.dropdown').each(function (menu) {
       menu.observe(alice.supportsTouch ? "touchstart" : "mousedown", function (e) {
+        e.stop();
         var element = e.element('.dropdown');
         if (element.hasClassName("dropdown")) {
           if (menu.hasClassName("open")) {
@@ -13104,7 +13107,6 @@ if (window == window.parent) {
             $$(".dropdown.open").invoke("removeClassName", "open");
             menu.addClassName("open");
           }
-          e.stop();
         }
       });
     });

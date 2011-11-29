@@ -172,10 +172,7 @@ Alice.Application = Class.create({
     },
     clear: function (action) {
       var win = this.getWindow(action['window'].id);
-      if (win) {
-        win.messages.update("");
-        win.lastNick = "";
-      }
+      if (win) win.clearMessages();
     },
     announce: function (action) {
       this.activeWindow().announce(action['body']);
@@ -379,12 +376,12 @@ Alice.Application = Class.create({
       if (pos.left) {
         var classes = win.statuses;
         classes.each(function(c){left.addClassName(c)});
-        left_menu.innerHTML += sprintf('<li rel="%s" class="%s">%s</a>', win.id, classes.join(" "), win.title)
+        left_menu.innerHTML += sprintf('<li rel="%s" class="%s"><span>%s</span></a>', win.id, classes.join(" "), win.title)
       }
       else if (pos.right) {
         var classes = win.statuses;
         classes.each(function(c){right.addClassName(c)});
-        right_menu.innerHTML += sprintf('<li rel="%s" class="%s">%s</a>', win.id, classes.join(" "), win.title)
+        right_menu.innerHTML += sprintf('<li rel="%s" class="%s"><span>%s</span></a>', win.id, classes.join(" "), win.title)
       }
 
     }.bind(this));

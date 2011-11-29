@@ -82,8 +82,7 @@ Alice.Keyboard = Class.create({
   },
 
   onCmdK: function() {
-    this.activeWindow.messages.update("");
-    this.activeWindow.lastNick = "";
+    this.activeWindow.clearMessages();
     this.application.connection.sendMessage({
       msg: "/clear",
       source: this.activeWindow.id,

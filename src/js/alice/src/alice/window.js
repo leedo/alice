@@ -98,6 +98,12 @@ Alice.Window = Class.create({
     }
   },
 
+  clearMessages: function() {
+    clearInterval(this.scrollListener);
+    this.messages.update("");
+    this.lastNick = "";
+  },
+
   updateTabLayout: function() {
     this.tab_layout = this.tab.getLayout();
   },
@@ -288,11 +294,10 @@ Alice.Window = Class.create({
   addChunk: function(chunk) {
     if (chunk.nicks) this.updateNicks(chunk.nicks);
 
-    this.tab.removeClassName("loading");
-
     if (chunk.range.length == 0) {
       clearInterval(this.scrollListener);
       this.scrollBackEmpty = true;
+      this.tab.removeClassName("loading");
       return;
     }
 
@@ -315,6 +320,7 @@ Alice.Window = Class.create({
     this.bulk_insert = false;
 
     this.scrollToPosition(position);
+    setTimeout(function(){this.removeClassName("loading")}.bind(this.tab), 1000);
     this.scrollListener = setInterval(this.checkScrollBack.bind(this), 1000);
   },
 
