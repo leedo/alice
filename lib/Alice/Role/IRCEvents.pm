@@ -348,14 +348,10 @@ irc_event channel_add => sub {
       $window->nicks_action($irc->channel_nicks($channel))
     );
 
-    unless ($self->is_ignore("join" => $channel)) {
+    if ($msg->{command} eq "JOIN" and !$self->is_ignore("join" => $channel)) {
       $self->broadcast(
         map {$window->format_event("joined", $_)} @nicks
       );
-    }
-
-    for my $nick (@nicks) {
-      $irc->send_srv("WHO" => $nick) unless $irc->nick_avatar($nick);
     }
   }
 };
