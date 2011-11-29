@@ -376,7 +376,6 @@ irc_event channel_remove => sub {
     unless ($self->is_ignore(part => $channel)) {
       my $reason = "";
 
-      my $reason = "";
       if ($msg and $msg->{command} eq "QUIT") {
         $reason = $msg->{params}[-1] || "Quit";
       }
@@ -414,12 +413,12 @@ irc_event 464 => sub{
 
 irc_event [qw/001 305 306 401 471 473 474 475 477 485 432 433/] => sub {
   my ($self, $irc, $msg) = @_;
-  $self->send_info($irc->name, $msg->{params}[1]);
+  $self->send_info($irc->name, $msg->{params}[-1]);
 };
 
 irc_event [qw/372 377 378/] => sub {
   my ($self, $irc, $msg) = @_;
-  $self->send_info($irc->name, $msg->{params}[1], mono => 1);
+  $self->send_info($irc->name, $msg->{params}[-1], mono => 1);
 };
 
 sub reconnect_irc {
