@@ -19,7 +19,6 @@ Alice.Connection.XHR = Class.create(Alice.Connection, {
     var now = new Date();
     this.application.log("opening new xhr stream");
     this.changeStatus("ok");
-    this.connected = true;
     this.request = new Ajax.Request('/stream', {
       method: 'get',
       parameters: {
@@ -41,6 +40,11 @@ Alice.Connection.XHR = Class.create(Alice.Connection, {
     if (this.reconnecting) {
       this.application.activeWindow().showHappyAlert("Reconnected to the Alice server");
       this.reconnecting = false;
+    }
+
+    if (!this.connected) {
+      this.connected = true;
+      setTimeout(function(){this.application.activeWindow().checkScrollBack()}.bind(this), 500);
     }
 
     this.reconnect_count = 0;

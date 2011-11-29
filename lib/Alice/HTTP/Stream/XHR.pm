@@ -69,14 +69,14 @@ sub BUILD {
   $hdl->on_eof($close);
   $hdl->on_error($close);
 
-  $self->send({type => "identify", id => $self->id});
+  $self->send([{type => "identify", id => $self->id}]);
 }
 
 sub send {
   my ($self, $messages) = @_;
   return if $self->closed;
 
-  $messages = [$messages] unless ref $messages eq "ARRAY";
+  $messages = [$messages] if $messages and ref $messages ne "ARRAY";
 
   $self->enqueue(@$messages) if $messages and @$messages;
   return if $self->delayed or $self->queue_empty;

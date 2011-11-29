@@ -15,7 +15,10 @@ Alice.Application = Class.create({
 
     this.oembeds = [];
     this.jsonp_callbacks = {};
-    this.connection = window.WebSocket ? new Alice.Connection.WebSocket(this) : new Alice.Connection.XHR(this);
+
+    this.connection = window.WebSocket && !window.location.search.match(/&?stream=xhr/) ?
+      new Alice.Connection.WebSocket(this)
+      : new Alice.Connection.XHR(this);
 
     this.tabs_width = $('tabs_container').getWidth();
     this.tabs_layout = this.tabs.getLayout();

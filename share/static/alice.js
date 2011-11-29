@@ -10672,7 +10672,10 @@ Alice.Application = Class.create({
 
     this.oembeds = [];
     this.jsonp_callbacks = {};
-    this.connection = window.WebSocket ? new Alice.Connection.WebSocket(this) : new Alice.Connection.XHR(this);
+
+    this.connection = window.WebSocket && !window.location.search.match(/&?stream=xhr/) ?
+      new Alice.Connection.WebSocket(this)
+      : new Alice.Connection.XHR(this);
 
     this.tabs_width = $('tabs_container').getWidth();
     this.tabs_layout = this.tabs.getLayout();
@@ -11770,7 +11773,6 @@ Alice.Connection.XHR = Class.create(Alice.Connection, {
     var now = new Date();
     this.application.log("opening new xhr stream");
     this.changeStatus("ok");
-    this.connected = true;
     this.request = new Ajax.Request('/stream', {
       method: 'get',
       parameters: {
@@ -11792,6 +11794,11 @@ Alice.Connection.XHR = Class.create(Alice.Connection, {
     if (this.reconnecting) {
       this.application.activeWindow().showHappyAlert("Reconnected to the Alice server");
       this.reconnecting = false;
+    }
+
+    if (!this.connected) {
+      this.connected = true;
+      setTimeout(function(){this.application.activeWindow().checkScrollBack()}.bind(this), 500);
     }
 
     this.reconnect_count = 0;
