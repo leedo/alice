@@ -434,23 +434,6 @@ command invite =>  {
   },
 };
 
-command qr{avatar|realname} => {
-  name => 'avatar',
-  eg => "/AVATAR [-<network>] <image-url>",
-  connection => 1,
-  network => 1,
-  desc => "Changes your avatar. Requires a reconnect on most servers.",
-  opts => qr{(\S+)},
-  cb => sub {
-    my ($self, $req, $opts) = @_;
-
-    my $url = $opts->[0];
-
-    $req->irc->update_realname($url);
-    $req->reply("realname changed to $url");
-  }
-};
-
 command help => {
   name => 'help',
   eg => "/HELP [<command>]",
