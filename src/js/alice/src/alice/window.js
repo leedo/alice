@@ -82,23 +82,20 @@ Alice.Window = Class.create({
     this.messages.observe("mouseover", this.showNick.bind(this));
   },
 
-  setupScrollBack: function() {
-    clearInterval(this.scrollListener);
-    this.scrollListener = setInterval(function(){
-      if (this.active && this.element.scrollTop == 0) {
-        var first = this.messages.down("li[id]");
-        if (first) {
-          first = first.id.replace("msg-", "") - 1;
-          this.messageLimit += this.chunkSize;
-        }
-        else {
-          first = this.msgid;
-        }
-        clearInterval(this.scrollListener);
-        this.application.showLoading();
-        this.application.getBacklog(this, first, this.chunkSize);
+  checkScrollBack: function() {
+    if (this.active && this.element.scrollTop == 0) {
+      var first = this.messages.down("li[id]");
+      if (first) {
+        first = first.id.replace("msg-", "") - 1;
+        this.messageLimit += this.chunkSize;
       }
-    }.bind(this), 1000);
+      else {
+        first = this.msgid;
+      }
+      clearInterval(this.scrollListener);
+      this.tab.addClassName("loading");
+      this.application.getBacklog(this, first, this.chunkSize);
+    }
   },
 
   updateTabLayout: function() {
@@ -200,7 +197,7 @@ Alice.Window = Class.create({
     if (!this.active) {
       setTimeout(function(){
         this.scrollToPosition(this.lastScrollPosition);
-        this.setupScrollBack();
+        if (!this.scrollBackEmpty) this.checkScrollBack();
       }.bind(this), 0);
     }
 
@@ -291,10 +288,11 @@ Alice.Window = Class.create({
   addChunk: function(chunk) {
     if (chunk.nicks) this.updateNicks(chunk.nicks);
 
-    this.application.hideLoading();
+    this.tab.removeClassName("loading");
 
     if (chunk.range.length == 0) {
       clearInterval(this.scrollListener);
+      this.scrollBackEmpty = true;
       return;
     }
 
@@ -317,7 +315,7 @@ Alice.Window = Class.create({
     this.bulk_insert = false;
 
     this.scrollToPosition(position);
-    this.setupScrollBack();
+    this.scrollListener = setInterval(this.checkScrollBack.bind(this), 1000);
   },
 
   addMessage: function(message) {

@@ -10708,23 +10708,6 @@ Alice.Application = Class.create({
     this.connection.requestChunk(win.id, limit, max);
   },
 
-  hideLoading: function() {
-    var loading = $('loading');
-    loading.setStyle({opacity: 0});
-    var end = function () {
-      loading.hide();
-      loading.stopObserving();
-    };
-    loading.observe("webkitTransitionEnd", end);
-    loading.observe("transitionend", end);
-  },
-
-  showLoading: function() {
-    var loading = $('loading');
-    loading.show();
-    loading.setStyle({opacity: 1});
-  },
-
   fetchOembeds: function(cb) {
     var req = new XMLHttpRequest();
     req.open("GET", "https://noembed.com/providers");
@@ -11680,6 +11663,7 @@ Alice.Connection = {
   },
 
   requestChunk: function (win, limit, max) {
+    if (!this.connected) return;
     this.sendMessage({
       source: win,
       msg: "/chunk " + limit + " " + max,
@@ -11710,7 +11694,7 @@ Alice.Connection.WebSocket = Class.create(Alice.Connection, {
     this.request = new WebSocket(url);
     this.request.onopen = function(){
       this.connected = true;
-      this.application.windows().invoke("setupScrollBack");
+      setTimeout(function(){this.application.activeWindow().checkScrollBack()}.bind(this), 500);
     }.bind(this);
     this.request.onmessage = this.handleUpdate.bind(this);
     this.request.onerror = this.handleException.bind(this);
@@ -12001,23 +11985,20 @@ Alice.Window = Class.create({
     this.messages.observe("mouseover", this.showNick.bind(this));
   },
 
-  setupScrollBack: function() {
-    clearInterval(this.scrollListener);
-    this.scrollListener = setInterval(function(){
-      if (this.active && this.element.scrollTop == 0) {
-        var first = this.messages.down("li[id]");
-        if (first) {
-          first = first.id.replace("msg-", "") - 1;
-          this.messageLimit += this.chunkSize;
-        }
-        else {
-          first = this.msgid;
-        }
-        clearInterval(this.scrollListener);
-        this.application.showLoading();
-        this.application.getBacklog(this, first, this.chunkSize);
+  checkScrollBack: function() {
+    if (this.active && this.element.scrollTop == 0) {
+      var first = this.messages.down("li[id]");
+      if (first) {
+        first = first.id.replace("msg-", "") - 1;
+        this.messageLimit += this.chunkSize;
       }
-    }.bind(this), 1000);
+      else {
+        first = this.msgid;
+      }
+      clearInterval(this.scrollListener);
+      this.tab.addClassName("loading");
+      this.application.getBacklog(this, first, this.chunkSize);
+    }
   },
 
   updateTabLayout: function() {
@@ -12116,7 +12097,7 @@ Alice.Window = Class.create({
     if (!this.active) {
       setTimeout(function(){
         this.scrollToPosition(this.lastScrollPosition);
-        this.setupScrollBack();
+        if (!this.scrollBackEmpty) this.checkScrollBack();
       }.bind(this), 0);
     }
 
@@ -12206,10 +12187,11 @@ Alice.Window = Class.create({
   addChunk: function(chunk) {
     if (chunk.nicks) this.updateNicks(chunk.nicks);
 
-    this.application.hideLoading();
+    this.tab.removeClassName("loading");
 
     if (chunk.range.length == 0) {
       clearInterval(this.scrollListener);
+      this.scrollBackEmpty = true;
       return;
     }
 
@@ -12232,7 +12214,7 @@ Alice.Window = Class.create({
     this.bulk_insert = false;
 
     this.scrollToPosition(position);
-    this.setupScrollBack();
+    this.scrollListener = setInterval(this.checkScrollBack.bind(this), 1000);
   },
 
   addMessage: function(message) {

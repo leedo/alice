@@ -22,7 +22,7 @@ Alice.Connection.WebSocket = Class.create(Alice.Connection, {
     this.request = new WebSocket(url);
     this.request.onopen = function(){
       this.connected = true;
-      this.application.windows().invoke("setupScrollBack");
+      setTimeout(function(){this.application.activeWindow().checkScrollBack()}.bind(this), 500);
     }.bind(this);
     this.request.onmessage = this.handleUpdate.bind(this);
     this.request.onerror = this.handleException.bind(this);

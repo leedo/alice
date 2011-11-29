@@ -98,6 +98,7 @@ Alice.Connection = {
   },
 
   requestChunk: function (win, limit, max) {
+    if (!this.connected) return;
     this.sendMessage({
       source: win,
       msg: "/chunk " + limit + " " + max,

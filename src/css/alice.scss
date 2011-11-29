@@ -906,13 +906,26 @@ li.channel_tab div.tab_button {
   background: url(image/sprites.png) 0px -80px no-repeat;
 }
 
+li.loading.channel_tab div.tab_button {
+  background: url(image/sprites.png) -38px -80px no-repeat;
+}
+
 li.privmsg_tab div.tab_button {
   background: url(image/sprites.png) 0px -120px no-repeat;
+}
+
+li.loading.privmsg_tab div.tab_button {
+  background: url(image/sprites.png) -38px -140px no-repeat;
 }
 
 li.info_tab div.tab_button {
   background: url(image/sprites.png) 0px 0px no-repeat;
 }
+
+li.loading.info_tab div.tab_button {
+  background: url(image/sprites.png) -39px -160px no-repeat;
+}
+
 
 ul#tabs li.disabled.channel_tab div.tab_button:hover,
 ul#tabs li.active div.tab_button:hover {
@@ -1509,22 +1522,4 @@ body > div.copybuffer {
   position: absolute;
   top: -500px;
   height: 1px;
-}
-
-div#loading {
-  z-index: 999;
-  position: absolute;
-  width: 100px;
-  top: 0px;
-  left: 50%;
-  margin-left: -50px;
-  text-align: center;
-  font-size: 0.8em;
-  color: $tab_text;
-  background: $message_background;
-  border: 1px solid $message_border;
-  border-top: none;
-  -moz-transition: opacity 0.75s ease-in-out;
-  -webkit-transition: opacity 0.75s ease-in-out;
-  padding: 4px;
 }
