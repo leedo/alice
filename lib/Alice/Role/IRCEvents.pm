@@ -160,10 +160,9 @@ irc_event privatemsg => sub {
   my ($self, $irc, $nick, $msg) = @_;
 
   my $text = $msg->{params}[1];
+  my ($from) = split_prefix($msg->{prefix});
 
   if ($msg->{command} eq "PRIVMSG") {
-    my ($from) = split_prefix($msg->{prefix});
-
     return if $self->is_ignore(msg => $from);
 
     my $window = $self->find_or_create_window($from, $irc);
@@ -171,7 +170,7 @@ irc_event privatemsg => sub {
     $irc->send_srv(WHO => $from) unless $irc->nick_avatar($from);
   }
   elsif ($msg->{command} eq "NOTICE") {
-    $self->send_info($nick, $text);
+    $self->send_info($from, $text);
   }
 };
 
