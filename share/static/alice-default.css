@@ -1,3 +1,4 @@
+@charset "UTF-8";
 input[type="hidden"] {
   display: none; }
 
@@ -132,7 +133,6 @@ div#config_menu > ul {
     -webkit-background-size: 33px 13px;
     background-color: #999999;
     width: 53px; } }
-
 div#config_menu ul ul {
   left: 100%;
   right: auto;
@@ -168,12 +168,11 @@ body {
   text-rendering: optimizeLegibility;
   background: white; }
 
-a:link, a:visited, a:hover, a:active {
+a:link, a:visited, a:active {
   color: #0033cc; }
 
-a.channel {
-  color: black;
-  text-decoration: none; }
+a:hover {
+  color: #00249d; }
 
 div#windows {
   position: absolute;
@@ -626,6 +625,9 @@ sup.external a {
   border-right: 1px solid #aaa;
   border-bottom: 1px solid #aaa; }
 
+sup.external a:hover {
+  background-color: #D1D3D3; }
+
 sup.external a:after {
   content: " ▸"; }
 
@@ -976,7 +978,6 @@ div.color_picker div.toggle span#bg.active {
     border: none;
     max-width: 150px;
     max-height: 150px; } }
-
 div.config {
   position: absolute;
   top: 50%;
@@ -1020,7 +1021,7 @@ div.config div.buttons {
   bottom: 0px;
   left: 0px;
   right: 0px;
-  padding: 2px 10px;
+  padding: 2px 8px;
   height: 24px;
   background: #999999;
   border: 1px solid #efefef;

@@ -1,3 +1,4 @@
+@charset "UTF-8";
 tr.input, div.msg {
   -webkit-font-smoothing: antialiased; }
 
@@ -135,7 +136,6 @@ div#config_menu > ul {
     -webkit-background-size: 33px 13px;
     background-color: #555555;
     width: 53px; } }
-
 div#config_menu ul ul {
   left: 100%;
   right: auto;
@@ -171,12 +171,11 @@ body {
   text-rendering: optimizeLegibility;
   background: #222222; }
 
-a:link, a:visited, a:hover, a:active {
+a:link, a:visited, a:active {
   color: #f09740; }
 
-a.channel {
-  color: white;
-  text-decoration: none; }
+a:hover {
+  color: #d7863a; }
 
 div#windows {
   position: absolute;
@@ -629,6 +628,9 @@ sup.external a {
   border-right: 1px solid #aaa;
   border-bottom: 1px solid #aaa; }
 
+sup.external a:hover {
+  background-color: #D1D3D3; }
+
 sup.external a:after {
   content: " ▸"; }
 
@@ -979,7 +981,6 @@ div.color_picker div.toggle span#bg.active {
     border: none;
     max-width: 150px;
     max-height: 150px; } }
-
 div.config {
   position: absolute;
   top: 50%;
@@ -1023,7 +1024,7 @@ div.config div.buttons {
   bottom: 0px;
   left: 0px;
   right: 0px;
-  padding: 2px 10px;
+  padding: 2px 8px;
   height: 24px;
   background: #222222;
   border: 1px solid #333333;

@@ -22,7 +22,9 @@ $default_text: $base02;
 $nicks: $base02;
 
 $links: $base3;
+$links_hover: #E8E2D0;
 div.msg a { color: $orange; }
+div.msg a:hover { color: #B6461E }
 
 $message_background: $base3;
 $message_nick_column_background: $base2;

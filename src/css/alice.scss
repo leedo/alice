@@ -204,12 +204,8 @@ body {
   background: $message_background;
 }
 
-a:link, a:visited, a:hover, a:active { color: $links; }
-
-a.channel {
-  color: $default_text;
-  text-decoration: none;
-}
+a:link, a:visited, a:active { color: $links; }
+a:hover { color: $links_hover }
 
 div#windows {
   position:absolute;
@@ -721,7 +717,10 @@ sup.external a {
   letter-spacing: 0;
   border-right: 1px solid #aaa;
   border-bottom: 1px solid #aaa;
+}
 
+sup.external a:hover {
+  background-color: #D1D3D3;
 }
 
 sup.external a:after {
@@ -1192,7 +1191,7 @@ div.config div.buttons {
   bottom: 0px;
   left: 0px;
   right: 0px;
-  padding: 2px 10px;
+  padding: 2px 8px;
   height: 24px;
   background: $tab_border_active;
   border: 1px solid $tab_background_active;
