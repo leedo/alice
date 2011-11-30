@@ -163,6 +163,13 @@ Alice.Application = Class.create({
     part: function (action) {
       this.closeWindow(action['window'].id);
     },
+    trim: function (action) {
+      var win = this.getWindow(action['window'].id);
+      if (win) {
+        win.messageLimit = action['lines'];
+        win.trimMessages();
+      }
+    },
     nicks: function (action) {
       var win = this.getWindow(action['window'].id);
       if (win) win.updateNicks(action.nicks);

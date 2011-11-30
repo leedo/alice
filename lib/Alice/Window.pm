@@ -175,12 +175,21 @@ sub format_message {
 
 sub close_action {
   my $self = shift;
-  my $action = {
+  return +{
     type   => "action",
     event  => "part",
     window => $self->serialized,
   };
-  return $action;
+}
+
+sub trim_action {
+  my ($self, $lines) = @_;
+  return +{
+    type => "action",
+    event => "trim",
+    lines => $lines,
+    window => $self->serialized,
+  };
 }
 
 sub nick_table {
