@@ -6,6 +6,8 @@ use Try::Tiny;
 
 has cbs => (is => 'rw', default => sub {{}});
 has nick => (is => 'rw');
+has is_connected => (is => 'rw', default => 0);
+has channels => (is => 'rw', default => sub {{}});
 has user_prefix => (
   is => 'rw',
   lazy => 1,
@@ -25,6 +27,7 @@ has events => (
       JOIN => sub {
         my $msg = shift;
         my $nick = prefix_nick($msg->{prefix});
+        $self->{channels}{$msg->{params}[0]} = 1;
         $self->cbs->{join}->($self, $nick, $msg->{params}[0], $nick eq $self->nick);
         $self->cbs->{channel_add}->($self, $msg, $msg->{params}[0], $nick);
         $self->send_srv(WHO => $msg->{params}[0]);
@@ -37,6 +40,7 @@ has events => (
       PART => sub {
         my $msg = shift;
         my $nick = prefix_nick($msg->{prefix});
+        delete $self->{channels}{$msg->{params}[0]};
         $self->cbs->{part}->($self, $nick, $msg->{params}[0], $nick eq $self->nick);
         $self->cbs->{channel_remove}->($self, $msg, $msg->{params}[0], $nick);
       },
@@ -89,10 +93,12 @@ sub connect {
 }
 sub register {
   my $self = shift;
+  $self->is_connected(1);
   $self->cbs->{registered}->();
 }
 sub disconnect {
   my $self = shift;
+  $self->is_connected(1);
   $self->cbs->{disconnect}->();
 }
 sub enable_ping {}
@@ -107,6 +113,11 @@ sub reg_cb {
 sub is_channel_name {
   my ($self, $name) = @_;
   return $name =~ /^[#&]/;
+}
+
+sub channel_list {
+  my $self = shift;
+  return $self->channels;
 }
 
 __PACKAGE__->meta->make_immutable;

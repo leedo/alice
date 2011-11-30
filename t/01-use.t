@@ -1,3 +1,3 @@
 use Test::More tests => 1;
 
-use_ok 'App::Alice';
+use_ok 'Alice';

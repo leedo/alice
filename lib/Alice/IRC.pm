@@ -138,10 +138,6 @@ sub channel_nicks {
   } keys %$nicks;
 }
 
-sub nick_with_prefix {
-  my ($self, $nick, $channel) = @_;
-}
-
 sub prefix_from_modes {
   my ($self, $nick, $modes) = @_;
   for my $mode (keys %$modes) {

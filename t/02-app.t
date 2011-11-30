@@ -1,11 +1,9 @@
 use Test::More;
-use App::Alice;
-use App::Alice::Test::NullHistory;
+use Alice;
 use Test::TCP;
+use Alice::Test::MockIRC;
 
-my $history = App::Alice::Test::NullHistory->new;
-my $app = App::Alice->new(
-  history => $history,
+my $app = Alice->new(
   path => 't/alice',
   file => "test_config",
   port => empty_port(),
@@ -21,6 +19,8 @@ $app->add_irc_server("test", {
 # connections
 ok $app->has_irc("test"), "add connection";
 my $irc = $app->get_irc("test");
+$irc->cl(Alice::Test::MockIRC->new(nick => "tester"));
+$app->connect_irc("test");
 is_deeply [$app->ircs], [$irc], "connection list";
 
 # windows
@@ -32,7 +32,7 @@ ok $window, "create window";
 my $window_id = $app->_build_window_id("test-window", "test");
 ok $app->has_window($window_id), "window exists";
 ok $app->find_window("test-window", $irc), "find window by name";
-ok ref $app->get_window($window_id) eq "App::Alice::Window", "get window";
+ok ref $app->get_window($window_id) eq "Alice::Window", "get window";
 is_deeply [$app->sorted_windows], [$info, $window], "window list";
 
 is_deeply $app->find_or_create_window("test-window", $irc), $window, "find or create existing window";
@@ -44,11 +44,9 @@ $app->close_window($window);
 ok !$app->has_window($window_id), "close window";
 
 # ignores
-$app->add_ignore("jerk");
-ok $app->is_ignore("jerk"), "add ignore";
-is_deeply [$app->ignores], ["jerk"], "ignore list";
-$app->remove_ignore("jerk");
-ok !$app->is_ignore("jerk"), "remove ignore";
-is_deeply [$app->ignores], [], "ignore list post remove";
+$app->add_ignore(msg => "jerk");
+ok $app->is_ignore(msg => "jerk"), "add ignore";
+$app->remove_ignore(msg => "jerk");
+ok !$app->is_ignore("msg => jerk"), "remove ignore";
 
 done_testing();
