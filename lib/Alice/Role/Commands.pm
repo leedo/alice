@@ -476,12 +476,13 @@ command chunk => {
 command trim => {
   name => 'trim',
   eg => "/TRIM [<number>]",
-  desc => "Trims the current tab to <number> of lines.",
+  desc => "Trims the current tab to <number> of lines. Defaults to 50.",
   window => 1,
-  opts => qr{(\d+)},
+  opts => qr{(\d+)?},
   cb => sub {
     my ($self, $req, $opts) = @_;
-    $req->stream->send($req->window->trim_action($opts->[0]));
+    my $lines = $opts->[0] || 50;
+    $req->stream->send($req->window->trim_action($lines));
   }
 };
 
