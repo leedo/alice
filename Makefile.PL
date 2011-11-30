@@ -3,6 +3,7 @@ name 'Alice';
 perl_version '5.008';
 author 'Lee Aylward <leedo@cpan.org>';
 all_from 'lib/Alice.pm';
+license 'perl';
 
 requires 'Class::Throwable';
 requires 'List::MoreUtils';

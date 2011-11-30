@@ -1,3 +1,12 @@
+0.20  Wed 30 Nov 2011
+        - Lazy loading of channel content
+          (infinite scrolling)
+        - Ignore part/join
+        - UI additions (join button, etc)
+        - Use Fliggy and websocket-js for Firefox
+        - Use noembed.com for embedded content
+          (tweets, video, etc.)
+
 0.19  Tue 31 Aug 2010
         - Added a dark theme
         - Made preferences and connections windows
