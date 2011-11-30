@@ -3,7 +3,7 @@ Alice.Connection = {
     window.location = "/login";
   },
  
-  connect: function() {
+  connect: function(cb) {
     if (this.reconnect_count > 3) {
       this.aborting = true;
       this.changeStatus("ok");
@@ -24,7 +24,7 @@ Alice.Connection = {
     this.reconnect_count++;
 
     this.changeStatus("loading");
-    this._connect();
+    this._connect(cb);
   },
 
   changeStatus: function(classname) {

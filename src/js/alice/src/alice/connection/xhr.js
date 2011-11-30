@@ -14,7 +14,7 @@ Alice.Connection.XHR = Class.create(Alice.Connection, {
     this.reconnecting = false;
   },
 
-  _connect: function() {
+  _connect: function(cb) {
     setTimeout(function () {
     var now = new Date();
     this.application.log("opening new xhr stream");
@@ -30,7 +30,13 @@ Alice.Connection.XHR = Class.create(Alice.Connection, {
       on502: this.gotoLogin,
       on503: this.gotoLogin,
       onException: this.handleException.bind(this),
-      onInteractive: this.handleUpdate.bind(this),
+      onInteractive: function(transport) {
+        if (!this.connected) {
+          this.connected = true;
+          setTimeout(cb, 0);
+        }
+        this.handleUpdate(transport);
+      }.bind(this),
       onComplete: this.handleComplete.bind(this)
     });
     }.bind(this), this.application.loadDelay);
@@ -40,11 +46,6 @@ Alice.Connection.XHR = Class.create(Alice.Connection, {
     if (this.reconnecting) {
       this.application.activeWindow().showHappyAlert("Reconnected to the Alice server");
       this.reconnecting = false;
-    }
-
-    if (!this.connected) {
-      this.connected = true;
-      setTimeout(function(){this.application.activeWindow().checkScrollBack()}.bind(this), 500);
     }
 
     this.reconnect_count = 0;

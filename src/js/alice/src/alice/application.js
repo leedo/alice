@@ -609,11 +609,12 @@ Alice.Application = Class.create({
 
   ready: function() {
     this.fetchOembeds(function() {
-      this.connection.connect();
+      this.connection.connect(function() {
+        this.focusHash() || this.activeWindow().focus();
+      }.bind(this));
 
       // required due to browser weirdness with scrolltobottom on initial focus
       setTimeout(function(){
-        this.focusHash() || this.activeWindow().focus();
         this.activeWindow().scrollToPosition(0)
         this.freeze();
         setTimeout(this.updateOverflowMenus.bind(this), 1000);

@@ -84,6 +84,7 @@ Alice.Window = Class.create({
 
   checkScrollBack: function() {
     if (this.active && this.element.scrollTop == 0) {
+      clearInterval(this.scrollListener);
       var first = this.messages.down("li[id]");
       if (first) {
         first = first.id.replace("msg-", "") - 1;
@@ -92,7 +93,7 @@ Alice.Window = Class.create({
       else {
         first = this.msgid;
       }
-      clearInterval(this.scrollListener);
+      this.application.log("requesting chunk" + first);
       this.tab.addClassName("loading");
       this.application.getBacklog(this, first, this.chunkSize);
     }
@@ -293,9 +294,9 @@ Alice.Window = Class.create({
 
   addChunk: function(chunk) {
     if (chunk.nicks) this.updateNicks(chunk.nicks);
+    clearInterval(this.scrollListener);
 
     if (chunk.range.length == 0) {
-      clearInterval(this.scrollListener);
       this.scrollBackEmpty = true;
       this.tab.removeClassName("loading");
       return;

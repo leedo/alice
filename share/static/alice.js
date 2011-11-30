@@ -11263,10 +11263,11 @@ Alice.Application = Class.create({
 
   ready: function() {
     this.fetchOembeds(function() {
-      this.connection.connect();
+      this.connection.connect(function() {
+        this.focusHash() || this.activeWindow().focus();
+      }.bind(this));
 
       setTimeout(function(){
-        this.focusHash() || this.activeWindow().focus();
         this.activeWindow().scrollToPosition(0)
         this.freeze();
         setTimeout(this.updateOverflowMenus.bind(this), 1000);
@@ -11568,7 +11569,7 @@ Alice.Connection = {
     window.location = "/login";
   },
 
-  connect: function() {
+  connect: function(cb) {
     if (this.reconnect_count > 3) {
       this.aborting = true;
       this.changeStatus("ok");
@@ -11589,7 +11590,7 @@ Alice.Connection = {
     this.reconnect_count++;
 
     this.changeStatus("loading");
-    this._connect();
+    this._connect(cb);
   },
 
   changeStatus: function(classname) {
@@ -11681,7 +11682,7 @@ Alice.Connection.WebSocket = Class.create(Alice.Connection, {
     this.reconnecting = false;
   },
 
-  _connect: function() {
+  _connect: function(cb) {
     var now = new Date();
     this.application.log("opening new websocket stream");
     this.changeStatus("ok");
@@ -11694,7 +11695,7 @@ Alice.Connection.WebSocket = Class.create(Alice.Connection, {
     this.request = new WebSocket(url);
     this.request.onopen = function(){
       this.connected = true;
-      setTimeout(function(){this.application.activeWindow().checkScrollBack()}.bind(this), 500);
+      setTimeout(cb, 100);
     }.bind(this);
     this.request.onmessage = this.handleUpdate.bind(this);
     this.request.onerror = this.handleException.bind(this);
@@ -11765,7 +11766,7 @@ Alice.Connection.XHR = Class.create(Alice.Connection, {
     this.reconnecting = false;
   },
 
-  _connect: function() {
+  _connect: function(cb) {
     setTimeout(function () {
     var now = new Date();
     this.application.log("opening new xhr stream");
@@ -11781,7 +11782,13 @@ Alice.Connection.XHR = Class.create(Alice.Connection, {
       on502: this.gotoLogin,
       on503: this.gotoLogin,
       onException: this.handleException.bind(this),
-      onInteractive: this.handleUpdate.bind(this),
+      onInteractive: function(transport) {
+        if (!this.connected) {
+          this.connected = true;
+          setTimeout(cb, 0);
+        }
+        this.handleUpdate(transport);
+      }.bind(this),
       onComplete: this.handleComplete.bind(this)
     });
     }.bind(this), this.application.loadDelay);
@@ -11791,11 +11798,6 @@ Alice.Connection.XHR = Class.create(Alice.Connection, {
     if (this.reconnecting) {
       this.application.activeWindow().showHappyAlert("Reconnected to the Alice server");
       this.reconnecting = false;
-    }
-
-    if (!this.connected) {
-      this.connected = true;
-      setTimeout(function(){this.application.activeWindow().checkScrollBack()}.bind(this), 500);
     }
 
     this.reconnect_count = 0;
@@ -11991,6 +11993,7 @@ Alice.Window = Class.create({
 
   checkScrollBack: function() {
     if (this.active && this.element.scrollTop == 0) {
+      clearInterval(this.scrollListener);
       var first = this.messages.down("li[id]");
       if (first) {
         first = first.id.replace("msg-", "") - 1;
@@ -11999,7 +12002,7 @@ Alice.Window = Class.create({
       else {
         first = this.msgid;
       }
-      clearInterval(this.scrollListener);
+      this.application.log("requesting chunk" + first);
       this.tab.addClassName("loading");
       this.application.getBacklog(this, first, this.chunkSize);
     }
@@ -12196,9 +12199,9 @@ Alice.Window = Class.create({
 
   addChunk: function(chunk) {
     if (chunk.nicks) this.updateNicks(chunk.nicks);
+    clearInterval(this.scrollListener);
 
     if (chunk.range.length == 0) {
-      clearInterval(this.scrollListener);
       this.scrollBackEmpty = true;
       this.tab.removeClassName("loading");
       return;

@@ -9,7 +9,7 @@ Alice.Connection.WebSocket = Class.create(Alice.Connection, {
     this.reconnecting = false;
   },
 
-  _connect: function() {
+  _connect: function(cb) {
     var now = new Date();
     this.application.log("opening new websocket stream");
     this.changeStatus("ok");
@@ -22,7 +22,7 @@ Alice.Connection.WebSocket = Class.create(Alice.Connection, {
     this.request = new WebSocket(url);
     this.request.onopen = function(){
       this.connected = true;
-      setTimeout(function(){this.application.activeWindow().checkScrollBack()}.bind(this), 500);
+      setTimeout(cb, 100);
     }.bind(this);
     this.request.onmessage = this.handleUpdate.bind(this);
     this.request.onerror = this.handleException.bind(this);
