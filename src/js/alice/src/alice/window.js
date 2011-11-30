@@ -97,10 +97,14 @@ Alice.Window = Class.create({
       this.tab.addClassName("loading");
       this.application.getBacklog(this, first, this.chunkSize);
     }
+    else {
+      clearTimeout(this.scrollListener);
+      this.scrollListener = setTimeout(this.checkScrollBack.bind(this), 1000);
+    }
   },
 
   clearMessages: function() {
-    clearInterval(this.scrollListener);
+    clearTimeout(this.scrollListener);
     this.messages.update("");
     this.lastNick = "";
   },
@@ -145,7 +149,7 @@ Alice.Window = Class.create({
     this.active = false;
     this.element.removeClassName('active');
     this.tab.removeClassName('active');
-    clearInterval(this.scrollListener);
+    clearTimeout(this.scrollListener);
     this.addFold();
   },
 
@@ -202,13 +206,13 @@ Alice.Window = Class.create({
     // scroll position jump to its position from its last
     // unfocus. doh.
     if (!this.active) {
+      this.active = true;
+
       setTimeout(function(){
         this.scrollToPosition(this.lastScrollPosition);
         if (!this.scrollBackEmpty) this.checkScrollBack();
       }.bind(this), 0);
     }
-
-    this.active = true;
 
     this.application.setSource(this.id);
     this.application.displayNicks(this.nicks);
@@ -294,7 +298,7 @@ Alice.Window = Class.create({
 
   addChunk: function(chunk) {
     if (chunk.nicks) this.updateNicks(chunk.nicks);
-    clearInterval(this.scrollListener);
+    clearTimeout(this.scrollListener);
 
     if (chunk.range.length == 0) {
       this.scrollBackEmpty = true;
@@ -322,7 +326,7 @@ Alice.Window = Class.create({
 
     this.scrollToPosition(position);
     setTimeout(function(){this.removeClassName("loading")}.bind(this.tab), 1000);
-    this.scrollListener = setInterval(this.checkScrollBack.bind(this), 1000);
+    this.scrollListener = setTimeout(this.checkScrollBack.bind(this), 1000);
   },
 
   addMessage: function(message) {
