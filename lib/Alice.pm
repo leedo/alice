@@ -23,7 +23,7 @@ use Alice::Request;
 use Alice::MessageBuffer;
 use Alice::MessageStore;
 
-our $VERSION = '0.19';
+our $VERSION = '0.20';
 
 with 'Alice::Role::Commands';
 with 'Alice::Role::IRCEvents';

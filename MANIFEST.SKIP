@@ -48,7 +48,7 @@
 \bextlib.*
 
 # Avoid archives of this distribution
-\bshare/sprockets.*
+\bsrc/
 \balice.app.*
 \bAlice.app.*
 TODO
@@ -57,3 +57,5 @@ README.md
 \.modulebuildrc
 bin/client
 INSTALL.md
+
+.*\.acorn
