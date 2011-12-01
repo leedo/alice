@@ -123,7 +123,7 @@ irc_event disconnect => sub {
     type => "action",
     event => "disconnect",
     network => $irc->name,
-    windows => [map {$_->serialized} @windows],
+    windows => [map {$_->id} @windows],
   });
   $self->remove_window($_) for map {$_->id} @windows;
 

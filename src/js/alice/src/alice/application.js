@@ -161,24 +161,24 @@ Alice.Application = Class.create({
       }
     },
     part: function (action) {
-      this.closeWindow(action['window'].id);
+      this.closeWindow(action['window_id']);
     },
     trim: function (action) {
-      var win = this.getWindow(action['window'].id);
+      var win = this.getWindow(action['window_id']);
       if (win) {
         win.messageLimit = action['lines'];
         win.trimMessages();
       }
     },
     nicks: function (action) {
-      var win = this.getWindow(action['window'].id);
+      var win = this.getWindow(action['window_id']);
       if (win) win.updateNicks(action.nicks);
     },
     alert: function (action) {
       this.activeWindow().showAlert(action['body']);
     },
     clear: function (action) {
-      var win = this.getWindow(action['window'].id);
+      var win = this.getWindow(action['window_id']);
       if (win) win.clearMessages();
     },
     announce: function (action) {
@@ -186,30 +186,29 @@ Alice.Application = Class.create({
     },
     connect: function (action) {
       if ($('servers')) {
-        Alice.connections.connectServer(action.network);
+        Alice.connections.connectServer(action['network']);
       }
     },
     disconnect: function (action) {
-      action.windows.each(function (win_info) {
-        var win = this.getWindow(win_info.id);
-        if (win) {
-          win.disable();
-        }
+      action['windows'].each(function (win_id) {
+        var win = this.getWindow(win_id);
+        if (win) win.disable();
       }.bind(this));
       if ($('servers')) {
-        Alice.connections.disconnectServer(action.network);
+        Alice.connections.disconnectServer(action['network']);
       }
     },
     focus: function (action) {
-      if (!action.window_number) return;
-      if (action.window_number == "next") {
+      if (!action['window_number']) return;
+      var window_number = action['window_number'];
+      if (window_number == "next") {
         this.nextWindow();
       }
-      else if (action.window_number.match(/^prev/)) {
+      else if (window_number.match(/^prev/)) {
         this.previousWindow();
       }
-      else if (action.window_number.match(/^\d+$/)) {
-        var tab = this.tabs.down('li', action.window_number);
+      else if (indow_number.match(/^\d+$/)) {
+        var tab = this.tabs.down('li', window_number);
         if (tab) {
           var window_id = tab.id.replace('_tab','');
           this.getWindow(window_id).focus();
@@ -498,7 +497,7 @@ Alice.Application = Class.create({
       win.addMessage(message);
     } else {
       this.connection.requestWindow(
-        message['window'].title, message['window'].id, message
+        message['window'].title, message['window'].id
       );
     }
   },

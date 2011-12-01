@@ -40,6 +40,16 @@ sub pretty_name {
   return $self->{title};
 }
 
+sub hashtag {
+  my $self = shift;
+
+  my $name = $self->title;
+  $name =~ s/[#&~@]//g;
+  my $path = $self->type eq "privmsg" ? "users" : "channels";
+  
+  return "/" . $self->{network} . "/$path/" . $name;
+}
+
 sub is_channel {
   $_[0]->{type} eq "channel"
 }
@@ -60,38 +70,6 @@ sub serialized {
     hashtag    => $self->hashtag,
     topic      => $self->topic_string,
     map {$_ => $self->{$_}} qw/id network title type/
-  };
-}
-
-sub join_action {
-  my $self = shift;
-  return {
-    type      => "action",
-    event     => "join",
-    window    => $self->serialized,
-    html => {
-      window  => $self->{render}->("window", $self),
-      tab     => $self->{render}->("tab", $self),
-    },
-  };
-}
-
-sub nicks_action {
-  my ($self, @nicks) = @_;
-  return {
-    type   => "action",
-    event  => "nicks",
-    nicks  => \@nicks,
-    window => $self->serialized,
-  };
-}
-
-sub clear_action {
-  my $self = shift;
-  return {
-    type   => "action",
-    event  => "clear",
-    window => $self->serialized,
   };
 }
 
@@ -138,56 +116,56 @@ sub format_message {
   });
 }
 
+sub join_action {
+  my $self = shift;
+  return {
+    type      => "action",
+    event     => "join",
+    window    => $self->serialized,
+    html => {
+      window  => $self->{render}->("window", $self),
+      tab     => $self->{render}->("tab", $self),
+    },
+  };
+}
+
+sub nicks_action {
+  my ($self, @nicks) = @_;
+  return {
+    type      => "action",
+    event     => "nicks",
+    nicks     => \@nicks,
+    window_id => $self->id,
+  };
+}
+
+sub clear_action {
+  my $self = shift;
+  return {
+    type      => "action",
+    event     => "clear",
+    window_id => $self->id,
+  };
+}
+
+
 sub close_action {
   my $self = shift;
   return +{
-    type   => "action",
-    event  => "part",
-    window => $self->serialized,
+    type      => "action",
+    event     => "part",
+    window_id => $self->id,
   };
 }
 
 sub trim_action {
   my ($self, $lines) = @_;
   return +{
-    type => "action",
-    event => "trim",
-    lines => $lines,
-    window => $self->serialized,
+    type      => "action",
+    event     => "trim",
+    lines     => $lines,
+    window_id => $self->id,
   };
-}
-
-sub nick_table {
-  my ($self, @nicks) = @_;
-
-  return "" unless @nicks;
-
-  my $maxlen = 0;
-  for (@nicks) {
-    my $length = length $_;
-    $maxlen = $length if $length > $maxlen;
-  }
-  my $cols = int(74  / $maxlen + 2);
-  my (@rows, @row);
-  for (sort {lc $a cmp lc $b} @nicks) {
-    push @row, $_ . " " x ($maxlen - length $_);
-    if (@row >= $cols) {
-      push @rows, [@row];
-      @row = ();
-    }
-  }
-  push @rows, [@row] if @row;
-  return join "\n", map {join " ", @$_} @rows;
-}
-
-sub hashtag {
-  my $self = shift;
-
-  my $name = $self->title;
-  $name =~ s/[#&~@]//g;
-  my $path = $self->type eq "privmsg" ? "users" : "channels";
-  
-  return "/" . $self->{network} . "/$path/" . $name;
 }
 
 1;

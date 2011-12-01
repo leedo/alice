@@ -165,7 +165,7 @@ command qr{names|n} => {
   cb => sub  {
     my ($self, $req) = @_;
     my @nicks = $req->irc->channel_nicks($req->window->title);
-    $req->reply($req->window->nick_table(@nicks));
+    $req->reply($req->nick_table(@nicks));
   },
 };
 
@@ -485,5 +485,28 @@ command trim => {
     $req->stream->send($req->window->trim_action($lines));
   }
 };
+
+sub nick_table {
+  my ($self, @nicks) = @_;
+
+  return "" unless @nicks;
+
+  my $maxlen = 0;
+  for (@nicks) {
+    my $length = length $_;
+    $maxlen = $length if $length > $maxlen;
+  }
+  my $cols = int(74  / $maxlen + 2);
+  my (@rows, @row);
+  for (sort {lc $a cmp lc $b} @nicks) {
+    push @row, $_ . " " x ($maxlen - length $_);
+    if (@row >= $cols) {
+      push @rows, [@row];
+      @row = ();
+    }
+  }
+  push @rows, [@row] if @row;
+  return join "\n", map {join " ", @$_} @rows;
+}
 
 1;
