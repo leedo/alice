@@ -12113,17 +12113,19 @@ Alice.Window = Class.create({
     if (this != this.application.previousFocus)
       this.application.previousFocus.unFocus();
 
-    this.element.addClassName('active');
-    this.tab.addClassName('active');
-
     if (!this.active) {
       this.active = true;
+
+      this.scrollToPosition(this.lastScrollPosition);
 
       setTimeout(function(){
         this.scrollToPosition(this.lastScrollPosition);
         if (!this.scrollBackEmpty) this.checkScrollBack();
       }.bind(this), 0);
     }
+
+    this.element.addClassName('active');
+    this.tab.addClassName('active');
 
     this.application.setSource(this.id);
     this.application.displayNicks(this.nicks);
