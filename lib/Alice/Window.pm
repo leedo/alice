@@ -47,7 +47,7 @@ sub is_channel {
 sub topic_string {
   my $self = shift;
   if ($self->{type} eq "channel") {
-    return $self->{topic}{string} or "$self->{title}: no topic set";
+    return ($self->{topic}{string} or "$self->{title}: no topic set");
   }
   return $self->{title};
 }
