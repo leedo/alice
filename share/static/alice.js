@@ -11855,12 +11855,12 @@ Alice.Connection.XHR = Class.create(Alice.Connection, {
     var params;
     if (form.nodeName && form.nodeName == "FORM") {
       params = Form.serialize(form);
+      params += "&stream="+this.id;
     }
     else {
       params = form;
+      params['stream'] = this.id;
     }
-
-    params['stream'] = this.id;
 
     new Ajax.Request('/say', {
       method: 'post',
