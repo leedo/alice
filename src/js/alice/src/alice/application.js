@@ -504,10 +504,8 @@ Alice.Application = Class.create({
   },
 
   displayChunk: function(message) {
-    var win = this.getWindow(message['window'].id);
-    if (win) {
-      win.addChunk(message);
-    }
+    var win = this.getWindow(message['window_id']);
+    if (win) win.addChunk(message);
   },
 
   focusHash: function(hash) {

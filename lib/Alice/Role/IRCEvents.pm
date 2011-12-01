@@ -390,7 +390,7 @@ irc_event channel_topic => sub {
   my ($self, $irc, $channel, $topic, $nick) = @_;
   if (my $window = $self->find_window($channel, $irc)) {
     $topic = irc_to_html($topic, classes => 1, invert => "italic");
-    $window->topic({string => $topic, author => $nick, time => time});
+    $window->topic({string => $topic, author => $nick});
     $self->broadcast($window->format_event("topic", $nick, $topic));
   }
 };

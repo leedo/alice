@@ -225,7 +225,6 @@ command clear =>  {
   desc => "Clears lines from current window.",
   cb => sub {
     my ($self, $req) = @_;
-    $req->window->buffer->clear;
     $self->broadcast($req->window->clear_action);
   },
 };
@@ -242,13 +241,16 @@ command qr{topic|t} => {
     my ($self, $req, $opts) = @_;
 
     my $new_topic = $opts->[0];
+    my $window = $req->window;
 
     if ($new_topic) {
-      $req->window->topic({string => $new_topic, nick => $req->nick, time => time});
-      $req->send_srv(TOPIC => $req->window->title, $new_topic);
+      $window->topic({string => $new_topic, nick => $req->nick, time => time});
+      $req->send_srv(TOPIC => $window->title, $new_topic);
     }
     else {
-      $req->stream->send($req->window->format_topic);
+      $req->stream->send(
+        $window->format_event(topic => $window->topic->{nick}, $window->topic_string)
+      );
     }
   }
 };
@@ -467,9 +469,7 @@ command chunk => {
   opts => qr{(\d+) (\d+)},
   cb => sub {
     my ($self, $req, $opts) = @_;
-    my $window = $req->window;
-
-    $self->update_window($req->stream, $window, $opts->[1], 0, $opts->[0], 0);
+    $self->update_window($req->stream, $req->window->id, $opts->[1], 0, $opts->[0], 0);
   }
 };
 
