@@ -11273,7 +11273,9 @@ Alice.Application = Class.create({
     setTimeout(this.updateOverflowMenus.bind(this), 1000);
 
     if (this.isMobile) {
-      this.focusHash() || this.activeWindow().focus();
+      this.connection.connect(function() {
+        this.focusHash() || this.activeWindow().focus();
+      }.bind(this));
     }
     else {
       this.fetchOembeds(function() {
