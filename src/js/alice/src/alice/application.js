@@ -618,12 +618,16 @@ Alice.Application = Class.create({
     this.freeze();
     setTimeout(this.updateOverflowMenus.bind(this), 1000);
 
-    this.fetchOembeds(function() {
-      this.connection.connect(function() {
-        this.focusHash() || this.activeWindow().focus();
+    if (this.isMobile) {
+      this.focusHash() || this.activeWindow().focus();
+    }
+    else {
+      this.fetchOembeds(function() {
+        this.connection.connect(function() {
+          this.focusHash() || this.activeWindow().focus();
+        }.bind(this));
       }.bind(this));
-
-    }.bind(this));
+    }
   },
 
   log: function () {
