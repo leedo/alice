@@ -10712,21 +10712,19 @@ Alice.Application = Class.create({
   },
 
   fetchOembeds: function(cb) {
-    var req = new XMLHttpRequest();
-    req.open("GET", "https://noembed.com/providers");
-    req.onreadystatechange = function(){
-      if (req.readyState == 4) {
-        try {
-          var providers = req.responseText.evalJSON();
-          this.oembeds = providers.inject([], function(acc, site){
-            return acc.concat(site.patterns.map(function(pat){return new RegExp(pat)}));
-          });
-        } catch (e) {}
-        setTimeout(this.fetchOembeds.bind(this), 1000 * 60 * 5);
+    this.getJSON("https://noembed.com/providers", function(response) {
+      try {
+        var providers = response.evalJSON();
+        this.oembeds = providers.inject([], function(acc, site){
+          return acc.concat(site.patterns.map(function(pat){return new RegExp(pat)}));
+        });
+        if (cb) cb();
+      } catch (e) {
         if (cb) cb();
       }
-    }.bind(this);
-    req.send();
+    }.bind(this));
+
+    setTimeout(this.fetchOembeds.bind(this), 1000 * 60 * 5);
   },
 
   embed: function(a, win) {
@@ -10734,15 +10732,32 @@ Alice.Application = Class.create({
       url: a.href,
       maxheight: 300,
     };
-    var req = new XMLHttpRequest();
-    req.open("GET", "https://www.noembed.com/embed?" + Object.toQueryString(params));
-    req.onreadystatechange = function(){
-      if (req.readyState == 4) {
-        var data = req.responseText.evalJSON();
-        this.embedContent(a, win, data);
-      }
-    }.bind(this);
-    req.send();
+    var url = "https://www.noembed.com/embed?" + Object.toQueryString(params);
+    this.getJSON(url, function(response) {
+      var data = response.evalJSON();
+      this.embedContent(a, win, data);
+    }.bind(this));
+  },
+
+  getJSON: function(url, handler) {
+    if ("XDomainReq" in window) {
+      var req = new XDomainReq();
+      req.open("GET", url);
+      req.onload = function() {
+        handler(req.responseText);
+      };
+      req.send();
+    }
+    else {
+      var req = new XMLHttpRequest();
+      req.open("GET", url);
+      req.onreadystatechange = function(){
+        if (req.readyState == 4) {
+          handler(req.responseText);
+        }
+      };
+      req.send();
+    }
   },
 
   embedContent: function(a, win, data) {
@@ -10817,24 +10832,24 @@ Alice.Application = Class.create({
       }
     },
     part: function (action) {
-      this.closeWindow(action['window'].id);
+      this.closeWindow(action['window_id']);
     },
     trim: function (action) {
-      var win = this.getWindow(action['window'].id);
+      var win = this.getWindow(action['window_id']);
       if (win) {
         win.messageLimit = action['lines'];
         win.trimMessages();
       }
     },
     nicks: function (action) {
-      var win = this.getWindow(action['window'].id);
+      var win = this.getWindow(action['window_id']);
       if (win) win.updateNicks(action.nicks);
     },
     alert: function (action) {
       this.activeWindow().showAlert(action['body']);
     },
     clear: function (action) {
-      var win = this.getWindow(action['window'].id);
+      var win = this.getWindow(action['window_id']);
       if (win) win.clearMessages();
     },
     announce: function (action) {
@@ -10842,30 +10857,29 @@ Alice.Application = Class.create({
     },
     connect: function (action) {
       if ($('servers')) {
-        Alice.connections.connectServer(action.network);
+        Alice.connections.connectServer(action['network']);
       }
     },
     disconnect: function (action) {
-      action.windows.each(function (win_info) {
-        var win = this.getWindow(win_info.id);
-        if (win) {
-          win.disable();
-        }
+      action['windows'].each(function (win_id) {
+        var win = this.getWindow(win_id);
+        if (win) win.disable();
       }.bind(this));
       if ($('servers')) {
-        Alice.connections.disconnectServer(action.network);
+        Alice.connections.disconnectServer(action['network']);
       }
     },
     focus: function (action) {
-      if (!action.window_number) return;
-      if (action.window_number == "next") {
+      if (!action['window_number']) return;
+      var window_number = action['window_number'];
+      if (window_number == "next") {
         this.nextWindow();
       }
-      else if (action.window_number.match(/^prev/)) {
+      else if (window_number.match(/^prev/)) {
         this.previousWindow();
       }
-      else if (action.window_number.match(/^\d+$/)) {
-        var tab = this.tabs.down('li', action.window_number);
+      else if (indow_number.match(/^\d+$/)) {
+        var tab = this.tabs.down('li', window_number);
         if (tab) {
           var window_id = tab.id.replace('_tab','');
           this.getWindow(window_id).focus();
@@ -11154,7 +11168,7 @@ Alice.Application = Class.create({
       win.addMessage(message);
     } else {
       this.connection.requestWindow(
-        message['window'].title, message['window'].id, message
+        message['window'].title, message['window'].id
       );
     }
   },
