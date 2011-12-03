@@ -253,7 +253,7 @@ sub create_window {
   );
   if ($window->is_channel) {
     my $config = $self->config->servers->{$window->network};
-    $config->{channels} = [uniq $title, @{$config->{channels}}];
+    $config->{channels} = [uniq lc($title), @{$config->{channels}}];
     $self->config->write;
   }
   $self->add_window($window);
@@ -309,7 +309,7 @@ sub close_window {
   if ($window->is_channel) {
     my $irc = $self->get_irc($window->network);
     my $config = $self->config->servers->{$window->network};
-    $config->{channels} = [grep {$_ ne $window->title} @{$config->{channels}}];
+    $config->{channels} = [grep {lc $_ ne lc $window->title} @{$config->{channels}}];
     $self->config->write;
   }
 
