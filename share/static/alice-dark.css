@@ -982,10 +982,10 @@ div.color_picker div.toggle span#bg.active {
     max-height: 150px; }
 
   div#tab_menu_left ul {
-    left: -24px; }
+    margin-left: -24px; }
 
   div#tab_menu_left ul {
-    right: -24px; } }
+    margin-right: -24px; } }
 
 div.config {
   position: absolute;
