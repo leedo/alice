@@ -548,8 +548,7 @@ div#topic {
   text-align: center;
   border-top: $topic_border_top;
   border-bottom: $topic_border_bottom;
-  padding: 1px 0;
-  padding-left: 50px;
+  padding: 1px 55px;
   font-size: 11px;
   height: 15px;
   min-height: 15px;
@@ -710,17 +709,17 @@ sup.external a {
   text-shadow: 1px 1px 1px white;
   margin-left: 1px;
   font-size: 0.7em;
-  background-color: #CCC;
   border-radius: 3px;
   padding: 1px 2px 1px 3px;
   font-weight: normal;
   letter-spacing: 0;
   border-right: 1px solid #aaa;
   border-bottom: 1px solid #aaa;
+  background-color: #D1D3D3;
 }
 
 sup.external a:hover {
-  background-color: #D1D3D3;
+  background-color: #CCC;
 }
 
 sup.external a:after {
@@ -1140,6 +1139,12 @@ div.color_picker div.toggle span#bg.active {
     border: none;
     max-width: 150px;
     max-height: 150px;
+  }
+  div#tab_menu_left ul {
+    margin-left: -24px;
+  }
+  div#tab_menu_right ul {
+    margin-right: -35px;
   }
 }
 

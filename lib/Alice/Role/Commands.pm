@@ -117,7 +117,7 @@ command say => {
   },
 };
 
-command msg => {
+command qr{msg|query|q} => {
   name => "msg",
   opts => qr{(\S+)\s*(.*)},
   eg => "/MSG [-<network>] <nick> [<msg>]",

@@ -10,7 +10,7 @@ Alice.Application = Class.create({
     this.nicklist = $('nicklist');
     this.overlayVisible = false;
     this.lastnotify = 0;
-    this.topic_height = "14px";
+    this.topic_height = this.topic.getStyle("height");
     this.beep = new Audio("/static/beep.mp3");
 
     this.oembeds = [];
@@ -615,12 +615,18 @@ Alice.Application = Class.create({
     this.freeze();
     setTimeout(this.updateOverflowMenus.bind(this), 1000);
 
-    this.fetchOembeds(function() {
+    if (this.isMobile) {
       this.connection.connect(function() {
         this.focusHash() || this.activeWindow().focus();
       }.bind(this));
-
-    }.bind(this));
+    }
+    else {
+      this.fetchOembeds(function() {
+        this.connection.connect(function() {
+          this.focusHash() || this.activeWindow().focus();
+        }.bind(this));
+      }.bind(this));
+    }
   },
 
   log: function () {
@@ -741,6 +747,7 @@ Alice.Application = Class.create({
 
   setupTopic: function() {
     this.topic.observe(this.supportsTouch ? "touchstart" : "click", function(e) {
+      if (e.findElement("a")) return;
       if (this.supportsTouch) e.stop();
       if (this.topic.getStyle("height") == this.topic_height) {
         this.topic.setStyle({height: "auto"});
