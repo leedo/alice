@@ -17,9 +17,17 @@ sub build_events {
     map {
       my $event = $_;
       $event => sub {
-        my @args = @_; # we don't need the client
-        shift @args;
+        my ($cl, @args) = @_;
+
+        if ($cl != $irc->cl) {
+          AE::log warn => "$event event on rogue AE::IRC::Client!";
+          $cl->remove_all_callbacks;
+          $cl->disconnect();
+          return;
+        }
+
         AE::log trace => "$event event for " . $irc->name;
+
         try {
           $EVENTS{$event}->($self, $irc, @args);
         }
@@ -131,11 +139,12 @@ irc_event disconnect => sub {
   return if $reason eq "reconnect requested.";
   $self->send_info($irc->name, "disconnected: $reason");
   
-  # TODO - Object::Event bug that prevents object from getting destroyed
-  delete $irc->cl->{change_nick_cb_guard} if $irc->cl;
-  $irc->cl->remove_all_callbacks;
-
-  $irc->cl(undef);
+  if ($irc->cl) {
+    # TODO - Object::Event bug that prevents object from getting destroyed
+    delete $irc->cl->{change_nick_cb_guard};
+    $irc->cl->remove_all_callbacks;
+    $irc->cl(undef);
+  }
 
   $self->reconnect_irc($irc->name, 0) unless $irc->disabled;
 
@@ -458,7 +467,15 @@ sub disconnect_irc {
   $irc->is_connecting(0);
   $irc->disabled(1);
   $msg ||= $self->config->quitmsg;
-  $irc->cl->disconnect($msg);
+  $irc->send_srv(QUIT => $msg);
+
+  my $cl = $irc->cl;
+  my $t; $t = AE::timer 3, 0, sub {
+    undef $t;
+    if ($cl and $cl->is_connected) {
+      $cl->disconnect;
+    }
+  };
 }
 
 sub cancel_reconnect {
