@@ -10740,8 +10740,8 @@ Alice.Application = Class.create({
   },
 
   getJSON: function(url, handler) {
-    if ("XDomainReq" in window) {
-      var req = new XDomainReq();
+    if ("XDomainRequest" in window) {
+      var req = new XDomainRequest();
       req.open("GET", url);
       req.onload = function() {
         handler(req.responseText);
@@ -10832,24 +10832,24 @@ Alice.Application = Class.create({
       }
     },
     part: function (action) {
-      this.closeWindow(action['window_id']);
+      this.closeWindow(action['window'].id);
     },
     trim: function (action) {
-      var win = this.getWindow(action['window_id']);
+      var win = this.getWindow(action['window'].id);
       if (win) {
         win.messageLimit = action['lines'];
         win.trimMessages();
       }
     },
     nicks: function (action) {
-      var win = this.getWindow(action['window_id']);
+      var win = this.getWindow(action['window'].id);
       if (win) win.updateNicks(action.nicks);
     },
     alert: function (action) {
       this.activeWindow().showAlert(action['body']);
     },
     clear: function (action) {
-      var win = this.getWindow(action['window_id']);
+      var win = this.getWindow(action['window'].id);
       if (win) win.clearMessages();
     },
     announce: function (action) {
@@ -10857,29 +10857,29 @@ Alice.Application = Class.create({
     },
     connect: function (action) {
       if ($('servers')) {
-        Alice.connections.connectServer(action['network']);
+        Alice.connections.connectServer(action.network);
       }
     },
     disconnect: function (action) {
-      action['windows'].each(function (win_id) {
-        var win = this.getWindow(win_id);
-        if (win) win.disable();
-      }.bind(this));
+      var windows = this.windows().map(function(win) {
+        if (win.network == action['network']) {
+          win.disable();
+        }
+      });
       if ($('servers')) {
-        Alice.connections.disconnectServer(action['network']);
+        Alice.connections.disconnectServer(action.network);
       }
     },
     focus: function (action) {
-      if (!action['window_number']) return;
-      var window_number = action['window_number'];
-      if (window_number == "next") {
+      if (!action.window_number) return;
+      if (action.window_number == "next") {
         this.nextWindow();
       }
-      else if (window_number.match(/^prev/)) {
+      else if (action.window_number.match(/^prev/)) {
         this.previousWindow();
       }
-      else if (indow_number.match(/^\d+$/)) {
-        var tab = this.tabs.down('li', window_number);
+      else if (action.window_number.match(/^\d+$/)) {
+        var tab = this.tabs.down('li', action.window_number);
         if (tab) {
           var window_id = tab.id.replace('_tab','');
           this.getWindow(window_id).focus();
@@ -11168,7 +11168,7 @@ Alice.Application = Class.create({
       win.addMessage(message);
     } else {
       this.connection.requestWindow(
-        message['window'].title, message['window'].id
+        message['window'].title, message['window'].id, message
       );
     }
   },
@@ -11943,6 +11943,7 @@ Alice.Window = Class.create({
     this.title = serialized['title'];
     this.type = serialized['type'];
     this.hashtag = serialized['hashtag'];
+    this.network = serialized['network'];
     this.id = this.element.identify();
     this.active = false;
     this.topic = serialized['topic'];

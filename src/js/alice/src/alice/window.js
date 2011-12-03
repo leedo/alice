@@ -6,6 +6,7 @@ Alice.Window = Class.create({
     this.title = serialized['title'];
     this.type = serialized['type'];
     this.hashtag = serialized['hashtag'];
+    this.network = serialized['network'];
     this.id = this.element.identify();
     this.active = false;
     this.topic = serialized['topic'];

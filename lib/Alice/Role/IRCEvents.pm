@@ -126,14 +126,11 @@ irc_event registered => sub {
 irc_event disconnect => sub {
   my ($self, $irc, $reason) = @_;
 
-  my @windows = grep {$_->network eq $irc->name} $self->windows;
   $self->broadcast({
     type => "action",
     event => "disconnect",
     network => $irc->name,
-    windows => [map {$_->serialized} @windows],
   });
-  $self->remove_window($_) for map {$_->id} @windows;
 
   $reason = "" unless $reason;
   return if $reason eq "reconnect requested.";
@@ -470,9 +467,10 @@ sub disconnect_irc {
   $irc->send_srv(QUIT => $msg);
 
   my $cl = $irc->cl;
-  my $t; $t = AE::timer 3, 0, sub {
+  my $t; $t = AE::timer 2, 0, sub {
     undef $t;
     if ($cl and $cl->is_connected) {
+      $cl->remove_all_callbacks;
       $cl->disconnect;
     }
   };

@@ -205,12 +205,11 @@ Alice.Application = Class.create({
       }
     },
     disconnect: function (action) {
-      action.windows.each(function (win_info) {
-        var win = this.getWindow(win_info.id);
-        if (win) {
+      var windows = this.windows().map(function(win) {
+        if (win.network == action['network']) {
           win.disable();
         }
-      }.bind(this));
+      });
       if ($('servers')) {
         Alice.connections.disconnectServer(action.network);
       }
