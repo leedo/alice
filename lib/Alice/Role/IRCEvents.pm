@@ -133,6 +133,7 @@ irc_event disconnect => sub {
   
   # TODO - Object::Event bug that prevents object from getting destroyed
   delete $irc->cl->{change_nick_cb_guard} if $irc->cl;
+  $irc->cl->remove_all_callbacks;
 
   $irc->cl(undef);
 
