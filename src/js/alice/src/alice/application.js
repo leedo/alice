@@ -56,21 +56,19 @@ Alice.Application = Class.create({
   },
 
   fetchOembeds: function(cb) {
-    var req = new XMLHttpRequest();
-    req.open("GET", "https://noembed.com/providers");
-    req.onreadystatechange = function(){
-      if (req.readyState == 4) {
-        try {
-          var providers = req.responseText.evalJSON();
-          this.oembeds = providers.inject([], function(acc, site){
-            return acc.concat(site.patterns.map(function(pat){return new RegExp(pat)}));
-          });
-        } catch (e) {}
-        setTimeout(this.fetchOembeds.bind(this), 1000 * 60 * 5);
+    this.getJSON("https://noembed.com/providers", function(response) {
+      try {
+        var providers = response.evalJSON();
+        this.oembeds = providers.inject([], function(acc, site){
+          return acc.concat(site.patterns.map(function(pat){return new RegExp(pat)}));
+        });
+        if (cb) cb();
+      } catch (e) {
         if (cb) cb();
       }
-    }.bind(this);
-    req.send();
+    }.bind(this));
+
+    setTimeout(this.fetchOembeds.bind(this), 1000 * 60 * 5);
   },
 
   embed: function(a, win) {
@@ -78,15 +76,32 @@ Alice.Application = Class.create({
       url: a.href,
       maxheight: 300,
     };
-    var req = new XMLHttpRequest();
-    req.open("GET", "https://www.noembed.com/embed?" + Object.toQueryString(params));
-    req.onreadystatechange = function(){
-      if (req.readyState == 4) {
-        var data = req.responseText.evalJSON();
-        this.embedContent(a, win, data);
-      }
-    }.bind(this);
-    req.send();
+    var url = "https://www.noembed.com/embed?" + Object.toQueryString(params);
+    this.getJSON(url, function(response) {
+      var data = response.evalJSON();
+      this.embedContent(a, win, data);
+    }.bind(this));
+  },
+
+  getJSON: function(url, handler) {
+    if ("XDomainReq" in window) {
+      var req = new XDomainReq();
+      req.open("GET", url);
+      req.onload = function() {
+        handler(req.responseText);
+      };
+      req.send();
+    }
+    else {
+      var req = new XMLHttpRequest();
+      req.open("GET", url);
+      req.onreadystatechange = function(){
+        if (req.readyState == 4) {
+          handler(req.responseText);
+        }
+      };
+      req.send();
+    }
   },
 
   embedContent: function(a, win, data) {
