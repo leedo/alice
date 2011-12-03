@@ -10,7 +10,7 @@ Alice.Application = Class.create({
     this.nicklist = $('nicklist');
     this.overlayVisible = false;
     this.lastnotify = 0;
-    this.topic_height = "14px";
+    this.topic_height = this.topic.getStyle("height");
     this.beep = new Audio("/static/beep.mp3");
 
     this.oembeds = [];
@@ -750,6 +750,7 @@ Alice.Application = Class.create({
 
   setupTopic: function() {
     this.topic.observe(this.supportsTouch ? "touchstart" : "click", function(e) {
+      if (e.findElement("a")) return;
       if (this.supportsTouch) e.stop();
       if (this.topic.getStyle("height") == this.topic_height) {
         this.topic.setStyle({height: "auto"});
