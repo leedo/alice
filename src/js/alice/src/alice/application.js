@@ -84,8 +84,8 @@ Alice.Application = Class.create({
   },
 
   getJSON: function(url, handler) {
-    if ("XDomainReq" in window) {
-      var req = new XDomainReq();
+    if ("XDomainRequest" in window) {
+      var req = new XDomainRequest();
       req.open("GET", url);
       req.onload = function() {
         handler(req.responseText);
