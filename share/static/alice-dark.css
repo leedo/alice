@@ -984,8 +984,8 @@ div.color_picker div.toggle span#bg.active {
   div#tab_menu_left ul {
     margin-left: -24px; }
 
-  div#tab_menu_left ul {
-    margin-right: -24px; } }
+  div#tab_menu_right ul {
+    margin-right: -35px; } }
 
 div.config {
   position: absolute;
