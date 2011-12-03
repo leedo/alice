@@ -976,7 +976,13 @@ div.color_picker div.toggle span#bg.active {
   div.msg img {
     border: none;
     max-width: 150px;
-    max-height: 150px; } }
+    max-height: 150px; }
+
+  div#tab_menu_left ul {
+    left: -24px; }
+
+  div#tab_menu_left ul {
+    right: -24px; } }
 
 div.config {
   position: absolute;
