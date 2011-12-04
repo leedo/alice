@@ -455,7 +455,7 @@ sub handle_message {
     $message->{msg} = html_to_irc($message->{msg}) if $message->{html};
 
     for my $line (split /\n/, $message->{msg}) {
-      next unless $line;
+      next unless length $line;
 
       my $input = Alice::Request->new(
         window => $window,
