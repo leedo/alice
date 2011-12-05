@@ -38,7 +38,7 @@ sub match_irc_command {
 
   for my $name (keys %COMMANDS) {
 
-    if ($line =~ m{^/$name\b\s*(.*)}) {
+    if ($line =~ m{^/$name\b\s?(.*)}) {
       my $args = $1;
       return ($name, $args);
     }
@@ -60,7 +60,7 @@ sub run_irc_command {
   my $network = $req->window->network;
 
   # determine the network can be overridden
-  if ($command->{network} and $args =~ s/^$SRVOPT//) {
+  if ($command->{network} and $args =~ s/^\s*$SRVOPT//) {
     $network = $1;
   }
 
