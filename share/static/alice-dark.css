@@ -721,7 +721,7 @@ ul.messages li.monospaced + li.monospaced.consecutive {
   padding-top: 0px; }
 
 ul.messages li.monospaced div.msg {
-  font-family: Monaco, monospace;
+  font-family: Menlo, monospace;
   font-size: 10px;
   line-height: 12px;
   word-wrap: normal; }
