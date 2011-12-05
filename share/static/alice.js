@@ -12019,7 +12019,7 @@ Alice.Window = Class.create({
   },
 
   checkScrollBack: function() {
-    if (this.active && this.element.scrollTop == 0) {
+    if (this.active && this.element.scrollTop <= 150) {
       clearInterval(this.scrollListener);
       var first = this.messages.down("li[id]");
       if (first) {
