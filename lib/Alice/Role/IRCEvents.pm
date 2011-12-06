@@ -78,11 +78,6 @@ irc_event connect => sub {
     network => $irc->name,
   });
 
-  my $config = $self->config->servers->{$irc->name};
-
-  $irc->cl->register(
-    $config->{nick}, $config->{username}, $config->{ircname}, $config->{password}
-  );
 };
 
 irc_event registered => sub {
@@ -517,7 +512,12 @@ sub connect_irc {
   $self->send_info($irc->name, "connecting (attempt " . $irc->reconnect_count .")");
   
   $irc->is_connecting(1);
-  $irc->cl->connect($config->{host}, $config->{port});
+  $irc->cl->connect($config->{host}, $config->{port}, {
+    nick => $config->{nick},
+    user => $config->{user},
+    real => $config->{ircname},
+    password => $config->{password},
+  });
 }
 
 1;
