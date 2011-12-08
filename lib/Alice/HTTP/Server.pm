@@ -29,6 +29,11 @@ has httpd => (
   builder => "_build_httpd",
 );
 
+has base_path => (
+  is => 'ro',
+  default => '',
+);
+
 has ping => (
   is  => 'rw',
   lazy => 1,
@@ -92,12 +97,13 @@ sub _build_httpd {
       host => $self->address,
       port => $self->port,
     );
+    my $static = $self->base_path . "/static/";
     $httpd->register_service(
       builder {
         enable "Session",
           store => $self->session,
           state => Plack::Session::State::Cookie->new(expires => 60 * 60 * 24 * 7);
-        enable "Static", path => qr{^/static/}, root => $self->assets;
+        enable "Static", path => sub {s/^\Q$static\E//}, root => $self->assets . "/static/";
         enable "+Alice::HTTP::WebSocket";
         sub {
           my $env = shift;
@@ -116,8 +122,9 @@ sub dispatch {
 
   my $req = Alice::HTTP::Request->new($env, $cb);
   my $res = $req->new_response(200);
+  my $path_info = substr $req->path_info, length $self->base_path;
 
-  AE::log trace => $req->path;
+  AE::log trace => $path_info;
 
   if ($self->auth_enabled) {
     unless ($req->path eq "/login" or $self->is_logged_in($req)) {
@@ -127,7 +134,7 @@ sub dispatch {
   }
   for my $handler (@{$self->url_handlers}) {
     my $path = $handler->[0];
-    if ($req->path_info =~ /^\/$path\/?$/) {
+    if ($path_info =~ /^\/$path\/?$/) {
       my $method = $handler->[1];
       $self->$method($req, $res);
       return;
@@ -318,7 +325,7 @@ sub merged_options {
   my $config = $self->app->config;
 
   my $options = { map { $_ => ($req->param($_) || $config->$_) }
-      qw/animate images avatars alerts audio timeformat image_prefix/ };
+      qw/base_path animate images avatars alerts audio timeformat image_prefix/ };
 
   if ($options->{images} eq "show" and $options->{animate} eq "hide") {
     $options->{image_prefix} = "https://noembed.com/i/still/";

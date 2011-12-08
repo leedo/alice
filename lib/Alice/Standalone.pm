@@ -27,11 +27,12 @@ after init => sub {
   };
 
   $self->{httpd} = Alice::HTTP::Server->new(
-    app     => $self,
-    port    => $self->config->http_port,
-    address => $self->config->http_address,
-    session => $session,
-    assets  => $self->config->assetdir,
+    app       => $self,
+    port      => $self->config->http_port,
+    address   => $self->config->http_address,
+    base_path => $self->config->base_path,
+    assets    => $self->config->assetdir,
+    session   => $session,
   );
 
   AE::log info => "Location: http://".$self->config->http_address.":".$self->config->http_port."/";

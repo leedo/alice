@@ -11,7 +11,6 @@ Alice.Application = Class.create({
     this.overlayVisible = false;
     this.lastnotify = 0;
     this.topic_height = this.topic.getStyle("height");
-    this.beep = new Audio("/static/beep.mp3");
 
     this.oembeds = [];
     this.jsonp_callbacks = {};
@@ -644,6 +643,8 @@ Alice.Application = Class.create({
         }.bind(this));
       }.bind(this));
     }
+
+    this.beep = new Audio(this.options.base_path + "/static/beep.mp3");
   },
 
   log: function () {

@@ -513,7 +513,7 @@ sub ignores {
 
 sub static_url {
   my ($self, $file) = @_;
-  return $self->config->static_prefix . $file;
+  return $self->config->base_path . $self->config->static_prefix . $file;
 }
 
 sub auth_enabled {

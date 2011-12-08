@@ -18,7 +18,7 @@ Alice.Connection.WebSocket = Class.create(Alice.Connection, {
       tab: this.application.activeWindow().id
     });
     var protocol = (window.location.protocol.match(/^https/) ? "wss://" : "ws://");
-    var url = protocol + window.location.host + "/wsstream?" + parameters;
+    var url = protocol + window.location.host + this.application.options.base_path + "/wsstream?" + parameters;
     this.request = new WebSocket(url);
     this.request.onopen = function(){
       this.connected = true;

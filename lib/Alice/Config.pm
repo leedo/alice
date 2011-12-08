@@ -128,6 +128,11 @@ has static_prefix => (
   default => '/static/',
 );
 
+has base_path => (
+  is      => 'rw',
+  default => "",
+);
+
 has image_prefix => (
   is      => 'rw',
   isa     => 'Str',
