@@ -407,12 +407,7 @@ irc_event irc_invite => sub {
   $self->announce($message);
 };
 
-irc_event 464 => sub{
-  my ($self, $irc, $msg) = @_;
-  $self->disconnect_irc($irc->name, "bad USER/PASS")
-};
-
-irc_event [qw/001 305 306 401 471 473 474 475 477 485 432 433/] => sub {
+irc_event [qw/001 305 306 401 462 464 465 471 473 474 475 477 485 432 433/] => sub {
   my ($self, $irc, $msg) = @_;
   $self->send_info($irc->name, $msg->{params}[-1]);
 };
