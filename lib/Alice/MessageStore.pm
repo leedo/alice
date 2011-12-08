@@ -44,20 +44,31 @@ has dbi => (
 
 has msgid => (
   is => 'rw',
-  default => 0,
+  default => sub{{}},
 );
 
 sub BUILD {
   my $self = shift;
-  $self->dbi->exec("SELECT msgid FROM window_buffer ORDER BY msgid DESC LIMIT 1", sub {
+  $self->dbi->exec("SELECT window_id, MAX(msgid) FROM window_buffer GROUP BY window_id", sub {
     my (undef, $row) = @_;
-    $self->msgid( @$row ? $row->[0][0] : 0);
+    $self->msgid({map {@$_} @$row});
   });
 }
 
-sub clear {
+sub build_iter {
   my ($self, $id) = @_;
-  $self->dbi->exec("DELETE FROM window_buffer WHERE window_id = ?", $id, sub {});
+  $self->msgid->{$id} ||= 1;
+  return sub {
+    my $cb = shift;
+    my $msg = $cb->(++$self->msgid->{$id});
+    $self->add($id, $msg);
+    return $msg;
+  };
+}
+
+sub max_window_msgid {
+  my ($self, $id) = @_;
+  return $self->msgid->{$id} || 0;
 }
 
 sub messages {

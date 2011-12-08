@@ -20,7 +20,6 @@ use Alice::IRC;
 use Alice::Config;
 use Alice::Tabset;
 use Alice::Request;
-use Alice::MessageBuffer;
 use Alice::MessageStore;
 
 our $VERSION = '0.20';
@@ -106,8 +105,8 @@ has 'info_window' => (
     my $id = $self->_build_window_id("info", "info");
     my $info = Alice::InfoWindow->new(
       id       => $id,
-      buffer   => $self->_build_window_buffer($id),
-      render   => sub { $self->render(@_) }
+      render   => sub { $self->render(@_) },
+      msg_iter => $self->message_store->build_iter($id),
     );
     $self->add_window($info);
     return $info;
@@ -190,7 +189,7 @@ sub tab_order {
   my $order = [];
   for my $count (0 .. scalar @$window_ids - 1) {
     if (my $window = $self->get_window($window_ids->[$count])) {
-      next unless $window->is_channel;
+      next unless $window->type eq "channel";
       push @$order, $window->id;
     }
   }
@@ -243,29 +242,25 @@ sub alert {
 sub create_window {
   my ($self, $title, $irc) = @_;
   my $id = $self->_build_window_id($title, $irc->name);
+  my $type = $irc->is_channel($title) ? "channel" : "privmsg";
+
   my $window = Alice::Window->new(
     title    => $title,
-    type     => $irc->is_channel($title) ? "channel" : "privmsg",
+    type     => $type,
     network  => $irc->name,
     id       => $id,
-    buffer   => $self->_build_window_buffer($id),
     render   => sub { $self->render(@_) },
+    msg_iter => $self->message_store->build_iter($id),
   );
-  if ($window->is_channel) {
+
+  if ($type eq "channel") {
     my $config = $self->config->servers->{$window->network};
     $config->{channels} = [uniq lc($title), @{$config->{channels}}];
     $self->config->write;
   }
+
   $self->add_window($window);
   return $window;
-}
-
-sub _build_window_buffer {
-  my ($self, $id) = @_;
-  Alice::MessageBuffer->new(
-    id => $id,
-    store => $self->message_store,
-  );
 }
 
 sub _build_window_id {
@@ -306,7 +301,7 @@ sub close_window {
   AE::log debug => "sending a request to close a tab: " . $window->title;
   $self->broadcast($window->close_action);
 
-  if ($window->is_channel) {
+  if ($window->type eq "channel") {
     my $irc = $self->get_irc($window->network);
     my $config = $self->config->servers->{$window->network};
     $config->{channels} = [grep {lc $_ ne lc $window->title} @{$config->{channels}}];
@@ -415,38 +410,36 @@ sub ping {
 }
 
 sub update_window {
-  my ($self, $stream, $window, $max, $min, $limit, $total, $cb) = @_;
+  my ($self, $stream, $window_id, $max, $min, $limit, $total) = @_;
 
   my $step = 20;
   if ($limit - $total <  20) {
     $step = $limit - $total;
   }
 
-  $window->buffer->messages($max, $min, $step, sub {
+  $self->message_store->messages($window_id, $max, $min, $step, sub {
     my $msgs = shift;
 
     $stream->send([{
-      window => $window->serialized,
-      type   => "chunk",
-      range  => (@$msgs ? [$msgs->[0]{msgid}, $msgs->[-1]{msgid}] : []),
-      html   => join "", map {$_->{html}} @$msgs,
+      window_id => $window_id,
+      type      => "chunk",
+      range     => (@$msgs ? [$msgs->[0]{msgid}, $msgs->[-1]{msgid}] : []),
+      html      => join "", map {$_->{html}} @$msgs,
     }]);
 
     $total += $step;
 
     if (@$msgs == $step and $total < $limit) {
       $max = $msgs->[0]->{msgid} - 1;
-      $self->update_window($stream, $window, $max, $min, $limit, $total, $cb);
-    }
-    else {
-      $cb->() if $cb;
-      return;
+      $self->update_window($stream, $window_id, $max, $min, $limit, $total);
     }
   });
 }
 
 sub handle_message {
   my ($self, $message) = @_;
+
+  AE::log trace => "handing command $message->{msg} on $message->{source}";
 
   if (my $window = $self->get_window($message->{source})) {
     my $stream = first {$_->id eq $message->{stream}} @{$self->streams};
