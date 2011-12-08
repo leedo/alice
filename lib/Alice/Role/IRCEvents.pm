@@ -19,7 +19,7 @@ sub build_events {
       $event => sub {
         my ($cl, @args) = @_;
 
-        if ($cl != $irc->cl) {
+        if (!$irc->cl or $cl != $irc->cl) {
           AE::log warn => "$event event on rogue AE::IRC::Client!";
           $cl->remove_all_callbacks;
           $cl->disconnect();
