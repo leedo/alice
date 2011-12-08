@@ -164,8 +164,7 @@ command qr{names|n} => {
   desc => "Lists nicks in current channel.",
   cb => sub  {
     my ($self, $req) = @_;
-    my @nicks = map {}
-      $req->irc->channel_nicks($req->window->title, 1);
+    my @nicks = $req->irc->channel_nicks($req->window->title, 1);
     $req->reply($req->window->nick_table(@nicks));
   },
 };
