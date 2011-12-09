@@ -165,7 +165,7 @@ command qr{names|n} => {
   cb => sub  {
     my ($self, $req) = @_;
     my @nicks = $req->irc->channel_nicks($req->window->title, 1);
-    $req->reply($req->window->nick_table(@nicks));
+    $req->reply(nick_table(@nicks));
   },
 };
 
@@ -487,7 +487,7 @@ command trim => {
 };
 
 sub nick_table {
-  my ($self, @nicks) = @_;
+  my @nicks = @_;
 
   return "" unless @nicks;
 
