@@ -3,11 +3,9 @@ package Alice::Window;
 use strict;
 use warnings;
 
-use Encode;
 use Text::MicroTemplate qw/encoded_string/;
 use IRC::Formatting::HTML qw/irc_to_html/;
 use Plack::Util::Accessor qw/title type id network previous_nick disabled topic/;
-use AnyEvent;
 
 sub new {
   my ($class, %args) = @_;
