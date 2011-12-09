@@ -151,6 +151,7 @@ Alice.Window = Class.create({
     this.element.removeClassName('active');
     this.tab.removeClassName('active');
     clearTimeout(this.scrollListener);
+    clearTimeout(this.focusTimer);
     this.addFold();
   },
 
@@ -208,10 +209,10 @@ Alice.Window = Class.create({
 
       this.scrollToPosition(this.lastScrollPosition);
 
-      setTimeout(function(){
+      this.focusTimer = setTimeout(function(){
         this.scrollToPosition(this.lastScrollPosition);
         if (!this.scrollBackEmpty) this.checkScrollBack();
-      }.bind(this), 0);
+      }.bind(this), 400);
     }
 
     this.element.addClassName('active');
