@@ -382,7 +382,7 @@ sub send_message {
 
   if ($messages[0]->{highlight}) {
     push @messages, $self->info_window->format_message(
-      $nick, $body, self => 1, source => $nick);
+      $nick, $body, self => 1, source => $window->title);
   }
 
   $self->broadcast(@messages);
