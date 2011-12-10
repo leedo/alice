@@ -12252,10 +12252,14 @@ Alice.Window = Class.create({
       this.messages.insert({"top": chunk['html']});
     }
 
+    var original_timestamp = this.lasttimestamp;
+    this.lasttimestamp = new Date(0);
+
     this.messages.select("li:not(.filtered)").each(function (li) {
       this.application.applyFilters(li, this);
     }.bind(this));
 
+    this.lasttimestamp = original_timestamp;
     this.bulk_insert = false;
 
     this.scrollToPosition(position);
