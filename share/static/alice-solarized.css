@@ -621,8 +621,9 @@ div.msg div.oembed {
 
 sup.external {
   line-height: 0px;
-  vertical-align: 2px;
-  padding-left: 1px; }
+  vertical-align: 7px;
+  padding-left: 2px;
+  display: inline-block; }
 
 sup.external a {
   text-decoration: none;
