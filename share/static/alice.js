@@ -10070,6 +10070,7 @@ var swfobject=function(){var D="undefined",r="object",S="Shockwave Flash",W="Sho
   WebSocket.CLOSING = 2;
   WebSocket.CLOSED = 3;
 
+  WebSocket.__initialized = false;
   WebSocket.__flash = null;
   WebSocket.__instances = {};
   WebSocket.__tasks = [];
@@ -10089,7 +10090,9 @@ var swfobject=function(){var D="undefined",r="object",S="Shockwave Flash",W="Sho
    * Loads WebSocketMain.swf and creates WebSocketMain object in Flash.
    */
   WebSocket.__initialize = function() {
-    if (WebSocket.__flash) return;
+
+    if (WebSocket.__initialized) return;
+    WebSocket.__initialized = true;
 
     if (WebSocket.__swfLocation) {
       window.WEB_SOCKET_SWF_LOCATION = WebSocket.__swfLocation;
@@ -10139,7 +10142,9 @@ var swfobject=function(){var D="undefined",r="object",S="Shockwave Flash",W="Sho
         if (!e.success) {
           logger.error("[WebSocket] swfobject.embedSWF failed");
         }
-      });
+      }
+    );
+
   };
 
   /**
@@ -10207,14 +10212,16 @@ var swfobject=function(){var D="undefined",r="object",S="Shockwave Flash",W="Sho
   };
 
   if (!window.WEB_SOCKET_DISABLE_AUTO_INITIALIZATION) {
-    if (window.addEventListener) {
-      window.addEventListener("load", function(){
-        WebSocket.__initialize();
-      }, false);
+    var init = function(){
+      WebSocket.__initialize();
+    };
+    if (document.readyState == "complete") {
+      init();
+    } else if (window.addEventListener) {
+      document.addEventListener("DOMContentLoaded", init, false);
+      window.addEventListener("load", init, false);
     } else {
-      window.attachEvent("onload", function(){
-        WebSocket.__initialize();
-      });
+      window.attachEvent("onload", init);
     }
   }
 
