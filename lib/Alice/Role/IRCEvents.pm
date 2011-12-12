@@ -351,6 +351,7 @@ irc_event channel_add => sub {
     else {
       $window->{add_queue} = [@nicks];
       $window->{add_timer} = AE::timer 1, 0, sub {
+        delete $window->{add_timer};
         $self->broadcast($window->nicks_action($irc->channel_nicks($channel)));
         my $nicks = delete $window->{add_queue};
         return if $msg->{command} ne "JOIN" or $self->is_ignore(join => $channel);
