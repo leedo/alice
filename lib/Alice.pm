@@ -395,6 +395,13 @@ sub send_info {
   $self->broadcast($message);
 }
 
+sub send_nicks {
+  my ($self, $window) = @_;
+  my $irc = $self->get_irc($window->network);
+  my @nicks = $irc->channel_nicks($window->title);
+  $self->broadcast($window->nicks_action(@nicks));
+}
+
 sub broadcast {
   my ($self, @messages) = @_;
   return if $self->no_streams or !@messages;

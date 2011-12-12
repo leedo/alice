@@ -333,54 +333,54 @@ irc_event join => sub {
   if ($is_self) {
     my $window = $self->find_or_create_window($channel, $irc);
     $self->broadcast(
-      $window->format_event("joined", "you"),
+      $window->format_event("join", "you"),
       $window->join_action,
       $window->nicks_action($irc->channel_nicks($channel)),
     );
     $irc->send_srv("WHO" => $channel) if $irc->cl->isupport("UHNAMES");
   }
-};
-
-irc_event channel_add => sub {
-  my ($self, $irc, $msg, $channel, @nicks) = @_;
-
-  if (my $window = $self->find_window($channel, $irc)) {
-    push @{$window->{event_queue}}, [joined => \@nicks, ""];
-    if (!$window->{event_timer}) {
-      $window->{event_timer} = AE::timer 1, 0, sub {
-        delete $window->{event_timer};
-        $self->flush_events($window, delete $window->{event_queue});
-      };
-    }
+  else {
+    my $window = $self->find_window($channel, $irc);
+    $self->queue_event({
+      irc    => $irc,
+      window => $window,
+      event  => "join",
+      nick   => $nick,
+    });
   }
 };
 
 irc_event part => sub {
   my ($self, $irc, $nick, $channel, $is_self, $msg) = @_;
+  my $window = $self->find_window($channel, $irc);
+  return unless $window;
 
-  if ($is_self and my $window = $self->find_window($channel, $irc)) {
+  if ($is_self) {
     $self->send_info($irc->name, "leaving $channel");
     $self->close_window($window);
   }
+  else {
+    $self->queue_event({
+      irc    => $irc,
+      window => $window,
+      event  => "part",
+      nick   => $nick,
+    });
+  }
 };
 
-irc_event channel_remove => sub {
-  my ($self, $irc, $msg, $channel, @nicks) = @_;
-  return unless $msg;
+irc_event quit => sub {
+  my ($self, $irc, $nick, $msg) = @_;
 
-  if (my $window = $self->find_window($channel, $irc)) {
-    my $reason = "";
-    if ($msg and $msg->{command} eq "QUIT") {
-      $reason = $msg->{params}[-1] || "Quit";
-    }
-
-    push @{$window->{event_queue}}, [left => \@nicks, $reason];
-    if (!$window->{event_timer}) {
-      $window->{event_timer} = AE::timer 1, 0, sub {
-        delete $window->{event_timer};
-        $self->flush_events($window, delete $window->{event_queue});
-      };
-    }
+  for my $channel ($irc->nick_channels($nick)) {
+    my $window = $self->find_window($irc, $channel);
+    $self->queue_event({
+      irc    => $irc,
+      window => $window,
+      event  => "quit",
+      nick   => $nick,
+      args   => $msg->{params}[-1],
+    });
   }
 };
 
@@ -526,23 +526,38 @@ sub connect_irc {
   });
 }
 
-sub flush_events {
-  my ($self, $window, $queue) = @_;
-  my $current = shift @$queue;
+sub queue_event {
+  my ($self, $event) = @_;
 
-  my $idle_w; $idle_w = AE::idle sub {
-    my $next = shift @$queue;
+  my $window = $event->{window};
+  my $irc    = $event->{irc};
 
-    if ($next and $current->[0] eq $next->[0] and $current->[2] eq $next->[2]) {
-      push @{$current->[1]}, @{$next->[1]};
-    }
-    else {
-      $current->[1] = join ",", @{$current->[1]};
-      $self->broadcast($window->format_event(@$current));
-      $current = $next;
-    }
+  push @{$window->{event_queue}}, [$event->{event}, $event->{nick}, $event->{args} || ""];
 
-    undef $idle_w unless $current;
+  $window->{event_timer} ||= AE::timer 1, 0, sub {
+    delete $window->{event_timer};
+    $self->send_nicks($window);
+
+    my $queue = delete $window->{event_queue};
+    my $current = shift @$queue;
+
+    my $idle_w; $idle_w = AE::idle sub {
+      if (!$current) {
+        undef $idle_w;
+        return;
+      }
+
+      my $next = shift @$queue;
+      return if $self->is_ignore($current->[0] => $window->title);
+
+      if (!$next or $current->[0] ne $next->[0] or $current->[2] ne $next->[2]) {
+        $self->broadcast($window->format_event(@$current));
+        $current = $next;
+      }
+      else {
+        $current->[1] .= ", $next->[1]";
+      }
+    };
   };
 }
 
