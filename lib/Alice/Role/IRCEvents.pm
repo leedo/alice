@@ -352,36 +352,27 @@ irc_event join => sub {
 
 irc_event part => sub {
   my ($self, $irc, $nick, $channel, $is_self, $msg) = @_;
-  my $window = $self->find_window($channel, $irc);
-  return unless $window;
 
-  if ($is_self) {
+  if ($is_self and my $window = $self->find_window($channel, $irc)) {
     $self->send_info($irc->name, "leaving $channel");
     $self->close_window($window);
   }
-  else {
-    $self->queue_event({
-      irc    => $irc,
-      window => $window,
-      event  => "part",
-      nick   => $nick,
-    });
-  }
 };
 
-irc_event quit => sub {
-  my ($self, $irc, $nick, $msg) = @_;
+irc_event channel_remove => sub {
+  my ($self, $irc, $msg, $channel, $nick) = @_;
 
-  for my $channel ($irc->nick_channels($nick)) {
-    my $window = $self->find_window($channel, $irc);
-    $self->queue_event({
-      irc    => $irc,
-      window => $window,
-      event  => "quit",
-      nick   => $nick,
-      args   => $msg->{params}[-1],
-    });
-  }
+  my $event = lc $msg->{command};
+  my $reason = $event eq "quit" ? $msg->{params}[-1] : "";
+  my $window = $self->find_window($channel, $irc);
+
+  $self->queue_event({
+    irc    => $irc,
+    window => $window,
+    event  => $event,
+    nick   => $nick,
+    args   => $reason,
+  });
 };
 
 irc_event channel_topic => sub {
