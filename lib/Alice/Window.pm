@@ -21,6 +21,10 @@ sub new {
   $args{disbled} = 0;
   $args{previous_nick} = "";
 
+  $args{add_queue} = ();
+  $args{remove_queue} = {};
+  $args{remove_timer} = {};
+
   bless \%args, __PACKAGE__;
 }
 

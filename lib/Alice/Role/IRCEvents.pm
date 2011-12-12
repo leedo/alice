@@ -345,14 +345,17 @@ irc_event channel_add => sub {
   my ($self, $irc, $msg, $channel, @nicks) = @_;
 
   if (my $window = $self->find_window($channel, $irc)) {
-    $self->broadcast(
-      $window->nicks_action($irc->channel_nicks($channel))
-    );
-
-    if ($msg->{command} eq "JOIN" and !$self->is_ignore("join" => $channel)) {
-      $self->broadcast(
-        map {$window->format_event("joined", $_)} @nicks
-      );
+    if ($window->{add_queue}) {
+      push @{$window->{add_queue}}, @nicks;
+    }
+    else {
+      $window->{add_queue} = [@nicks];
+      $window->{add_timer} = AE::timer 1, 0, sub {
+        $self->broadcast($window->nicks_action($irc->channel_nicks($channel)));
+        my $nicks = delete $window->{add_queue};
+        return if $self->is_ignore(join => $channel);
+        $self->broadcast($window->format_event(joined => join(", ", @$nicks)));
+      };
     }
   }
 };
@@ -370,20 +373,23 @@ irc_event channel_remove => sub {
   my ($self, $irc, $msg, $channel, @nicks) = @_;
 
   if (my $window = $self->find_window($channel, $irc)) {
-    $self->broadcast(
-      $window->nicks_action($irc->channel_nicks($channel))
-    );
+    my $reason = "PART";
+    if ($msg and $msg->{command} eq "QUIT") {
+      $reason = $msg->{params}[-1] || "Quit";
+    }
 
-    unless ($self->is_ignore(part => $channel)) {
-      my $reason = "";
-
-      if ($msg and $msg->{command} eq "QUIT") {
-        $reason = $msg->{params}[-1] || "Quit";
-      }
-
-      $self->broadcast(
-        map {$window->format_event(left => $_, $reason)} @nicks
-      );
+    if ($window->{remove_queue}{$reason}) {
+      push @{$window->{remove_queue}{$reason}}, @nicks;
+    }
+    else {
+      $window->{remove_queue}{$reason} = \@nicks;
+      $window->{remove_timer}{$reason} = AE::timer 1, 0, sub {
+        $self->broadcast($window->nicks_action($irc->channel_nicks($channel)));
+        my $nicks = delete $window->{remove_queue}{$reason};
+        return if $self->is_ignore(part => $channel);
+        $reason = "" if $reason eq "PART";
+        $self->broadcast($window->format_event(left => join(", ", @$nicks), $reason));
+      };
     }
   }
 };
