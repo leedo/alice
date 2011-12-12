@@ -345,17 +345,11 @@ irc_event channel_add => sub {
   my ($self, $irc, $msg, $channel, @nicks) = @_;
 
   if (my $window = $self->find_window($channel, $irc)) {
-    if ($window->{add_queue}) {
-      push @{$window->{add_queue}}, @nicks;
-    }
-    else {
-      $window->{add_queue} = [@nicks];
-      $window->{add_timer} = AE::timer 1, 0, sub {
-        delete $window->{add_timer};
-        $self->broadcast($window->nicks_action($irc->channel_nicks($channel)));
-        my $nicks = delete $window->{add_queue};
-        return if $msg->{command} ne "JOIN" or $self->is_ignore(join => $channel);
-        $self->broadcast($window->format_event(joined => join(", ", @$nicks)));
+    push @{$window->{event_queue}}, [joined => \@nicks, ""];
+    if (!$window->{event_timer}) {
+      $window->{event_timer} = AE::timer 1, 0, sub {
+        delete $window->{event_timer};
+        $self->flush_events($window, delete $window->{event_queue});
       };
     }
   }
@@ -375,22 +369,16 @@ irc_event channel_remove => sub {
   return unless $msg;
 
   if (my $window = $self->find_window($channel, $irc)) {
-    my $reason = "PART";
+    my $reason = "";
     if ($msg and $msg->{command} eq "QUIT") {
       $reason = $msg->{params}[-1] || "Quit";
     }
 
-    if ($window->{remove_queue}{$reason}) {
-      push @{$window->{remove_queue}{$reason}}, @nicks;
-    }
-    else {
-      $window->{remove_queue}{$reason} = \@nicks;
-      $window->{remove_timer}{$reason} = AE::timer 1, 0, sub {
-        $self->broadcast($window->nicks_action($irc->channel_nicks($channel)));
-        my $nicks = delete $window->{remove_queue}{$reason};
-        return if $self->is_ignore(part => $channel);
-        $reason = "" if $reason eq "PART";
-        $self->broadcast($window->format_event(left => join(", ", @$nicks), $reason));
+    push @{$window->{event_queue}}, [left => \@nicks, $reason];
+    if (!$window->{event_timer}) {
+      $window->{event_timer} = AE::timer 1, 0, sub {
+        delete $window->{event_timer};
+        $self->flush_events($window, delete $window->{event_queue});
       };
     }
   }
@@ -536,6 +524,26 @@ sub connect_irc {
     real => $config->{ircname},
     password => $config->{password},
   });
+}
+
+sub flush_events {
+  my ($self, $window, $queue) = @_;
+  my $current = shift @$queue;
+
+  my $idle_w; $idle_w = AE::idle sub {
+    my $next = shift @$queue;
+
+    if ($next and $current->[0] eq $next->[0] and $current->[2] eq $next->[2]) {
+      push @{$current->[1]}, @{$next->[1]};
+    }
+    else {
+      $current->[1] = join ",", @{$current->[1]};
+      $self->broadcast($window->format_event(@$current));
+      $current = $next;
+    }
+
+    undef $idle_w unless $current;
+  };
 }
 
 1;
