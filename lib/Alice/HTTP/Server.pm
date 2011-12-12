@@ -159,6 +159,7 @@ sub login {
   my ($self, $req, $res) = @_;
 
   my $dest = $req->param("dest") || "/";
+  $dest = "/" unless $dest =~ /^\//;
 
   # no auth is required
   if (!$self->auth_enabled) {
