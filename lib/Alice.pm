@@ -214,10 +214,10 @@ sub window_nicks {
 
 sub connect_actions {
   my $self = shift;
-  return [ map {
+  map {
     $_->join_action,
     $_->nicks_action($self->window_nicks($_))
-  } $self->windows ];
+  } $self->windows;
 }
 
 sub find_window {
@@ -385,7 +385,7 @@ sub send_message {
       $nick, $body, self => 1, source => $window->title);
   }
 
-  $self->broadcast(\@messages);
+  $self->broadcast(@messages);
 }
 
 sub send_info {
@@ -396,9 +396,10 @@ sub send_info {
 }
 
 sub broadcast {
-  my ($self, $messages) = @_;
+  my ($self, @messages) = @_;
+  return if $self->no_streams or !@messages;
   for my $stream (@{$self->streams}) {
-    $stream->send($messages);
+    $stream->send(\@messages);
   }
 }
 

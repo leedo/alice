@@ -192,17 +192,18 @@ irc_event ctcp_action => sub {
 irc_event nick_change => sub {
   my ($self, $irc, $old_nick, $new_nick, $is_self) = @_;
 
-  my @messages;
+  my @channels = $irc->nick_channels($new_nick);
 
-  for my $channel ($irc->nick_channels($new_nick)) {
-    my $window = $self->find_window($channel, $irc);
-    push @messages, $window->nicks_action($irc->channel_nicks($channel));
-    unless ($self->is_ignore(nick => $channel)) {
-      push @messages, $window->format_event(nick => $old_nick, $new_nick);
-    }
-  }
-
-  $self->broadcast(\@messages);
+  $self->broadcast(
+    grep {$_}
+    map  {
+      if (my $window = $self->find_window($_, $irc)) {
+        $window->nicks_action($irc->channel_nicks($window->title)),
+        $self->is_ignore(nick => $_) ? ()
+          : $window->format_event("nick", $old_nick, $new_nick)
+      }
+    } @channels
+  );
 
   if ($irc->avatars->{$old_nick}) {
     $irc->avatars->{$new_nick} = delete $irc->avatars->{$old_nick};
@@ -331,57 +332,60 @@ irc_event join => sub {
 
   if ($is_self) {
     my $window = $self->find_or_create_window($channel, $irc);
-    $self->broadcast([
+    $self->broadcast(
       $window->format_event("joined", "you"),
       $window->join_action,
       $window->nicks_action($irc->channel_nicks($channel)),
-    ]);
+    );
     $irc->send_srv("WHO" => $channel) if $irc->cl->isupport("UHNAMES");
   }
+};
 
-  elsif (my $window = $self->find_window($channel, $irc)) {
-    my @messages = ($window->nicks_action($irc->channel_nicks($channel)));
-    unless ($self->is_ignore(join => $channel)) {
-      push @messages, $window->format_event(joined => $nick);
+irc_event channel_add => sub {
+  my ($self, $irc, $msg, $channel, @nicks) = @_;
+
+  if (my $window = $self->find_window($channel, $irc)) {
+    $self->broadcast(
+      $window->nicks_action($irc->channel_nicks($channel))
+    );
+
+    if ($msg->{command} eq "JOIN" and !$self->is_ignore("join" => $channel)) {
+      $self->broadcast(
+        map {$window->format_event("joined", $_)} @nicks
+      );
     }
-    $self->broadcast(\@messages);
   }
 };
 
 irc_event part => sub {
   my ($self, $irc, $nick, $channel, $is_self, $msg) = @_;
 
-  my $window = $self->find_window($channel, $irc);
-  return unless $window;
-
-  if ($is_self) {
+  if ($is_self and my $window = $self->find_window($channel, $irc)) {
     $self->send_info($irc->name, "leaving $channel");
     $self->close_window($window);
   }
-  else {
-    my @messages = ($window->nicks_action($irc->channel_nicks($channel)));
-    unless ($self->is_ignore(part => $channel)) {
-      push @messages, $window->format_event(left => $nick);
-    }
-    $self->broadcast(\@messages);
-  }
 };
 
-irc_event quit => sub {
-  my ($self, $irc, $nick, $msg) = @_;
+irc_event channel_remove => sub {
+  my ($self, $irc, $msg, $channel, @nicks) = @_;
 
-  my @messages;
-  my $reason = $msg->{params}[-1] || "Quit";
+  if (my $window = $self->find_window($channel, $irc)) {
+    $self->broadcast(
+      $window->nicks_action($irc->channel_nicks($channel))
+    );
 
-  for my $channel ($irc->nick_channels($nick)) {
-    my $window = $self->find_window($channel, $irc);
-    push @messages, $window->nicks_action($irc->channel_nicks($channel));
     unless ($self->is_ignore(part => $channel)) {
-      push @messages, $window->format_event(left => $nick, $reason);
+      my $reason = "";
+
+      if ($msg and $msg->{command} eq "QUIT") {
+        $reason = $msg->{params}[-1] || "Quit";
+      }
+
+      $self->broadcast(
+        map {$window->format_event(left => $_, $reason)} @nicks
+      );
     }
   }
-
-  $self->broadcast(\@messages);
 };
 
 irc_event channel_topic => sub {

@@ -226,7 +226,7 @@ sub setup_xhr_stream {
     on_error => sub { $app->purge_disconnects },
   );
 
-  $stream->send($app->connect_actions);
+  $stream->send([$app->connect_actions]);
   $app->add_stream($stream);
 }
 
@@ -245,7 +245,7 @@ sub setup_ws_stream {
       ws_version => $req->env->{'websocket.impl'}->version,
     );
 
-    $stream->send($app->connect_actions);
+    $stream->send([$app->connect_actions]);
     $app->add_stream($stream);
   }
   else {
