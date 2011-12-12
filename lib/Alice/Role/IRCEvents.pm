@@ -419,9 +419,24 @@ irc_event [qw/001 305 306 401 462 464 465 471 473 474 475 477 485 432 433/] => s
   $self->send_info($irc->name, $msg->{params}[-1]);
 };
 
+irc_event 375 => sub {
+  my ($self, $irc, $msg) = @_;
+  $irc->{motd_buffer} = [];
+};
+
 irc_event [qw/372 377 378/] => sub {
   my ($self, $irc, $msg) = @_;
-  $self->send_info($irc->name, $msg->{params}[-1], mono => 1);
+  push @{$irc->{motd_buffer}}, $msg->{params}[-1];
+  if (@{$irc->{motd_buffer}} > 20) {
+    my $lines = delete $irc->{motd_buffer};
+    $self->send_info($irc->name, join("\n", @$lines), mono => 1, multiline => 1);
+  }
+};
+
+irc_event 376 => sub {
+  my ($self, $irc, $msg) = @_;
+  my $lines = delete $irc->{motd_buffer};
+  $self->send_info($irc->name, join("\n", @$lines), mono => 1, multiline => 1);
 };
 
 sub reconnect_irc {

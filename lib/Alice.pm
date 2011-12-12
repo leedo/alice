@@ -391,7 +391,7 @@ sub send_message {
 sub send_info {
   my ($self, $network, $body, %options) = @_;
   return unless $body;
-  my $message = $self->info_window->format_message($network, $body, %options);
+  my $message = $self->info_window->format_message($network, $body, %options, info => 1);
   $self->broadcast($message);
 }
 

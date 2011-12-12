@@ -33,6 +33,9 @@ sub format_message {
   my ($self, $from, $body, %options) = @_;
 
   my $html = irc_to_html($body, classes => 1, ($options{monospaced} ? () : (invert => "italic")));
+  if ($options{multiline}) {
+    $html = join "<br>", split "\n", $html;
+  }
 
   my $message = {
     type   => "message",
