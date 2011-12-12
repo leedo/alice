@@ -373,7 +373,7 @@ irc_event quit => sub {
   my ($self, $irc, $nick, $msg) = @_;
 
   for my $channel ($irc->nick_channels($nick)) {
-    my $window = $self->find_window($irc, $channel);
+    my $window = $self->find_window($channel, $irc);
     $self->queue_event({
       irc    => $irc,
       window => $window,
