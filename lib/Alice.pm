@@ -15,17 +15,15 @@ use Encode;
 
 use Alice::Window;
 use Alice::InfoWindow;
-use Alice::HTTP::Server;
 use Alice::IRC;
 use Alice::Config;
 use Alice::Tabset;
-use Alice::Request;
-use Alice::MessageStore;
 
 our $VERSION = '0.20';
 
 with 'Alice::Role::Commands';
 with 'Alice::Role::IRCEvents';
+with 'Alice::Role::MessageStore';
 
 has config => (
   is       => 'rw',
@@ -55,20 +53,6 @@ has streams => (
 sub add_stream {unshift @{shift->streams}, @_}
 sub no_streams {@{$_[0]->streams} == 0}
 sub stream_count {scalar @{$_[0]->streams}}
-
-has message_store => (
-  is      => 'ro',
-  lazy    => 1,
-  default => sub {
-    my $self = shift;
-    my $buffer = $self->config->path."/buffer.db";
-    if (! -e  $buffer) {
-      require File::Copy;
-      File::Copy::copy($self->config->assetdir."/buffer.db", $buffer);
-    }
-    Alice::MessageStore->new(dsn => ["dbi:SQLite:dbname=$buffer", "", ""]);
-  }
-);
 
 has _windows => (
   is        => 'rw',
@@ -106,7 +90,6 @@ has 'info_window' => (
     my $info = Alice::InfoWindow->new(
       id       => $id,
       render   => sub { $self->render(@_) },
-      msg_iter => $self->message_store->build_iter($id),
     );
     $self->add_window($info);
     return $info;
@@ -250,7 +233,6 @@ sub create_window {
     network  => $irc->name,
     id       => $id,
     render   => sub { $self->render(@_) },
-    msg_iter => $self->message_store->build_iter($id),
   );
 
   if ($type eq "channel") {
@@ -373,33 +355,50 @@ sub send_message {
   my ($self, $window, $nick, $body) = @_;
 
   my $irc = $self->get_irc($window->network);
-  my @messages = $window->format_message($nick, $body,
+  my %options = (
+    highlight  => $self->is_highlight($irc->nick, $body),
     monospaced => $self->is_monospace_nick($nick),
-    self => $irc->nick eq $nick,
-    avatar => $irc->nick_avatar($nick) || "",
-    highlight => $self->is_highlight($irc->nick, $body),
+    self       => $irc->nick eq $nick,
+    avatar     => $irc->nick_avatar($nick) || "",
+    source     => $window->title,
   );
 
-  if ($messages[0]->{highlight}) {
-    push @messages, $self->info_window->format_message(
-      $nick, $body, self => 1, source => $window->title);
-  }
+  $self->get_msgid($window->id, sub {
+    my $msgid = shift;
+    my $message = $window->format_message($msgid, $nick, $body, %options);
+    $self->broadcast($message);
+    $self->add_message($window->id, $message);
+  });
 
-  $self->broadcast(@messages);
+  if ($options{highlight}) {
+    $self->send_info($nick, $body, %options, self => 1);
+  }
 }
 
 sub send_info {
   my ($self, $network, $body, %options) = @_;
   return unless $body;
-  my $message = $self->info_window->format_message($network, $body, %options, info => 1);
-  $self->broadcast($message);
+  $self->get_msgid($self->info_window->id, sub {
+    my $msgid = shift;
+    my $message = $self->info_window->format_message($msgid, $network, $body, %options, info => 1);
+    $self->broadcast($message);
+    $self->add_message($self->info_window->id, $message);
+  });
+}
+
+sub send_event {
+  my ($self, $window, $event, @args) = @_;
+  $self->get_msgid($window->id, sub {
+    my $msgid = shift;
+    my $message = $window->format_event($msgid, $event, @args);
+    $self->broadcast($message);
+    $self->add_message($window->id, $message);
+  });
 }
 
 sub send_nicks {
   my ($self, $window) = @_;
-  my $irc = $self->get_irc($window->network);
-  my @nicks = $irc->channel_nicks($window->title);
-  $self->broadcast($window->nicks_action(@nicks));
+  $self->broadcast($self->window_nicks($window));
 }
 
 sub broadcast {
@@ -417,14 +416,18 @@ sub ping {
 }
 
 sub update_window {
-  my ($self, $stream, $window_id, $max, $min, $limit, $total) = @_;
+  my ($self, $stream, $window_id, $max, $limit, $total) = @_;
 
   my $step = 20;
-  if ($limit - $total <  20) {
+  $total = 0 unless defined $total;
+
+  if ($limit - $total <  $step) {
     $step = $limit - $total;
   }
 
-  $self->message_store->messages($window_id, $max, $min, $step, sub {
+  AE::log debug => "updating $window_id with $limit messages starting at $max";
+
+  $self->get_messages($window_id, $max, $step, sub {
     my $msgs = shift;
 
     $stream->send([{
@@ -434,11 +437,11 @@ sub update_window {
       html      => join "", map {$_->{html}} @$msgs,
     }]);
 
-    $total += $step;
+    $total += scalar @$msgs;
 
     if (@$msgs == $step and $total < $limit) {
       $max = $msgs->[0]->{msgid} - 1;
-      $self->update_window($stream, $window_id, $max, $min, $limit, $total);
+      $self->update_window($stream, $window_id, $max, $limit, $total);
     }
   });
 }
@@ -456,14 +459,7 @@ sub handle_message {
 
     for my $line (split /\n/, $message->{msg}) {
       next unless length $line;
-
-      my $input = Alice::Request->new(
-        window => $window,
-        stream => $stream,
-        line   => $line,
-      );
-
-      $self->irc_command($input);
+      $self->irc_command($stream, $window, $line);
     }
   }
 }

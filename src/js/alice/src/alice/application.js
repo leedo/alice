@@ -52,7 +52,7 @@ Alice.Application = Class.create({
   },
 
   getBacklog: function (win, max, limit) {
-    this.connection.requestChunk(win.id, limit, max);
+    this.connection.requestChunk(win.id, max, limit);
   },
 
   fetchOembeds: function(cb) {

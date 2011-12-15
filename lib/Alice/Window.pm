@@ -9,7 +9,7 @@ use Plack::Util::Accessor qw/title type id network previous_nick disabled topic/
 
 sub new {
   my ($class, %args) = @_;
-  for (qw/title type id network render msg_iter/) {
+  for (qw/title type id network render/) {
     die "$_ is required" unless defined $args{$_};
   }
 
@@ -75,8 +75,9 @@ sub serialized {
 }
 
 sub format_event {
-  my ($self, $event, $nick, $body) = @_;
+  my ($self, $msgid, $event, $nick, $body) = @_;
   my $message = {
+    msgid     => $msgid,
     type      => "message",
     event     => $event,
     nick      => $nick,
@@ -86,18 +87,15 @@ sub format_event {
   };
 
   $self->{previous_nick} = "";
-
-  $self->{msg_iter}->(sub {
-    $message->{msgid} = shift;
-    $message->{html} = $self->{render}->("event", $message);
-    return $message;
-  });
+  $message->{html} = $self->{render}->("event", $message);
+  return $message;
 }
 
 sub format_message {
-  my ($self, $nick, $body, %options) = @_;
+  my ($self, $msgid, $nick, $body, %options) = @_;
   my $html = irc_to_html($body, classes => 1, ($options{monospaced} ? () : (invert => "italic")));
   my $message = {
+    msgid     => $msgid,
     type      => "message",
     event     => "say",
     nick      => $nick,
@@ -109,12 +107,8 @@ sub format_message {
   };
 
   $self->{previous_nick} = $nick;
-
-  $self->{msg_iter}->(sub {
-    $message->{msgid} = shift;
-    $message->{html} = $self->{render}->("message", $message);
-    return $message;
-  });
+  $message->{html} = $self->{render}->("message", $message);
+  return $message;
 }
 
 sub join_action {

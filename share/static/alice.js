@@ -11493,7 +11493,7 @@ Alice.Application = Class.create({
   },
 
   getBacklog: function (win, max, limit) {
-    this.connection.requestChunk(win.id, limit, max);
+    this.connection.requestChunk(win.id, max, limit);
   },
 
   fetchOembeds: function(cb) {
@@ -12473,11 +12473,11 @@ Alice.Connection = {
     });
   },
 
-  requestChunk: function (win, limit, max) {
+  requestChunk: function (win, max, limit) {
     if (!this.connected) return;
     this.sendMessage({
       source: win,
-      msg: "/chunk " + limit + " " + max,
+      msg: "/chunk " + max + " " + limit,
     });
   }
 };
@@ -12720,7 +12720,7 @@ Alice.Connection.XHR = Class.create(Alice.Connection, {
 
 });
 Alice.Window = Class.create({
-  initialize: function(application, serialized, msgid) {
+  initialize: function(application, serialized) {
     this.application = application;
 
     this.element = $(serialized['id']);
@@ -12743,7 +12743,7 @@ Alice.Window = Class.create({
     this.statuses = [];
     this.messageLimit = this.application.isMobile ? 50 : 100;
     this.chunkSize = this.messageLimit / 2;
-    this.msgid = msgid || 0;
+    this.msgid = -1;
     this.visible = true;
     this.forceScroll = false;
     this.lastScrollPosition = 0;
@@ -13027,10 +13027,10 @@ Alice.Window = Class.create({
 
     var position = this.captureScrollPosition();
 
-    if (chunk['range'][0] > this.msgid) {
+    if (parseInt(chunk['range'][0]) > this.msgid) {
       this.messages.insert({"bottom": chunk['html']});
       this.trimMessages();
-      this.msgid = chunk['range'][1];
+      this.msgid = parseInt(chunk['range'][1]);
     }
     else {
       this.bulk_insert = true;

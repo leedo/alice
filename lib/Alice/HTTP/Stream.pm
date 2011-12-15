@@ -24,6 +24,15 @@ has id => (
   default => sub { $NEXT_ID++ }
 );
 
+sub reply {
+  my ($self, $line) = @_;
+  $self->send({
+    type => "action",
+    event => "announce",
+    body => $line,
+  });
+}
+
 __PACKAGE__->meta->make_immutable;
 
 1;

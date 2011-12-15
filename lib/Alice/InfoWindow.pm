@@ -9,7 +9,7 @@ use parent 'Alice::Window';
 sub new {
   my ($class, %args) = @_;
 
-  for (qw/id render msg_iter/) {
+  for (qw/id render/) {
     die "$_ is required" unless defined $args{$_};
   }
   
@@ -30,7 +30,7 @@ sub hashtag {
 }
 
 sub format_message {
-  my ($self, $from, $body, %options) = @_;
+  my ($self, $msgid, $from, $body, %options) = @_;
 
   my $html = irc_to_html($body, classes => 1, ($options{monospaced} ? () : (invert => "italic")));
   if ($options{multiline}) {
@@ -54,11 +54,8 @@ sub format_message {
 
   $self->{previous_nick} = $from;
 
-  $self->{msg_iter}->(sub {
-    $message->{msgid} = shift;
-    $message->{html} = $self->{render}->("message", $message);
-    return $message;
-  });
+  $message->{html} = $self->{render}->("message", $message);
+  return $message;
 }
 
 1;

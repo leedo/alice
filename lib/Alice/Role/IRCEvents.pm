@@ -192,17 +192,13 @@ irc_event ctcp_action => sub {
 irc_event nick_change => sub {
   my ($self, $irc, $old_nick, $new_nick, $is_self) = @_;
 
-  my @channels = $irc->nick_channels($new_nick);
+  my @windows = grep {$_} map {$self->find_window($_)} $irc->nick_channels($new_nick);
+
+  $self->send_event($_, nick => $old_nick, $new_nick)
+    for grep {$self->is_ignore(nick => $_->title)} @windows;
 
   $self->broadcast(
-    grep {$_}
-    map  {
-      if (my $window = $self->find_window($_, $irc)) {
-        $window->nicks_action($irc->channel_nicks($window->title)),
-        $self->is_ignore(nick => $_) ? ()
-          : $window->format_event("nick", $old_nick, $new_nick)
-      }
-    } @channels
+    map {$_->nicks_action($irc->channel_nicks($_->title))} @windows
   );
 
   if ($irc->avatars->{$old_nick}) {
@@ -332,8 +328,8 @@ irc_event join => sub {
 
   if ($is_self) {
     my $window = $self->find_or_create_window($channel, $irc);
+    $self->send_event($window, join => "you");
     $self->broadcast(
-      $window->format_event("join", "you"),
       $window->join_action,
       $window->nicks_action($irc->channel_nicks($channel)),
     );
@@ -362,25 +358,27 @@ irc_event part => sub {
 irc_event channel_remove => sub {
   my ($self, $irc, $msg, $channel, $nick) = @_;
 
-  my $event = lc $msg->{command};
-  my $reason = $event eq "quit" ? $msg->{params}[-1] : "";
-  my $window = $self->find_window($channel, $irc);
+  if (my $window = $self->find_window($channel, $irc)) {
+    my $event = $msg ? lc $msg->{command} : "disconnect";
+    my $reason = $event eq "quit" ? $msg->{params}[-1] : "";
 
-  $self->queue_event({
-    irc    => $irc,
-    window => $window,
-    event  => $event,
-    nick   => $nick,
-    args   => $reason,
-  });
+    $self->queue_event({
+      irc    => $irc,
+      window => $window,
+      event  => $event,
+      nick   => $nick,
+      args   => $reason,
+    });
+  }
 };
 
 irc_event channel_topic => sub {
   my ($self, $irc, $channel, $topic, $nick) = @_;
+
   if (my $window = $self->find_window($channel, $irc)) {
     $topic = irc_to_html($topic, classes => 1, invert => "italic");
     $window->topic({string => $topic, author => $nick});
-    $self->broadcast($window->format_event("topic", $nick, $topic));
+    $self->send_event($window, topic => $nick, $topic);
   }
 };
 
@@ -542,7 +540,7 @@ sub queue_event {
       return if $self->is_ignore($current->[0] => $window->title);
 
       if (!$next or $current->[0] ne $next->[0] or $current->[2] ne $next->[2]) {
-        $self->broadcast($window->format_event(@$current));
+        $self->send_event($window, @$current);
         $current = $next;
       }
       else {

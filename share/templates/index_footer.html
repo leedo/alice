@@ -17,8 +17,7 @@
 
             <? for my $window (@windows) { ?>
             alice.openWindow(
-              <?= Text::MicroTemplate::encoded_string(JSON::to_json $window->serialized, {ascii => 1}) ?>,
-              <?= $app->message_store->max_window_msgid($window->id) ?>
+              <?= Text::MicroTemplate::encoded_string(JSON::to_json $window->serialized, {ascii => 1}) ?>
             );
             <? } ?>
 
