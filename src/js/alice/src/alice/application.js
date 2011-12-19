@@ -861,6 +861,7 @@ Alice.Application = Class.create({
         var stamp = li.down('.timestamp');
         if (!stamp) return;
 
+        var show_date = false;
         var remove = false;
         var seconds = stamp.innerHTML.strip();
 
@@ -868,14 +869,18 @@ Alice.Application = Class.create({
           var time = new Date(seconds * 1000);
           var diff = (time - win.lasttimestamp) / 1000;
           remove = !(diff >= 300 || (diff > 60 && time.getMinutes() % 5 == 0));
-          if (!remove) win.lasttimestamp = time;
+          if (!remove) {
+            var now = new Date();
+            show_date = now.getDate() != win.lasttimestamp.getDate();
+            win.lasttimestamp = time;
+          }
         }
 
         if (remove) {
           stamp.remove();
         }
         else {
-          stamp.update(Alice.epochToLocal(seconds, this.options.timeformat));
+          stamp.update(Alice.epochToLocal(seconds, this.options.timeformat, show_date));
           stamp.style.opacity = 1;
         }
       },
