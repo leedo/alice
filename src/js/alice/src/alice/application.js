@@ -867,11 +867,16 @@ Alice.Application = Class.create({
 
         if (li.hasClassName("message")) {
           var time = new Date(seconds * 1000);
-          var diff = (time - win.lasttimestamp) / 1000;
-          remove = !(diff >= 300 || (diff > 60 && time.getMinutes() % 5 == 0));
-          if (!remove) {
+          if (win.lasttimestamp) {
+            var diff = (time - win.lasttimestamp) / 1000;
+            remove = !(diff >= 300 || (diff > 60 && time.getMinutes() % 5 == 0));
             var now = new Date();
             show_date = now.getDate() != win.lasttimestamp.getDate();
+          }
+          else {
+            remove = true;
+          }
+          if (!remove || !win.lasttimestamp) {
             win.lasttimestamp = time;
           }
         }

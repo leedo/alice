@@ -16,7 +16,7 @@ Alice.Window = Class.create({
     this.messages = this.element.down('.messages');
     this.visibleNick = "";
     this.visibleNickTimeout = "";
-    this.lasttimestamp = new Date(0);
+    this.lasttimestamp = null;
     this.nicks = [];
     this.nicks_order = [];
     this.statuses = [];
@@ -323,7 +323,7 @@ Alice.Window = Class.create({
     }
 
     var original_timestamp = this.lasttimestamp;
-    this.lasttimestamp = new Date(0);
+    this.lasttimestamp = null;
 
     this.messages.select("li:not(.filtered)").each(function (li) {
       this.application.applyFilters(li, this);

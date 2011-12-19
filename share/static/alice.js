@@ -12310,11 +12310,16 @@ Alice.Application = Class.create({
 
         if (li.hasClassName("message")) {
           var time = new Date(seconds * 1000);
-          var diff = (time - win.lasttimestamp) / 1000;
-          remove = !(diff >= 300 || (diff > 60 && time.getMinutes() % 5 == 0));
-          if (!remove) {
+          if (win.lasttimestamp) {
+            var diff = (time - win.lasttimestamp) / 1000;
+            remove = !(diff >= 300 || (diff > 60 && time.getMinutes() % 5 == 0));
             var now = new Date();
             show_date = now.getDate() != win.lasttimestamp.getDate();
+          }
+          else {
+            remove = true;
+          }
+          if (!remove || !win.lasttimestamp) {
             win.lasttimestamp = time;
           }
         }
@@ -12750,7 +12755,7 @@ Alice.Window = Class.create({
     this.messages = this.element.down('.messages');
     this.visibleNick = "";
     this.visibleNickTimeout = "";
-    this.lasttimestamp = new Date(0);
+    this.lasttimestamp = null;
     this.nicks = [];
     this.nicks_order = [];
     this.statuses = [];
@@ -13051,7 +13056,7 @@ Alice.Window = Class.create({
     }
 
     var original_timestamp = this.lasttimestamp;
-    this.lasttimestamp = new Date(0);
+    this.lasttimestamp = null;
 
     this.messages.select("li:not(.filtered)").each(function (li) {
       this.application.applyFilters(li, this);
