@@ -213,7 +213,6 @@ div#nicklist_toggle {
   right: 15px;
   background: url(image/slider.png) center center no-repeat;
   background-color: #dddddd;
-  border: 1px solid #999999;
   -webkit-box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
   -webkit-transition-property: opacity, width;
   -webkit-transition-duration: 0.3s, 0.2s;
@@ -607,9 +606,8 @@ div.msg div.oembed {
 
 sup.external {
   line-height: 0px;
-  vertical-align: 7px;
-  padding-left: 2px;
-  display: inline-block; }
+  vertical-align: 2px;
+  padding-left: 1px; }
 
 sup.external a {
   text-decoration: none;
