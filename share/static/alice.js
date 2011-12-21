@@ -11040,7 +11040,7 @@ Object.extend(Alice, {
         clean.push(body);
       }
       if (clean.length) lines.push(
-        clean.join(" ").replace(/\n/g, "").escapeHTML());
+        clean.join(" ").replace(/\n/g, ""));
     });
     node.update(lines.join("<br>"));
     node.cleanWhitespace();
