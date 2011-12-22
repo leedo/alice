@@ -31,7 +31,7 @@ Object.extend(Alice, {
         clean.push(body);
       }
       if (clean.length) lines.push(
-        clean.join(" ").replace(/\n/g, ""));
+        clean.join(" ").replace(/\n/g, "").escapeHTML());
     });
     node.update(lines.join("<br>"));
     node.cleanWhitespace();
