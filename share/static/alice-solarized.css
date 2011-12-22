@@ -7,11 +7,6 @@ div.msg a:hover {
 div.left span.nick, div#input button, #tabs li, #topic {
   -webkit-font-smoothing: antialiased; }
 
-::selection {
-  background: #FF5E99;
-  color: #fff;
-  text-shadow: none; }
-
 input[type="hidden"] {
   display: none; }
 
