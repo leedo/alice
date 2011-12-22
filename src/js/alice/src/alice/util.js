@@ -22,7 +22,7 @@ Object.extend(Alice, {
         var nick = left.innerHTML.stripTags();
         nick = nick.replace(/^\s+/, "");
         nick = nick.replace(/\s+$/, "");
-        clean.push("&lt;"+nick+"&gt;");
+        clean.push("&lt; "+nick+"&gt;");
       }
       if (message) {
         var body = message.innerHTML.stripTags();
