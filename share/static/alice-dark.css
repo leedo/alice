@@ -216,7 +216,6 @@ div#nicklist_toggle {
   right: 15px;
   background: url(image/slider.png) center center no-repeat;
   background-color: #444444;
-  border: 1px solid #222222;
   -webkit-box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
   -webkit-transition-property: opacity, width;
   -webkit-transition-duration: 0.3s, 0.2s;

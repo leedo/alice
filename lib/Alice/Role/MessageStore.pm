@@ -1,36 +1,26 @@
-package Alice::MessageStore;
+package Alice::Role::MessageStore;
 
 use AnyEvent::DBI;
 use List::Util qw/min/;
-use Any::Moose;
+use Any::Moose 'Role';
 use JSON;
 
-has insert => (
-  is => 'rw',
-  default => sub {[]},
-);
-
-has trim => (
+has trim_queue => (
   is => 'rw',
   default => sub {{}},
 );
 
-has backlog => (
+has backlog_size => (
   is => 'ro',
   default => 5000,
 );
 
-has 'trim_timer' => (
+has trim_timer => (
   is => 'ro',
   default => sub {
     my $self = shift;
-    AE::timer 60, 60, sub{$self->do_trim};
+    AE::timer 60, 60, sub{$self->_do_trim};
   }
-);
-
-has dsn => (
-  is => 'ro',
-  required => 1,
 );
 
 has dbi => (
@@ -38,58 +28,67 @@ has dbi => (
   lazy => 1,
   default => sub {
     my $self = shift;
-    AnyEvent::DBI->new(@{$self->dsn});
+    my $buffer = $self->config->path."/buffer.db";
+    if (! -e  $buffer) {
+      require File::Copy;
+      File::Copy::copy($self->config->assetdir."/buffer.db", $buffer);
+    }
+    AnyEvent::DBI->new("dbi:SQLite:dbname=$buffer", "", "");
   }
 );
 
 has msgid => (
   is => 'rw',
-  default => 0,
+  default => sub{{}},
 );
 
-sub BUILD {
+before init => sub {
   my $self = shift;
-  $self->dbi->exec("SELECT msgid FROM window_buffer ORDER BY msgid DESC LIMIT 1", sub {
+  $self->dbi->exec("SELECT window_id, MAX(msgid) FROM window_buffer GROUP BY window_id", sub {
     my (undef, $row) = @_;
-    $self->msgid( @$row ? $row->[0][0] : 0);
+    $self->msgid({map {@$_} @$row});
   });
+};
+
+sub get_msgid {
+  my ($self, $id, $cb) = @_;
+  $cb->(++$self->msgid->{$id});
 }
 
-sub clear {
-  my ($self, $id) = @_;
-  $self->dbi->exec("DELETE FROM window_buffer WHERE window_id = ?", $id, sub {});
-}
+sub get_messages {
+  my ($self, $id, $max, $limit, $cb) = @_;
 
-sub messages {
-  my ($self, $id, $max, $min, $limit, $cb) = @_;
+  unless (defined $max and $max >= 0) {
+    $max = $self->msgid->{$id};
+  }
 
   $self->dbi->exec(
     "SELECT message FROM window_buffer WHERE window_id=? " .
-    "AND msgid <= ? AND msgid >= ? ORDER BY msgid DESC LIMIT ?",
-    $id, $max, $min, $limit,
+    "AND msgid <= ? ORDER BY msgid DESC LIMIT ?",
+    $id, $max, $limit,
     sub { $cb->([map {decode_json $_->[0]} reverse @{$_[1]}]) }
   );
 }
 
-sub add {
+sub add_message {
   my ($self, $id, $message) = @_;
 
   $self->dbi->exec(
     "INSERT INTO window_buffer (window_id,msgid,message) VALUES (?,?,?)",
     $id, $message->{msgid}, encode_json($message), sub {});
 
-  $self->trim->{$id} = 1;
+  $self->trim_queue->{$id} = 1;
 }
 
-sub do_trim {
+sub _do_trim {
   my $self = shift;
 
-  my @trim = keys %{$self->trim};
-  $self->trim({});
+  my @trim = keys %{$self->trim_queue};
+  $self->trim_queue({});
 
   my $idle_w; $idle_w = AE::idle sub {
     if (my $window_id = shift @trim) {
-      $self->trim_id($window_id);
+      $self->_trim_id($window_id);
     }
     else {
       undef $idle_w;
@@ -97,11 +96,11 @@ sub do_trim {
   };
 }
 
-sub trim_id {
+sub _trim_id {
   my ($self, $window_id) = @_;
   $self->dbi->exec(
     "SELECT msgid FROM window_buffer WHERE window_id=? ORDER BY msgid DESC LIMIT ?,1",
-    $window_id, $self->backlog, sub {
+    $window_id, $self->backlog_size, sub {
       my $rows = $_[1];
       if (@$rows) {
         my $minid = $rows->[0][0];
@@ -114,5 +113,4 @@ sub trim_id {
   );
 }
 
-__PACKAGE__->meta->make_immutable;
 1;

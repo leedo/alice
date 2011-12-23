@@ -12,8 +12,12 @@
 ? } elsif ($msg->{event} eq "invite") {
     <?= $msg->{nick} ?> has invited you to join <?= $msg->{body} ?>
 
-? } elsif ($msg->{event} eq "joined" or $msg->{event} eq "left") { 
-    <a href="javascript:alice.connection.requestWindow('<?= $msg->{nick} ?>','<?= $msg->{window}->{id} ?>')" class="nick"><?= $msg->{nick} ?></a> <?= $msg->{event} ?> the chat room.
+? } elsif ($msg->{event} eq "join") {
+    <a href="javascript:alice.connection.requestWindow('<?= $msg->{nick} ?>','<?= $msg->{window}->{id} ?>')" class="nick"><?= $msg->{nick} ?></a> joined the chat room.
+? } elsif ($msg->{event} eq "part") {
+    <a href="javascript:alice.connection.requestWindow('<?= $msg->{nick} ?>','<?= $msg->{window}->{id} ?>')" class="nick"><?= $msg->{nick} ?></a> left the chat room.
+? } elsif ($msg->{event} eq "quit") {
+    <a href="javascript:alice.connection.requestWindow('<?= $msg->{nick} ?>','<?= $msg->{window}->{id} ?>')" class="nick"><?= $msg->{nick} ?></a> left the chat room.
 ?   if ($msg->{body}) {
       (<?= $msg->{body} ?>)
 ?   }

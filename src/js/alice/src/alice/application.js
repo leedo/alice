@@ -28,7 +28,7 @@ Alice.Application = Class.create({
     this.supportsTouch = 'createTouch' in document;
 
     this.isPhone = window.navigator.userAgent.match(/(android|iphone|wosbrowser)/i) ? true : false;
-    this.isMobile = this.isPhone || Prototype.Browser.MobileSafari;
+    this.isMobile = window.location.toString().match(/mobile/i) || this.isPhone || Prototype.Browser.MobileSafari;
     this.loadDelay = this.isMobile ? 3000 : 1000;
     if (window.navigator.standalone || window.navigator.userAgent.match(/Fluid/)) this.loadDelay = 0;
     
@@ -51,7 +51,7 @@ Alice.Application = Class.create({
   },
 
   getBacklog: function (win, max, limit) {
-    this.connection.requestChunk(win.id, limit, max);
+    this.connection.requestChunk(win.id, max, limit);
   },
 
   fetchOembeds: function(cb) {
@@ -175,24 +175,24 @@ Alice.Application = Class.create({
       }
     },
     part: function (action) {
-      this.closeWindow(action['window'].id);
+      this.closeWindow(action['window_id']);
     },
     trim: function (action) {
-      var win = this.getWindow(action['window'].id);
+      var win = this.getWindow(action['window_id']);
       if (win) {
         win.messageLimit = action['lines'];
         win.trimMessages();
       }
     },
     nicks: function (action) {
-      var win = this.getWindow(action['window'].id);
+      var win = this.getWindow(action['window_id']);
       if (win) win.updateNicks(action.nicks);
     },
     alert: function (action) {
       this.activeWindow().showAlert(action['body']);
     },
     clear: function (action) {
-      var win = this.getWindow(action['window'].id);
+      var win = this.getWindow(action['window_id']);
       if (win) win.clearMessages();
     },
     announce: function (action) {
@@ -200,7 +200,7 @@ Alice.Application = Class.create({
     },
     connect: function (action) {
       if ($('servers')) {
-        Alice.connections.connectServer(action.network);
+        Alice.connections.connectServer(action['network']);
       }
     },
     disconnect: function (action) {
@@ -210,19 +210,20 @@ Alice.Application = Class.create({
         }
       });
       if ($('servers')) {
-        Alice.connections.disconnectServer(action.network);
+        Alice.connections.disconnectServer(action['network']);
       }
     },
     focus: function (action) {
-      if (!action.window_number) return;
-      if (action.window_number == "next") {
+      if (!action['window_number']) return;
+      var window_number = action['window_number'];
+      if (window_number == "next") {
         this.nextWindow();
       }
-      else if (action.window_number.match(/^prev/)) {
+      else if (window_number.match(/^prev/)) {
         this.previousWindow();
       }
-      else if (action.window_number.match(/^\d+$/)) {
-        var tab = this.tabs.down('li', action.window_number);
+      else if (indow_number.match(/^\d+$/)) {
+        var tab = this.tabs.down('li', window_number);
         if (tab) {
           var window_id = tab.id.replace('_tab','');
           this.getWindow(window_id).focus();
@@ -511,16 +512,14 @@ Alice.Application = Class.create({
       win.addMessage(message);
     } else {
       this.connection.requestWindow(
-        message['window'].title, message['window'].id, message
+        message['window'].title, message['window'].id
       );
     }
   },
 
   displayChunk: function(message) {
-    var win = this.getWindow(message['window'].id);
-    if (win) {
-      win.addChunk(message);
-    }
+    var win = this.getWindow(message['window_id']);
+    if (win) win.addChunk(message);
   },
 
   focusHash: function(hash) {
@@ -863,21 +862,31 @@ Alice.Application = Class.create({
         var stamp = li.down('.timestamp');
         if (!stamp) return;
 
+        var show_date = false;
         var remove = false;
         var seconds = stamp.innerHTML.strip();
 
         if (li.hasClassName("message")) {
           var time = new Date(seconds * 1000);
-          var diff = (time - win.lasttimestamp) / 1000;
-          remove = !(diff >= 300 || (diff > 60 && time.getMinutes() % 5 == 0));
-          if (!remove) win.lasttimestamp = time;
+          if (win.lasttimestamp) {
+            var diff = (time - win.lasttimestamp) / 1000;
+            remove = !(diff >= 300 || (diff > 60 && time.getMinutes() % 5 == 0));
+            var now = new Date();
+            show_date = now.getDate() != win.lasttimestamp.getDate();
+          }
+          else {
+            remove = true;
+          }
+          if (!remove || !win.lasttimestamp) {
+            win.lasttimestamp = time;
+          }
         }
 
         if (remove) {
           stamp.remove();
         }
         else {
-          stamp.update(Alice.epochToLocal(seconds, this.options.timeformat));
+          stamp.update(Alice.epochToLocal(seconds, this.options.timeformat, show_date));
           stamp.style.opacity = 1;
         }
       },

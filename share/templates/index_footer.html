@@ -15,11 +15,9 @@
             <? my $tabsets = {map {$_->name => $_->windows } $app->tabsets}; ?>
             alice.tabsets = <?= Text::MicroTemplate::encoded_string(JSON::to_json $tabsets, {ascii => 1}) ?>;
 
-            <? my $msgid = $app->message_store->msgid; ?>
             <? for my $window (@windows) { ?>
             alice.openWindow(
-              <?= Text::MicroTemplate::encoded_string(JSON::to_json $window->serialized, {ascii => 1}) ?>,
-              <?= $msgid ?>
+              <?= Text::MicroTemplate::encoded_string(JSON::to_json $window->serialized, {ascii => 1}) ?>
             );
             <? } ?>
 

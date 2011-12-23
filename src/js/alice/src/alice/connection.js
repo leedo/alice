@@ -97,11 +97,11 @@ Alice.Connection = {
     });
   },
 
-  requestChunk: function (win, limit, max) {
+  requestChunk: function (win, max, limit) {
     if (!this.connected) return;
     this.sendMessage({
       source: win,
-      msg: "/chunk " + limit + " " + max,
+      msg: "/chunk " + max + " " + limit,
     });
   }
 };

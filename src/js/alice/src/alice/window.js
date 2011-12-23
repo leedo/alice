@@ -1,5 +1,5 @@
 Alice.Window = Class.create({
-  initialize: function(application, serialized, msgid) {
+  initialize: function(application, serialized) {
     this.application = application;
     
     this.element = $(serialized['id']);
@@ -16,13 +16,13 @@ Alice.Window = Class.create({
     this.messages = this.element.down('.messages');
     this.visibleNick = "";
     this.visibleNickTimeout = "";
-    this.lasttimestamp = new Date(0);
+    this.lasttimestamp = null;
     this.nicks = [];
     this.nicks_order = [];
     this.statuses = [];
     this.messageLimit = this.application.isMobile ? 50 : 100;
     this.chunkSize = this.messageLimit / 2;
-    this.msgid = msgid || 0;
+    this.msgid = -1;
     this.visible = true;
     this.forceScroll = false;
     this.lastScrollPosition = 0;
@@ -151,6 +151,7 @@ Alice.Window = Class.create({
     this.element.removeClassName('active');
     this.tab.removeClassName('active');
     clearTimeout(this.scrollListener);
+    clearTimeout(this.focusTimer);
     this.addFold();
   },
 
@@ -208,10 +209,10 @@ Alice.Window = Class.create({
 
       this.scrollToPosition(this.lastScrollPosition);
 
-      setTimeout(function(){
+      this.focusTimer = setTimeout(function(){
         this.scrollToPosition(this.lastScrollPosition);
         if (!this.scrollBackEmpty) this.checkScrollBack();
-      }.bind(this), 0);
+      }.bind(this), 400);
     }
 
     this.element.addClassName('active');
@@ -311,20 +312,24 @@ Alice.Window = Class.create({
 
     var position = this.captureScrollPosition();
 
-    if (chunk['range'][0] > this.msgid) {
+    if (parseInt(chunk['range'][0]) > this.msgid) {
       this.messages.insert({"bottom": chunk['html']});
       this.trimMessages();
-      this.msgid = chunk['range'][1];
+      this.msgid = parseInt(chunk['range'][1]);
     }
     else {
       this.bulk_insert = true;
       this.messages.insert({"top": chunk['html']});
     }
 
+    var original_timestamp = this.lasttimestamp;
+    this.lasttimestamp = null;
+
     this.messages.select("li:not(.filtered)").each(function (li) {
       this.application.applyFilters(li, this);
     }.bind(this));
 
+    this.lasttimestamp = original_timestamp;
     this.bulk_insert = false;
 
     this.scrollToPosition(position);
