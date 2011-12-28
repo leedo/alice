@@ -26,7 +26,6 @@ Object.extend(Alice, {
       }
       if (message) {
         var body = message.innerHTML.stripTags();
-console.log(body);
         body = body.replace(/^\s+/, "");
         body = body.replace(/\s+$/, "");
         clean.push(body);
