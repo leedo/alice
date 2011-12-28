@@ -398,7 +398,8 @@ sub send_event {
 
 sub send_nicks {
   my ($self, $window) = @_;
-  $self->broadcast($self->window_nicks($window));
+  my $action = $window->nicks_action($self->window_nicks($window));
+  $self->broadcast($action);
 }
 
 sub broadcast {
