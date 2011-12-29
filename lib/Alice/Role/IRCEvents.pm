@@ -314,7 +314,7 @@ irc_event 401 => sub {
   my $nick = $msg->{params}[1];
 
   if (my $window = $self->find_window($nick, $irc)) {
-    $self->announce("No such nick.");
+    $self->announce($window, "No such nick.");
   }
   
   if ($irc->whois->{$nick}) {
