@@ -4,9 +4,6 @@ div.msg a {
 div.msg a:hover {
   color: #B6461E; }
 
-div.left span.nick, div#input button, #tabs li, #topic {
-  -webkit-font-smoothing: antialiased; }
-
 input[type="hidden"] {
   display: none; }
 
