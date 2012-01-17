@@ -1,13 +1,11 @@
 # NAME
 
-App::Alice - an Altogether Lovely Internet Chatting Experience
+Alice::ReadMe - an Altogether Lovely Internet Chatting Experience
 
 # SYNPOSIS
 
     arthur:~ leedo$ alice
     Location: http://localhost:8080/
-
-![Screenshot](http://static.usealice.org/whatisalice.png)
 
 # DESCRIPTION
 
@@ -113,7 +111,7 @@ This will clear the current tab's messages from your browser. It
 will also clear the tab's message buffer so when you refresh your
 browser the messages won't re-appear.
 
-- /msg [-network] $nick [$msg]
+- /msg [-network] <nick> [<msg>]
 
 Takes a nick as an argument and an optional network flag. If no
 network flag is provided, it will use the network of the current
@@ -122,19 +120,19 @@ text is provided, a blank tab will be opened.
 
 __/query__ is an alias for /msg
 
-- /whois [-force] $nick
+- /whois [-force] <nick>
 
 Takes a nick as an argument and an optional force flag. This will
 print some information about the supplied user. If the force flag
 is provided, the information will be refreshed from the server.
 
-- /quote $string
+- /quote <command>
 
 Sends a string as a raw message to the server.
 
 __/raw__ is an alias for /quote
 
-- /t[opic] [$topic]
+- /t[opic] [<topic>]
 
 Takes an optional topic string. This will display the topic for the
 current tab.  If a string is supplied, it will attempt to update
@@ -145,30 +143,30 @@ the channel's topic.  Only works in a channel.
 This will print a table of all of the nicks in the current tab.  An
 optional avatars flag can be provided to include avatars.
 
-- /me $string
+- /me <action>
 
 Sends a string as an action to the channel.
 
 e.g. * lee hits clint with a large trout
 
-- /w[indow] $number
+- /w[indow] <number>
 
 Focus the provided tab number. Also accepts "next" or "prev". The
 space after the w can be ommited (e.g. /w4 to focus window 4.)
 
-- /connect $network
+- /connect <network>
 
 Connect to a network. The network must be the name of a server from
 the Connections window. If you are already connected to the network
 it will do nothing.
 
-- /disconnect $network
+- /disconnect <network>
 
 Disconnect from a network. The network must be the name of a server
 from the Connections window. This command will also stop any reconnect
 timers for that network.
 
-- /ignore $nick
+- /ignore <nick>
 
 Ignore any nick that matches the one provided. __This applies across
 all networks.__
@@ -177,7 +175,7 @@ all networks.__
 
 List all active ignored nicks.
 
-- /unignore $nick
+- /unignore <nick>
 
 Unignore a nick.
 
@@ -197,6 +195,15 @@ get notifications when the window is unfocused.
 
 Alice has an iPhone style sheet, but it may work in other mobile
 browsers as well. Any help or bug reports would be much appreciated.
+
+# CONTRIBUTORS
+
+- [Ryan Baumann](https://github.com/leedo/alice/commits/master?author=ryanfb)
+- [Sam Stephenson](https://github.com/leedo/alice/commits/master?author=sstephenson)
+- [Paul Robins](https://github.com/leedo/alice/commits/master?author=exp)
+- [Clint Ecker](https://github.com/leedo/alice/commits/master?author=clintecker)
+- [Adam Prescott](https://github.com/leedo/alice/commits/master?author=aprescott)
+- [datamuc](https://github.com/leedo/alice/commits/master?author=datamuc)
 
 # COPYRIGHT
 

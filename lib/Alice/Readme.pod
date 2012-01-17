@@ -206,6 +206,24 @@ get notifications when the window is unfocused.
 Alice has an iPhone style sheet, but it may work in other mobile
 browsers as well. Any help or bug reports would be much appreciated.
 
+=head1 CONTRIBUTORS
+
+=over 4
+
+=item * L<Ryan Baumann|https://github.com/leedo/alice/commits/master?author=ryanfb>
+
+=item * L<Sam Stephenson|https://github.com/leedo/alice/commits/master?author=sstephenson>
+
+=item * L<Paul Robins|https://github.com/leedo/alice/commits/master?author=exp>
+
+=item * L<Clint Ecker|https://github.com/leedo/alice/commits/master?author=clintecker>
+
+=item * L<Adam Prescott|https://github.com/leedo/alice/commits/master?author=aprescott>
+
+=item * L<datamuc|https://github.com/leedo/alice/commits/master?author=datamuc>
+
+=back
+
 =head1 COPYRIGHT
 
 Copyright 2010 by Lee Aylward E<lt>leedo@cpan.orgE<gt>
