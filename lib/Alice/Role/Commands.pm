@@ -147,6 +147,7 @@ command nick => {
     my ($self, $req, $nick) = @_;
 
     $req->{stream}->reply("changing nick to $nick on " . $req->{irc}->name);
+    $self->config->servers->{$req->{irc}->name}{nick} = $nick;
     $req->{irc}->send_srv(NICK => $nick);
   }
 };
