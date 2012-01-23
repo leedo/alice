@@ -755,7 +755,7 @@ Alice.Application = Class.create({
     this.nicklist.observe("click", function(e) {
       var li = e.findElement('a');
       if (li) {
-        var nick = a.innerHTML;
+        var nick = li.innerHTML;
         this.connection.requestWindow(nick, this.activeWindow().id);
       }
     }.bind(this));
