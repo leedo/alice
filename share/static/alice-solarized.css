@@ -987,7 +987,11 @@ div.color_picker div.toggle span#bg.active {
     margin-left: -24px; }
 
   div#tab_menu_right ul {
-    margin-right: -35px; } }
+    margin-right: -35px; }
+
+  ul#tabs li div.hit_area {
+    padding-left: 8px;
+    padding-right: 10px; } }
 
 div.config {
   position: absolute;
