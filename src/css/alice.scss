@@ -1145,7 +1145,13 @@ div.color_picker div.toggle span#bg.active {
   div#tab_menu_right ul {
     margin-right: -35px;
   }
+  ul#tabs li div.hit_area {
+    padding-left: 8px;
+    padding-right: 10px;
+  }
+}
 
+@media only screen and (max-device-width: 1024px) {
   ul#tabs li div.hit_area {
     padding-left: 8px;
     padding-right: 10px;

@@ -987,6 +987,11 @@ div.color_picker div.toggle span#bg.active {
     padding-left: 8px;
     padding-right: 10px; } }
 
+@media only screen and (max-device-width: 1024px) {
+  ul#tabs li div.hit_area {
+    padding-left: 8px;
+    padding-right: 10px; } }
+
 div.config {
   position: absolute;
   top: 50%;
