@@ -459,7 +459,7 @@ command help => {
     my ($self, $req, $command) = @_;
 
     if (!$command) {
-      my $commands = join " ", map {uc $_->{name}} grep {$_->{eg}} values %COMMANDS;
+      my $commands = join " ", sort map {uc $_->{name}} grep {$_->{eg}} values %COMMANDS;
       $req->{stream}->reply('/HELP <command> for help with a specific command');
       $req->{stream}->reply("Available commands: $commands");
       return;
