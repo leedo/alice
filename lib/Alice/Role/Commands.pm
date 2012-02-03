@@ -421,6 +421,20 @@ command invite =>  {
   },
 };
 
+command mode => {
+  name => 'op',
+  args => qr{(\S+)\s+([+-]\S+)},
+  eg => '/MODE <target> <+/-><mode>',
+  connection => 1,
+  window_type => ['channel'],
+  desc => "Sets a mode",
+  cb => sub {
+    my ($self, $req, $target, $mode) = @_;
+    my $channel = $req->{window}->title;
+    $req->{irc}->send_srv(MODE => $channel, $mode, $target);
+  },
+};
+
 command help => {
   name => 'help',
   eg => "/HELP [<command>]",
