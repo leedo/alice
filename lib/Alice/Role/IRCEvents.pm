@@ -376,13 +376,14 @@ irc_event irc_mode => sub {
   my ($self, $irc, $msg) = @_;
   my ($from) = split_prefix($msg->{prefix});
   my ($channel, $mode, $nick) = (@{$msg->{params}});
+  AE::log debug => "$from " . join " ", @{$msg->{params}};
   if (my $window = $self->find_window($channel, $irc)) {
     $self->queue_event({
       irc => $irc,
       window => $window,
       event => "mode",
       nick => $from,
-      args => "$mode to $nick",
+      args => $mode . ($nick ? " to $nick" : ""),
     });
   }
 };

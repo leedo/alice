@@ -33,6 +33,9 @@
 
 ? } elsif ($msg->{event} eq "mode") {
 <a href="javascript:alice.connection.requestWindow('<?= $msg->{nick} ?>', '<?= $msg->{window}{id} ?>')" class="nick"><?= $msg->{nick} ?></a> set mode <?= $msg->{body} ?>.
+
+? } elsif ($msg->{event} eq "kick") {
+  <?= $msg->{nick} ?> was kicked.
 ? }
 
   </div>

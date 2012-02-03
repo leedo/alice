@@ -435,6 +435,21 @@ command mode => {
   },
 };
 
+command kick => {
+  name => 'kick',
+  args => qr{(\S+)},
+  eg => '/KICK <nick> [message]',
+  connection => 1,
+  window_type => ['channel'],
+  desc => "Kicks a user with an optional message",
+  cb => sub {
+    my ($self, $req, $nick, $message) = @_;
+    $message = "" unless defined $message;
+    my $channel = $req->{window}->title;
+    $req->{irc}->send_srv(KICK => $channel, $nick, $message);
+  }
+};
+
 command help => {
   name => 'help',
   eg => "/HELP [<command>]",
