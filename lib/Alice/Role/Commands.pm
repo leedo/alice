@@ -422,7 +422,7 @@ command invite =>  {
 };
 
 command mode => {
-  name => 'op',
+  name => 'mode',
   args => qr{(\S+)\s+([+-]\S+)},
   eg => '/MODE <target> <+/-><mode>',
   connection => 1,
