@@ -66,7 +66,10 @@ Object.extend(Alice, {
 
     for (var i=0; i < length; i++) {
       var node = children[i];
-      if (node.nodeName != "#text") {
+      if (node.nodeName == "A") {
+        continue;
+      }
+      else if (node.nodeName != "#text") {
         Alice.makeLinksClickable(node);
       }
       else if (node.nodeValue.match(Alice.RE.url)) {
