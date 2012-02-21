@@ -187,6 +187,8 @@ sub split_unicode_string {
   my $cur_out = '';
   my $word = '';
   my @lines;
+  my $hellip = decode "utf8", "\xe2\x80\xa6";
+  $maxlen -= 3; # 3 bytes for hellip
 
   while (length ($str) > 0) {
     $word .= substr $str, 0, 1, '';
@@ -196,8 +198,8 @@ sub split_unicode_string {
         || length ( encode ($enc, $word)) >= $maxlen) {
 
       if (length (encode ($enc, $cur_out.$word)) > $maxlen) {
-        push @lines, $cur_out;
-        $cur_out = '';
+        push @lines, $cur_out.$hellip;
+        $cur_out = $hellip;
       }
 
       $cur_out .= $word;
