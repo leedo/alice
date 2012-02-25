@@ -184,7 +184,7 @@ sub load {
     }
   }
   else {
-    say STDERR "No config found, writing a few config to ".$self->fullpath;
+    say STDERR "No config found, writing a new config to ".$self->fullpath;
     $self->write($loaded);
   }
 }
