@@ -420,9 +420,6 @@ Alice.Window = Class.create({
       a.update(a.href);
       a.style.display = "inline";
       div.replace(a);
-      var contain = a.up();
-      contain.innerHTML = contain.innerHTML.replace("\n", "");
-      var a = $(id);
       a.observe("click", function(e){e.stop();this.inlineImage(a)}.bind(this));
     }
   },

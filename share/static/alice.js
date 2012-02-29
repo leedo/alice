@@ -10653,7 +10653,13 @@ var swfobject=function(){var D="undefined",r="object",S="Shockwave Flash",W="Sho
 
 (function() {
 
-  if (window.WebSocket && !window.WEB_SOCKET_FORCE_FLASH) return;
+  if (window.WEB_SOCKET_FORCE_FLASH) {
+  } else if (window.WebSocket) {
+    return;
+  } else if (window.MozWebSocket) {
+    window.WebSocket = MozWebSocket;
+    return;
+  }
 
   var logger;
   if (window.WEB_SOCKET_LOGGER) {
@@ -10676,14 +10682,14 @@ var swfobject=function(){var D="undefined",r="object",S="Shockwave Flash",W="Sho
   }
 
   /**
-   * This class represents a faux web socket.
+   * Our own implementation of WebSocket class using Flash.
    * @param {string} url
    * @param {array or string} protocols
    * @param {string} proxyHost
    * @param {int} proxyPort
    * @param {string} headers
    */
-  WebSocket = function(url, protocols, proxyHost, proxyPort, headers) {
+  window.WebSocket = function(url, protocols, proxyHost, proxyPort, headers) {
     var self = this;
     self.__id = WebSocket.__nextId++;
     WebSocket.__instances[self.__id] = self;
@@ -10727,10 +10733,10 @@ var swfobject=function(){var D="undefined",r="object",S="Shockwave Flash",W="Sho
    */
   WebSocket.prototype.close = function() {
     if (this.__createTask) {
-        clearTimeout(this.__createTask);
-        this.__createTask = null;
-        this.readyState = WebSocket.CLOSED;
-        return;
+      clearTimeout(this.__createTask);
+      this.__createTask = null;
+      this.readyState = WebSocket.CLOSED;
+      return;
     }
     if (this.readyState == WebSocket.CLOSED || this.readyState == WebSocket.CLOSING) {
       return;
@@ -10990,17 +10996,9 @@ var swfobject=function(){var D="undefined",r="object",S="Shockwave Flash",W="Sho
   };
 
   if (!window.WEB_SOCKET_DISABLE_AUTO_INITIALIZATION) {
-    var init = function(){
+    swfobject.addDomLoadEvent(function() {
       WebSocket.__initialize();
-    };
-    if (document.readyState == "complete") {
-      init();
-    } else if (window.addEventListener) {
-      document.addEventListener("DOMContentLoaded", init, false);
-      window.addEventListener("load", init, false);
-    } else {
-      window.attachEvent("onload", init);
-    }
+    });
   }
 
 })();
@@ -13154,9 +13152,6 @@ Alice.Window = Class.create({
       a.update(a.href);
       a.style.display = "inline";
       div.replace(a);
-      var contain = a.up();
-      contain.innerHTML = contain.innerHTML.replace("\n", "");
-      var a = $(id);
       a.observe("click", function(e){e.stop();this.inlineImage(a)}.bind(this));
     }
   },
