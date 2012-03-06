@@ -629,13 +629,6 @@ sup.external a:hover {
 sup.external a:after {
   content: " ▸"; }
 
-div.oembed iframe {
-  min-height: 250px;
-  font-size: 0.8em;
-  border: none;
-  margin: 0;
-  padding: 0; }
-
 li.message div.msg > span {
   white-space: pre-wrap; }
 
