@@ -106,7 +106,7 @@ sub BUILDARGS {
 
   my $self = {};
 
-  for (qw/template user message_store/) {
+  for (qw/template user dbi/) {
     if (exists $options{$_}) {
       $self->{$_} = $options{$_};
       delete $options{$_};
