@@ -337,11 +337,9 @@ irc_event join => sub {
   }
   else {
     my $window = $self->find_window($channel, $irc);
-    $self->queue_event({
-      irc    => $irc,
-      window => $window,
-      event  => "join",
-      nick   => $nick,
+    $self->queue_event($window, {
+      type => "join",
+      nick => $nick,
     });
   }
 };
@@ -362,12 +360,10 @@ irc_event channel_remove => sub {
     my $event = $msg ? lc $msg->{command} : "disconnect";
     my $reason = $event eq "quit" ? $msg->{params}[-1] : "";
 
-    $self->queue_event({
-      irc    => $irc,
-      window => $window,
-      event  => $event,
-      nick   => $nick,
-      args   => $reason,
+    $self->queue_event($window, {
+      type => $event,
+      nick => $nick,
+      args => $reason,
     });
   }
 };
@@ -378,10 +374,8 @@ irc_event irc_mode => sub {
   my ($channel, $mode, $nick) = (@{$msg->{params}});
   AE::log debug => "$from " . join " ", @{$msg->{params}};
   if (my $window = $self->find_window($channel, $irc)) {
-    $self->queue_event({
-      irc => $irc,
-      window => $window,
-      event => "mode",
+    $self->queue_event($window, {
+      type => "mode",
       nick => $from,
       args => $mode . ($nick ? " to $nick" : ""),
     });
@@ -532,37 +526,20 @@ sub connect_irc {
 }
 
 sub queue_event {
-  my ($self, $event) = @_;
+  my ($self, $window, $event) = @_;
 
-  my $window = $event->{window};
-  my $irc    = $event->{irc};
-
-  push @{$window->{event_queue}}, [$event->{event}, $event->{nick}, $event->{args} || ""];
+  unless ($self->is_ignore($event->{type}, $window->title)) {
+    $window->queue_event([$event->{type}, $event->{nick}, $event->{args} || ""]);
+  }
 
   $window->{event_timer} ||= AE::timer 1, 0, sub {
     delete $window->{event_timer};
     $self->send_nicks($window);
-
-    my $queue = delete $window->{event_queue};
-    my $current = shift @$queue;
-
-    my $idle_w; $idle_w = AE::idle sub {
-      if (!$current) {
-        undef $idle_w;
-        return;
-      }
-
-      my $next = shift @$queue;
-      return if $self->is_ignore($current->[0] => $window->title);
-
-      if (!$next or $current->[0] ne $next->[0] or $current->[2] ne $next->[2]) {
-        $self->send_event($window, @$current);
-        $current = $next;
-      }
-      else {
-        $current->[1] .= ", $next->[1]";
-      }
-    };
+    for my $event ($window->delete_events) {
+      my $nicks = join ", ", map {$_->[1]} @$event;
+      $event->[0][1] = $nicks;
+      $self->send_event($window, @{$event->[0]});
+    }
   };
 }
 

@@ -21,10 +21,21 @@ sub new {
   $args{disbled} = 0;
   $args{previous_nick} = "";
 
-  $args{event_queue} = [];
+  $args{event_queue} = {};
   $args{event_timer} = ();
 
   bless \%args, __PACKAGE__;
+}
+
+sub queue_event {
+  my ($self, $event) = @_;
+  $self->{event_queue}{$event->[0]} ||= [];
+  push @{$self->{event_queue}{$event->[0]}}, $event;
+}
+
+sub delete_events {
+  my $self = shift;
+  map { delete $self->{event_queue}{$_} } keys %{$self->{event_queue}};
 }
 
 sub sort_name {
