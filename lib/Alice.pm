@@ -26,6 +26,7 @@ with 'Alice::Role::IRCEvents';
 with 'Alice::Role::MessageStore';
 
 has config => (
+  required => 1,
   is       => 'rw',
   isa      => 'Alice::Config',
 );

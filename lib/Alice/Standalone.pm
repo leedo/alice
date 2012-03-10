@@ -9,14 +9,16 @@ extends 'Alice';
 
 has cv => (is => 'rw');
 
-sub BUILD {
-  my $self = shift;
-  my $cv = AE::cv;
-  my $config = Alice::Config->new;
-  $config->load(sub{$cv->send});
-  $cv->recv;
-  $self->config($config);
-}
+has '+config' => (
+  is => 'rw',
+  default => sub {
+    my $cv = AE::cv;
+    my $config = Alice::Config->new;
+    $config->load(sub{$cv->send});
+    $cv->recv;
+    return $config;
+  }
+);
 
 after run => sub {
   my $self = shift;
