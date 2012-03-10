@@ -140,31 +140,19 @@ has message_store => (
   default => 'Memory',
 );
 
-has callback => (
-  is      => 'ro',
-  isa     => 'CodeRef',
-);
-
-sub BUILD {
-  my $self = shift;
-  $self->load;
-  mkdir $self->path unless -d $self->path;
-}
-
 sub load {
-  my $self = shift;
+  my ($self, $callback) = @_;
+
+  mkdir $self->path unless -d $self->path;
   my $config = {};
 
   my $loaded = sub {
     $self->read_commandline_args;
     $self->merge($config);
-    $self->callback->();
+    $callback->();
 
     my $class = "Alice::MessageStore::".$self->message_store;
     eval "require $class";
-
-    delete $self->{callback};
-    $self->{loaded} = 1;
   };
 
   if (-e $self->fullpath) {

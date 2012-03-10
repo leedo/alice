@@ -101,36 +101,7 @@ has 'user' => (
   default => $ENV{USER}
 );
 
-sub BUILDARGS {
-  my ($class, %options) = @_;
-  my $self = {};
-
-  for (qw/template user dbi/) {
-    if (exists $options{$_}) {
-      $self->{$_} = delete $options{$_};
-    }
-  }
-
-  $self->{config} = Alice::Config->new(
-    %options,
-    callback => sub {$self->{config}->merge(\%options)}
-  );
-
-  return $self;
-}
-
 sub run {
-  my $self = shift;
-
-  # wait for config to finish loading
-  my $w; $w = AE::idle sub {
-    return unless $self->config->{loaded};
-    undef $w;
-    $self->init;
-  };
-}
-
-sub init {
   my $self = shift;
   $self->info_window;
   $self->template;

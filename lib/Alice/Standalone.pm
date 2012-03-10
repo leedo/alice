@@ -2,23 +2,26 @@ package Alice::Standalone;
 
 use Any::Moose;
 use AnyEvent;
+use Alice::Config;
 use Alice::HTTP::Server;
 
 extends 'Alice';
 
 has cv => (is => 'rw');
 
+before run => sub {
+  my $self = shift;
+  my $cv = AE::cv;
+  my $config = Alice::Config->new;
+  $config->load(sub{$cv->send});
+  $cv->recv;
+  $self->config($config);
+};
+
 after run => sub {
   my $self = shift;
 
   my @sigs = map {AE::signal $_, sub {$self->init_shutdown}} qw/INT QUIT/;
-
-  $self->cv(AE::cv);
-  $self->cv->recv;
-};
-
-after init => sub {
-  my $self = shift;
 
   my $session = do {;
     my $dir = $self->config->path."/sessions";
@@ -26,7 +29,7 @@ after init => sub {
     Plack::Session::Store::File->new(dir => $self->config->path."/sessions"),
   };
 
-  $self->{httpd} = Alice::HTTP::Server->new(
+  my $httpd = Alice::HTTP::Server->new(
     app     => $self,
     port    => $self->config->http_port,
     address => $self->config->http_address,
@@ -35,6 +38,9 @@ after init => sub {
   );
 
   AE::log info => "Location: http://".$self->config->http_address.":".$self->config->http_port."/";
+
+  $self->cv(AE::cv);
+  $self->cv->recv;
 };
 
 before init_shutdown => sub {
