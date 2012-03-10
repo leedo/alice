@@ -42,7 +42,7 @@ has msgid => (
   default => sub{{}},
 );
 
-after run => sub {
+before run => sub {
   my $self = shift;
   $self->dbi->exec("SELECT window_id, MAX(msgid) FROM window_buffer GROUP BY window_id", sub {
     my (undef, $row) = @_;
