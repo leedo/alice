@@ -102,7 +102,7 @@ sub send_long_line {
 
 sub send_raw {
   my $self = shift;
-  $self->cl->send_raw(encode "utf8", $_[0]);
+  $self->cl->send_raw(encode "utf8", $_[0]) if $self->cl;
 }
 
 sub is_connected {
