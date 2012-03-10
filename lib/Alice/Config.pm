@@ -134,12 +134,6 @@ has image_prefix => (
   default => 'https://noembed.com/i/',
 );
 
-has message_store => (
-  is      => 'rw',
-  isa     => 'Str',
-  default => 'Memory',
-);
-
 sub load {
   my ($self, $callback) = @_;
 
@@ -149,10 +143,7 @@ sub load {
   my $loaded = sub {
     $self->read_commandline_args;
     $self->merge($config);
-    $callback->();
-
-    my $class = "Alice::MessageStore::".$self->message_store;
-    eval "require $class";
+    $callback->($self);
   };
 
   if (-e $self->fullpath) {
