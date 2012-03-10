@@ -24,5 +24,13 @@ BEGIN {
 $0 = "aliced\0";
 binmode(STDERR, ":utf8");
 binmode(STDOUT, ":utf8");
-  
-Alice::Standalone->new->run;
+
+my $config = do {
+  my $cv = AE::cv;
+  my $c = Alice::Config->new;
+  $c->load(sub{$cv->send});
+  $cv->recv;
+  $c;
+};
+
+Alice::Standalone->new(config => $config)->run;
