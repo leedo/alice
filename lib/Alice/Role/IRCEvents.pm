@@ -525,7 +525,7 @@ sub connect_irc {
   $irc->is_connecting(1);
   $irc->cl->connect($config->{host}, $config->{port}, {
     nick => $config->{nick},
-    user => $config->{user},
+    user => $config->{username},
     real => $config->{ircname},
     password => $config->{password},
   });
