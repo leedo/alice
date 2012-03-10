@@ -103,13 +103,11 @@ has 'user' => (
 
 sub BUILDARGS {
   my ($class, %options) = @_;
-
   my $self = {};
 
   for (qw/template user dbi/) {
     if (exists $options{$_}) {
-      $self->{$_} = $options{$_};
-      delete $options{$_};
+      $self->{$_} = delete $options{$_};
     }
   }
 
