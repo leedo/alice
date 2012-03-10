@@ -42,17 +42,27 @@ has msgid => (
   default => sub{{}},
 );
 
-before run => sub {
-  my $self = shift;
-  $self->dbi->exec("SELECT window_id, MAX(msgid) FROM window_buffer GROUP BY window_id", sub {
-    my (undef, $row) = @_;
-    $self->msgid({map {@$_} @$row});
-  });
-};
-
 sub get_msgid {
   my ($self, $id, $cb) = @_;
-  $cb->(++$self->msgid->{$id});
+  if (exists $self->msgid->{$id}) {
+    $cb->(++$self->msgid->{$id});
+  }
+  else {
+    $self->query_msgid($id, sub {
+      my $max = shift;
+      $self->msgid->{$id} = $max;
+      $cb->($max);
+    });
+  }
+}
+
+sub query_msgid {
+  my ($self, $id, $cb) = @_;
+  $self->dbi->exec("SELECT MAX(msgid) FROM window_buffer WHERE window_id=?", $id, sub {
+    my (undef, $row) = @_;
+    my ($max) = @{$row->[0]};
+    $cb->($max + 1);
+  });
 }
 
 sub get_messages {
