@@ -70,6 +70,13 @@ sub add_whois {
 
 sub new_client {
   my ($self, $events, $config) = @_;
+ 
+  if ($self->cl) {
+    # TODO - Object::Event bug that prevents object from getting destroyed
+    delete $self->cl->{change_nick_cb_guard};
+    $self->cl->remove_all_callbacks;
+    $self->cl(undef);
+  }
 
   my $client = AnyEvent::IRC::Client->new(send_initial_whois => 1);
   $client->enable_ssl if $config->{ssl};
