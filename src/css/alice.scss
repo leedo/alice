@@ -1287,6 +1287,7 @@ div.config label {
   font-size: 0.8em;
 }
 
+div.config input[type="password"],
 div.config input[type="text"] {
   background: $textentry_background;
   color: $default_text;
