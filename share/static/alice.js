@@ -11481,6 +11481,12 @@ Alice.Application = Class.create({
 
     this.isPhone = window.navigator.userAgent.match(/(android|iphone|wosbrowser)/i) ? true : false;
     this.isMobile = window.location.toString().match(/mobile/i) || this.isPhone || Prototype.Browser.MobileSafari;
+
+    if (this.isMobile && this.isBeefy()) {
+      this.isPhone = false;
+      this.isMobile = false;
+    }
+
     this.loadDelay = this.isMobile ? 3000 : 1000;
     if (window.navigator.standalone || window.navigator.userAgent.match(/Fluid/)) this.loadDelay = 0;
 
@@ -11499,6 +11505,11 @@ Alice.Application = Class.create({
     this.setupTopic();
     this.setupNicklist();
     this.setupMenus();
+  },
+
+  isBeefy: function() {
+    return window.navigator.userAgent.match(/ipad/i) &&
+      (window.screen.width == 2048 || window.screen.width == 1536);
   },
 
   getBacklog: function (win, max, limit) {

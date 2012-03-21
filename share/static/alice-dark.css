@@ -1103,6 +1103,7 @@ div.config label {
   color: #cccccc;
   font-size: 0.8em; }
 
+div.config input[type="password"],
 div.config input[type="text"] {
   background: black;
   color: white; }
