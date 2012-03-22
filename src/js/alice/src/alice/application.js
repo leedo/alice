@@ -30,10 +30,12 @@ Alice.Application = Class.create({
 
     this.isPhone = window.navigator.userAgent.match(/(android|iphone|wosbrowser)/i) ? true : false;
     this.isMobile = window.location.toString().match(/mobile/i) || this.isPhone || Prototype.Browser.MobileSafari;
+    this.messageLimit = this.isMobile ? 50 : 100;
 
     if (this.isMobile && this.isBeefy()) {
       this.isPhone = false;
       this.isMobile = false;
+      this.messageLimit = 50;
     }
 
     this.loadDelay = this.isMobile ? 3000 : 1000;
@@ -58,8 +60,7 @@ Alice.Application = Class.create({
   },
 
   isBeefy: function() {
-    return window.navigator.userAgent.match(/ipad/i) &&
-      (window.screen.width == 2048 || window.screen.width == 1536);
+    return window.navigator.userAgent.match(/ipad/i);
   },
 
   getBacklog: function (win, max, limit) {
