@@ -11684,7 +11684,7 @@ Alice.Application = Class.create({
       else if (window_number.match(/^prev/)) {
         this.previousWindow();
       }
-      else if (indow_number.match(/^\d+$/)) {
+      else if (window_number.match(/^\d+$/)) {
         var tab = this.tabs.down('li', window_number);
         if (tab) {
           var window_id = tab.id.replace('_tab','');
