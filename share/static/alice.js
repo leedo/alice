@@ -11510,7 +11510,7 @@ Alice.Application = Class.create({
 
   isBeefy: function() {
     return window.navigator.userAgent.match(/ipad/i) &&
-      (window.devicePixelRatio) && (window.devicePixelRatio >= 2));
+      (window.devicePixelRatio && (window.devicePixelRatio >= 2));
   },
 
   getBacklog: function (win, max, limit) {
