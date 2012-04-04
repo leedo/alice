@@ -13362,6 +13362,7 @@ Alice.Input = Class.create({
     if (this.canContentEditable()) {
       this.editor = WysiHat.Editor.attach(this.textarea);
       this.element = this.editor;
+      this.element.writeAttribute("autocapitalize", "off");
       this.toolbar = new Alice.Toolbar(this.element)
       this.toolbar.addButtonSet(Alice.Toolbar.ButtonSet);
       var input = new Element("input", {type: "hidden", name: "html", value: 1});
