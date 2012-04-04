@@ -60,7 +60,7 @@ sub query_msgid {
   my ($self, $id, $cb) = @_;
   $self->dbi->exec("SELECT MAX(msgid) FROM window_buffer WHERE window_id=?", $id, sub {
     my (undef, $row) = @_;
-    my ($max) = @{$row->[0]};
+    my ($max) = @$row ? @{$row->[0]} : 0;
     $cb->($max + 1);
   });
 }
