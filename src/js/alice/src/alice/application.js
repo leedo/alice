@@ -11,7 +11,6 @@ Alice.Application = Class.create({
     this.overlayVisible = false;
     this.lastnotify = 0;
     this.topic_height = this.topic.getStyle("height");
-    this.beep = new Audio("/static/beep.mp3");
 
     this.oembeds = [];
     this.jsonp_callbacks = {};
@@ -60,7 +59,8 @@ Alice.Application = Class.create({
   },
 
   isBeefy: function() {
-    return window.navigator.userAgent.match(/ipad/i);
+    return window.navigator.userAgent.match(/ipad/i) &&
+      (window.devicePixelRatio) && (window.devicePixelRatio >= 2));
   },
 
   getBacklog: function (win, max, limit) {
@@ -944,8 +944,9 @@ Alice.Application = Class.create({
             if (this.options.alerts == "show")
               Alice.growlNotify(message);
             if (this.options.audio == "show") {
-              this.beep.currentTime = 0;
-              this.beep.play();
+              var beep = new Audio("/static/beep.mp3");
+              beep.currentTime = 0;
+              beep.play();
             }
           }
           this.addMissed();

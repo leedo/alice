@@ -11462,7 +11462,6 @@ Alice.Application = Class.create({
     this.overlayVisible = false;
     this.lastnotify = 0;
     this.topic_height = this.topic.getStyle("height");
-    this.beep = new Audio("/static/beep.mp3");
 
     this.oembeds = [];
     this.jsonp_callbacks = {};
@@ -11481,10 +11480,12 @@ Alice.Application = Class.create({
 
     this.isPhone = window.navigator.userAgent.match(/(android|iphone|wosbrowser)/i) ? true : false;
     this.isMobile = window.location.toString().match(/mobile/i) || this.isPhone || Prototype.Browser.MobileSafari;
+    this.messageLimit = this.isMobile ? 50 : 100;
 
     if (this.isMobile && this.isBeefy()) {
       this.isPhone = false;
       this.isMobile = false;
+      this.messageLimit = 50;
     }
 
     this.loadDelay = this.isMobile ? 3000 : 1000;
@@ -11509,7 +11510,7 @@ Alice.Application = Class.create({
 
   isBeefy: function() {
     return window.navigator.userAgent.match(/ipad/i) &&
-      (window.screen.width == 2048 || window.screen.width == 1536);
+      (window.devicePixelRatio) && (window.devicePixelRatio >= 2));
   },
 
   getBacklog: function (win, max, limit) {
@@ -12384,8 +12385,9 @@ Alice.Application = Class.create({
             if (this.options.alerts == "show")
               Alice.growlNotify(message);
             if (this.options.audio == "show") {
-              this.beep.currentTime = 0;
-              this.beep.play();
+              var beep = new Audio("/static/beep.mp3");
+              beep.currentTime = 0;
+              beep.play();
             }
           }
           this.addMissed();
@@ -12771,7 +12773,7 @@ Alice.Window = Class.create({
     this.nicks = [];
     this.nicks_order = [];
     this.statuses = [];
-    this.messageLimit = this.application.isMobile ? 50 : 100;
+    this.messageLimit = this.application.messageLimit;
     this.chunkSize = this.messageLimit / 2;
     this.msgid = -1;
     this.visible = true;
