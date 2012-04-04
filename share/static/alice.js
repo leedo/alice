@@ -12386,7 +12386,6 @@ Alice.Application = Class.create({
               Alice.growlNotify(message);
             if (this.options.audio == "show") {
               var beep = new Audio("/static/beep.mp3");
-              beep.currentTime = 0;
               beep.play();
             }
           }
