@@ -351,12 +351,12 @@ Alice.Application = Class.create({
     this.message_filters = this.message_filters.concat(list);
   },
   
-  applyFilters: function(li, win) {
+  applyFilters: function(li, win, message) {
     if (li.hasClassName("filtered")) return;
     var length = this.base_filters.length;
 
     for (var i=0; i < length; i++) {
-      this.base_filters[i].call(this, li, win);
+      this.base_filters[i].call(this, li, win, message);
     }
 
     li.addClassName("filtered");
@@ -365,7 +365,7 @@ Alice.Application = Class.create({
       var msg = li.down("div.msg");
       var length = this.message_filters.length;
       for (var i=0; i < length; i++) {
-        var stop = this.message_filters[i].call(this, msg, win);
+        var stop = this.message_filters[i].call(this, msg, win, message);
         if (stop) return;
       }
     }
