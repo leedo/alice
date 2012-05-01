@@ -351,7 +351,7 @@ Alice.Window = Class.create({
     this.scrollToPosition(position);
 
     var li = this.messages.select("li").last();
-    this.application.applyFilters(li, this);
+    this.application.applyFilters(li, this, message);
 
     this.scrollToPosition(position);
 
