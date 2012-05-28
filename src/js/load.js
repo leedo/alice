@@ -1,25 +1,3 @@
-//= require <prototype>
-//= require <effects>
-//= require <dragdrop>
-//= require <shortcut>
-//= require <sprintf>
-//= require <wysihat>
-//= require <swfobject>
-//= require <web_socket>
-
-var Alice = { };
-
-//= require <alice/util>
-//= require <alice/application>
-//= require <alice/connection>
-//= require <alice/connection/websocket>
-//= require <alice/connection/xhr>
-//= require <alice/window>
-//= require <alice/toolbar>
-//= require <alice/input>
-//= require <alice/keyboard>
-//= require <alice/completion>
-
 if (window == window.parent) {
   document.observe("dom:loaded", function () {
     var alice = new Alice.Application();

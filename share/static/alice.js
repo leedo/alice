@@ -49,7 +49,7 @@ var Prototype = {
     })()
   },
 
-  ScriptFragment: '<script[^>]*>([\\S\\s]*?)<\/script>',
+  ScriptFragment: '<script[^>]*>([\\S\\s]*?)<\/script\\s*>',
   JSONFilter: /^\/\*-secure-([\s\S]*)\*\/\s*$/,
 
   emptyFunction: function() { },
@@ -120,8 +120,13 @@ var Class = (function() {
           return function() { return ancestor[m].apply(this, arguments); };
         })(property).wrap(method);
 
-        value.valueOf = method.valueOf.bind(method);
-        value.toString = method.toString.bind(method);
+        value.valueOf = (function(method) {
+          return function() { return method.valueOf.call(method); };
+        })(method);
+
+        value.toString = (function(method) {
+          return function() { return method.toString.call(method); };
+        })(method);
       }
       this.prototype[property] = value;
     }
@@ -205,9 +210,7 @@ var Class = (function() {
   }
 
   function Str(key, holder, stack) {
-    var value = holder[key],
-        type = typeof value;
-
+    var value = holder[key];
     if (Type(value) === OBJECT_TYPE && typeof value.toJSON === 'function') {
       value = value.toJSON(key);
     }
@@ -227,7 +230,7 @@ var Class = (function() {
       case false: return 'false';
     }
 
-    type = typeof value;
+    var type = typeof value;
     switch (type) {
       case 'string':
         return value.inspect(true);
@@ -236,7 +239,9 @@ var Class = (function() {
       case 'object':
 
         for (var i = 0, length = stack.length; i < length; i++) {
-          if (stack[i] === value) { throw new TypeError(); }
+          if (stack[i] === value) {
+            throw new TypeError("Cyclic reference to '" + value + "' in object");
+          }
         }
         stack.push(value);
 
@@ -382,13 +387,27 @@ Object.extend(Function.prototype, (function() {
     return names.length == 1 && !names[0] ? [] : names;
   }
 
+
   function bind(context) {
-    if (arguments.length < 2 && Object.isUndefined(arguments[0])) return this;
+    if (arguments.length < 2 && Object.isUndefined(arguments[0]))
+      return this;
+
+    if (!Object.isFunction(this))
+      throw new TypeError("The object is not callable.");
+
+    var nop = function() {};
     var __method = this, args = slice.call(arguments, 1);
-    return function() {
-      var a = merge(args, arguments);
-      return __method.apply(context, a);
-    }
+
+    var bound = function() {
+      var a = merge(args, arguments), c = context;
+      var c = this instanceof bound ? this : context || window;
+      return __method.apply(c, a);
+    };
+
+    nop.prototype   = this.prototype;
+    bound.prototype = new nop();
+
+    return bound;
   }
 
   function bindAsEventListener(context) {
@@ -438,16 +457,20 @@ Object.extend(Function.prototype, (function() {
     };
   }
 
-  return {
+  var extensions = {
     argumentNames:       argumentNames,
-    bind:                bind,
     bindAsEventListener: bindAsEventListener,
     curry:               curry,
     delay:               delay,
     defer:               defer,
     wrap:                wrap,
     methodize:           methodize
-  }
+  };
+
+  if (!Function.prototype.bind)
+    extensions.bind = bind;
+
+  return extensions;
 })());
 
 
@@ -608,7 +631,7 @@ Object.extend(String.prototype, (function() {
   }
 
   function evalScripts() {
-    return this.extractScripts().map(function(script) { return eval(script) });
+    return this.extractScripts().map(function(script) { return eval(script); });
   }
 
   function escapeHTML() {
@@ -818,11 +841,8 @@ var $break = { };
 
 var Enumerable = (function() {
   function each(iterator, context) {
-    var index = 0;
     try {
-      this._each(function(value) {
-        iterator.call(context, value, index++);
-      });
+      this._each(iterator, context);
     } catch (e) {
       if (e != $break) throw e;
     }
@@ -841,9 +861,9 @@ var Enumerable = (function() {
     iterator = iterator || Prototype.K;
     var result = true;
     this.each(function(value, index) {
-      result = result && !!iterator.call(context, value, index);
+      result = result && !!iterator.call(context, value, index, this);
       if (!result) throw $break;
-    });
+    }, this);
     return result;
   }
 
@@ -851,9 +871,9 @@ var Enumerable = (function() {
     iterator = iterator || Prototype.K;
     var result = false;
     this.each(function(value, index) {
-      if (result = !!iterator.call(context, value, index))
+      if (result = !!iterator.call(context, value, index, this))
         throw $break;
-    });
+    }, this);
     return result;
   }
 
@@ -861,28 +881,28 @@ var Enumerable = (function() {
     iterator = iterator || Prototype.K;
     var results = [];
     this.each(function(value, index) {
-      results.push(iterator.call(context, value, index));
-    });
+      results.push(iterator.call(context, value, index, this));
+    }, this);
     return results;
   }
 
   function detect(iterator, context) {
     var result;
     this.each(function(value, index) {
-      if (iterator.call(context, value, index)) {
+      if (iterator.call(context, value, index, this)) {
         result = value;
         throw $break;
       }
-    });
+    }, this);
     return result;
   }
 
   function findAll(iterator, context) {
     var results = [];
     this.each(function(value, index) {
-      if (iterator.call(context, value, index))
+      if (iterator.call(context, value, index, this))
         results.push(value);
-    });
+    }, this);
     return results;
   }
 
@@ -895,8 +915,8 @@ var Enumerable = (function() {
 
     this.each(function(value, index) {
       if (filter.match(value))
-        results.push(iterator.call(context, value, index));
-    });
+        results.push(iterator.call(context, value, index, this));
+    }, this);
     return results;
   }
 
@@ -924,8 +944,8 @@ var Enumerable = (function() {
 
   function inject(memo, iterator, context) {
     this.each(function(value, index) {
-      memo = iterator.call(context, memo, value, index);
-    });
+      memo = iterator.call(context, memo, value, index, this);
+    }, this);
     return memo;
   }
 
@@ -940,10 +960,10 @@ var Enumerable = (function() {
     iterator = iterator || Prototype.K;
     var result;
     this.each(function(value, index) {
-      value = iterator.call(context, value, index);
+      value = iterator.call(context, value, index, this);
       if (result == null || value >= result)
         result = value;
-    });
+    }, this);
     return result;
   }
 
@@ -951,10 +971,10 @@ var Enumerable = (function() {
     iterator = iterator || Prototype.K;
     var result;
     this.each(function(value, index) {
-      value = iterator.call(context, value, index);
+      value = iterator.call(context, value, index, this);
       if (result == null || value < result)
         result = value;
-    });
+    }, this);
     return result;
   }
 
@@ -962,9 +982,9 @@ var Enumerable = (function() {
     iterator = iterator || Prototype.K;
     var trues = [], falses = [];
     this.each(function(value, index) {
-      (iterator.call(context, value, index) ?
+      (iterator.call(context, value, index, this) ?
         trues : falses).push(value);
-    });
+    }, this);
     return [trues, falses];
   }
 
@@ -979,9 +999,9 @@ var Enumerable = (function() {
   function reject(iterator, context) {
     var results = [];
     this.each(function(value, index) {
-      if (!iterator.call(context, value, index))
+      if (!iterator.call(context, value, index, this))
         results.push(value);
-    });
+    }, this);
     return results;
   }
 
@@ -989,9 +1009,9 @@ var Enumerable = (function() {
     return this.map(function(value, index) {
       return {
         value: value,
-        criteria: iterator.call(context, value, index)
+        criteria: iterator.call(context, value, index, this)
       };
-    }).sort(function(left, right) {
+    }, this).sort(function(left, right) {
       var a = left.criteria, b = right.criteria;
       return a < b ? -1 : a > b ? 1 : 0;
     }).pluck('value');
@@ -1141,7 +1161,7 @@ Array.from = $A;
 
   function intersect(array) {
     return this.uniq().findAll(function(item) {
-      return array.detect(function(value) { return item === value });
+      return array.indexOf(item) !== -1;
     });
   }
 
@@ -1159,32 +1179,174 @@ Array.from = $A;
   }
 
   function indexOf(item, i) {
-    i || (i = 0);
-    var length = this.length;
-    if (i < 0) i = length + i;
-    for (; i < length; i++)
-      if (this[i] === item) return i;
+    if (this == null) throw new TypeError();
+
+    var array = Object(this), length = array.length >>> 0;
+    if (length === 0) return -1;
+
+    i = Number(i);
+    if (isNaN(i)) {
+      i = 0;
+    } else if (i !== 0 && isFinite(i)) {
+      i = (i > 0 ? 1 : -1) * Math.floor(Math.abs(i));
+    }
+
+    if (i > length) return -1;
+
+    var k = i >= 0 ? i : Math.max(length - Math.abs(i), 0);
+    for (; k < length; k++)
+      if (k in array && array[k] === item) return k;
     return -1;
   }
 
+
   function lastIndexOf(item, i) {
-    i = isNaN(i) ? this.length : (i < 0 ? this.length + i : i) + 1;
-    var n = this.slice(0, i).reverse().indexOf(item);
-    return (n < 0) ? n : i - n - 1;
+    if (this == null) throw new TypeError();
+
+    var array = Object(this), length = array.length >>> 0;
+    if (length === 0) return -1;
+
+    if (!Object.isUndefined(i)) {
+      i = Number(i);
+      if (isNaN(i)) {
+        i = 0;
+      } else if (i !== 0 && isFinite(i)) {
+        i = (i > 0 ? 1 : -1) * Math.floor(Math.abs(i));
+      }
+    } else {
+      i = length;
+    }
+
+    var k = i >= 0 ? Math.min(i, length - 1) :
+     length - Math.abs(i);
+
+    for (; k >= 0; k--)
+      if (k in array && array[k] === item) return k;
+    return -1;
   }
 
-  function concat() {
-    var array = slice.call(this, 0), item;
-    for (var i = 0, length = arguments.length; i < length; i++) {
-      item = arguments[i];
+  function concat(_) {
+    var array = [], items = slice.call(arguments, 0), item, n = 0;
+    items.unshift(this);
+    for (var i = 0, length = items.length; i < length; i++) {
+      item = items[i];
       if (Object.isArray(item) && !('callee' in item)) {
-        for (var j = 0, arrayLength = item.length; j < arrayLength; j++)
-          array.push(item[j]);
+        for (var j = 0, arrayLength = item.length; j < arrayLength; j++) {
+          if (j in item) array[n] = item[j];
+          n++;
+        }
       } else {
-        array.push(item);
+        array[n++] = item;
       }
     }
+    array.length = n;
     return array;
+  }
+
+  function wrapNative(method) {
+    return function() {
+      if (arguments.length === 0) {
+        return method.call(this, Prototype.K);
+      } else if (arguments[0] === undefined) {
+        var args = slice.call(arguments, 1);
+        args.unshift(Prototype.K);
+        return method.apply(this, args);
+      } else {
+        return method.apply(this, arguments);
+      }
+    };
+  }
+
+  function map(iterator) {
+    if (this == null) throw new TypeError();
+    iterator = iterator || Prototype.K;
+
+    var object = Object(this);
+    var results = [], context = arguments[1], n = 0;
+
+    for (var i = 0, length = object.length >>> 0; i < length; i++) {
+      if (i in object) {
+        results[n] = iterator.call(context, object[i], i, object);
+      }
+      n++;
+    }
+    results.length = n;
+    return results;
+  }
+
+  if (arrayProto.map) {
+    map = wrapNative(Array.prototype.map);
+  }
+
+  function filter(iterator) {
+    if (this == null || !Object.isFunction(iterator))
+      throw new TypeError();
+
+    var object = Object(this);
+    var results = [], context = arguments[1], value;
+
+    for (var i = 0, length = object.length >>> 0; i < length; i++) {
+      if (i in object) {
+        value = object[i];
+        if (iterator.call(context, value, i, object)) {
+          results.push(value);
+        }
+      }
+    }
+    return results;
+  }
+
+  if (arrayProto.filter) {
+    filter = Array.prototype.filter;
+  }
+
+  function some(iterator) {
+    if (this == null) throw new TypeError();
+    iterator = iterator || Prototype.K;
+    var context = arguments[1];
+
+    var object = Object(this);
+    for (var i = 0, length = object.length >>> 0; i < length; i++) {
+      if (i in object && iterator.call(context, object[i], i, object)) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  if (arrayProto.some) {
+    var some = wrapNative(Array.prototype.some);
+  }
+
+  function every(iterator) {
+    if (this == null) throw new TypeError();
+    iterator = iterator || Prototype.K;
+    var context = arguments[1];
+
+    var object = Object(this);
+    for (var i = 0, length = object.length >>> 0; i < length; i++) {
+      if (i in object && !iterator.call(context, object[i], i, object)) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  if (arrayProto.every) {
+    var every = wrapNative(Array.prototype.every);
+  }
+
+  var _reduce = arrayProto.reduce;
+  function inject(memo, iterator) {
+    iterator = iterator || Prototype.K;
+    var context = arguments[2];
+    return _reduce.call(this, iterator.bind(context), memo);
+  }
+
+  if (!arrayProto.reduce) {
+    var inject = Enumerable.inject;
   }
 
   Object.extend(arrayProto, Enumerable);
@@ -1194,6 +1356,18 @@ Array.from = $A;
 
   Object.extend(arrayProto, {
     _each:     _each,
+
+    map:       map,
+    collect:   map,
+    select:    filter,
+    filter:    filter,
+    findAll:   filter,
+    some:      some,
+    any:       some,
+    every:     every,
+    all:       every,
+    inject:    inject,
+
     clear:     clear,
     first:     first,
     last:      last,
@@ -1211,7 +1385,7 @@ Array.from = $A;
 
   var CONCAT_ARGUMENTS_BUGGY = (function() {
     return [].concat(arguments)[0][0] !== 1;
-  })(1,2)
+  })(1,2);
 
   if (CONCAT_ARGUMENTS_BUGGY) arrayProto.concat = concat;
 
@@ -1228,12 +1402,12 @@ var Hash = Class.create(Enumerable, (function() {
   }
 
 
-  function _each(iterator) {
+  function _each(iterator, context) {
     for (var key in this._object) {
       var value = this._object[key], pair = [key, value];
       pair.key = key;
       pair.value = value;
-      iterator(pair);
+      iterator.call(context, pair);
     }
   }
 
@@ -1286,7 +1460,13 @@ var Hash = Class.create(Enumerable, (function() {
 
   function toQueryPair(key, value) {
     if (Object.isUndefined(value)) return key;
-    return key + '=' + encodeURIComponent(String.interpret(value));
+
+    var value = String.interpret(value);
+
+    value = value.gsub(/(\r)?\n/, '\r\n');
+    value = encodeURIComponent(value);
+    value = value.gsub(/%20/, '+');
+    return key + '=' + value;
   }
 
   function toQueryString() {
@@ -1396,10 +1576,10 @@ var ObjectRange = Class.create(Enumerable, (function() {
     this.exclusive = exclusive;
   }
 
-  function _each(iterator) {
+  function _each(iterator, context) {
     var value = this.start;
     while (this.include(value)) {
-      iterator(value);
+      iterator.call(context, value);
       value = value.succ();
     }
   }
@@ -1455,8 +1635,8 @@ var Ajax = {
 Ajax.Responders = {
   responders: [],
 
-  _each: function(iterator) {
-    this.responders._each(iterator);
+  _each: function(iterator, context) {
+    this.responders._each(iterator, context);
   },
 
   register: function(responder) {
@@ -1927,7 +2107,7 @@ Ajax.PeriodicalUpdater = Class.create(Ajax.Base, {
     element = $(element);
     var result = '<' + element.tagName.toLowerCase();
 
-    var attribute;
+    var attribute, value;
     for (var property in INSPECT_ATTRIBUTES) {
       attribute = INSPECT_ATTRIBUTES[property];
       value = (element[property] || '').toString();
@@ -2008,7 +2188,7 @@ Ajax.PeriodicalUpdater = Class.create(Ajax.Base, {
   var LINK_ELEMENT_INNERHTML_BUGGY = (function() {
     try {
       var el = document.createElement('div');
-      el.innerHTML = "<link>";
+      el.innerHTML = "<link />";
       var isBuggy = (el.childNodes.length === 0);
       el = null;
       return isBuggy;
@@ -2262,7 +2442,7 @@ Ajax.PeriodicalUpdater = Class.create(Ajax.Base, {
     }
 
     if (workaround) {
-      div.innerHTML = '&nbsp;' + t[0] + html + t[1];
+      div.innerHTML = '&#160;' + t[0] + html + t[1];
       div.removeChild(div.firstChild);
       for (var i = t[2]; i--; )
         div = div.firstChild;
@@ -2305,7 +2485,7 @@ Ajax.PeriodicalUpdater = Class.create(Ajax.Base, {
   }
 
   function purgeCollection_IE(elements) {
-    var i = elements.length, element, eventName, responders, uid, j;
+    var i = elements.length, element, uid;
     while (i--) {
       element = elements[i];
       uid = getUniqueElementID(element);
@@ -2414,71 +2594,47 @@ Ajax.PeriodicalUpdater = Class.create(Ajax.Base, {
     return selector.match(element);
   }
 
+
+  function _recursivelyFind(element, property, expression, index) {
+    element = $(element), expression = expression || 0, index = index || 0;
+    if (Object.isNumber(expression)) {
+      index = expression, expression = null;
+    }
+
+    while (element = element[property]) {
+      if (element.nodeType !== 1) continue;
+      if (expression && !Prototype.Selector.match(element, expression))
+        continue;
+      if (--index >= 0) continue;
+
+      return Element.extend(element);
+    }
+  }
+
+
   function up(element, expression, index) {
     element = $(element);
 
     if (arguments.length === 1) return $(element.parentNode);
-
-    var ancestors = Element.ancestors(element);
-    return Object.isNumber(expression) ? ancestors[expression] :
-     Prototype.Selector.find(ancestors, expression, index);
+    return _recursivelyFind(element, 'parentNode', expression, index);
   }
 
   function down(element, expression, index) {
-    element = $(element);
+    element = $(element), expression = expression || 0, index = index || 0;
 
-    if (arguments.length === 1) return firstDescendant(element);
+    if (Object.isNumber(expression))
+      index = expression, expression = '*';
 
-    return Object.isNumber(expression) ? Element.descendants(element)[expression] :
-     Element.select(element, expression)[index || 0];
-  }
-
-
-  function _descendants(element) {
-    var nodes = element.getElementsByTagName('*'), results = [];
-    for (var i = 0, node; node = nodes[i]; i++)
-      if (node.tagName !== "!") // Filter out comment nodes.
-        results.push(node);
-    return results;
-  }
-
-  function down_IE(element, expression, index) {
-    element = $(element);
-    if (arguments.length === 1)
-      return Element.firstDescendant(element);
-
-    var node = Object.isNumber(expression) ? _descendants(element)[expression] :
-      Element.select(element, expression)[index || 0];
+    var node = Prototype.Selector.select(expression, element)[index];
     return Element.extend(node);
   }
 
-  if (!Prototype.BrowserFeatures.ElementExtensions)
-    down = down_IE;
-
   function previous(element, expression, index) {
-    element = $(element);
-    if (Object.isNumber(expression))
-      index = expression, expression = false;
-    if (!Object.isNumber(index)) index = 0;
-
-    if (expression) {
-      return Prototype.Selector.find(previousSiblings(element), expression, index);
-    } else {
-      return recursivelyCollect(element, 'previousSibling', index + 1)[index];
-    }
+    return _recursivelyFind(element, 'previousSibling', expression, index);
   }
 
   function next(element, expression, index) {
-    element = $(element);
-    if (Object.isNumber(expression))
-      index = expression, expression = false;
-    if (!Object.isNumber(index)) index = 0;
-
-    if (expression) {
-      return Prototype.Selector.find(nextSiblings(element), expression, index);
-    } else {
-      return recursivelyCollect(element, 'nextSibling', index + 1)[index];
-    }
+    return _recursivelyFind(element, 'nextSibling', expression, index);
   }
 
   function select(element) {
@@ -2500,7 +2656,7 @@ Ajax.PeriodicalUpdater = Class.create(Ajax.Base, {
   }
 
   function descendantOf_DOM(element, ancestor) {
-    element = $(element);
+    element = $(element), ancestor = $(ancestor);
     while (element = element.parentNode)
       if (element === ancestor) return true;
     return false;
@@ -2565,8 +2721,7 @@ Ajax.PeriodicalUpdater = Class.create(Ajax.Base, {
 
 
   function readAttribute(element, name) {
-    element = $(element);
-    return element.getAttribute(name);
+    return $(element).getAttribute(name);
   }
 
   function readAttribute_IE(element, name) {
@@ -2588,7 +2743,7 @@ Ajax.PeriodicalUpdater = Class.create(Ajax.Base, {
 
   function readAttribute_Opera(element, name) {
     if (name === 'title') return element.title;
-    return element.getAttribute(attribute);
+    return element.getAttribute(name);
   }
 
   var PROBLEMATIC_ATTRIBUTE_READING = (function() {
@@ -2647,7 +2802,7 @@ Ajax.PeriodicalUpdater = Class.create(Ajax.Base, {
   function getRegExpForClassName(className) {
     if (regExpCache[className]) return regExpCache[className];
 
-    re = new RegExp("(^|\\s+)" + className + "(\\s+|$)");
+    var re = new RegExp("(^|\\s+)" + className + "(\\s+|$)");
     regExpCache[className] = re;
     return re;
   }
@@ -2946,6 +3101,10 @@ Ajax.PeriodicalUpdater = Class.create(Ajax.Base, {
     return element;
   }
 
+  var STANDARD_CSS_OPACITY_SUPPORTED = (function() {
+    DIV.style.cssText = "opacity:.55";
+    return /^0.55/.test(DIV.style.opacity);
+  })();
 
   function setOpacity(element, value) {
     element = $(element);
@@ -2956,6 +3115,9 @@ Ajax.PeriodicalUpdater = Class.create(Ajax.Base, {
   }
 
   function setOpacity_IE(element, value) {
+    if (STANDARD_CSS_OPACITY_SUPPORTED)
+      return setOpacity(element, value);
+
     element = hasLayout_IE($(element));
     var filter = Element.getStyle(element, 'filter'),
      style = element.style;
@@ -2981,6 +3143,9 @@ Ajax.PeriodicalUpdater = Class.create(Ajax.Base, {
   }
 
   function getOpacity_IE(element) {
+    if (STANDARD_CSS_OPACITY_SUPPORTED)
+      return getOpacity(element);
+
     var filter = Element.getStyle(element, 'filter');
     if (filter.length === 0) return 1.0;
     var match = (filter || '').match(/alpha\(opacity=(.*)\)/);
@@ -3260,7 +3425,6 @@ Ajax.PeriodicalUpdater = Class.create(Ajax.Base, {
   Element.addMethods(methods);
 
 })(this);
-
 (function() {
 
   function toDecimal(pctString) {
@@ -3336,9 +3500,7 @@ Ajax.PeriodicalUpdater = Class.create(Ajax.Base, {
 
     if (element && isPercentage) {
       context = context || element.parentNode;
-      var decimal = toDecimal(value);
-      var whole = null;
-      var position = element.getStyle('position');
+      var decimal = toDecimal(value), whole = null;
 
       var isHorizontal = property.include('left') || property.include('right') ||
        property.include('width');
@@ -3373,7 +3535,6 @@ Ajax.PeriodicalUpdater = Class.create(Ajax.Base, {
   }
 
   function isDisplayed(element) {
-    var originalElement = element;
     while (element && element.parentNode) {
       var display = element.getStyle('display');
       if (display === 'none') {
@@ -3895,10 +4056,9 @@ Ajax.PeriodicalUpdater = Class.create(Ajax.Base, {
   }
 
   function viewportOffset(forElement) {
-    element = $(element);
     var valueT = 0, valueL = 0, docBody = document.body;
 
-    var element = forElement;
+    var element = $(forElement);
     do {
       valueT += element.offsetTop  || 0;
       valueL += element.offsetLeft || 0;
@@ -4044,30 +4204,28 @@ Ajax.PeriodicalUpdater = Class.create(Ajax.Base, {
 
     source  = $(source);
     element = $(element);
-    var p = Element.viewportOffset(source), delta = [0, 0], parent = null;
+    var p, delta, layout, styles = {};
 
-    if (Element.getStyle(element, 'position') === 'absolute') {
-      parent = Element.getOffsetParent(element);
-      delta  = Element.viewportOffset(parent);
+    if (options.setLeft || options.setTop) {
+      p = Element.viewportOffset(source);
+      delta = [0, 0];
+      if (Element.getStyle(element, 'position') === 'absolute') {
+        var parent = Element.getOffsetParent(element);
+        if (parent !== document.body) delta = Element.viewportOffset(parent);
+      }
     }
 
-    if (parent === document.body) {
-      delta[0] -= document.body.offsetLeft;
-      delta[1] -= document.body.offsetTop;
+    if (options.setWidth || options.setHeight) {
+      layout = Element.getLayout(source);
     }
-
-
-    var layout = Element.getLayout(source);
-
-    var styles = {};
 
     if (options.setLeft)
       styles.left = (p[0] - delta[0] + options.offsetLeft) + 'px';
     if (options.setTop)
-      styles.top  = (p[1] - delta[1] + options.offsetTop) + 'px';
+      styles.top  = (p[1] - delta[1] + options.offsetTop)  + 'px';
 
     if (options.setWidth)
-      styles.width = layout.get('border-box-width') + 'px';
+      styles.width  = layout.get('border-box-width')  + 'px';
     if (options.setHeight)
       styles.height = layout.get('border-box-height') + 'px';
 
@@ -4266,6 +4424,7 @@ Prototype.Selector = (function() {
     extendElement: Element.extend
   };
 })();
+Prototype._original_property = window.Sizzle;
 /*!
  * Sizzle CSS Selector Engine
  *  Copyright 2011, The Dojo Foundation
@@ -5595,8 +5754,6 @@ window.Sizzle = Sizzle;
 
 })();
 
-Prototype._original_property = window.Sizzle;
-
 ;(function(engine) {
   var extendElements = Prototype.Selector.extendElements;
 
@@ -6059,6 +6216,10 @@ Form.EventObserver = Class.create(Abstract.EventObserver, {
   function isRightClick(event)  { return _isButton(event, 2) }
 
   function element(event) {
+    return Element.extend(_element(event));
+  }
+
+  function _element(event) {
     event = Event.extend(event);
 
     var node = event.target, type = event.type,
@@ -6078,13 +6239,11 @@ Form.EventObserver = Class.create(Abstract.EventObserver, {
   }
 
   function findElement(event, expression) {
-    var element = Event.element(event);
-
-    if (!expression) return element;
+    var element = _element(event), match = Prototype.Selector.match;
+    if (!expression) return Element.extend(element);
     while (element) {
-      if (Object.isElement(element) && Prototype.Selector.match(element, expression)) {
+      if (Object.isElement(element) && match(element, expression))
         return Element.extend(element);
-      }
       element = element.parentNode;
     }
   }
@@ -6231,15 +6390,17 @@ Form.EventObserver = Class.create(Abstract.EventObserver, {
 
   Event._isCustomEvent = isCustomEvent;
 
-  function getRegistryForElement(element) {
+  function getRegistryForElement(element, uid) {
     var CACHE = GLOBAL.Event.cache;
-    var uid = getUniqueElementID(element);
+    if (Object.isUndefined(uid))
+      uid = getUniqueElementID(element);
     if (!CACHE[uid]) CACHE[uid] = { element: element };
     return CACHE[uid];
   }
 
-  function destroyRegistryForElement(element) {
-    var uid = getUniqueElementID(element);
+  function destroyRegistryForElement(element, uid) {
+    if (Object.isUndefined(uid))
+      uid = getUniqueElementID(element);
     delete GLOBAL.Event.cache[uid];
   }
 
@@ -6362,11 +6523,15 @@ Form.EventObserver = Class.create(Abstract.EventObserver, {
 
 
   function stopObservingElement(element) {
-    var registry = getRegistryForElement(element);
-    destroyRegistryForElement(element);
+    var uid = getUniqueElementID(element),
+     registry = getRegistryForElement(element, uid);
+
+    destroyRegistryForElement(element, uid);
 
     var entries, i;
     for (var eventName in registry) {
+      if (eventName === 'element') continue;
+
       entries = registry[eventName];
       i = entries.length;
       while (i--)
@@ -6774,10 +6939,10 @@ Element.ClassNames.prototype = {
     this.element = $(element);
   },
 
-  _each: function(iterator) {
+  _each: function(iterator, context) {
     this.element.className.split(/\s+/).select(function(name) {
       return name.length > 0;
-    })._each(iterator);
+    })._each(iterator, context);
   },
 
   set: function(className) {
@@ -6857,7 +7022,82 @@ Object.extend(Element.ClassNames.prototype, Enumerable);
     }
   });
 })();
+// Copyright (c) 2005-2010 Thomas Fuchs (http://script.aculo.us, http://mir.aculo.us)
+//
+// Permission is hereby granted, free of charge, to any person obtaining
+// a copy of this software and associated documentation files (the
+// "Software"), to deal in the Software without restriction, including
+// without limitation the rights to use, copy, modify, merge, publish,
+// distribute, sublicense, and/or sell copies of the Software, and to
+// permit persons to whom the Software is furnished to do so, subject to
+// the following conditions:
+//
+// The above copyright notice and this permission notice shall be
+// included in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+// LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+// OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+// WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+//
+// For details, see the script.aculo.us web site: http://script.aculo.us/
 
+var Scriptaculous = {
+  Version: '1.9.0',
+  require: function(libraryName) {
+    try{
+      // inserting via DOM fails in Safari 2.0, so brute force approach
+      document.write('<script type="text/javascript" src="'+libraryName+'"><\/script>');
+    } catch(e) {
+      // for xhtml+xml served content, fall back to DOM methods
+      var script = document.createElement('script');
+      script.type = 'text/javascript';
+      script.src = libraryName;
+      document.getElementsByTagName('head')[0].appendChild(script);
+    }
+  },
+  REQUIRED_PROTOTYPE: '1.6.0.3',
+  load: function() {
+    function convertVersionString(versionString) {
+      var v = versionString.replace(/_.*|\./g, '');
+      v = parseInt(v + '0'.times(4-v.length));
+      return versionString.indexOf('_') > -1 ? v-1 : v;
+    }
+
+    if((typeof Prototype=='undefined') ||
+       (typeof Element == 'undefined') ||
+       (typeof Element.Methods=='undefined') ||
+       (convertVersionString(Prototype.Version) <
+        convertVersionString(Scriptaculous.REQUIRED_PROTOTYPE)))
+       throw("script.aculo.us requires the Prototype JavaScript framework >= " +
+        Scriptaculous.REQUIRED_PROTOTYPE);
+
+    var js = /scriptaculous\.js(\?.*)?$/;
+    $$('script[src]').findAll(function(s) {
+      return s.src.match(js);
+    }).each(function(s) {
+      var path = s.src.replace(js, ''),
+      includes = s.src.match(/\?.*load=([a-z,]*)/);
+      (includes ? includes[1] : 'builder,effects,dragdrop,controls,slider,sound').split(',').each(
+       function(include) { Scriptaculous.require(path+include+'.js') });
+    });
+  }
+};
+
+Scriptaculous.load();// Copyright (c) 2005-2010 Thomas Fuchs (http://script.aculo.us, http://mir.aculo.us)
+// Contributors:
+//  Justin Palmer (http://encytemedia.com/)
+//  Mark Pilgrim (http://diveintomark.org/)
+//  Martin Bialasinki
+//
+// script.aculo.us is freely distributable under the terms of an MIT-style license.
+// For details, see the script.aculo.us web site: http://script.aculo.us/
+
+// converts rgb() and #xxx to #xxxxxx format,
+// returns self (or first argument) if not convertable
 String.prototype.parseColor = function() {
   var color = '#';
   if (this.slice(0,4) == 'rgb(') {
@@ -6997,7 +7237,7 @@ var Effect = {
   toggle: function(element, effect, options) {
     element = $(element);
     effect  = (effect || 'appear').toLowerCase();
-
+    
     return Effect[ Effect.PAIRS[ effect ][ element.visible() ? 1 : 0 ] ](element, Object.extend({
       queue: { position:'end', scope:(element.id || 'global'), limit: 1 }
     }, options || {}));
@@ -7024,6 +7264,7 @@ Effect.ScopedQueue = Class.create(Enumerable, {
 
     switch(position) {
       case 'front':
+        // move unstarted effects after this effect
         this.effects.findAll(function(e){ return e.state=='idle' }).each( function(e) {
             e.startOn  += effect.finishOn;
             e.finishOn += effect.finishOn;
@@ -7033,6 +7274,7 @@ Effect.ScopedQueue = Class.create(Enumerable, {
         timestamp = this.effects.pluck('startOn').max() || timestamp;
         break;
       case 'end':
+        // start effect after last queued effect has finished
         timestamp = this.effects.pluck('finishOn').max() || timestamp;
         break;
     }
@@ -7195,6 +7437,7 @@ Effect.Opacity = Class.create(Effect.Base, {
   initialize: function(element) {
     this.element = $(element);
     if (!this.element) throw(Effect._elementDoesNotExistError);
+    // make this work on IE on elements without 'layout'
     if (Prototype.Browser.IE && (!this.element.currentStyle.hasLayout))
       this.element.setStyle({zoom: 1});
     var options = Object.extend({
@@ -7236,6 +7479,7 @@ Effect.Move = Class.create(Effect.Base, {
   }
 });
 
+// for backwards compatibility
 Effect.MoveBy = function(element, toTop, toLeft) {
   return new Effect.Move(element,
     Object.extend({ x: toLeft, y: toTop }, arguments[3] || { }));
@@ -7323,7 +7567,9 @@ Effect.Highlight = Class.create(Effect.Base, {
     this.start(options);
   },
   setup: function() {
+    // Prevent executing on elements not in the layout flow
     if (this.element.getStyle('display')=='none') { this.cancel(); return; }
+    // Disable background image during the effect
     this.oldStyle = { };
     if (!this.options.keepBackgroundImage) {
       this.oldStyle.backgroundImage = this.element.getStyle('background-image');
@@ -7333,6 +7579,7 @@ Effect.Highlight = Class.create(Effect.Base, {
       this.options.endcolor = this.element.getStyle('background-color').parseColor('#ffffff');
     if (!this.options.restorecolor)
       this.options.restorecolor = this.element.getStyle('background-color');
+    // init color calculations
     this._base  = $R(0,2).map(function(i){ return parseInt(this.options.startcolor.slice(i*2+1,i*2+3),16) }.bind(this));
     this._delta = $R(0,2).map(function(i){ return parseInt(this.options.endcolor.slice(i*2+1,i*2+3),16)-this._base[i] }.bind(this));
   },
@@ -7383,6 +7630,7 @@ Effect.Appear = function(element) {
   var options = Object.extend({
   from: (element.getStyle('display') == 'none' ? 0.0 : element.getOpacity() || 0.0),
   to:   1.0,
+  // force Safari to render floated elements properly
   afterFinishInternal: function(effect) {
     effect.element.forceRerendering();
   },
@@ -7519,6 +7767,7 @@ Effect.Shake = function(element) {
 
 Effect.SlideDown = function(element) {
   element = $(element).cleanWhitespace();
+  // SlideDown need to have the content of the element wrapped in a container element with fixed height!
   var oldInnerBottom = element.down().getStyle('bottom');
   var elementDimensions = element.getDimensions();
   return new Effect.Scale(element, 100, Object.extend({
@@ -7573,6 +7822,7 @@ Effect.SlideUp = function(element) {
   );
 };
 
+// Bug in opera makes the TD containing this element expand for a instance after finish
 Effect.Squish = function(element) {
   return new Effect.Scale(element, window.opera ? 1 : 0, {
     restoreAfterFinish: true,
@@ -7957,7 +8207,10 @@ $w('getInlineOpacity forceRerendering setContentZoom collectTextNodes collectTex
   function(f) { Effect.Methods[f] = Element[f]; }
 );
 
-Element.addMethods(Effect.Methods);
+Element.addMethods(Effect.Methods);// Copyright (c) 2005-2010 Thomas Fuchs (http://script.aculo.us, http://mir.aculo.us)
+//
+// script.aculo.us is freely distributable under the terms of an MIT-style license.
+// For details, see the script.aculo.us web site: http://script.aculo.us/
 
 if(Object.isUndefined(Effect))
   throw("dragdrop.js requires including script.aculo.us' effects.js library");
@@ -7977,6 +8230,7 @@ var Droppables = {
       tree:       false
     }, arguments[1] || { });
 
+    // cache containers
     if(options.containment) {
       options._containers = [];
       var containment = options.containment;
@@ -8123,6 +8377,8 @@ var Draggables = {
   updateDrag: function(event) {
     if(!this.activeDraggable) return;
     var pointer = [Event.pointerX(event), Event.pointerY(event)];
+    // Mozilla-based browsers fire successive mousemove events with
+    // the same coordinates, prevent needless redrawing (moz bug?)
     if(this._lastPointer && (this._lastPointer.inspect() == pointer.inspect())) return;
     this._lastPointer = pointer;
 
@@ -8253,6 +8509,7 @@ var Draggable = Class.create({
     if(!Object.isUndefined(Draggable._dragging[this.element]) &&
       Draggable._dragging[this.element]) return;
     if(Event.isLeftClick(event)) {
+      // abort on form elements, fixes a Firefox issue
       var src = Event.element(event);
       if((tag_name = src.tagName.toUpperCase()) && (
         tag_name=='INPUT' ||
@@ -8338,6 +8595,7 @@ var Draggable = Class.create({
       this.startScrolling(speed);
     }
 
+    // fix AppleWebKit rendering
     if(Prototype.Browser.WebKit) window.scrollBy(0,0);
 
     Event.stop(event);
@@ -8592,6 +8850,8 @@ var Sortable = {
       scrollSpeed: 15,
       format:      this.SERIALIZE_RULE,
 
+      // these take arrays of elements or ids and can be
+      // used for better initialization performance
       elements:    false,
       handles:     false,
 
@@ -8599,8 +8859,10 @@ var Sortable = {
       onUpdate:    Prototype.emptyFunction
     }, arguments[1] || { });
 
+    // clear any old sortable with same element
     this.destroy(element);
 
+    // build options for the draggables
     var options_for_draggable = {
       revert:      true,
       quiet:       options.quiet,
@@ -8629,6 +8891,7 @@ var Sortable = {
     if(options.zindex)
       options_for_draggable.zindex = options.zindex;
 
+    // build options for the droppables
     var options_for_droppable = {
       overlap:     options.overlap,
       containment: options.containment,
@@ -8644,11 +8907,13 @@ var Sortable = {
       hoverclass:   options.hoverclass
     };
 
+    // fix for gecko engine
     Element.cleanWhitespace(element);
 
     options.draggables = [];
     options.droppables = [];
 
+    // drop on empty handling
     if(options.dropOnEmpty || options.tree) {
       Droppables.add(element, options_for_tree);
       options.droppables.push(element);
@@ -8672,12 +8937,15 @@ var Sortable = {
       });
     }
 
+    // keep reference
     this.sortables[element.identify()] = options;
 
+    // for onupdate
     Draggables.addObserver(new SortableObserver(element, options.onUpdate));
 
   },
 
+  // return all suitable-for-sortable elements in a guaranteed order
   findElements: function(element, options) {
     return Element.findChildren(
       element, options.only, options.tree ? true : false, options.tag);
@@ -8755,6 +9023,7 @@ var Sortable = {
   },
 
   mark: function(dropon, position) {
+    // mark on ghosting only
     var sortable = Sortable.options(dropon.parentNode);
     if(sortable && !sortable.ghosting) return;
 
@@ -8882,6 +9151,7 @@ var Sortable = {
   }
 };
 
+// Returns true if child is contained within element
 Element.isParent = function(child, element) {
   if (!child.parentNode || child == element) return false;
   if (child.parentNode == element) return true;
@@ -8908,8 +9178,7 @@ Element.findChildren = function(element, only, recursive, tagName) {
 
 Element.offsetSize = function (element, type) {
   return element['offset' + ((type=='vertical' || type=='height') ? 'Height' : 'Width')];
-};
-/**
+};/**
  * http://www.openjs.com/scripts/events/keyboard_shortcuts/
  * Version : 2.01.B
  * By Binny V A
@@ -8918,6 +9187,7 @@ Element.offsetSize = function (element, type) {
 shortcut = {
 	'all_shortcuts':{},//All the shortcuts are stored in this array
 	'add': function(shortcut_combination,callback,opt) {
+		//Provide a set of default options
 		var default_options = {
 			'type':'keydown',
 			'propagate':false,
@@ -8937,9 +9207,10 @@ shortcut = {
 		var ths = this;
 		shortcut_combination = shortcut_combination.toLowerCase();
 
+		//The function to be called at keypress
 		var func = function(e) {
 			e = e || window.event;
-
+			
 			if(opt['disable_in_input']) { //Don't enable shortcut keys in Input, Textarea fields
 				var element;
 				if(e.target) element=e.target;
@@ -8948,17 +9219,20 @@ shortcut = {
 
 				if(element.tagName == 'INPUT' || element.tagName == 'TEXTAREA') return;
 			}
-
+	
+			//Find Which key is pressed
 			if (e.keyCode) code = e.keyCode;
 			else if (e.which) code = e.which;
 			var character = String.fromCharCode(code).toLowerCase();
-
+			
 			if(code == 188) character=","; //If the user presses , when the type is onkeydown
 			if(code == 190) character="."; //If the user presses , when the type is onkeydown
 
 			var keys = shortcut_combination.split("+");
+			//Key Pressed - counts the number of valid keypresses - if it is same as the number of keys, the shortcut function is invoked
 			var kp = 0;
-
+			
+			//Work around for stupid Shift key bug created by using lowercase - as a result the shift+num combination was broken
 			var shift_nums = {
 				"`":"~",
 				"1":"!",
@@ -8980,6 +9254,7 @@ shortcut = {
 				"/":"?",
 				"\\":"|"
 			}
+			//Special Keys - and their codes
 			var special_keys = {
 				'esc':27,
 				'escape':27,
@@ -8988,7 +9263,7 @@ shortcut = {
 				'return':13,
 				'enter':13,
 				'backspace':8,
-
+	
 				'scrolllock':145,
 				'scroll_lock':145,
 				'scroll':145,
@@ -8998,28 +9273,28 @@ shortcut = {
 				'numlock':144,
 				'num_lock':144,
 				'num':144,
-
+				
 				'pause':19,
 				'break':19,
-
+				
 				'insert':45,
 				'home':36,
 				'delete':46,
 				'end':35,
-
+				
 				'pageup':33,
 				'page_up':33,
 				'pu':33,
-
+	
 				'pagedown':34,
 				'page_down':34,
 				'pd':34,
-
+	
 				'left':37,
 				'up':38,
 				'right':39,
 				'down':40,
-
+	
 				'f1':112,
 				'f2':113,
 				'f3':114,
@@ -9033,20 +9308,21 @@ shortcut = {
 				'f11':122,
 				'f12':123
 			}
-
-			var modifiers = {
+	
+			var modifiers = { 
 				shift: { wanted:false, pressed:false},
 				ctrl : { wanted:false, pressed:false},
 				alt  : { wanted:false, pressed:false},
 				meta : { wanted:false, pressed:false}	//Meta is Mac specific
 			};
-
+                        
 			if(e.ctrlKey)	modifiers.ctrl.pressed = true;
 			if(e.shiftKey)	modifiers.shift.pressed = true;
 			if(e.altKey)	modifiers.alt.pressed = true;
 			if(e.metaKey)   modifiers.meta.pressed = true;
-
+                        
 			for(var i=0; k=keys[i],i<keys.length; i++) {
+				//Modifiers
 				if(k == 'ctrl' || k == 'control') {
 					kp++;
 					modifiers.ctrl.wanted = true;
@@ -9063,7 +9339,7 @@ shortcut = {
 					modifiers.meta.wanted = true;
 				} else if(k.length > 1) { //If it is a special key
 					if(special_keys[k] == code) kp++;
-
+					
 				} else if(opt['keycode']) {
 					if(opt['keycode'] == code) kp++;
 
@@ -9071,24 +9347,26 @@ shortcut = {
 					if(character == k) kp++;
 					else {
 						if(shift_nums[character] && e.shiftKey) { //Stupid Shift key bug created by using lowercase
-							character = shift_nums[character];
+							character = shift_nums[character]; 
 							if(character == k) kp++;
 						}
 					}
 				}
 			}
-
-			if(kp == keys.length &&
+			
+			if(kp == keys.length && 
 						modifiers.ctrl.pressed == modifiers.ctrl.wanted &&
 						modifiers.shift.pressed == modifiers.shift.wanted &&
 						modifiers.alt.pressed == modifiers.alt.wanted &&
 						modifiers.meta.pressed == modifiers.meta.wanted) {
 				callback(e);
-
+	
 				if(!opt['propagate']) { //Stop the event
+					//e.cancelBubble is supported by IE - this will kill the bubbling process.
 					e.cancelBubble = true;
 					e.returnValue = false;
-
+	
+					//e.stopPropagation works in Firefox.
 					if (e.stopPropagation) {
 						e.stopPropagation();
 						e.preventDefault();
@@ -9098,15 +9376,17 @@ shortcut = {
 			}
 		}
 		this.all_shortcuts[shortcut_combination] = {
-			'callback':func,
-			'target':ele,
+			'callback':func, 
+			'target':ele, 
 			'event': opt['type']
 		};
+		//Attach the function with the event
 		if(ele.addEventListener) ele.addEventListener(opt['type'], func, false);
 		else if(ele.attachEvent) ele.attachEvent('on'+opt['type'], func);
 		else ele['on'+opt['type']] = func;
 	},
 
+	//Remove the shortcut - just specify the shortcut and I will remove the binding
 	'remove':function(shortcut_combination) {
 		shortcut_combination = shortcut_combination.toLowerCase();
 		var binding = this.all_shortcuts[shortcut_combination];
@@ -9121,6 +9401,55 @@ shortcut = {
 		else ele['on'+type] = false;
 	}
 };
+/**
+sprintf() for JavaScript 0.6
+
+Copyright (c) Alexandru Marasteanu <alexaholic [at) gmail (dot] com>
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+    * Redistributions of source code must retain the above copyright
+      notice, this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright
+      notice, this list of conditions and the following disclaimer in the
+      documentation and/or other materials provided with the distribution.
+    * Neither the name of sprintf() for JavaScript nor the
+      names of its contributors may be used to endorse or promote products
+      derived from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL Alexandru Marasteanu BE LIABLE FOR ANY
+DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+
+Changelog:
+2007.04.03 - 0.1:
+ - initial release
+2007.09.11 - 0.2:
+ - feature: added argument swapping
+2007.09.17 - 0.3:
+ - bug fix: no longer throws exception on empty paramenters (Hans Pufal)
+2007.10.21 - 0.4:
+ - unit test and patch (David Baird)
+2010.05.09 - 0.5:
+ - bug fix: 0 is now preceeded with a + sign
+ - bug fix: the sign was not at the right position on padded results (Kamal Abdali)
+ - switched from GPL to BSD license
+2010.05.22 - 0.6:
+ - reverted to 0.4 and fixed the bug regarding the sign of the number 0
+ Note:
+ Thanks to Raphael Pigulla <raph (at] n3rd [dot) org> (http://www.n3rd.org/)
+ who warned me about a bug in 0.5, I discovered that the last update was
+ a regress. I appologize for that.
+**/
 
 function str_repeat(i, m) {
 	for (var o = []; m > 0; o[--m] = i);
@@ -9168,6 +9497,398 @@ function sprintf() {
 	}
 	return o.join('');
 }
+/*	SWFObject v2.2 <http://code.google.com/p/swfobject/> 
+	is released under the MIT License <http://www.opensource.org/licenses/mit-license.php> 
+*/
+var swfobject=function(){var D="undefined",r="object",S="Shockwave Flash",W="ShockwaveFlash.ShockwaveFlash",q="application/x-shockwave-flash",R="SWFObjectExprInst",x="onreadystatechange",O=window,j=document,t=navigator,T=false,U=[h],o=[],N=[],I=[],l,Q,E,B,J=false,a=false,n,G,m=true,M=function(){var aa=typeof j.getElementById!=D&&typeof j.getElementsByTagName!=D&&typeof j.createElement!=D,ah=t.userAgent.toLowerCase(),Y=t.platform.toLowerCase(),ae=Y?/win/.test(Y):/win/.test(ah),ac=Y?/mac/.test(Y):/mac/.test(ah),af=/webkit/.test(ah)?parseFloat(ah.replace(/^.*webkit\/(\d+(\.\d+)?).*$/,"$1")):false,X=!+"\v1",ag=[0,0,0],ab=null;if(typeof t.plugins!=D&&typeof t.plugins[S]==r){ab=t.plugins[S].description;if(ab&&!(typeof t.mimeTypes!=D&&t.mimeTypes[q]&&!t.mimeTypes[q].enabledPlugin)){T=true;X=false;ab=ab.replace(/^.*\s+(\S+\s+\S+$)/,"$1");ag[0]=parseInt(ab.replace(/^(.*)\..*$/,"$1"),10);ag[1]=parseInt(ab.replace(/^.*\.(.*)\s.*$/,"$1"),10);ag[2]=/[a-zA-Z]/.test(ab)?parseInt(ab.replace(/^.*[a-zA-Z]+(.*)$/,"$1"),10):0}}else{if(typeof O.ActiveXObject!=D){try{var ad=new ActiveXObject(W);if(ad){ab=ad.GetVariable("$version");if(ab){X=true;ab=ab.split(" ")[1].split(",");ag=[parseInt(ab[0],10),parseInt(ab[1],10),parseInt(ab[2],10)]}}}catch(Z){}}}return{w3:aa,pv:ag,wk:af,ie:X,win:ae,mac:ac}}(),k=function(){if(!M.w3){return}if((typeof j.readyState!=D&&j.readyState=="complete")||(typeof j.readyState==D&&(j.getElementsByTagName("body")[0]||j.body))){f()}if(!J){if(typeof j.addEventListener!=D){j.addEventListener("DOMContentLoaded",f,false)}if(M.ie&&M.win){j.attachEvent(x,function(){if(j.readyState=="complete"){j.detachEvent(x,arguments.callee);f()}});if(O==top){(function(){if(J){return}try{j.documentElement.doScroll("left")}catch(X){setTimeout(arguments.callee,0);return}f()})()}}if(M.wk){(function(){if(J){return}if(!/loaded|complete/.test(j.readyState)){setTimeout(arguments.callee,0);return}f()})()}s(f)}}();function f(){if(J){return}try{var Z=j.getElementsByTagName("body")[0].appendChild(C("span"));Z.parentNode.removeChild(Z)}catch(aa){return}J=true;var X=U.length;for(var Y=0;Y<X;Y++){U[Y]()}}function K(X){if(J){X()}else{U[U.length]=X}}function s(Y){if(typeof O.addEventListener!=D){O.addEventListener("load",Y,false)}else{if(typeof j.addEventListener!=D){j.addEventListener("load",Y,false)}else{if(typeof O.attachEvent!=D){i(O,"onload",Y)}else{if(typeof O.onload=="function"){var X=O.onload;O.onload=function(){X();Y()}}else{O.onload=Y}}}}}function h(){if(T){V()}else{H()}}function V(){var X=j.getElementsByTagName("body")[0];var aa=C(r);aa.setAttribute("type",q);var Z=X.appendChild(aa);if(Z){var Y=0;(function(){if(typeof Z.GetVariable!=D){var ab=Z.GetVariable("$version");if(ab){ab=ab.split(" ")[1].split(",");M.pv=[parseInt(ab[0],10),parseInt(ab[1],10),parseInt(ab[2],10)]}}else{if(Y<10){Y++;setTimeout(arguments.callee,10);return}}X.removeChild(aa);Z=null;H()})()}else{H()}}function H(){var ag=o.length;if(ag>0){for(var af=0;af<ag;af++){var Y=o[af].id;var ab=o[af].callbackFn;var aa={success:false,id:Y};if(M.pv[0]>0){var ae=c(Y);if(ae){if(F(o[af].swfVersion)&&!(M.wk&&M.wk<312)){w(Y,true);if(ab){aa.success=true;aa.ref=z(Y);ab(aa)}}else{if(o[af].expressInstall&&A()){var ai={};ai.data=o[af].expressInstall;ai.width=ae.getAttribute("width")||"0";ai.height=ae.getAttribute("height")||"0";if(ae.getAttribute("class")){ai.styleclass=ae.getAttribute("class")}if(ae.getAttribute("align")){ai.align=ae.getAttribute("align")}var ah={};var X=ae.getElementsByTagName("param");var ac=X.length;for(var ad=0;ad<ac;ad++){if(X[ad].getAttribute("name").toLowerCase()!="movie"){ah[X[ad].getAttribute("name")]=X[ad].getAttribute("value")}}P(ai,ah,Y,ab)}else{p(ae);if(ab){ab(aa)}}}}}else{w(Y,true);if(ab){var Z=z(Y);if(Z&&typeof Z.SetVariable!=D){aa.success=true;aa.ref=Z}ab(aa)}}}}}function z(aa){var X=null;var Y=c(aa);if(Y&&Y.nodeName=="OBJECT"){if(typeof Y.SetVariable!=D){X=Y}else{var Z=Y.getElementsByTagName(r)[0];if(Z){X=Z}}}return X}function A(){return !a&&F("6.0.65")&&(M.win||M.mac)&&!(M.wk&&M.wk<312)}function P(aa,ab,X,Z){a=true;E=Z||null;B={success:false,id:X};var ae=c(X);if(ae){if(ae.nodeName=="OBJECT"){l=g(ae);Q=null}else{l=ae;Q=X}aa.id=R;if(typeof aa.width==D||(!/%$/.test(aa.width)&&parseInt(aa.width,10)<310)){aa.width="310"}if(typeof aa.height==D||(!/%$/.test(aa.height)&&parseInt(aa.height,10)<137)){aa.height="137"}j.title=j.title.slice(0,47)+" - Flash Player Installation";var ad=M.ie&&M.win?"ActiveX":"PlugIn",ac="MMredirectURL="+O.location.toString().replace(/&/g,"%26")+"&MMplayerType="+ad+"&MMdoctitle="+j.title;if(typeof ab.flashvars!=D){ab.flashvars+="&"+ac}else{ab.flashvars=ac}if(M.ie&&M.win&&ae.readyState!=4){var Y=C("div");X+="SWFObjectNew";Y.setAttribute("id",X);ae.parentNode.insertBefore(Y,ae);ae.style.display="none";(function(){if(ae.readyState==4){ae.parentNode.removeChild(ae)}else{setTimeout(arguments.callee,10)}})()}u(aa,ab,X)}}function p(Y){if(M.ie&&M.win&&Y.readyState!=4){var X=C("div");Y.parentNode.insertBefore(X,Y);X.parentNode.replaceChild(g(Y),X);Y.style.display="none";(function(){if(Y.readyState==4){Y.parentNode.removeChild(Y)}else{setTimeout(arguments.callee,10)}})()}else{Y.parentNode.replaceChild(g(Y),Y)}}function g(ab){var aa=C("div");if(M.win&&M.ie){aa.innerHTML=ab.innerHTML}else{var Y=ab.getElementsByTagName(r)[0];if(Y){var ad=Y.childNodes;if(ad){var X=ad.length;for(var Z=0;Z<X;Z++){if(!(ad[Z].nodeType==1&&ad[Z].nodeName=="PARAM")&&!(ad[Z].nodeType==8)){aa.appendChild(ad[Z].cloneNode(true))}}}}}return aa}function u(ai,ag,Y){var X,aa=c(Y);if(M.wk&&M.wk<312){return X}if(aa){if(typeof ai.id==D){ai.id=Y}if(M.ie&&M.win){var ah="";for(var ae in ai){if(ai[ae]!=Object.prototype[ae]){if(ae.toLowerCase()=="data"){ag.movie=ai[ae]}else{if(ae.toLowerCase()=="styleclass"){ah+=' class="'+ai[ae]+'"'}else{if(ae.toLowerCase()!="classid"){ah+=" "+ae+'="'+ai[ae]+'"'}}}}}var af="";for(var ad in ag){if(ag[ad]!=Object.prototype[ad]){af+='<param name="'+ad+'" value="'+ag[ad]+'" />'}}aa.outerHTML='<object classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000"'+ah+">"+af+"</object>";N[N.length]=ai.id;X=c(ai.id)}else{var Z=C(r);Z.setAttribute("type",q);for(var ac in ai){if(ai[ac]!=Object.prototype[ac]){if(ac.toLowerCase()=="styleclass"){Z.setAttribute("class",ai[ac])}else{if(ac.toLowerCase()!="classid"){Z.setAttribute(ac,ai[ac])}}}}for(var ab in ag){if(ag[ab]!=Object.prototype[ab]&&ab.toLowerCase()!="movie"){e(Z,ab,ag[ab])}}aa.parentNode.replaceChild(Z,aa);X=Z}}return X}function e(Z,X,Y){var aa=C("param");aa.setAttribute("name",X);aa.setAttribute("value",Y);Z.appendChild(aa)}function y(Y){var X=c(Y);if(X&&X.nodeName=="OBJECT"){if(M.ie&&M.win){X.style.display="none";(function(){if(X.readyState==4){b(Y)}else{setTimeout(arguments.callee,10)}})()}else{X.parentNode.removeChild(X)}}}function b(Z){var Y=c(Z);if(Y){for(var X in Y){if(typeof Y[X]=="function"){Y[X]=null}}Y.parentNode.removeChild(Y)}}function c(Z){var X=null;try{X=j.getElementById(Z)}catch(Y){}return X}function C(X){return j.createElement(X)}function i(Z,X,Y){Z.attachEvent(X,Y);I[I.length]=[Z,X,Y]}function F(Z){var Y=M.pv,X=Z.split(".");X[0]=parseInt(X[0],10);X[1]=parseInt(X[1],10)||0;X[2]=parseInt(X[2],10)||0;return(Y[0]>X[0]||(Y[0]==X[0]&&Y[1]>X[1])||(Y[0]==X[0]&&Y[1]==X[1]&&Y[2]>=X[2]))?true:false}function v(ac,Y,ad,ab){if(M.ie&&M.mac){return}var aa=j.getElementsByTagName("head")[0];if(!aa){return}var X=(ad&&typeof ad=="string")?ad:"screen";if(ab){n=null;G=null}if(!n||G!=X){var Z=C("style");Z.setAttribute("type","text/css");Z.setAttribute("media",X);n=aa.appendChild(Z);if(M.ie&&M.win&&typeof j.styleSheets!=D&&j.styleSheets.length>0){n=j.styleSheets[j.styleSheets.length-1]}G=X}if(M.ie&&M.win){if(n&&typeof n.addRule==r){n.addRule(ac,Y)}}else{if(n&&typeof j.createTextNode!=D){n.appendChild(j.createTextNode(ac+" {"+Y+"}"))}}}function w(Z,X){if(!m){return}var Y=X?"visible":"hidden";if(J&&c(Z)){c(Z).style.visibility=Y}else{v("#"+Z,"visibility:"+Y)}}function L(Y){var Z=/[\\\"<>\.;]/;var X=Z.exec(Y)!=null;return X&&typeof encodeURIComponent!=D?encodeURIComponent(Y):Y}var d=function(){if(M.ie&&M.win){window.attachEvent("onunload",function(){var ac=I.length;for(var ab=0;ab<ac;ab++){I[ab][0].detachEvent(I[ab][1],I[ab][2])}var Z=N.length;for(var aa=0;aa<Z;aa++){y(N[aa])}for(var Y in M){M[Y]=null}M=null;for(var X in swfobject){swfobject[X]=null}swfobject=null})}}();return{registerObject:function(ab,X,aa,Z){if(M.w3&&ab&&X){var Y={};Y.id=ab;Y.swfVersion=X;Y.expressInstall=aa;Y.callbackFn=Z;o[o.length]=Y;w(ab,false)}else{if(Z){Z({success:false,id:ab})}}},getObjectById:function(X){if(M.w3){return z(X)}},embedSWF:function(ab,ah,ae,ag,Y,aa,Z,ad,af,ac){var X={success:false,id:ah};if(M.w3&&!(M.wk&&M.wk<312)&&ab&&ah&&ae&&ag&&Y){w(ah,false);K(function(){ae+="";ag+="";var aj={};if(af&&typeof af===r){for(var al in af){aj[al]=af[al]}}aj.data=ab;aj.width=ae;aj.height=ag;var am={};if(ad&&typeof ad===r){for(var ak in ad){am[ak]=ad[ak]}}if(Z&&typeof Z===r){for(var ai in Z){if(typeof am.flashvars!=D){am.flashvars+="&"+ai+"="+Z[ai]}else{am.flashvars=ai+"="+Z[ai]}}}if(F(Y)){var an=u(aj,am,ah);if(aj.id==ah){w(ah,true)}X.success=true;X.ref=an}else{if(aa&&A()){aj.data=aa;P(aj,am,ah,ac);return}else{w(ah,true)}}if(ac){ac(X)}})}else{if(ac){ac(X)}}},switchOffAutoHideShow:function(){m=false},ua:M,getFlashPlayerVersion:function(){return{major:M.pv[0],minor:M.pv[1],release:M.pv[2]}},hasFlashPlayerVersion:F,createSWF:function(Z,Y,X){if(M.w3){return u(Z,Y,X)}else{return undefined}},showExpressInstall:function(Z,aa,X,Y){if(M.w3&&A()){P(Z,aa,X,Y)}},removeSWF:function(X){if(M.w3){y(X)}},createCSS:function(aa,Z,Y,X){if(M.w3){v(aa,Z,Y,X)}},addDomLoadEvent:K,addLoadEvent:s,getQueryParamValue:function(aa){var Z=j.location.search||j.location.hash;if(Z){if(/\?/.test(Z)){Z=Z.split("?")[1]}if(aa==null){return L(Z)}var Y=Z.split("&");for(var X=0;X<Y.length;X++){if(Y[X].substring(0,Y[X].indexOf("="))==aa){return L(Y[X].substring((Y[X].indexOf("=")+1)))}}}return""},expressInstallCallback:function(){if(a){var X=c(R);if(X&&l){X.parentNode.replaceChild(l,X);if(Q){w(Q,true);if(M.ie&&M.win){l.style.display="block"}}if(E){E(B)}}a=false}}}}();// Copyright: Hiroshi Ichikawa <http://gimite.net/en/>
+// License: New BSD License
+// Reference: http://dev.w3.org/html5/websockets/
+// Reference: http://tools.ietf.org/html/rfc6455
+
+(function() {
+  
+  if (window.WEB_SOCKET_FORCE_FLASH) {
+    // Keeps going.
+  } else if (window.WebSocket) {
+    return;
+  } else if (window.MozWebSocket) {
+    // Firefox.
+    window.WebSocket = MozWebSocket;
+    return;
+  }
+  
+  var logger;
+  if (window.WEB_SOCKET_LOGGER) {
+    logger = WEB_SOCKET_LOGGER;
+  } else if (window.console && window.console.log && window.console.error) {
+    // In some environment, console is defined but console.log or console.error is missing.
+    logger = window.console;
+  } else {
+    logger = {log: function(){ }, error: function(){ }};
+  }
+  
+  // swfobject.hasFlashPlayerVersion("10.0.0") doesn't work with Gnash.
+  if (swfobject.getFlashPlayerVersion().major < 10) {
+    logger.error("Flash Player >= 10.0.0 is required.");
+    return;
+  }
+  if (location.protocol == "file:") {
+    logger.error(
+      "WARNING: web-socket-js doesn't work in file:///... URL " +
+      "unless you set Flash Security Settings properly. " +
+      "Open the page via Web server i.e. http://...");
+  }
+
+  /**
+   * Our own implementation of WebSocket class using Flash.
+   * @param {string} url
+   * @param {array or string} protocols
+   * @param {string} proxyHost
+   * @param {int} proxyPort
+   * @param {string} headers
+   */
+  window.WebSocket = function(url, protocols, proxyHost, proxyPort, headers) {
+    var self = this;
+    self.__id = WebSocket.__nextId++;
+    WebSocket.__instances[self.__id] = self;
+    self.readyState = WebSocket.CONNECTING;
+    self.bufferedAmount = 0;
+    self.__events = {};
+    if (!protocols) {
+      protocols = [];
+    } else if (typeof protocols == "string") {
+      protocols = [protocols];
+    }
+    // Uses setTimeout() to make sure __createFlash() runs after the caller sets ws.onopen etc.
+    // Otherwise, when onopen fires immediately, onopen is called before it is set.
+    self.__createTask = setTimeout(function() {
+      WebSocket.__addTask(function() {
+        self.__createTask = null;
+        WebSocket.__flash.create(
+            self.__id, url, protocols, proxyHost || null, proxyPort || 0, headers || null);
+      });
+    }, 0);
+  };
+
+  /**
+   * Send data to the web socket.
+   * @param {string} data  The data to send to the socket.
+   * @return {boolean}  True for success, false for failure.
+   */
+  WebSocket.prototype.send = function(data) {
+    if (this.readyState == WebSocket.CONNECTING) {
+      throw "INVALID_STATE_ERR: Web Socket connection has not been established";
+    }
+    // We use encodeURIComponent() here, because FABridge doesn't work if
+    // the argument includes some characters. We don't use escape() here
+    // because of this:
+    // https://developer.mozilla.org/en/Core_JavaScript_1.5_Guide/Functions#escape_and_unescape_Functions
+    // But it looks decodeURIComponent(encodeURIComponent(s)) doesn't
+    // preserve all Unicode characters either e.g. "\uffff" in Firefox.
+    // Note by wtritch: Hopefully this will not be necessary using ExternalInterface.  Will require
+    // additional testing.
+    var result = WebSocket.__flash.send(this.__id, encodeURIComponent(data));
+    if (result < 0) { // success
+      return true;
+    } else {
+      this.bufferedAmount += result;
+      return false;
+    }
+  };
+
+  /**
+   * Close this web socket gracefully.
+   */
+  WebSocket.prototype.close = function() {
+    if (this.__createTask) {
+      clearTimeout(this.__createTask);
+      this.__createTask = null;
+      this.readyState = WebSocket.CLOSED;
+      return;
+    }
+    if (this.readyState == WebSocket.CLOSED || this.readyState == WebSocket.CLOSING) {
+      return;
+    }
+    this.readyState = WebSocket.CLOSING;
+    WebSocket.__flash.close(this.__id);
+  };
+
+  /**
+   * Implementation of {@link <a href="http://www.w3.org/TR/DOM-Level-2-Events/events.html#Events-registration">DOM 2 EventTarget Interface</a>}
+   *
+   * @param {string} type
+   * @param {function} listener
+   * @param {boolean} useCapture
+   * @return void
+   */
+  WebSocket.prototype.addEventListener = function(type, listener, useCapture) {
+    if (!(type in this.__events)) {
+      this.__events[type] = [];
+    }
+    this.__events[type].push(listener);
+  };
+
+  /**
+   * Implementation of {@link <a href="http://www.w3.org/TR/DOM-Level-2-Events/events.html#Events-registration">DOM 2 EventTarget Interface</a>}
+   *
+   * @param {string} type
+   * @param {function} listener
+   * @param {boolean} useCapture
+   * @return void
+   */
+  WebSocket.prototype.removeEventListener = function(type, listener, useCapture) {
+    if (!(type in this.__events)) return;
+    var events = this.__events[type];
+    for (var i = events.length - 1; i >= 0; --i) {
+      if (events[i] === listener) {
+        events.splice(i, 1);
+        break;
+      }
+    }
+  };
+
+  /**
+   * Implementation of {@link <a href="http://www.w3.org/TR/DOM-Level-2-Events/events.html#Events-registration">DOM 2 EventTarget Interface</a>}
+   *
+   * @param {Event} event
+   * @return void
+   */
+  WebSocket.prototype.dispatchEvent = function(event) {
+    var events = this.__events[event.type] || [];
+    for (var i = 0; i < events.length; ++i) {
+      events[i](event);
+    }
+    var handler = this["on" + event.type];
+    if (handler) handler.apply(this, [event]);
+  };
+
+  /**
+   * Handles an event from Flash.
+   * @param {Object} flashEvent
+   */
+  WebSocket.prototype.__handleEvent = function(flashEvent) {
+    
+    if ("readyState" in flashEvent) {
+      this.readyState = flashEvent.readyState;
+    }
+    if ("protocol" in flashEvent) {
+      this.protocol = flashEvent.protocol;
+    }
+    
+    var jsEvent;
+    if (flashEvent.type == "open" || flashEvent.type == "error") {
+      jsEvent = this.__createSimpleEvent(flashEvent.type);
+    } else if (flashEvent.type == "close") {
+      jsEvent = this.__createSimpleEvent("close");
+      jsEvent.wasClean = flashEvent.wasClean ? true : false;
+      jsEvent.code = flashEvent.code;
+      jsEvent.reason = flashEvent.reason;
+    } else if (flashEvent.type == "message") {
+      var data = decodeURIComponent(flashEvent.message);
+      jsEvent = this.__createMessageEvent("message", data);
+    } else {
+      throw "unknown event type: " + flashEvent.type;
+    }
+    
+    this.dispatchEvent(jsEvent);
+    
+  };
+  
+  WebSocket.prototype.__createSimpleEvent = function(type) {
+    if (document.createEvent && window.Event) {
+      var event = document.createEvent("Event");
+      event.initEvent(type, false, false);
+      return event;
+    } else {
+      return {type: type, bubbles: false, cancelable: false};
+    }
+  };
+  
+  WebSocket.prototype.__createMessageEvent = function(type, data) {
+    if (document.createEvent && window.MessageEvent && !window.opera) {
+      var event = document.createEvent("MessageEvent");
+      event.initMessageEvent("message", false, false, data, null, null, window, null);
+      return event;
+    } else {
+      // IE and Opera, the latter one truncates the data parameter after any 0x00 bytes.
+      return {type: type, data: data, bubbles: false, cancelable: false};
+    }
+  };
+  
+  /**
+   * Define the WebSocket readyState enumeration.
+   */
+  WebSocket.CONNECTING = 0;
+  WebSocket.OPEN = 1;
+  WebSocket.CLOSING = 2;
+  WebSocket.CLOSED = 3;
+
+  WebSocket.__initialized = false;
+  WebSocket.__flash = null;
+  WebSocket.__instances = {};
+  WebSocket.__tasks = [];
+  WebSocket.__nextId = 0;
+  
+  /**
+   * Load a new flash security policy file.
+   * @param {string} url
+   */
+  WebSocket.loadFlashPolicyFile = function(url){
+    WebSocket.__addTask(function() {
+      WebSocket.__flash.loadManualPolicyFile(url);
+    });
+  };
+
+  /**
+   * Loads WebSocketMain.swf and creates WebSocketMain object in Flash.
+   */
+  WebSocket.__initialize = function() {
+    
+    if (WebSocket.__initialized) return;
+    WebSocket.__initialized = true;
+    
+    if (WebSocket.__swfLocation) {
+      // For backword compatibility.
+      window.WEB_SOCKET_SWF_LOCATION = WebSocket.__swfLocation;
+    }
+    if (!window.WEB_SOCKET_SWF_LOCATION) {
+      logger.error("[WebSocket] set WEB_SOCKET_SWF_LOCATION to location of WebSocketMain.swf");
+      return;
+    }
+    if (!window.WEB_SOCKET_SUPPRESS_CROSS_DOMAIN_SWF_ERROR &&
+        !WEB_SOCKET_SWF_LOCATION.match(/(^|\/)WebSocketMainInsecure\.swf(\?.*)?$/) &&
+        WEB_SOCKET_SWF_LOCATION.match(/^\w+:\/\/([^\/]+)/)) {
+      var swfHost = RegExp.$1;
+      if (location.host != swfHost) {
+        logger.error(
+            "[WebSocket] You must host HTML and WebSocketMain.swf in the same host " +
+            "('" + location.host + "' != '" + swfHost + "'). " +
+            "See also 'How to host HTML file and SWF file in different domains' section " +
+            "in README.md. If you use WebSocketMainInsecure.swf, you can suppress this message " +
+            "by WEB_SOCKET_SUPPRESS_CROSS_DOMAIN_SWF_ERROR = true;");
+      }
+    }
+    var container = document.createElement("div");
+    container.id = "webSocketContainer";
+    // Hides Flash box. We cannot use display: none or visibility: hidden because it prevents
+    // Flash from loading at least in IE. So we move it out of the screen at (-100, -100).
+    // But this even doesn't work with Flash Lite (e.g. in Droid Incredible). So with Flash
+    // Lite, we put it at (0, 0). This shows 1x1 box visible at left-top corner but this is
+    // the best we can do as far as we know now.
+    container.style.position = "absolute";
+    if (WebSocket.__isFlashLite()) {
+      container.style.left = "0px";
+      container.style.top = "0px";
+    } else {
+      container.style.left = "-100px";
+      container.style.top = "-100px";
+    }
+    var holder = document.createElement("div");
+    holder.id = "webSocketFlash";
+    container.appendChild(holder);
+    document.body.appendChild(container);
+    // See this article for hasPriority:
+    // http://help.adobe.com/en_US/as3/mobile/WS4bebcd66a74275c36cfb8137124318eebc6-7ffd.html
+    swfobject.embedSWF(
+      WEB_SOCKET_SWF_LOCATION,
+      "webSocketFlash",
+      "1" /* width */,
+      "1" /* height */,
+      "10.0.0" /* SWF version */,
+      null,
+      null,
+      {hasPriority: true, swliveconnect : true, allowScriptAccess: "always"},
+      null,
+      function(e) {
+        if (!e.success) {
+          logger.error("[WebSocket] swfobject.embedSWF failed");
+        }
+      }
+    );
+    
+  };
+  
+  /**
+   * Called by Flash to notify JS that it's fully loaded and ready
+   * for communication.
+   */
+  WebSocket.__onFlashInitialized = function() {
+    // We need to set a timeout here to avoid round-trip calls
+    // to flash during the initialization process.
+    setTimeout(function() {
+      WebSocket.__flash = document.getElementById("webSocketFlash");
+      WebSocket.__flash.setCallerUrl(location.href);
+      WebSocket.__flash.setDebug(!!window.WEB_SOCKET_DEBUG);
+      for (var i = 0; i < WebSocket.__tasks.length; ++i) {
+        WebSocket.__tasks[i]();
+      }
+      WebSocket.__tasks = [];
+    }, 0);
+  };
+  
+  /**
+   * Called by Flash to notify WebSockets events are fired.
+   */
+  WebSocket.__onFlashEvent = function() {
+    setTimeout(function() {
+      try {
+        // Gets events using receiveEvents() instead of getting it from event object
+        // of Flash event. This is to make sure to keep message order.
+        // It seems sometimes Flash events don't arrive in the same order as they are sent.
+        var events = WebSocket.__flash.receiveEvents();
+        for (var i = 0; i < events.length; ++i) {
+          WebSocket.__instances[events[i].webSocketId].__handleEvent(events[i]);
+        }
+      } catch (e) {
+        logger.error(e);
+      }
+    }, 0);
+    return true;
+  };
+  
+  // Called by Flash.
+  WebSocket.__log = function(message) {
+    logger.log(decodeURIComponent(message));
+  };
+  
+  // Called by Flash.
+  WebSocket.__error = function(message) {
+    logger.error(decodeURIComponent(message));
+  };
+  
+  WebSocket.__addTask = function(task) {
+    if (WebSocket.__flash) {
+      task();
+    } else {
+      WebSocket.__tasks.push(task);
+    }
+  };
+  
+  /**
+   * Test if the browser is running flash lite.
+   * @return {boolean} True if flash lite is running, false otherwise.
+   */
+  WebSocket.__isFlashLite = function() {
+    if (!window.navigator || !window.navigator.mimeTypes) {
+      return false;
+    }
+    var mimeType = window.navigator.mimeTypes["application/x-shockwave-flash"];
+    if (!mimeType || !mimeType.enabledPlugin || !mimeType.enabledPlugin.filename) {
+      return false;
+    }
+    return mimeType.enabledPlugin.filename.match(/flashlite/i) ? true : false;
+  };
+  
+  if (!window.WEB_SOCKET_DISABLE_AUTO_INITIALIZATION) {
+    // NOTE:
+    //   This fires immediately if web_socket.js is dynamically loaded after
+    //   the document is loaded.
+    swfobject.addDomLoadEvent(function() {
+      WebSocket.__initialize();
+    });
+  }
+  
+})();
 /*  WysiHat - WYSIWYG JavaScript framework, version 0.2.1
  *  (c) 2008-2010 Joshua Peek
  *
@@ -9679,6 +10400,8 @@ if (!window.getSelection) {
     var selection = new Selection(document);
     return function() { return selection; };
   })();
+
+  window.getSelection.custom = true;
 }
 
 Object.extend(Range.prototype, (function() {
@@ -9735,7 +10458,7 @@ Object.extend(Range.prototype, (function() {
   };
 })());
 
-if (Prototype.Browser.IE) {
+if (window.getSelection.custom) {
   Object.extend(Selection.prototype, (function() {
     function getNode() {
       var range = this._document.selection.createRange();
@@ -10646,809 +11369,7 @@ WysiHat.Toolbar.ButtonSets.Basic = $A([
   { label: "Underline" },
   { label: "Italic" }
 ]);
-/*	SWFObject v2.2 <http://code.google.com/p/swfobject/>
-	is released under the MIT License <http://www.opensource.org/licenses/mit-license.php>
-*/
-var swfobject=function(){var D="undefined",r="object",S="Shockwave Flash",W="ShockwaveFlash.ShockwaveFlash",q="application/x-shockwave-flash",R="SWFObjectExprInst",x="onreadystatechange",O=window,j=document,t=navigator,T=false,U=[h],o=[],N=[],I=[],l,Q,E,B,J=false,a=false,n,G,m=true,M=function(){var aa=typeof j.getElementById!=D&&typeof j.getElementsByTagName!=D&&typeof j.createElement!=D,ah=t.userAgent.toLowerCase(),Y=t.platform.toLowerCase(),ae=Y?/win/.test(Y):/win/.test(ah),ac=Y?/mac/.test(Y):/mac/.test(ah),af=/webkit/.test(ah)?parseFloat(ah.replace(/^.*webkit\/(\d+(\.\d+)?).*$/,"$1")):false,X=!+"\v1",ag=[0,0,0],ab=null;if(typeof t.plugins!=D&&typeof t.plugins[S]==r){ab=t.plugins[S].description;if(ab&&!(typeof t.mimeTypes!=D&&t.mimeTypes[q]&&!t.mimeTypes[q].enabledPlugin)){T=true;X=false;ab=ab.replace(/^.*\s+(\S+\s+\S+$)/,"$1");ag[0]=parseInt(ab.replace(/^(.*)\..*$/,"$1"),10);ag[1]=parseInt(ab.replace(/^.*\.(.*)\s.*$/,"$1"),10);ag[2]=/[a-zA-Z]/.test(ab)?parseInt(ab.replace(/^.*[a-zA-Z]+(.*)$/,"$1"),10):0}}else{if(typeof O.ActiveXObject!=D){try{var ad=new ActiveXObject(W);if(ad){ab=ad.GetVariable("$version");if(ab){X=true;ab=ab.split(" ")[1].split(",");ag=[parseInt(ab[0],10),parseInt(ab[1],10),parseInt(ab[2],10)]}}}catch(Z){}}}return{w3:aa,pv:ag,wk:af,ie:X,win:ae,mac:ac}}(),k=function(){if(!M.w3){return}if((typeof j.readyState!=D&&j.readyState=="complete")||(typeof j.readyState==D&&(j.getElementsByTagName("body")[0]||j.body))){f()}if(!J){if(typeof j.addEventListener!=D){j.addEventListener("DOMContentLoaded",f,false)}if(M.ie&&M.win){j.attachEvent(x,function(){if(j.readyState=="complete"){j.detachEvent(x,arguments.callee);f()}});if(O==top){(function(){if(J){return}try{j.documentElement.doScroll("left")}catch(X){setTimeout(arguments.callee,0);return}f()})()}}if(M.wk){(function(){if(J){return}if(!/loaded|complete/.test(j.readyState)){setTimeout(arguments.callee,0);return}f()})()}s(f)}}();function f(){if(J){return}try{var Z=j.getElementsByTagName("body")[0].appendChild(C("span"));Z.parentNode.removeChild(Z)}catch(aa){return}J=true;var X=U.length;for(var Y=0;Y<X;Y++){U[Y]()}}function K(X){if(J){X()}else{U[U.length]=X}}function s(Y){if(typeof O.addEventListener!=D){O.addEventListener("load",Y,false)}else{if(typeof j.addEventListener!=D){j.addEventListener("load",Y,false)}else{if(typeof O.attachEvent!=D){i(O,"onload",Y)}else{if(typeof O.onload=="function"){var X=O.onload;O.onload=function(){X();Y()}}else{O.onload=Y}}}}}function h(){if(T){V()}else{H()}}function V(){var X=j.getElementsByTagName("body")[0];var aa=C(r);aa.setAttribute("type",q);var Z=X.appendChild(aa);if(Z){var Y=0;(function(){if(typeof Z.GetVariable!=D){var ab=Z.GetVariable("$version");if(ab){ab=ab.split(" ")[1].split(",");M.pv=[parseInt(ab[0],10),parseInt(ab[1],10),parseInt(ab[2],10)]}}else{if(Y<10){Y++;setTimeout(arguments.callee,10);return}}X.removeChild(aa);Z=null;H()})()}else{H()}}function H(){var ag=o.length;if(ag>0){for(var af=0;af<ag;af++){var Y=o[af].id;var ab=o[af].callbackFn;var aa={success:false,id:Y};if(M.pv[0]>0){var ae=c(Y);if(ae){if(F(o[af].swfVersion)&&!(M.wk&&M.wk<312)){w(Y,true);if(ab){aa.success=true;aa.ref=z(Y);ab(aa)}}else{if(o[af].expressInstall&&A()){var ai={};ai.data=o[af].expressInstall;ai.width=ae.getAttribute("width")||"0";ai.height=ae.getAttribute("height")||"0";if(ae.getAttribute("class")){ai.styleclass=ae.getAttribute("class")}if(ae.getAttribute("align")){ai.align=ae.getAttribute("align")}var ah={};var X=ae.getElementsByTagName("param");var ac=X.length;for(var ad=0;ad<ac;ad++){if(X[ad].getAttribute("name").toLowerCase()!="movie"){ah[X[ad].getAttribute("name")]=X[ad].getAttribute("value")}}P(ai,ah,Y,ab)}else{p(ae);if(ab){ab(aa)}}}}}else{w(Y,true);if(ab){var Z=z(Y);if(Z&&typeof Z.SetVariable!=D){aa.success=true;aa.ref=Z}ab(aa)}}}}}function z(aa){var X=null;var Y=c(aa);if(Y&&Y.nodeName=="OBJECT"){if(typeof Y.SetVariable!=D){X=Y}else{var Z=Y.getElementsByTagName(r)[0];if(Z){X=Z}}}return X}function A(){return !a&&F("6.0.65")&&(M.win||M.mac)&&!(M.wk&&M.wk<312)}function P(aa,ab,X,Z){a=true;E=Z||null;B={success:false,id:X};var ae=c(X);if(ae){if(ae.nodeName=="OBJECT"){l=g(ae);Q=null}else{l=ae;Q=X}aa.id=R;if(typeof aa.width==D||(!/%$/.test(aa.width)&&parseInt(aa.width,10)<310)){aa.width="310"}if(typeof aa.height==D||(!/%$/.test(aa.height)&&parseInt(aa.height,10)<137)){aa.height="137"}j.title=j.title.slice(0,47)+" - Flash Player Installation";var ad=M.ie&&M.win?"ActiveX":"PlugIn",ac="MMredirectURL="+O.location.toString().replace(/&/g,"%26")+"&MMplayerType="+ad+"&MMdoctitle="+j.title;if(typeof ab.flashvars!=D){ab.flashvars+="&"+ac}else{ab.flashvars=ac}if(M.ie&&M.win&&ae.readyState!=4){var Y=C("div");X+="SWFObjectNew";Y.setAttribute("id",X);ae.parentNode.insertBefore(Y,ae);ae.style.display="none";(function(){if(ae.readyState==4){ae.parentNode.removeChild(ae)}else{setTimeout(arguments.callee,10)}})()}u(aa,ab,X)}}function p(Y){if(M.ie&&M.win&&Y.readyState!=4){var X=C("div");Y.parentNode.insertBefore(X,Y);X.parentNode.replaceChild(g(Y),X);Y.style.display="none";(function(){if(Y.readyState==4){Y.parentNode.removeChild(Y)}else{setTimeout(arguments.callee,10)}})()}else{Y.parentNode.replaceChild(g(Y),Y)}}function g(ab){var aa=C("div");if(M.win&&M.ie){aa.innerHTML=ab.innerHTML}else{var Y=ab.getElementsByTagName(r)[0];if(Y){var ad=Y.childNodes;if(ad){var X=ad.length;for(var Z=0;Z<X;Z++){if(!(ad[Z].nodeType==1&&ad[Z].nodeName=="PARAM")&&!(ad[Z].nodeType==8)){aa.appendChild(ad[Z].cloneNode(true))}}}}}return aa}function u(ai,ag,Y){var X,aa=c(Y);if(M.wk&&M.wk<312){return X}if(aa){if(typeof ai.id==D){ai.id=Y}if(M.ie&&M.win){var ah="";for(var ae in ai){if(ai[ae]!=Object.prototype[ae]){if(ae.toLowerCase()=="data"){ag.movie=ai[ae]}else{if(ae.toLowerCase()=="styleclass"){ah+=' class="'+ai[ae]+'"'}else{if(ae.toLowerCase()!="classid"){ah+=" "+ae+'="'+ai[ae]+'"'}}}}}var af="";for(var ad in ag){if(ag[ad]!=Object.prototype[ad]){af+='<param name="'+ad+'" value="'+ag[ad]+'" />'}}aa.outerHTML='<object classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000"'+ah+">"+af+"</object>";N[N.length]=ai.id;X=c(ai.id)}else{var Z=C(r);Z.setAttribute("type",q);for(var ac in ai){if(ai[ac]!=Object.prototype[ac]){if(ac.toLowerCase()=="styleclass"){Z.setAttribute("class",ai[ac])}else{if(ac.toLowerCase()!="classid"){Z.setAttribute(ac,ai[ac])}}}}for(var ab in ag){if(ag[ab]!=Object.prototype[ab]&&ab.toLowerCase()!="movie"){e(Z,ab,ag[ab])}}aa.parentNode.replaceChild(Z,aa);X=Z}}return X}function e(Z,X,Y){var aa=C("param");aa.setAttribute("name",X);aa.setAttribute("value",Y);Z.appendChild(aa)}function y(Y){var X=c(Y);if(X&&X.nodeName=="OBJECT"){if(M.ie&&M.win){X.style.display="none";(function(){if(X.readyState==4){b(Y)}else{setTimeout(arguments.callee,10)}})()}else{X.parentNode.removeChild(X)}}}function b(Z){var Y=c(Z);if(Y){for(var X in Y){if(typeof Y[X]=="function"){Y[X]=null}}Y.parentNode.removeChild(Y)}}function c(Z){var X=null;try{X=j.getElementById(Z)}catch(Y){}return X}function C(X){return j.createElement(X)}function i(Z,X,Y){Z.attachEvent(X,Y);I[I.length]=[Z,X,Y]}function F(Z){var Y=M.pv,X=Z.split(".");X[0]=parseInt(X[0],10);X[1]=parseInt(X[1],10)||0;X[2]=parseInt(X[2],10)||0;return(Y[0]>X[0]||(Y[0]==X[0]&&Y[1]>X[1])||(Y[0]==X[0]&&Y[1]==X[1]&&Y[2]>=X[2]))?true:false}function v(ac,Y,ad,ab){if(M.ie&&M.mac){return}var aa=j.getElementsByTagName("head")[0];if(!aa){return}var X=(ad&&typeof ad=="string")?ad:"screen";if(ab){n=null;G=null}if(!n||G!=X){var Z=C("style");Z.setAttribute("type","text/css");Z.setAttribute("media",X);n=aa.appendChild(Z);if(M.ie&&M.win&&typeof j.styleSheets!=D&&j.styleSheets.length>0){n=j.styleSheets[j.styleSheets.length-1]}G=X}if(M.ie&&M.win){if(n&&typeof n.addRule==r){n.addRule(ac,Y)}}else{if(n&&typeof j.createTextNode!=D){n.appendChild(j.createTextNode(ac+" {"+Y+"}"))}}}function w(Z,X){if(!m){return}var Y=X?"visible":"hidden";if(J&&c(Z)){c(Z).style.visibility=Y}else{v("#"+Z,"visibility:"+Y)}}function L(Y){var Z=/[\\\"<>\.;]/;var X=Z.exec(Y)!=null;return X&&typeof encodeURIComponent!=D?encodeURIComponent(Y):Y}var d=function(){if(M.ie&&M.win){window.attachEvent("onunload",function(){var ac=I.length;for(var ab=0;ab<ac;ab++){I[ab][0].detachEvent(I[ab][1],I[ab][2])}var Z=N.length;for(var aa=0;aa<Z;aa++){y(N[aa])}for(var Y in M){M[Y]=null}M=null;for(var X in swfobject){swfobject[X]=null}swfobject=null})}}();return{registerObject:function(ab,X,aa,Z){if(M.w3&&ab&&X){var Y={};Y.id=ab;Y.swfVersion=X;Y.expressInstall=aa;Y.callbackFn=Z;o[o.length]=Y;w(ab,false)}else{if(Z){Z({success:false,id:ab})}}},getObjectById:function(X){if(M.w3){return z(X)}},embedSWF:function(ab,ah,ae,ag,Y,aa,Z,ad,af,ac){var X={success:false,id:ah};if(M.w3&&!(M.wk&&M.wk<312)&&ab&&ah&&ae&&ag&&Y){w(ah,false);K(function(){ae+="";ag+="";var aj={};if(af&&typeof af===r){for(var al in af){aj[al]=af[al]}}aj.data=ab;aj.width=ae;aj.height=ag;var am={};if(ad&&typeof ad===r){for(var ak in ad){am[ak]=ad[ak]}}if(Z&&typeof Z===r){for(var ai in Z){if(typeof am.flashvars!=D){am.flashvars+="&"+ai+"="+Z[ai]}else{am.flashvars=ai+"="+Z[ai]}}}if(F(Y)){var an=u(aj,am,ah);if(aj.id==ah){w(ah,true)}X.success=true;X.ref=an}else{if(aa&&A()){aj.data=aa;P(aj,am,ah,ac);return}else{w(ah,true)}}if(ac){ac(X)}})}else{if(ac){ac(X)}}},switchOffAutoHideShow:function(){m=false},ua:M,getFlashPlayerVersion:function(){return{major:M.pv[0],minor:M.pv[1],release:M.pv[2]}},hasFlashPlayerVersion:F,createSWF:function(Z,Y,X){if(M.w3){return u(Z,Y,X)}else{return undefined}},showExpressInstall:function(Z,aa,X,Y){if(M.w3&&A()){P(Z,aa,X,Y)}},removeSWF:function(X){if(M.w3){y(X)}},createCSS:function(aa,Z,Y,X){if(M.w3){v(aa,Z,Y,X)}},addDomLoadEvent:K,addLoadEvent:s,getQueryParamValue:function(aa){var Z=j.location.search||j.location.hash;if(Z){if(/\?/.test(Z)){Z=Z.split("?")[1]}if(aa==null){return L(Z)}var Y=Z.split("&");for(var X=0;X<Y.length;X++){if(Y[X].substring(0,Y[X].indexOf("="))==aa){return L(Y[X].substring((Y[X].indexOf("=")+1)))}}}return""},expressInstallCallback:function(){if(a){var X=c(R);if(X&&l){X.parentNode.replaceChild(l,X);if(Q){w(Q,true);if(M.ie&&M.win){l.style.display="block"}}if(E){E(B)}}a=false}}}}();
-
-(function() {
-
-  if (window.WEB_SOCKET_FORCE_FLASH) {
-  } else if (window.WebSocket) {
-    return;
-  } else if (window.MozWebSocket) {
-    window.WebSocket = MozWebSocket;
-    return;
-  }
-
-  var logger;
-  if (window.WEB_SOCKET_LOGGER) {
-    logger = WEB_SOCKET_LOGGER;
-  } else if (window.console && window.console.log && window.console.error) {
-    logger = window.console;
-  } else {
-    logger = {log: function(){ }, error: function(){ }};
-  }
-
-  if (swfobject.getFlashPlayerVersion().major < 10) {
-    logger.error("Flash Player >= 10.0.0 is required.");
-    return;
-  }
-  if (location.protocol == "file:") {
-    logger.error(
-      "WARNING: web-socket-js doesn't work in file:///... URL " +
-      "unless you set Flash Security Settings properly. " +
-      "Open the page via Web server i.e. http://...");
-  }
-
-  /**
-   * Our own implementation of WebSocket class using Flash.
-   * @param {string} url
-   * @param {array or string} protocols
-   * @param {string} proxyHost
-   * @param {int} proxyPort
-   * @param {string} headers
-   */
-  window.WebSocket = function(url, protocols, proxyHost, proxyPort, headers) {
-    var self = this;
-    self.__id = WebSocket.__nextId++;
-    WebSocket.__instances[self.__id] = self;
-    self.readyState = WebSocket.CONNECTING;
-    self.bufferedAmount = 0;
-    self.__events = {};
-    if (!protocols) {
-      protocols = [];
-    } else if (typeof protocols == "string") {
-      protocols = [protocols];
-    }
-    self.__createTask = setTimeout(function() {
-      WebSocket.__addTask(function() {
-        self.__createTask = null;
-        WebSocket.__flash.create(
-            self.__id, url, protocols, proxyHost || null, proxyPort || 0, headers || null);
-      });
-    }, 0);
-  };
-
-  /**
-   * Send data to the web socket.
-   * @param {string} data  The data to send to the socket.
-   * @return {boolean}  True for success, false for failure.
-   */
-  WebSocket.prototype.send = function(data) {
-    if (this.readyState == WebSocket.CONNECTING) {
-      throw "INVALID_STATE_ERR: Web Socket connection has not been established";
-    }
-    var result = WebSocket.__flash.send(this.__id, encodeURIComponent(data));
-    if (result < 0) { // success
-      return true;
-    } else {
-      this.bufferedAmount += result;
-      return false;
-    }
-  };
-
-  /**
-   * Close this web socket gracefully.
-   */
-  WebSocket.prototype.close = function() {
-    if (this.__createTask) {
-      clearTimeout(this.__createTask);
-      this.__createTask = null;
-      this.readyState = WebSocket.CLOSED;
-      return;
-    }
-    if (this.readyState == WebSocket.CLOSED || this.readyState == WebSocket.CLOSING) {
-      return;
-    }
-    this.readyState = WebSocket.CLOSING;
-    WebSocket.__flash.close(this.__id);
-  };
-
-  /**
-   * Implementation of {@link <a href="http://www.w3.org/TR/DOM-Level-2-Events/events.html#Events-registration">DOM 2 EventTarget Interface</a>}
-   *
-   * @param {string} type
-   * @param {function} listener
-   * @param {boolean} useCapture
-   * @return void
-   */
-  WebSocket.prototype.addEventListener = function(type, listener, useCapture) {
-    if (!(type in this.__events)) {
-      this.__events[type] = [];
-    }
-    this.__events[type].push(listener);
-  };
-
-  /**
-   * Implementation of {@link <a href="http://www.w3.org/TR/DOM-Level-2-Events/events.html#Events-registration">DOM 2 EventTarget Interface</a>}
-   *
-   * @param {string} type
-   * @param {function} listener
-   * @param {boolean} useCapture
-   * @return void
-   */
-  WebSocket.prototype.removeEventListener = function(type, listener, useCapture) {
-    if (!(type in this.__events)) return;
-    var events = this.__events[type];
-    for (var i = events.length - 1; i >= 0; --i) {
-      if (events[i] === listener) {
-        events.splice(i, 1);
-        break;
-      }
-    }
-  };
-
-  /**
-   * Implementation of {@link <a href="http://www.w3.org/TR/DOM-Level-2-Events/events.html#Events-registration">DOM 2 EventTarget Interface</a>}
-   *
-   * @param {Event} event
-   * @return void
-   */
-  WebSocket.prototype.dispatchEvent = function(event) {
-    var events = this.__events[event.type] || [];
-    for (var i = 0; i < events.length; ++i) {
-      events[i](event);
-    }
-    var handler = this["on" + event.type];
-    if (handler) handler.apply(this, [event]);
-  };
-
-  /**
-   * Handles an event from Flash.
-   * @param {Object} flashEvent
-   */
-  WebSocket.prototype.__handleEvent = function(flashEvent) {
-
-    if ("readyState" in flashEvent) {
-      this.readyState = flashEvent.readyState;
-    }
-    if ("protocol" in flashEvent) {
-      this.protocol = flashEvent.protocol;
-    }
-
-    var jsEvent;
-    if (flashEvent.type == "open" || flashEvent.type == "error") {
-      jsEvent = this.__createSimpleEvent(flashEvent.type);
-    } else if (flashEvent.type == "close") {
-      jsEvent = this.__createSimpleEvent("close");
-      jsEvent.wasClean = flashEvent.wasClean ? true : false;
-      jsEvent.code = flashEvent.code;
-      jsEvent.reason = flashEvent.reason;
-    } else if (flashEvent.type == "message") {
-      var data = decodeURIComponent(flashEvent.message);
-      jsEvent = this.__createMessageEvent("message", data);
-    } else {
-      throw "unknown event type: " + flashEvent.type;
-    }
-
-    this.dispatchEvent(jsEvent);
-
-  };
-
-  WebSocket.prototype.__createSimpleEvent = function(type) {
-    if (document.createEvent && window.Event) {
-      var event = document.createEvent("Event");
-      event.initEvent(type, false, false);
-      return event;
-    } else {
-      return {type: type, bubbles: false, cancelable: false};
-    }
-  };
-
-  WebSocket.prototype.__createMessageEvent = function(type, data) {
-    if (document.createEvent && window.MessageEvent && !window.opera) {
-      var event = document.createEvent("MessageEvent");
-      event.initMessageEvent("message", false, false, data, null, null, window, null);
-      return event;
-    } else {
-      return {type: type, data: data, bubbles: false, cancelable: false};
-    }
-  };
-
-  /**
-   * Define the WebSocket readyState enumeration.
-   */
-  WebSocket.CONNECTING = 0;
-  WebSocket.OPEN = 1;
-  WebSocket.CLOSING = 2;
-  WebSocket.CLOSED = 3;
-
-  WebSocket.__initialized = false;
-  WebSocket.__flash = null;
-  WebSocket.__instances = {};
-  WebSocket.__tasks = [];
-  WebSocket.__nextId = 0;
-
-  /**
-   * Load a new flash security policy file.
-   * @param {string} url
-   */
-  WebSocket.loadFlashPolicyFile = function(url){
-    WebSocket.__addTask(function() {
-      WebSocket.__flash.loadManualPolicyFile(url);
-    });
-  };
-
-  /**
-   * Loads WebSocketMain.swf and creates WebSocketMain object in Flash.
-   */
-  WebSocket.__initialize = function() {
-
-    if (WebSocket.__initialized) return;
-    WebSocket.__initialized = true;
-
-    if (WebSocket.__swfLocation) {
-      window.WEB_SOCKET_SWF_LOCATION = WebSocket.__swfLocation;
-    }
-    if (!window.WEB_SOCKET_SWF_LOCATION) {
-      logger.error("[WebSocket] set WEB_SOCKET_SWF_LOCATION to location of WebSocketMain.swf");
-      return;
-    }
-    if (!window.WEB_SOCKET_SUPPRESS_CROSS_DOMAIN_SWF_ERROR &&
-        !WEB_SOCKET_SWF_LOCATION.match(/(^|\/)WebSocketMainInsecure\.swf(\?.*)?$/) &&
-        WEB_SOCKET_SWF_LOCATION.match(/^\w+:\/\/([^\/]+)/)) {
-      var swfHost = RegExp.$1;
-      if (location.host != swfHost) {
-        logger.error(
-            "[WebSocket] You must host HTML and WebSocketMain.swf in the same host " +
-            "('" + location.host + "' != '" + swfHost + "'). " +
-            "See also 'How to host HTML file and SWF file in different domains' section " +
-            "in README.md. If you use WebSocketMainInsecure.swf, you can suppress this message " +
-            "by WEB_SOCKET_SUPPRESS_CROSS_DOMAIN_SWF_ERROR = true;");
-      }
-    }
-    var container = document.createElement("div");
-    container.id = "webSocketContainer";
-    container.style.position = "absolute";
-    if (WebSocket.__isFlashLite()) {
-      container.style.left = "0px";
-      container.style.top = "0px";
-    } else {
-      container.style.left = "-100px";
-      container.style.top = "-100px";
-    }
-    var holder = document.createElement("div");
-    holder.id = "webSocketFlash";
-    container.appendChild(holder);
-    document.body.appendChild(container);
-    swfobject.embedSWF(
-      WEB_SOCKET_SWF_LOCATION,
-      "webSocketFlash",
-      "1" /* width */,
-      "1" /* height */,
-      "10.0.0" /* SWF version */,
-      null,
-      null,
-      {hasPriority: true, swliveconnect : true, allowScriptAccess: "always"},
-      null,
-      function(e) {
-        if (!e.success) {
-          logger.error("[WebSocket] swfobject.embedSWF failed");
-        }
-      }
-    );
-
-  };
-
-  /**
-   * Called by Flash to notify JS that it's fully loaded and ready
-   * for communication.
-   */
-  WebSocket.__onFlashInitialized = function() {
-    setTimeout(function() {
-      WebSocket.__flash = document.getElementById("webSocketFlash");
-      WebSocket.__flash.setCallerUrl(location.href);
-      WebSocket.__flash.setDebug(!!window.WEB_SOCKET_DEBUG);
-      for (var i = 0; i < WebSocket.__tasks.length; ++i) {
-        WebSocket.__tasks[i]();
-      }
-      WebSocket.__tasks = [];
-    }, 0);
-  };
-
-  /**
-   * Called by Flash to notify WebSockets events are fired.
-   */
-  WebSocket.__onFlashEvent = function() {
-    setTimeout(function() {
-      try {
-        var events = WebSocket.__flash.receiveEvents();
-        for (var i = 0; i < events.length; ++i) {
-          WebSocket.__instances[events[i].webSocketId].__handleEvent(events[i]);
-        }
-      } catch (e) {
-        logger.error(e);
-      }
-    }, 0);
-    return true;
-  };
-
-  WebSocket.__log = function(message) {
-    logger.log(decodeURIComponent(message));
-  };
-
-  WebSocket.__error = function(message) {
-    logger.error(decodeURIComponent(message));
-  };
-
-  WebSocket.__addTask = function(task) {
-    if (WebSocket.__flash) {
-      task();
-    } else {
-      WebSocket.__tasks.push(task);
-    }
-  };
-
-  /**
-   * Test if the browser is running flash lite.
-   * @return {boolean} True if flash lite is running, false otherwise.
-   */
-  WebSocket.__isFlashLite = function() {
-    if (!window.navigator || !window.navigator.mimeTypes) {
-      return false;
-    }
-    var mimeType = window.navigator.mimeTypes["application/x-shockwave-flash"];
-    if (!mimeType || !mimeType.enabledPlugin || !mimeType.enabledPlugin.filename) {
-      return false;
-    }
-    return mimeType.enabledPlugin.filename.match(/flashlite/i) ? true : false;
-  };
-
-  if (!window.WEB_SOCKET_DISABLE_AUTO_INITIALIZATION) {
-    swfobject.addDomLoadEvent(function() {
-      WebSocket.__initialize();
-    });
-  }
-
-})();
-
 var Alice = { };
-
-Object.extend(Alice, {
-  RE: {
-    img: /^http[^\s]*\.(?:jpe?g|gif|png|bmp|svg)[^\/]*$/i,
-    audio: /^http[^\s]*\.(?:wav|mp3|ogg|aiff?|m4[ar])[^\/]*$/i,
-    url: /(https?:\/\/[^\s<"]*)/ig
-  },
-
-  Months: ['Jan','Feb','Mar','Apr','May','June','July','Aug',
-           'Sept','Oct','Nov','Dec'],
-
-  Days: ['Sun', 'Mon','Tue','Wed','Thu','Fri','Sat'],
-
-  cleanupCopy: function(node) {
-    if (!node.select("li.message").length) return;
-
-    var lines = [];
-    node.select("li.message").each(function(line) {
-      var left = line.down("div.left span.nick");
-      var message = line.down("div.msg");
-      var clean = [];
-      if (left) {
-        var nick = left.innerHTML.stripTags();
-        nick = nick.replace(/^\s+/, "");
-        nick = nick.replace(/\s+$/, "");
-        clean.push("&lt; "+nick+"&gt;");
-      }
-      if (message) {
-        var body = message.innerHTML.stripTags();
-        body = body.replace(/^\s+/, "");
-        body = body.replace(/\s+$/, "");
-        clean.push(body);
-      }
-      if (clean.length) lines.push(
-        clean.join(" ").replace(/\n/g, ""));
-    });
-    node.update(lines.join("<br>"));
-    node.cleanWhitespace();
-  },
-
-  epochToLocal: function(epoch, format, show_date) {
-    var date = new Date(parseInt(epoch) * 1000);
-    if (!date) return epoch;
-
-    var hours = date.getHours();
-    var prefix = show_date ?
-      sprintf("%s, %s %d, ", Alice.Days[date.getDay()], Alice.Months[date.getMonth()], date.getDate())
-      : "";
-
-    if (format == "12") {
-      var ap;
-      if (hours >= 12) {
-        if (hours > 12) hours -= 12;
-        ap = "p";
-      } else {
-        ap = "a"
-      }
-      return sprintf("%s%d:%02d%s", prefix, hours, date.getMinutes(), ap);
-    }
-
-    return sprintf("%s%02d:%02d", prefix, hours, date.getMinutes());
-  },
-
-  makeLinksClickable: function(elem) {
-    var children = elem.childNodes;
-    var length = children.length;
-
-    for (var i=0; i < length; i++) {
-      var node = children[i];
-      if (node.nodeName == "A") {
-        continue;
-      }
-      else if (node.nodeName != "#text") {
-        Alice.makeLinksClickable(node);
-      }
-      else if (node.nodeValue.match(Alice.RE.url)) {
-        var span = new Element("SPAN");
-        span.innerHTML = node.nodeValue.escapeHTML().replace(
-          Alice.RE.url, '<a href="$1" target="_blank" rel="noreferrer">$1</a>');
-        node.parentNode.replaceChild(span, node);
-      }
-    }
-  },
-
-  growlNotify: function(message) {
-    if (window.fluid) {
-      window.fluid.showGrowlNotification({
-        title: message.subject,
-        description: message.body,
-        priority: 1,
-        sticky: false,
-        identifier: message.msgid
-      });
-    }
-    else if (window.webkitNotifications) {
-      if (window.webkitNotifications.checkPermission() == 0) {
-        var popup = window.webkitNotifications.createNotification(
-          "http://static.usealice.org/image/alice.png",
-          message.subject,
-          message.body
-        );
-
-        popup.ondisplay = function() {
-          setTimeout(function () {popup.cancel();}, 5000);
-        };
-
-        popup.show();
-      }
-    }
-  },
-
-  isSpecialKey: function(keyCode) {
-    var special_keys = [
-			16,27,9,32,13,8,145,20,144,19,45,36,46,35,33,34,37,38,39,
-			40,17,18,91,112,113,114,115,116,117,118,119,120,121,122,123,
-      224
-		];
-		return special_keys.indexOf(keyCode) > -1;
-  },
-
-  playAudio: function(image, audio) {
-    image.src = '/static/image/pause.png';
-    if (! audio) {
-      var url = image.nextSibling.href;
-      audio = new Audio(url);
-      audio.addEventListener('ended', function () {
-        image.src = '/static/image/play.png';
-        image.onclick = function () { Alice.playAudio(image, audio) };
-      });
-    }
-    audio.play();
-    image.onclick = function() {
-      audio.pause();
-      this.src = '/static/image/play.png';
-      this.onclick = function () { Alice.playAudio(this, audio) };
-    };
-  },
-
-  joinChannel: function() {
-    var network = $('join_network').value;
-    var channel = $('join_channel').value;
-    if (!network || !channel) {
-      alert("Must select a channel and network!");
-      return;
-    }
-    var win = alice.activeWindow();
-    alice.connection.sendMessage({
-      source: win.id,
-      msg: "/join -"+network+" "+channel
-    });
-    alice.input.disabled = false;
-    $('join').remove();
-  },
-
-  tabsets: {
-    addSet: function () {
-			var name = prompt("Please enter a name for this tab set.");
-      if (name && !Alice.tabsets.hasTabset(name)) {
-        Alice.tabsets.clearActive();
-        $('sets').insert('<li class="active">'+name.escapeHTML()+'</li>');
-        var list = $('empty_tabset').clone(true).addClassName('active').show();
-        list.id = null;
-        $('tabset_data').insert(list);
-      }
-      else {
-        alert("Invalid tab set name.");
-      }
-    },
-
-    hasTabset: function (name) {
-      var sets = $$('#sets li');
-      for (var i=0; i < sets.length; i++) {
-        if (sets[i].innerHTML == name) {
-          return true;
-        }
-      }
-      return false;
-    },
-
-    submit: function (params) {
-      new Ajax.Request("/savetabsets", {
-        method: "post",
-        parameters: Object.toQueryString(params),
-        onSuccess: function(transport){
-          $('tabset_menu').replace(transport.responseText);
-          Alice.tabsets.remove()
-        }
-      });
-      return false;
-    },
-
-    params: function () {
-      var values = Alice.tabsets.values();
-      return Alice.tabsets.sets().inject({}, function(acc, set, index) {
-        acc[set] = values[index];
-        return acc;
-      });
-    },
-
-    sets: function () {
-      if (!$('sets')) return [];
-      return $('sets').select('li').map(function(li) {return li.innerHTML.unescapeHTML()});
-    },
-
-    values: function () {
-      if (!$('tabset_data')) return [];
-
-      return $$('#tabset_data ul').map(function(ul) {
-        var windows = ul.select('input').filter(function(input) {
-          return input.checked;
-        }).map(function(input){return input.name});
-        return windows.length ? windows : 'empty';
-      });
-    },
-
-    remove: function () {
-      alice.input.disabled = false;
-      $('tabsets').remove();
-    },
-
-    clearActive: function () {
-      $('tabset_data').select('.active').invoke('removeClassName', 'active');
-      $('sets').select('.active').invoke('removeClassName', 'active');
-    },
-
-    removeSet: function () {
-      $('tabsets').down('.active').remove();
-      $('tabset_data').down('.active').remove();
-    },
-
-    focusIndex: function (i) {
-      Alice.tabsets.clearActive();
-      $('tabset_data').select('ul')[i].addClassName('active');
-      $('sets').select('li')[i].addClassName('active');
-    },
-
-    focusSet: function (e) {
-      var li = e.findElement('li');
-      if (li) {
-        Alice.tabsets.focusIndex(li.previousSiblings().length);
-      }
-    },
-  },
-
-  prefs: {
-    addHighlight: function (alias) {
-		  var channel = prompt("Enter a word to highlight.");
-		  if (channel)
-		    $('highlights').insert("<option value=\""+channel+"\">"+channel+"</option>");
-		  return false;
-		},
-
-    removeHighlights: function (alias) {
-		  $A($('highlights').options).each(function (option) {
-		    if (option.selected) option.remove()});
-		  return false;
-		},
-
-    addNick: function (nick) {
-      var nick = prompt("Enter a nick.");
-      if (nick)
-        $('monospace_nicks').insert("<option value=\""+nick+"\">"+nick+"</option>");
-      return false;
-    },
-
-    removeNicks: function (nick) {
-      $A($('monospace_nicks').options).each(function (option) {
-        if (option.selected) option.remove()});
-      return false;
-    },
-
-    remove: function() {
-      alice.input.disabled = false;
-      $('prefs').remove();
-    },
-
-    submit: function(form) {
-      var options = {highlights: [], monospace_nicks: []};
-
-      ["images", "animate", "avatars", "alerts", "audio"].each(function (pref) {
-        options[pref] = $(pref).checked ? "show" : "hide";
-      });
-      $A($("highlights").options).each(function(option) {
-        options.highlights.push(option.value);
-      });
-
-      $A($("monospace_nicks").options).each(function(option) {
-        options.monospace_nicks.push(option.value);
-      });
-
-      ["style", "timeformat", "quitmsg"].each(function(pref) {
-        options[pref] = $(pref).value;
-      });
-
-      Alice.prefs.remove();
-
-			new Ajax.Request('/save', {
-        method: 'get',
-        parameters: options,
-        onSuccess: function(){
-          var reload = (alice.options.avatars != options.avatars ||
-                        alice.options.images != options.images ||
-                        alice.options.style != options.style);
-
-          if (reload) {
-            window.location.reload();
-          }
-          else {
-            alice.options = options;
-            if (window.location.toString().match(/safe/i)) {
-              alice.options.avatars = "hide";
-              alice.options.images = "hide";
-            }
-          }
-        }
-      });
-
-      return false;
-    }
-  },
-
-  connections: {
-    disconnectServer: function (alias) {
-      $("menu_" + alias).addClassName("disconnected");
-      $("menu_" + alias).removeClassName("connected");
-		  $(alias + "_status").className = "disconnected";
-		  $(alias + "_status").innerHTML = "disconnected";
-		  $(alias + "_connection").innerHTML = "connect";
-		  $(alias + "_connection").onclick = function (e) {
-		    e.stop();
-		    Alice.connections.serverConnection(alias, "connect");
-		  };
-		},
-
-    connectServer: function (alias) {
-      $("menu_" + alias).removeClassName("disconnected");
-      $("menu_" + alias).addClassName("connected");
-		  $(alias + "_status").className = "connected";
-		  $(alias + "_status").innerHTML = "connected";
-		  $(alias + "_connection").innerHTML = "disconnect";
-		  $(alias + "_connection").onclick = function (e) {
-		    e.stop();
-		    Alice.connections.serverConnection(alias, "disconnect");
-		  };
-		},
-
-    showConnection: function (alias) {
-		  $$("div#servers .active").invoke("removeClassName","active");
-			$("setting_" + alias).addClassName("active");
-			$("menu_" + alias).addClassName("active");
-	  },
-
-    addChannel: function (alias) {
-			var channel = prompt("Please enter a channel name.");
-			if (channel)
-			  $("channels_" + alias).insert("<option value=\""+channel+"\">"+channel+"</option>");
-			return false;
-	  },
-
-    addCommand: function (alias) {
-			var command = prompt("Please enter a command.");
-			if (command)
-			  $("on_connect_" + alias).insert("<option value=\""+command+"\">"+command+"</option>");
-			return false;
-		},
-
-    removeCommands: function (alias) {
-			$A($("on_connect_" + alias).options).each(function (option) {
-			if (option.selected) option.remove()});
-			  return false;
-		},
-
-    removeChannels: function (alias) {
-			$A($("channels_" + alias).options).each(function (option) {
-			if (option.selected) option.remove()});
-			  return false;
-		},
-
-    addServer: function () {
-			var name = prompt("Please enter a name for this server.");
-			if (! name) return;
-			new Ajax.Request("/serverconfig", {
-			  parameters: {name: name},
-			  method: 'get',
-			  onSuccess: function (trans) {
-			    var data = trans.responseText.evalJSON();
-			    $$('#config_data table').invoke('removeClassName',"active");
-			    $$('#connections li').invoke('removeClassName',"active");
-			    $('config_data').down('.config_body').insert(data.config);
-			    $('connections').insert(data.listitem);
-			  }
-		  });
-	  },
-
-    removeServer: function () {
-		  var alias = $('connections').down('.active').id.replace(/^menu_/, "");
-			if (alias && confirm("Are you sure you want to remove "+alias+"?")) {
-			  $("menu_"+alias).remove();
-			  $("setting_"+alias).remove();
-			  $("connections").down("li").addClassName("active");
-			  $("config_data").down("table").addClassName("active");
-			}
-	  },
-
-    submit: function(form) {
-      var params = form.serialize(true);
-      form.select(".channelselect").each(function(select) {
-        params[select.name] = $A(select.options).map(function(opt){return opt.value});
-      });
-
-      new Ajax.Request('/save', {
-        method: 'post',
-        parameters: params,
-        onSuccess: function(){Alice.connections.remove()}
-      });
-
-      return false;
-    },
-
-    remove: function() {
-      alice.input.disabled = false;
-      $('servers').remove();
-    },
-
-    serverConnection: function(alias, action) {
-      alice.connection.sendMessage({
-        msg: '/' + action + ' ' + alias,
-        source: alice.activeWindow().id,
-      });
-
-      return false;
-    }
-  }
-});
-
-
-Element.addMethods({
-  redraw: function(element){
-    element = $(element);
-    var n = document.createTextNode(' ');
-    element.appendChild(n);
-    (function(){n.parentNode.removeChild(n)}).defer();
-    return element;
-  }
-});
 Alice.Application = Class.create({
   initialize: function() {
     this.options = {};
@@ -11490,7 +11411,7 @@ Alice.Application = Class.create({
 
     this.loadDelay = this.isMobile ? 3000 : 1000;
     if (window.navigator.standalone || window.navigator.userAgent.match(/Fluid/)) this.loadDelay = 0;
-
+    
     this.keyboard = new Alice.Keyboard(this);
 
     this.input = new Alice.Input(this, "msg");
@@ -11502,6 +11423,7 @@ Alice.Application = Class.create({
     this.tabs.observe("webkitTransitionEnd", this.shiftEnd.bind(this));
     this.tabs.observe("transitionend", this.shiftEnd.bind(this));
 
+    // setup UI elements in initial state
     this.makeSortable();
     this.setupTopic();
     this.setupNicklist();
@@ -11694,12 +11616,12 @@ Alice.Application = Class.create({
       }
     }
   },
-
+ 
   toggleHelp: function() {
     var help = $('help');
     help.visible() ? help.hide() : help.show();
   },
-
+ 
   toggleJoin: function() {
     this.connection.get("/join", function (transport) {
       this.input.disabled = true;
@@ -11712,16 +11634,16 @@ Alice.Application = Class.create({
       this.input.disabled = true;
       $('windows').insert(transport.responseText);
     }.bind(this));
-
+    
     if (e) e.stop();
   },
-
+  
   togglePrefs: function(e) {
     this.connection.get("/prefs", function (transport) {
       this.input.disabled = true;
       $('windows').insert(transport.responseText);
     }.bind(this));
-
+    
     if (e) e.stop();
   },
 
@@ -11752,20 +11674,20 @@ Alice.Application = Class.create({
       if (win.type == "info") return win;
     });
   },
-
+  
   openWindow: function(serialized, msgid) {
     if (!msgid) msgid = this.msgid();
     var win = new Alice.Window(this, serialized, msgid);
     this.addWindow(win);
     return win;
   },
-
+  
   addWindow: function(win) {
     this.window_map.set(win.id, win);
     if (window.fluid)
       window.fluid.addDockMenuItem(win.title, win.focus.bind(win));
   },
-
+  
   removeWindow: function(win) {
     this.tabs_layout = this.tabs.getLayout();
 
@@ -11781,11 +11703,11 @@ Alice.Application = Class.create({
     this.connection.closeWindow(win);
     win = null;
   },
-
+  
   getWindow: function(windowId) {
     return this.window_map.get(windowId);
   },
-
+  
   activeWindow: function() {
     var windows = this.windows();
     for (var i=0; i < windows.length; i++) {
@@ -11796,11 +11718,11 @@ Alice.Application = Class.create({
     }
     if (windows[0]) return windows[0];
   },
-
+  
   addFilters: function(list) {
     this.message_filters = this.message_filters.concat(list);
   },
-
+  
   applyFilters: function(li, win, message) {
     if (li.hasClassName("filtered")) return;
     var length = this.base_filters.length;
@@ -11820,7 +11742,7 @@ Alice.Application = Class.create({
       }
     }
   },
-
+  
   nextWindow: function() {
     var active = this.activeWindow();
 
@@ -11897,14 +11819,14 @@ Alice.Application = Class.create({
       }
     }
   },
-
+  
   focusLast: function() {
     if (this.previousFocus && this.previousFocus.id != this.activeWindow().id)
       this.previousFocus.focus();
     else
       this.previousWindow();
   },
-
+  
   previousWindow: function() {
     var active = this.activeWindow();
 
@@ -11915,12 +11837,12 @@ Alice.Application = Class.create({
     var id = previousTab.id.replace('_tab','');
     if (id != active.id) this.getWindow(id).focus();
   },
-
+  
   closeWindow: function(windowId) {
     var win = this.getWindow(windowId);
     if (win) win.close();
   },
-
+  
   insertWindow: function(windowId, html) {
     if (!$(windowId)) {
       $('windows').insert(html['window']);
@@ -11928,7 +11850,7 @@ Alice.Application = Class.create({
       this.makeSortable();
     }
   },
-
+  
   highlightChannelSelect: function(id, classname) {
     if (!classname) classname = "unread";
     ['tab_menu_left', 'tab_menu_right'].find(function(menu) {
@@ -11943,7 +11865,7 @@ Alice.Application = Class.create({
       return false;
     });
   },
-
+  
   unHighlightChannelSelect: function(id) {
     ['tab_menu_left', 'tab_menu_right'].find(function(menu) {
       menu = $(menu);
@@ -11962,13 +11884,13 @@ Alice.Application = Class.create({
       return false;
     });
   },
-
+  
   handleAction: function(action) {
     if (this.actionHandlers[action.event]) {
       this.actionHandlers[action.event].call(this,action);
     }
   },
-
+  
   displayMessage: function(message) {
     var win = this.getWindow(message['window'].id);
     if (win) {
@@ -12048,12 +11970,12 @@ Alice.Application = Class.create({
     this.tabs.setStyle({left: left+"px"});
     this.tabs_layout = this.tabs.getLayout();
   },
-
+  
   shiftEnd: function(e) {
     this.tabs_layout = this.tabs.getLayout();
     this.updateOverflowMenus();
   },
-
+  
   makeSortable: function() {
     Sortable.create('tabs', {
       overlap: 'horizontal',
@@ -12068,6 +11990,8 @@ Alice.Application = Class.create({
         });
         if (order.length) this.connection.sendTabOrder(order);
 
+        // do this in a timeout because we need to wait for the tab
+        // to slide into its new position
         setTimeout(function(){
           this.windows().invoke("updateTabLayout");
           this.activeWindow().shiftTab();
@@ -12190,10 +12114,10 @@ Alice.Application = Class.create({
     this.nicklist.innerHTML = nicks.sort(function(a, b) {
       a = a.toLowerCase();
       b = b.toLowerCase();
-      if (a > b)
-        return 1
-      if (a < b)
-        return -1
+      if (a > b) 
+        return 1 
+      if (a < b) 
+        return -1 
       return 0;
     }).map(function(nick) {
       return '<li><a>'+nick.escapeHTML()+'</a></li>';
@@ -12284,10 +12208,12 @@ Alice.Application = Class.create({
 
   baseFilters: function() {
     return [
+      // linkify
       function(li, win) {
         Alice.makeLinksClickable(li.down("div.msg"));
       },
 
+      // insert avatars
       function(li, win) {
         if (li.hasClassName("avatar")) {
           if (this.options.avatars == "show") {
@@ -12301,9 +12227,10 @@ Alice.Application = Class.create({
         }
       },
 
+      // shrink previous line for consecutive messages
       function(li, win) {
         if (li.hasClassName("consecutive")) {
-          var prev = li.previous();
+          var prev = li.previous(); 
           if (!prev) return;
 
           if (prev && prev.hasClassName("avatar") && !prev.hasClassName("consecutive"))
@@ -12313,6 +12240,7 @@ Alice.Application = Class.create({
         }
       },
 
+      // toggle on timestamps if it has been 5 minutes
       function(li, win) {
         var stamp = li.down('.timestamp');
         if (!stamp) return;
@@ -12346,6 +12274,7 @@ Alice.Application = Class.create({
         }
       },
 
+      // turn on nicks if they are toggled
       function(li, win) {
         if (!this.overlayVisible || !li.hasClassName("avatar")) return;
 
@@ -12353,6 +12282,7 @@ Alice.Application = Class.create({
         if (nick) nick.style.opacity = 1;
       },
 
+      // highlights
       function(li, win) {
         if (win.bulk_insert) return;
 
@@ -12364,6 +12294,7 @@ Alice.Application = Class.create({
         }
       },
 
+      // growls
       function(li, win) {
         if (this.options.alerts != "show" && this.options.audio != "show") return;
         if (this.isFocused || win.bulk_insert || li.hasClassName("self")) return;
@@ -12405,11 +12336,124 @@ Alice.Application = Class.create({
   }
 
 });
+Alice.Completion = Class.create({
+  initialize: function(candidates, editor) {
+    var range = this.getRange();
+    if (!range) return;
+
+    this.element = range.startContainer;
+    this.editor = editor;
+    if (this.element == this.editor) {
+      this.addTextNode();
+    }
+
+    this.value = this.element.data || "";
+    this.index = range.startOffset;
+
+    this.findStem();
+    this.matches = this.matchAgainst(candidates);
+    this.matchIndex = -1;
+  },
+
+  addTextNode: function() {
+    // gross hack to make this work when
+    // element is the editor div, which only
+    // happens when the editor is blank
+
+    this.editor.innerHTML = "";
+    var node = document.createTextNode("");
+    this.editor.appendChild(node);
+    var selection = window.getSelection();
+    selection.removeAllRanges();
+    selection.selectNode(node);
+    range = selection.getRangeAt(0);
+    this.element = node;
+  },
+
+  getRange: function() {
+    var selection = window.getSelection();
+    if (selection.rangeCount > 0) {
+      return selection.getRangeAt(0);
+    }
+    if (document.createRange) {
+      return document.createRange();
+    }
+    return null;
+  },
+
+  setRange: function(range) {
+    if (!range) return;
+    var selection = window.getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
+  },
+
+  next: function() {
+    if (!this.matches.length) return;
+    if (++this.matchIndex == this.matches.length) this.matchIndex = 0;
+    this.complete();
+  },
+
+  prev: function() {
+    if (!this.matches.length) return;
+    if (--this.matchIndex <= 0) this.matchIndex = this.matches.length - 1;
+    this.complete();
+  },
+
+  complete: function() {
+    var match = this.matches[this.matchIndex];
+    match += this.leftOffset == 0 ? ":\u00a0" : "\u00a0";
+    this.restore(match, this.leftOffset + match.length);
+  },
+  
+  restore: function(stem, index) {
+    // add a new text node if our element was deleted (select-all delete)
+    if (!this.element.parentNode)
+      this.addTextNode();
+
+    this.element.data = this.stemLeft + (stem || this.stem) + this.stemRight;
+    this.setCursorToIndex(Object.isUndefined(index) ? this.index : index);
+  },
+  
+  setCursorToIndex: function(index) {
+    var range = this.getRange();
+    range.setStart(this.element, index);
+    range.setEnd(this.element, index);
+    this.setRange(range);
+  },
+
+  findStem: function() {
+    var left = [], right = [], chr, index, length = this.value.length;
+
+    for (index = this.index - 1; index >= 0; index--) {
+      chr = this.value.charAt(index);
+      if (!Alice.Completion.PATTERN.test(chr)) break;
+      left.unshift(chr);
+    }
+
+    for (index = this.index; index < length; index++) {
+      chr = this.value.charAt(index);
+      if (!Alice.Completion.PATTERN.test(chr)) break;
+      right.push(chr);
+    }
+
+    this.stem = left.concat(right).join("");
+    this.stemLeft  = this.value.substr(0, this.index - left.length);
+    this.stemRight = this.value.substr(this.index + right.length);
+    this.leftOffset = this.index - left.length;
+  },
+  
+  matchAgainst: function(candidates) {
+    return candidates.grep(new RegExp("^" + RegExp.escape(this.stem), "i"));
+  }
+});
+
+Alice.Completion.PATTERN = /[A-Za-z0-9\[\\\]^_{|}-]/;
 Alice.Connection = {
   gotoLogin: function() {
     window.location = "/login";
   },
-
+ 
   connect: function(cb) {
     if (this.reconnect_count > 3) {
       this.aborting = true;
@@ -12437,7 +12481,7 @@ Alice.Connection = {
   changeStatus: function(classname) {
     $('connection_status').className = classname;
   },
-
+ 
   reconnect: function () {
     this.reconnecting = true;
     this.reconnect_count = 0;
@@ -12462,7 +12506,7 @@ Alice.Connection = {
     else
       this.changeStatus("ok");
   },
-
+  
   processQueue: function(data) {
     try {
       var queue = data.queue;
@@ -12495,7 +12539,7 @@ Alice.Connection = {
       onSuccess: callback
     });
   },
-
+  
   sendTabOrder: function (windows) {
     new Ajax.Request('/tabs', {
       method: 'post',
@@ -12512,6 +12556,1095 @@ Alice.Connection = {
     });
   }
 };
+Alice.Input = Class.create({
+  initialize: function(application, element) {
+
+    this.application = application;
+    this.textarea = $(element);
+    this.disabled = false;
+
+    if (this.canContentEditable()) {
+      this.editor = WysiHat.Editor.attach(this.textarea);
+      this.element = this.editor;
+      this.element.writeAttribute("autocapitalize", "off");
+      this.toolbar = new Alice.Toolbar(this.element)
+      this.toolbar.addButtonSet(Alice.Toolbar.ButtonSet);
+      var input = new Element("input", {type: "hidden", name: "html", value: 1});
+      this.textarea.form.appendChild(input);
+
+      document.observe("mousedown", function(e) {
+        if (!e.findElement(".editor")) this.uncancelNextFocus();
+      }.bind(this));
+
+      this.editor.observe("keydown", function(){this.cancelNextFocus()}.bind(this));
+      this.editor.observe("keyup", this.updateRange.bind(this));
+      this.editor.observe("mouseup", this.updateRange.bind(this));
+      this.editor.observe("paste", this.pasteHandler.bind(this));
+
+      this.toolbar.element.on("mouseup","button",function(){
+        this.cancelNextFocus();
+      }.bind(this));
+    } else {
+      this.element = this.textarea;
+      this.element.observe("keydown", this.resize.bind(this));
+      this.element.observe("cut", this.resize.bind(this));
+      this.element.observe("paste", this.resize.bind(this));
+      this.element.observe("change", this.resize.bind(this));
+    }
+
+    this.history = [];
+    this.index = -1;
+    this.buffer = "";
+    this.completion = false;
+    this.focused = false;
+
+    if (!(this.application.isMobile || this.application.isBeefy)) this.focus();
+    
+    this.element.observe("blur", this.onBlur.bind(this));
+  },
+
+  setValue: function(value) {
+    this.textarea.setValue(value);
+    if (this.editor) {
+      this.editor.update(value);
+      // gross hack to work around some chrome redraw bug
+      var text = document.createElement("BR");
+      this.editor.appendChild(text);
+    }
+  },
+
+  getValue: function() {
+    if (this.editor) {
+      return this.editor.innerHTML;
+    }
+    return this.textarea.getValue();
+  },
+
+  onKeyPress: function(event) {
+    if (event.keyCode != Event.KEY_TAB) {
+      this.completion = false;
+      this.element.stopObserving("keypress");
+    }
+  },
+  
+  uncancelNextFocus: function() {
+    this.skipThisFocus = false;
+  },
+
+  cancelNextFocus: function() {
+    this.skipThisFocus = true;
+  },
+
+  focus: function(force) {
+    if (this.disabled) return;
+
+    if (!force) {
+      if (this.focused) return;
+
+      if (this.skipThisFocus) {
+        this.skipThisFocus = false;
+        return;
+      }
+    }
+
+    this.focused = true;
+
+    // hack to focus the end of editor...
+    if (this.editor) {
+      var selection = window.getSelection();
+      selection.removeAllRanges();
+      if (this.range) {
+        selection.addRange(this.range);
+      } else {
+        var text = document.createTextNode("");
+        this.editor.appendChild(text);
+        selection.selectNode(text);
+        this.range = selection.getRangeAt(0);
+      }
+      this.editor.focus();
+    } else {
+      this.textarea.focus();
+    }
+  },
+  
+  onBlur: function(e) {
+    this.focused = false;
+  },
+  
+  previousCommand: function() {
+    if (this.index-- == -1) {
+      this.index = this.history.length - 1;
+      this.stash();
+    }
+
+    this.update();
+  },
+  
+  nextCommand: function() {
+    if (this.index++ == -1) {
+      this.stash();
+    } else if (this.index == this.history.length) {
+      this.index = -1;
+    }
+
+    this.update();
+  },
+  
+  newLine: function() {
+    this.application.log("newLine");
+  },
+  
+  send: function() {
+    var msg = this.getValue();
+
+    if (msg.length > 1024*2) {
+      alert("That message is way too long, dude.");
+      return;
+    }
+
+    if (this.editor) this.textarea.value = msg;
+
+    var success = this.application.connection.sendMessage(this.textarea.form);
+    if (success) {
+      this.history.push(msg);
+      this.setValue("");
+      if (this.editor) this.editor.update();
+      this.index = -1;
+      this.stash();
+      this.update();
+      this.focus(1);
+    }
+    else {
+      alert("Could not send message, not connected!");
+    }
+  },
+  
+  completeNickname: function(prev) {
+    if (this.disabled) return;
+    if (!this.completion) {
+      this.completion = new Alice.Completion(this.application.activeWindow().getNicknames(), this.editor);
+      this.element.observe("keypress", this.onKeyPress.bind(this));
+    }
+
+    if (prev)
+      this.completion.prev();
+    else 
+      this.completion.next();
+  },
+  
+  stopCompletion: function() {
+    if (this.completion) {
+      this.completion.restore();
+      this.completion = false;
+      this.element.stopObserving("keypress");
+    }
+  },
+
+  stash: function() {
+    this.buffer = this.getValue();
+  },
+  
+  update: function() {
+    this.setValue(this.getCommand(this.index));
+  },
+  
+  getCommand: function(index) {
+    if (index == -1) {
+      return this.buffer;
+    } else {
+      return this.history[index];
+    }
+  },
+  
+  resize: function() {
+    (function() {
+      var height = this.getContentHeight();
+      if (height == 0) {
+        this.element.setStyle({ height: null, top: 0 });
+      } else if (height <= 150) {
+        this.element.setStyle({ height: height + "px", top: "0px" });
+      }
+    }).bind(this).defer();
+  },
+  
+  getContentHeight: function() {
+    var element = new Element("div").setStyle({
+      position:   "absolute",
+      visibility: "hidden",
+      left:       "-" + this.element.getWidth() + "px",
+      width:      this.element.getWidth() - 7 + "px",
+      fontFamily: this.element.getStyle("fontFamily"),
+      fontSize:   this.element.getStyle("fontSize"),
+      lineHeight: this.element.getStyle("lineHeight"),
+      whiteSpace: "pre-wrap",
+      wordWrap:   "break-word"
+    });
+
+    // add classname so collapsed margins/paddings are applied
+    if (this.editor) element.addClassName("editor");
+
+    var value = this.getValue();
+    element.update(value.replace(/\n$/, "\n\n").replace("\n", "<br>"));
+    $(document.body).insert(element);
+
+    var height = element.getHeight();
+    element.remove();
+    return height;
+  },
+
+  canContentEditable: function() {
+    var element = new Element("div", {contentEditable: "true"});
+    return  ! (element.contentEditable == null || this.application.isMobile || Prototype.Browser.IE);
+  },
+
+  updateRange: function (e) {
+    var selection = window.getSelection();
+    if (selection.rangeCount > 0) {
+      var range = selection.getRangeAt(0);
+      this.range = range;
+    }
+  },
+
+  pasteHandler: function(e) {
+    if (!e.clipboardData) return;
+
+    var items = e.clipboardData.items;
+    if (items) {
+      var output = "";
+      for (var i=0; i < items.length; i++) {
+        var blob = items[i].getAsFile();
+        if (blob && blob.type.match(/image/)) {
+          e.stop();
+          var fd = new FormData();
+          fd.append("image", blob);
+          fd.append("key", "f1f60f1650a07bfe5f402f35205dffd4");
+          var xhr = new XMLHttpRequest();
+          xhr.open("POST", "http://api.imgur.com/2/upload.json");
+          xhr.onload = function() {
+            var url = xhr.responseText.evalJSON();
+            this.editor.insertHTML(url.upload.links.original);
+            this.updateRange();
+          }.bind(this);
+          xhr.send(fd);
+          return;
+        }
+      }
+    }
+
+    var text = e.clipboardData.getData("Text");
+    if (text) {
+      e.preventDefault();
+      text = text.escapeHTML().replace(/\n+/g, "<br>\n");
+      this.editor.insertHTML(text);
+      this.updateRange();
+      return;
+    }
+
+    var url = e.clipboardData.getData("URL");
+    if (url) {
+      e.preventDefault();
+      this.editor.insertHTML(url);
+      this.updateRange();
+      return;
+    }
+
+  }
+});
+Alice.Keyboard = Class.create({
+  initialize: function(application) {
+    this.application = application;
+    this.isMac = navigator.platform.match(/mac/i);
+    this.lastCycle = 0;
+    this.cycleDelay = 300;
+    this.enable();
+    
+    if (!this.application.isMobile) {
+      this.shortcut("Cmd+C", { propagate: true });
+      this.shortcut("Ctrl+C", { propagate: true });
+      this.shortcut("Cmd+B");
+      this.shortcut("Cmd+I");
+      this.shortcut("Cmd+Shift+U");
+      this.shortcut("Opt+Up");
+      this.shortcut("Opt+Down");
+      this.shortcut("Cmd+Shift+M");
+      this.shortcut("Cmd+Shift+J");
+      this.shortcut("Cmd+Shift+K");
+      this.shortcut("Cmd+K");
+      this.shortcut("Cmd+Shift+Left");
+      this.shortcut("Cmd+Shift+Right");
+      this.shortcut("Cmd+Shift+H");
+      this.shortcut("Cmd+Shift+L");
+      this.shortcut("Cmd+U");
+      this.shortcut("Esc");
+      this.shortcut("Cmd", { propagate: true });
+      this.shortcut("Tab", { propagate: true });
+      this.shortcut("Shift+Tab", { propagate: true });
+      for (var i = 0; i < 10; i++) {
+        this.shortcut("Cmd+"+i);
+        if (!this.isMac) this.shortcut("Opt+"+i);
+      }
+    }
+
+    this.shortcut("Enter");
+  },
+  
+  shortcut: function(name, options) {
+
+    // use control as command on non-Mac platforms
+    var meta = this.isMac ? "Meta" : "Ctrl";
+
+    var keystroke = name.replace("Cmd", meta).replace("Opt", "Alt"), 
+        method = "on" + name.replace(/\+/g, "");
+
+    window.shortcut.add(keystroke, function(event) {
+      if (this.enabled) {
+        this.activeWindow = this.application.activeWindow();
+        if (method.match(/\d$/)) {
+          this.onNumeric.call(this, event, method.substr(-1));
+        }
+        else {
+          this[method].call(this, event);
+        }
+        delete this.activeWindow;
+      }
+    }.bind(this), options);
+  },
+
+  onCmd: function(e) {
+    if (e.keyCode == 186) {
+      e.stop();
+      this.application.nextUnreadWindow();
+    }
+  },
+
+  onNumeric: function(event, number) {
+    var win = this.application.nth_window(number);
+    if (number == 0) {
+      win = this.application.info_window();
+    }
+    if (win) win.focus();
+  },
+
+  onCmdC: function(event) {
+    this.application.input.cancelNextFocus();
+  },
+
+  onCtrlC: function(event) {
+    this.onCmdC(event);
+  },
+
+  onCmdK: function() {
+    this.activeWindow.clearMessages();
+    this.application.connection.sendMessage({
+      msg: "/clear",
+      source: this.activeWindow.id,
+    });
+  },
+
+  onCmdB: function() {
+    if (this.application.input.editor) {
+      this.application.input.focus();
+      this.application.input.editor.boldSelection();
+    }
+  },
+  
+  onCmdShiftU: function() {
+    if (this.application.input.editor) {
+      this.application.input.focus();
+      this.application.input.editor.underlineSelection();
+    }
+  },
+
+  onCmdI: function() {
+    if (this.application.input.editor) {
+      this.application.input.focus();
+      this.application.input.editor.italicSelection();
+    }
+  },
+
+  onCmdU: function() {
+    this.application.nextUnreadWindow();
+  },
+
+  onCmdShiftM: function() {
+    this.application.windows().invoke('markRead');
+  },
+  
+  onCmdShiftJ: function() {
+    this.activeWindow.scrollToPosition(0);
+  },
+  
+  onCmdShiftK: function() {
+    this.application.toggleOverlay();
+  },
+
+  onCmdRight: function() {
+    this.application.nextWindow();
+  },
+
+  onCmdShiftL: function() {
+    this.application.nextWindow();
+  },
+
+  onCmdShiftRight: function() {
+    this.application.nextWindow();
+  },
+  
+  onCmdLeft: function() {
+    this.application.previousWindow();
+  },
+
+  onCmdShiftH: function() {
+    this.application.previousWindow();
+  },
+
+  onCmdShiftLeft: function() {
+    this.application.previousWindow();
+  },
+  
+  onOptUp: function() {
+    this.application.input.previousCommand();
+  },
+  
+  onOptDown: function() {
+    this.application.input.nextCommand();
+  },
+  
+  onEnter: function() {
+    this.application.input.send();
+  },
+  
+  onTab: function(e) {
+    if (!e.findElement('div.config')) {
+      e.stop();
+      this.application.input.completeNickname();
+    }
+  },
+
+  onShiftTab: function(e) {
+    if (!e.findElement('div.config')) {
+      e.stop();
+      this.application.input.completeNickname(true);
+    }
+  },
+
+  onEsc: function() {
+    this.application.input.stopCompletion();
+  },
+  
+  enable: function() {
+    this.enabled = true;
+  },
+  
+  disable: function() {
+    this.enabled = false;
+  }
+});
+
+// override a few of the default toolbar methods
+Alice.Toolbar = Class.create(WysiHat.Toolbar, {
+  createButtonElement: function(toolbar, options) {
+    var button = Element('button');
+    button.update(options.get('label'));
+    button.addClassName(options.get('name'));
+    toolbar.appendChild(button);
+
+    return button;
+  },
+  observeButtonClick: function(element, handler) {
+    element.on('click', function(e) {e.stop()});
+    element.on('mouseup', function(event) {
+      alice.input.focus();
+
+      // pass in the button and toolbar in addition
+      // to the default editor parameter
+      handler(this.editor, element, this);
+
+      // need to fire this event to immediately toggle
+      // the active class
+      this.editor.fire("selection:change");
+
+      event.stop();
+    }.bind(this));
+  },
+});
+
+Object.extend(Alice.Toolbar, {
+  updateColors: function (editor) {
+    var range = alice.input.range || editor;
+    if (range) {
+      var node = range.getNode();
+      var fg = node.getStyle("color");
+      var bg = node.getStyle("background-color");
+      var button = alice.input.toolbar.element.down("button.colors");
+      button.setStyle({"border-color": fg, "background-color": bg});
+    }
+    return 1;
+  }
+});
+
+Alice.Toolbar.ButtonSet = [
+  {
+    label: "",
+    name: "colors",
+    query: Alice.Toolbar.updateColors,
+    handler: function (editor, button, toolbar) {
+      var cb = function (color, fg) {
+        if (fg) {
+          button.setStyle({"border-color": color})
+          editor.colorSelection(color);
+        } else {
+          button.setStyle({"background-color": color});
+          editor.backgroundColorSelection(color);
+        }
+      };
+      if (toolbar.picker) {
+        toolbar.picker.remove();
+        toolbar.picker = undefined;
+      } else {
+        toolbar.picker = new Alice.Colorpicker(button, cb);
+      }
+    }
+  },
+  {
+    label: "b",
+    name: "bold",
+    handler: function (editor, button, toolbar) {
+      editor.boldSelection();
+    }
+  },
+  {
+    label: "i",
+    name: "italic",
+    handler: function (editor, button, toolbar) {
+      editor.italicSelection();
+    }
+  },
+  {
+    label: "u",
+    name: "underline",
+    handler: function (editor, button, toolbar) {
+      var elem = toolbar.element.down(".underline");
+      if (elem.hasClassName("selected"))
+       elem.removeClassName("selected");
+      else 
+       elem.addClassName("selected");
+
+      editor.underlineSelection();
+    }
+  }
+];
+
+Alice.Colorpicker = Class.create({
+  initialize: function(button, callback) {
+    var elem = new Element("div").addClassName("color_picker");
+
+    var toggle = new Element("div").addClassName("toggle");
+    var blank = new Element("span").addClassName("blank").addClassName("color");
+    blank.setStyle({"background-color": "none"});
+    blank.insert("&#8416;");
+    toggle.insert('<span id="fg" class="active">fg</span><span id="bg">bg</span>');
+    toggle.insert(blank);
+    elem.insert(toggle);
+
+    var colorcontainer = new Element("div").addClassName("colors");
+    this.colors().each(function(color) {
+      var box = new Element("span").addClassName("color");
+      box.setStyle({"background-color": color});
+      colorcontainer.insert(box); 
+    });
+    elem.insert(colorcontainer);
+
+    document.body.insert(elem);
+    elem.observe("mousedown", this.clicked.bind(this));
+    elem.observe("mouseup", function(e) {e.stop()});
+
+    this.button = button;
+    this.elem = elem;
+    this.cb = callback;
+    this.fg = true;
+  },
+
+  clicked: function(e) {
+    e.stop();
+
+    var box = e.findElement("span.color");
+    if (box) {
+      var color = box.getStyle("background-color");
+      if (color) this.cb(color, this.fg);
+      return;
+    }
+
+    if (e.findElement("span#fg")) {
+      this.elem.down("#bg").removeClassName("active");
+      this.elem.down("#fg").addClassName("active");
+
+      this.fg = true;
+      return;
+    }
+
+    if (e.findElement("span#bg")) {
+      this.elem.down("#fg").removeClassName("active");
+      this.elem.down("#bg").addClassName("active");
+      this.fg = false;
+      return;
+    }
+  },
+
+  remove: function() {
+    this.elem.remove();
+  },
+
+  colors: function() {
+    return ["#fff", "#000", "#008", "#080", "#f00", "#800", "#808", "#f80",
+            "#ff0", "#0f0", "#088", "#0ff", "#00f", "#f0f", "#888", "#ccc"];
+  }
+});
+Object.extend(Alice, {
+  RE: { 
+    img: /^http[^\s]*\.(?:jpe?g|gif|png|bmp|svg)[^\/]*$/i,
+    audio: /^http[^\s]*\.(?:wav|mp3|ogg|aiff?|m4[ar])[^\/]*$/i,
+    url: /(https?:\/\/[^\s<"]*)/ig
+  },
+
+  Months: ['Jan','Feb','Mar','Apr','May','June','July','Aug',
+           'Sept','Oct','Nov','Dec'],
+
+  Days: ['Sun', 'Mon','Tue','Wed','Thu','Fri','Sat'],
+
+  cleanupCopy: function(node) {
+    if (!node.select("li.message").length) return;
+
+    var lines = [];
+    node.select("li.message").each(function(line) {
+      var left = line.down("div.left span.nick");
+      var message = line.down("div.msg");
+      var clean = [];
+      if (left) {
+        var nick = left.innerHTML.stripTags();
+        nick = nick.replace(/^\s+/, "");
+        nick = nick.replace(/\s+$/, "");
+        clean.push("&lt; "+nick+"&gt;");
+      }
+      if (message) {
+        var body = message.innerHTML.stripTags();
+        body = body.replace(/^\s+/, "");
+        body = body.replace(/\s+$/, "");
+        clean.push(body);
+      }
+      if (clean.length) lines.push(
+        clean.join(" ").replace(/\n/g, ""));
+    });
+    node.update(lines.join("<br>"));
+    node.cleanWhitespace();
+  },
+
+  epochToLocal: function(epoch, format, show_date) {
+    var date = new Date(parseInt(epoch) * 1000);
+    if (!date) return epoch;
+
+    var hours = date.getHours();
+    var prefix = show_date ?
+      sprintf("%s, %s %d, ", Alice.Days[date.getDay()], Alice.Months[date.getMonth()], date.getDate())
+      : "";
+
+    if (format == "12") {
+      var ap;
+      if (hours >= 12) {
+        if (hours > 12) hours -= 12;
+        ap = "p";
+      } else {
+        ap = "a"
+      }
+      return sprintf("%s%d:%02d%s", prefix, hours, date.getMinutes(), ap);
+    }
+
+    return sprintf("%s%02d:%02d", prefix, hours, date.getMinutes());
+  },
+
+  makeLinksClickable: function(elem) {
+    var children = elem.childNodes;
+    var length = children.length;
+
+    for (var i=0; i < length; i++) {
+      var node = children[i];
+      if (node.nodeName == "A") {
+        continue;
+      }
+      else if (node.nodeName != "#text") {
+        Alice.makeLinksClickable(node);
+      }
+      else if (node.nodeValue.match(Alice.RE.url)) {
+        var span = new Element("SPAN");
+        span.innerHTML = node.nodeValue.escapeHTML().replace(
+          Alice.RE.url, '<a href="$1" target="_blank" rel="noreferrer">$1</a>');
+        node.parentNode.replaceChild(span, node);
+      }
+    }
+  },
+
+  growlNotify: function(message) {
+    if (window.fluid) {
+      window.fluid.showGrowlNotification({
+        title: message.subject, 
+        description: message.body,
+        priority: 1, 
+        sticky: false,
+        identifier: message.msgid
+      });
+    }
+    else if (window.webkitNotifications) {
+      if (window.webkitNotifications.checkPermission() == 0) {
+        var popup = window.webkitNotifications.createNotification(
+          "http://static.usealice.org/image/alice.png",
+          message.subject,
+          message.body
+        );
+
+        popup.ondisplay = function() {
+          setTimeout(function () {popup.cancel();}, 5000);
+        };
+
+        popup.show();
+      }
+    }
+  },
+  
+  isSpecialKey: function(keyCode) {
+    var special_keys = [
+			16,27,9,32,13,8,145,20,144,19,45,36,46,35,33,34,37,38,39,
+			40,17,18,91,112,113,114,115,116,117,118,119,120,121,122,123,
+      224
+		];
+		return special_keys.indexOf(keyCode) > -1;
+  },
+  
+  playAudio: function(image, audio) {
+    image.src = '/static/image/pause.png'; 
+    if (! audio) {
+      var url = image.nextSibling.href;
+      audio = new Audio(url);
+      audio.addEventListener('ended', function () {
+        image.src = '/static/image/play.png';
+        image.onclick = function () { Alice.playAudio(image, audio) };
+      });
+    }
+    audio.play();
+    image.onclick = function() {
+      audio.pause();
+      this.src = '/static/image/play.png';
+      this.onclick = function () { Alice.playAudio(this, audio) };
+    };
+  },
+
+  joinChannel: function() {
+    var network = $('join_network').value;
+    var channel = $('join_channel').value;
+    if (!network || !channel) {
+      alert("Must select a channel and network!");
+      return;
+    }
+    var win = alice.activeWindow();
+    alice.connection.sendMessage({
+      source: win.id,
+      msg: "/join -"+network+" "+channel
+    });
+    alice.input.disabled = false;
+    $('join').remove();
+  },
+
+  tabsets: {
+    addSet: function () {
+			var name = prompt("Please enter a name for this tab set.");
+      if (name && !Alice.tabsets.hasTabset(name)) {
+        Alice.tabsets.clearActive();
+        $('sets').insert('<li class="active">'+name.escapeHTML()+'</li>');
+        var list = $('empty_tabset').clone(true).addClassName('active').show();
+        list.id = null;
+        $('tabset_data').insert(list);
+      }
+      else {
+        alert("Invalid tab set name.");
+      }
+    },
+
+    hasTabset: function (name) {
+      var sets = $$('#sets li');
+      for (var i=0; i < sets.length; i++) {
+        if (sets[i].innerHTML == name) {
+          return true;
+        }
+      }
+      return false;
+    },
+
+    submit: function (params) {
+      new Ajax.Request("/savetabsets", {
+        method: "post",
+        parameters: Object.toQueryString(params),
+        onSuccess: function(transport){
+          $('tabset_menu').replace(transport.responseText);
+          Alice.tabsets.remove()
+        }
+      });
+      return false;
+    },
+
+    params: function () {
+      var values = Alice.tabsets.values();
+      return Alice.tabsets.sets().inject({}, function(acc, set, index) {
+        acc[set] = values[index];
+        return acc;
+      });
+    },
+
+    sets: function () {
+      if (!$('sets')) return [];
+      return $('sets').select('li').map(function(li) {return li.innerHTML.unescapeHTML()});
+    },
+
+    values: function () {
+      if (!$('tabset_data')) return [];
+
+      return $$('#tabset_data ul').map(function(ul) {
+        var windows = ul.select('input').filter(function(input) {
+          return input.checked;
+        }).map(function(input){return input.name});
+        return windows.length ? windows : 'empty';
+      });
+    },
+
+    remove: function () {
+      alice.input.disabled = false;
+      $('tabsets').remove();
+    },
+
+    clearActive: function () {
+      $('tabset_data').select('.active').invoke('removeClassName', 'active');
+      $('sets').select('.active').invoke('removeClassName', 'active');
+    },
+
+    removeSet: function () {
+      $('tabsets').down('.active').remove();
+      $('tabset_data').down('.active').remove();
+    },
+
+    focusIndex: function (i) {
+      Alice.tabsets.clearActive();
+      $('tabset_data').select('ul')[i].addClassName('active');
+      $('sets').select('li')[i].addClassName('active');
+    },
+
+    focusSet: function (e) {
+      var li = e.findElement('li');
+      if (li) {
+        Alice.tabsets.focusIndex(li.previousSiblings().length);
+      }
+    },
+  },
+
+  prefs: {
+    addHighlight: function (alias) {
+		  var channel = prompt("Enter a word to highlight.");
+		  if (channel)
+		    $('highlights').insert("<option value=\""+channel+"\">"+channel+"</option>");
+		  return false;
+		},
+
+    removeHighlights: function (alias) {
+		  $A($('highlights').options).each(function (option) {
+		    if (option.selected) option.remove()});
+		  return false;
+		},
+
+    addNick: function (nick) {
+      var nick = prompt("Enter a nick.");
+      if (nick)
+        $('monospace_nicks').insert("<option value=\""+nick+"\">"+nick+"</option>");
+      return false;
+    },
+
+    removeNicks: function (nick) {
+      $A($('monospace_nicks').options).each(function (option) {
+        if (option.selected) option.remove()});
+      return false;
+    },
+
+    remove: function() {
+      alice.input.disabled = false;
+      $('prefs').remove();
+    },
+
+    submit: function(form) {
+      var options = {highlights: [], monospace_nicks: []};
+
+      ["images", "animate", "avatars", "alerts", "audio"].each(function (pref) {
+        options[pref] = $(pref).checked ? "show" : "hide";
+      });
+      $A($("highlights").options).each(function(option) {
+        options.highlights.push(option.value);
+      });
+
+      $A($("monospace_nicks").options).each(function(option) {
+        options.monospace_nicks.push(option.value);
+      });
+
+      ["style", "timeformat", "quitmsg"].each(function(pref) {
+        options[pref] = $(pref).value;
+      });
+
+      Alice.prefs.remove();
+
+			new Ajax.Request('/save', {
+        method: 'get',
+        parameters: options,
+        onSuccess: function(){
+          var reload = (alice.options.avatars != options.avatars || 
+                        alice.options.images != options.images ||
+                        alice.options.style != options.style);
+
+          if (reload) {
+            window.location.reload();
+          }
+          else {
+            alice.options = options;
+            if (window.location.toString().match(/safe/i)) {
+              alice.options.avatars = "hide";
+              alice.options.images = "hide";
+            }
+          }
+        }
+      });
+
+      return false;
+    }
+  },
+
+  connections: {
+    disconnectServer: function (alias) {
+      $("menu_" + alias).addClassName("disconnected");
+      $("menu_" + alias).removeClassName("connected");
+		  $(alias + "_status").className = "disconnected";
+		  $(alias + "_status").innerHTML = "disconnected";
+		  $(alias + "_connection").innerHTML = "connect";
+		  $(alias + "_connection").onclick = function (e) {
+		    e.stop();
+		    Alice.connections.serverConnection(alias, "connect");
+		  };
+		},
+
+    connectServer: function (alias) {
+      $("menu_" + alias).removeClassName("disconnected");
+      $("menu_" + alias).addClassName("connected");
+		  $(alias + "_status").className = "connected";
+		  $(alias + "_status").innerHTML = "connected";
+		  $(alias + "_connection").innerHTML = "disconnect";
+		  $(alias + "_connection").onclick = function (e) {
+		    e.stop();
+		    Alice.connections.serverConnection(alias, "disconnect");
+		  };
+		},
+
+    showConnection: function (alias) {
+		  $$("div#servers .active").invoke("removeClassName","active");
+			$("setting_" + alias).addClassName("active");
+			$("menu_" + alias).addClassName("active");
+	  },
+		
+    addChannel: function (alias) {
+			var channel = prompt("Please enter a channel name.");
+			if (channel)
+			  $("channels_" + alias).insert("<option value=\""+channel+"\">"+channel+"</option>");
+			return false;
+	  },
+
+    addCommand: function (alias) {
+			var command = prompt("Please enter a command.");
+			if (command)
+			  $("on_connect_" + alias).insert("<option value=\""+command+"\">"+command+"</option>");
+			return false;
+		},
+
+    removeCommands: function (alias) {
+			$A($("on_connect_" + alias).options).each(function (option) {
+			if (option.selected) option.remove()});
+			  return false;
+		},
+
+    removeChannels: function (alias) {
+			$A($("channels_" + alias).options).each(function (option) {
+			if (option.selected) option.remove()});
+			  return false;
+		},
+
+    addServer: function () {
+			var name = prompt("Please enter a name for this server.");
+			if (! name) return;
+			// TODO: test if this server is already being used ...
+			new Ajax.Request("/serverconfig", {
+			  parameters: {name: name},
+			  method: 'get',
+			  onSuccess: function (trans) {
+			    var data = trans.responseText.evalJSON();
+			    $$('#config_data table').invoke('removeClassName',"active");
+			    $$('#connections li').invoke('removeClassName',"active");
+			    $('config_data').down('.config_body').insert(data.config);
+			    $('connections').insert(data.listitem);
+			  }
+		  });
+	  },
+
+    removeServer: function () {
+		  var alias = $('connections').down('.active').id.replace(/^menu_/, "");
+			if (alias && confirm("Are you sure you want to remove "+alias+"?")) {
+			  $("menu_"+alias).remove();
+			  $("setting_"+alias).remove();
+			  $("connections").down("li").addClassName("active");
+			  $("config_data").down("table").addClassName("active");
+			}
+	  },
+
+    submit: function(form) {
+      var params = form.serialize(true);
+      form.select(".channelselect").each(function(select) {
+        params[select.name] = $A(select.options).map(function(opt){return opt.value});
+      });
+
+      new Ajax.Request('/save', {
+        method: 'post',
+        parameters: params,
+        onSuccess: function(){Alice.connections.remove()}
+      });
+
+      return false;
+    },
+
+    remove: function() {
+      alice.input.disabled = false;
+      $('servers').remove();
+    },
+
+    serverConnection: function(alias, action) {
+      alice.connection.sendMessage({
+        msg: '/' + action + ' ' + alias,
+        source: alice.activeWindow().id,
+      });
+
+      return false;
+    }
+  }
+});
+
+
+Element.addMethods({
+  redraw: function(element){
+    element = $(element);
+    var n = document.createTextNode(' ');
+    element.appendChild(n);
+    (function(){n.parentNode.removeChild(n)}).defer();
+    return element;
+  }
+});
 Alice.Connection.WebSocket = Class.create(Alice.Connection, {
   initialize: function(application) {
     this.type = "websocket";
@@ -12585,11 +13718,465 @@ Alice.Connection.WebSocket = Class.create(Alice.Connection, {
     this.sendMessage({source: windowId, msg: "/create " + title});
     if (message) {
       setTimeout(function() {
-        this.application.displayMessage(message)
+        this.application.displayMessage(message) 
       }.bind(this), 1000);
     }
   }
 
+});
+Alice.Window = Class.create({
+  initialize: function(application, serialized) {
+    this.application = application;
+    
+    this.element = $(serialized['id']);
+    this.title = serialized['title'];
+    this.type = serialized['type'];
+    this.hashtag = serialized['hashtag'];
+    this.network = serialized['network'];
+    this.id = this.element.identify();
+    this.active = false;
+    this.topic = serialized['topic'];
+    this.tab = $(this.id + "_tab");
+    this.tab_layout = this.tab.getLayout();
+    this.tabButton = $(this.id + "_tab_button");
+    this.messages = this.element.down('.messages');
+    this.visibleNick = "";
+    this.visibleNickTimeout = "";
+    this.lasttimestamp = null;
+    this.nicks = [];
+    this.nicks_order = [];
+    this.statuses = [];
+    this.messageLimit = this.application.messageLimit;
+    this.chunkSize = this.messageLimit / 2;
+    this.msgid = -1;
+    this.visible = true;
+    this.forceScroll = false;
+    this.lastScrollPosition = 0;
+    
+    this.setupEvents();
+  },
+
+  hide: function() {
+    this.element.hide();
+    this.tab.addClassName('hidden');
+    this.tab.removeClassName('visible');
+    this.visible = false;
+  },
+
+  show: function() {
+    this.element.show();
+    this.tab.addClassName('visible');
+    this.tab.removeClassName('hidden');
+    this.visible = true;
+    this.updateTabLayout();
+  },
+
+  setupEvents: function() {
+    this.application.supportsTouch ? this.setupTouchEvents() : this.setupMouseEvents();
+  },
+
+  setupTouchEvents: function() {
+    this.messages.observe("touchstart", function (e) {
+      this.showNick(e);
+    }.bind(this));
+    this.tab.observe("touchstart", function (e) {
+      e.stop();
+      if (!this.active) this.focus();
+    }.bind(this));
+    this.tabButton.observe("touchstart", function(e) {
+      if (this.active) {
+        e.stop();
+        confirm("Are you sure you want to close this tab?") && this.close()
+      }
+    }.bind(this));
+  },
+
+  setupMouseEvents: function() {
+    // huge mess of click logic to get the right behavior.
+    // (e.g. clicking on unfocused (x) button does not close tab)
+    this.tab.observe("mousedown", function(e) {
+      if (!this.active) {this.focus(); this.focusing = true}
+    }.bind(this));
+
+    this.tab.observe("click", function(e) {this.focusing = false}.bind(this));
+
+    this.tabButton.observe("click", function(e) {
+      if (this.active && !this.focusing) 
+        if (this.type != "channel" || confirm("Are you sure you want to leave "+this.title+"?"))
+          this.close()
+    }.bind(this));
+
+    this.messages.observe("mouseover", this.showNick.bind(this));
+  },
+
+  checkScrollBack: function() {
+    if (this.active && this.element.scrollTop <= 150) {
+      clearInterval(this.scrollListener);
+      var first = this.messages.down("li[id]");
+      if (first) {
+        first = first.id.replace("msg-", "") - 1;
+        this.messageLimit += this.chunkSize;
+      }
+      else {
+        first = this.msgid;
+      }
+      this.application.log("requesting chunk" + first);
+      this.tab.addClassName("loading");
+      this.application.getBacklog(this, first, this.chunkSize);
+    }
+    else {
+      clearTimeout(this.scrollListener);
+      this.scrollListener = setTimeout(this.checkScrollBack.bind(this), 1000);
+    }
+  },
+
+  clearMessages: function() {
+    clearTimeout(this.scrollListener);
+    this.messages.update("");
+    this.lastNick = "";
+  },
+
+  updateTabLayout: function() {
+    this.tab_layout = this.tab.getLayout();
+  },
+
+  getTabPosition: function() {
+    var shift = this.application.tabShift();
+
+    var tabs_width = this.application.tabsWidth();
+    var tab_width = this.tab_layout.get("width");
+
+    var offset_left = this.tab_layout.get("left") + shift;
+    var offset_right = tabs_width - (offset_left + tab_width);
+
+    var overflow_right = Math.abs(Math.min(0, offset_right));
+    var overflow_left = Math.abs(Math.min(0, offset_left));
+
+    return {
+      right: overflow_right,
+      left: overflow_left
+    };
+  },
+
+  shiftTab: function() {
+    var left = null
+      , time = 0
+      , pos = this.getTabPosition(); 
+
+    if (pos.left) {
+      this.application.shiftTabs(pos.left);
+    }
+    else if (pos.right) {
+      this.application.shiftTabs(-pos.right);
+    }
+  },
+
+  unFocus: function() {
+    this.lastScrollPosition = this.captureScrollPosition();
+    this.active = false;
+    this.element.removeClassName('active');
+    this.tab.removeClassName('active');
+    clearTimeout(this.scrollListener);
+    clearTimeout(this.focusTimer);
+    this.addFold();
+  },
+
+  addFold: function() {
+    this.messages.select("li.fold").invoke("removeClassName", "fold");
+    var last = this.messages.childElements().last();
+    if (last) last.addClassName("fold");
+  },
+
+  showNick: function (e) {
+    var li = e.findElement("li.message");
+    if (li && li.hasClassName("avatar")) {
+      if (this.application.overlayVisible || li == this.visibleNick) return;
+      clearTimeout(this.visibleNickTimeout);
+
+      this.visibleNick = li;
+      var nick;
+      if (li.hasClassName("consecutive")) {
+        var stem = li.previous("li:not(.consecutive)");
+        if (!stem) return;
+        nick = stem.down("span.nick");
+      } else {
+        nick = li.down("span.nick");
+      }
+
+      if (nick) {
+        this.visibleNickTimeout = setTimeout(function(nick) {
+          if (nick) nick.style.opacity = 1;
+
+          setTimeout(function(){
+            if (this.application.overlayVisible) return;
+            if (nick) nick.style.opacity = 0;
+          }.bind(this, nick) , 1000);
+        }.bind(this, nick), 500);
+      }
+    }
+    else {
+      this.visibleNick = "";
+      clearTimeout(this.visibleNickTimeout);
+    }
+  },
+  
+  focus: function(event) {
+    if (!this.application.currentSetContains(this)) return;
+
+    this.application.previousFocus = this.application.activeWindow();
+    if (this != this.application.previousFocus)
+      this.application.previousFocus.unFocus();
+
+    // focusing an already focused window can make the
+    // scroll position jump to its position from its last
+    // unfocus. doh.
+    if (!this.active) {
+      this.active = true;
+
+      this.scrollToPosition(this.lastScrollPosition);
+
+      this.focusTimer = setTimeout(function(){
+        this.scrollToPosition(this.lastScrollPosition);
+        if (!this.scrollBackEmpty) this.checkScrollBack();
+      }.bind(this), 400);
+    }
+
+    this.element.addClassName('active');
+    this.tab.addClassName('active');
+
+    this.application.setSource(this.id);
+    this.application.displayNicks(this.nicks);
+    this.markRead();
+    this.setWindowHash();
+
+    this.shiftTab();
+
+    // remove fold class from last message
+    var last = this.messages.childElements().last();
+    if (last && last.hasClassName("fold"))
+      last.removeClassName("fold");
+
+    this.application.displayTopic(this.topic);
+    document.title = this.title;
+    return this;
+  },
+
+  setWindowHash: function () {
+    var new_hash = "#" + this.application.selectedSet + this.hashtag;
+    if (new_hash != window.location.hash) {
+      window.location.hash = encodeURI(new_hash);
+      window.location = window.location.toString();
+    }
+  },
+  
+  markRead: function () {
+    this.tab.removeClassName("unread");
+    this.tab.removeClassName("highlight");
+    this.statuses = [];
+    this.application.unHighlightChannelSelect(this.id);
+  },
+
+  markUnread: function(classname) {
+    var classes = ["unread"];
+    if (classname) classes.push(classname);
+
+    classes.each(function(c){this.tab.addClassName(c)}.bind(this));
+    this.application.highlightChannelSelect(this.id, classes);
+    this.statuses = classes;
+  },
+  
+  disable: function () {
+    this.markRead();
+    this.tab.addClassName('disabled');
+  },
+  
+  enable: function () {
+    this.tab.removeClassName('disabled');
+  },
+  
+  close: function(event) {
+    this.tab.remove();
+    this.element.remove();
+    this.application.removeWindow(this);
+  },
+  
+  showHappyAlert: function (message) {
+    this.messages.insert(
+      "<li class='event happynotice'><div class='msg'>"+message+"</div></li>"
+    );
+    this.scrollToPosition(0);
+  },
+  
+  showAlert: function (message) {
+    this.messages.insert(
+      "<li class='event notice'><div class='msg'>"+message+"</div></li>"
+    );
+    this.scrollToPosition(0);
+  },
+
+  announce: function (message) {
+    message = message.escapeHTML();
+    this.messages.insert(
+      "<li class='message monospaced announce'><div class='msg'>"+message+"</div></li>"
+    );
+    this.scrollToPosition(0);
+  },
+
+  trimMessages: function() {
+    this.messages.select("li").reverse().slice(this.messageLimit).invoke("remove");
+  },
+
+  addChunk: function(chunk) {
+    if (chunk.nicks) this.updateNicks(chunk.nicks);
+    clearTimeout(this.scrollListener);
+
+    if (chunk.range.length == 0) {
+      this.scrollBackEmpty = true;
+      this.tab.removeClassName("loading");
+      return;
+    }
+
+    var position = this.captureScrollPosition();
+
+    if (parseInt(chunk['range'][0]) > this.msgid) {
+      this.messages.insert({"bottom": chunk['html']});
+      this.trimMessages();
+      this.msgid = parseInt(chunk['range'][1]);
+    }
+    else {
+      this.bulk_insert = true;
+      this.messages.insert({"top": chunk['html']});
+    }
+
+    var original_timestamp = this.lasttimestamp;
+    this.lasttimestamp = null;
+
+    this.messages.select("li:not(.filtered)").each(function (li) {
+      this.application.applyFilters(li, this);
+    }.bind(this));
+
+    this.lasttimestamp = original_timestamp;
+    this.bulk_insert = false;
+
+    this.scrollToPosition(position);
+    setTimeout(function(){this.removeClassName("loading")}.bind(this.tab), 1000);
+    this.scrollListener = setTimeout(this.checkScrollBack.bind(this), 1000);
+  },
+
+  addMessage: function(message) {
+    if (!message.html || message.msgid <= this.msgid) return;
+    
+    if (message.msgid) this.msgid = message.msgid;
+    if (message.nicks) this.updateNicks(message.nicks);
+
+    var position = this.captureScrollPosition();
+    
+    this.messages.insert(message.html);
+    this.trimMessages();
+
+    this.scrollToPosition(position);
+
+    var li = this.messages.select("li").last();
+    this.application.applyFilters(li, this, message);
+
+    this.scrollToPosition(position);
+
+    if (message.event == "topic") {
+      this.topic = message.body;
+      if (this.active) this.application.displayTopic(this.topic);
+    }
+
+    this.element.redraw();
+    this.promoteNick(message.nick);
+  },
+
+  promoteNick: function(nick) {
+    // just return if this nick is already at the end
+    if (this.nicks_order.last() == nick) return; 
+
+    // remove nick from list if it exists
+    var index = this.nicks_order.indexOf(nick);
+    if (index > -1) this.nicks_order.splice(index, 1);
+
+    this.nicks_order.push(nick);
+  },
+
+  captureScrollPosition: function() {
+    if (!this.active) return;
+    if (this.forceScroll) return 0;
+
+    var bottom = this.element.scrollTop + this.element.offsetHeight;
+    var height = this.element.scrollHeight;
+
+    return height - bottom;
+  },
+  
+  scrollToPosition: function(position) {
+    if (!this.active) return;
+    this.element.scrollTop = this.element.scrollHeight - this.element.offsetHeight - position;
+  },
+
+  getNicknames: function () {
+    return this.nicks.sort(function(a, b) {
+
+      var pos_a = this.nicks_order.indexOf(a),
+          pos_b = this.nicks_order.indexOf(b);
+
+      if (pos_a == pos_b)
+        return a.toLowerCase().localeCompare(b.toLowerCase());
+      else if (pos_a > pos_b)
+        return -1;
+      else if (pos_a < pos_b)
+        return 1;
+
+    }.bind(this));
+  },
+
+  updateNicks: function(nicks) {
+    this.nicks = nicks;
+    if (this.active) this.application.displayNicks(this.nicks);
+  },
+
+  removeImage: function(e) {
+    e.stop();
+    var div = e.findElement('div.image');
+    if (div) {
+      var a = div.down("a");
+      var id = a.identify();
+      a.update(a.href);
+      a.style.display = "inline";
+      div.replace(a);
+      a.observe("click", function(e){e.stop();this.inlineImage(a)}.bind(this));
+    }
+  },
+
+  inlineImage: function(a) {
+    a.stopObserving("click");
+    var src = a.readAttribute("img") || a.innerHTML;
+    var prefix = alice.options.image_prefix;
+
+    var img = new Element("IMG", {src: prefix + src});
+    img.hide();
+
+    img.observe("load", function(){
+      var wrap = new Element("DIV", {"class": "image"});
+      var hide = new Element("A", {"class": "hideimg"});
+      var position = this.captureScrollPosition();
+
+      img.show();
+      a.replace(wrap);
+      wrap.insert(a);
+      a.update(img);
+      a.insert(hide);
+      a.style.display = "inline-block";
+      hide.observe("click", this.removeImage.bind(this));
+      hide.update("hide");
+
+      this.scrollToPosition(position);
+    }.bind(this));
+
+    a.insert({after: img});
+  }
 });
 Alice.Connection.XHR = Class.create(Alice.Connection, {
   initialize: function(application) {
@@ -12742,7 +14329,7 @@ Alice.Connection.XHR = Class.create(Alice.Connection, {
         this.handleUpdate(transport);
         if (message) {
           setTimeout(function() {
-            this.application.displayMessage(message)
+            this.application.displayMessage(message) 
           }.bind(this), 1000);
         }
       }.bind(this)
@@ -12750,1205 +14337,15 @@ Alice.Connection.XHR = Class.create(Alice.Connection, {
   }
 
 });
-Alice.Window = Class.create({
-  initialize: function(application, serialized) {
-    this.application = application;
-
-    this.element = $(serialized['id']);
-    this.title = serialized['title'];
-    this.type = serialized['type'];
-    this.hashtag = serialized['hashtag'];
-    this.network = serialized['network'];
-    this.id = this.element.identify();
-    this.active = false;
-    this.topic = serialized['topic'];
-    this.tab = $(this.id + "_tab");
-    this.tab_layout = this.tab.getLayout();
-    this.tabButton = $(this.id + "_tab_button");
-    this.messages = this.element.down('.messages');
-    this.visibleNick = "";
-    this.visibleNickTimeout = "";
-    this.lasttimestamp = null;
-    this.nicks = [];
-    this.nicks_order = [];
-    this.statuses = [];
-    this.messageLimit = this.application.messageLimit;
-    this.chunkSize = this.messageLimit / 2;
-    this.msgid = -1;
-    this.visible = true;
-    this.forceScroll = false;
-    this.lastScrollPosition = 0;
-
-    this.setupEvents();
-  },
-
-  hide: function() {
-    this.element.hide();
-    this.tab.addClassName('hidden');
-    this.tab.removeClassName('visible');
-    this.visible = false;
-  },
-
-  show: function() {
-    this.element.show();
-    this.tab.addClassName('visible');
-    this.tab.removeClassName('hidden');
-    this.visible = true;
-    this.updateTabLayout();
-  },
-
-  setupEvents: function() {
-    this.application.supportsTouch ? this.setupTouchEvents() : this.setupMouseEvents();
-  },
-
-  setupTouchEvents: function() {
-    this.messages.observe("touchstart", function (e) {
-      this.showNick(e);
-    }.bind(this));
-    this.tab.observe("touchstart", function (e) {
-      e.stop();
-      if (!this.active) this.focus();
-    }.bind(this));
-    this.tabButton.observe("touchstart", function(e) {
-      if (this.active) {
-        e.stop();
-        confirm("Are you sure you want to close this tab?") && this.close()
-      }
-    }.bind(this));
-  },
-
-  setupMouseEvents: function() {
-    this.tab.observe("mousedown", function(e) {
-      if (!this.active) {this.focus(); this.focusing = true}
-    }.bind(this));
-
-    this.tab.observe("click", function(e) {this.focusing = false}.bind(this));
-
-    this.tabButton.observe("click", function(e) {
-      if (this.active && !this.focusing)
-        if (this.type != "channel" || confirm("Are you sure you want to leave "+this.title+"?"))
-          this.close()
-    }.bind(this));
-
-    this.messages.observe("mouseover", this.showNick.bind(this));
-  },
-
-  checkScrollBack: function() {
-    if (this.active && this.element.scrollTop <= 150) {
-      clearInterval(this.scrollListener);
-      var first = this.messages.down("li[id]");
-      if (first) {
-        first = first.id.replace("msg-", "") - 1;
-        this.messageLimit += this.chunkSize;
-      }
-      else {
-        first = this.msgid;
-      }
-      this.application.log("requesting chunk" + first);
-      this.tab.addClassName("loading");
-      this.application.getBacklog(this, first, this.chunkSize);
-    }
-    else {
-      clearTimeout(this.scrollListener);
-      this.scrollListener = setTimeout(this.checkScrollBack.bind(this), 1000);
-    }
-  },
-
-  clearMessages: function() {
-    clearTimeout(this.scrollListener);
-    this.messages.update("");
-    this.lastNick = "";
-  },
-
-  updateTabLayout: function() {
-    this.tab_layout = this.tab.getLayout();
-  },
-
-  getTabPosition: function() {
-    var shift = this.application.tabShift();
-
-    var tabs_width = this.application.tabsWidth();
-    var tab_width = this.tab_layout.get("width");
-
-    var offset_left = this.tab_layout.get("left") + shift;
-    var offset_right = tabs_width - (offset_left + tab_width);
-
-    var overflow_right = Math.abs(Math.min(0, offset_right));
-    var overflow_left = Math.abs(Math.min(0, offset_left));
-
-    return {
-      right: overflow_right,
-      left: overflow_left
-    };
-  },
-
-  shiftTab: function() {
-    var left = null
-      , time = 0
-      , pos = this.getTabPosition();
-
-    if (pos.left) {
-      this.application.shiftTabs(pos.left);
-    }
-    else if (pos.right) {
-      this.application.shiftTabs(-pos.right);
-    }
-  },
-
-  unFocus: function() {
-    this.lastScrollPosition = this.captureScrollPosition();
-    this.active = false;
-    this.element.removeClassName('active');
-    this.tab.removeClassName('active');
-    clearTimeout(this.scrollListener);
-    clearTimeout(this.focusTimer);
-    this.addFold();
-  },
-
-  addFold: function() {
-    this.messages.select("li.fold").invoke("removeClassName", "fold");
-    var last = this.messages.childElements().last();
-    if (last) last.addClassName("fold");
-  },
-
-  showNick: function (e) {
-    var li = e.findElement("li.message");
-    if (li && li.hasClassName("avatar")) {
-      if (this.application.overlayVisible || li == this.visibleNick) return;
-      clearTimeout(this.visibleNickTimeout);
-
-      this.visibleNick = li;
-      var nick;
-      if (li.hasClassName("consecutive")) {
-        var stem = li.previous("li:not(.consecutive)");
-        if (!stem) return;
-        nick = stem.down("span.nick");
-      } else {
-        nick = li.down("span.nick");
-      }
-
-      if (nick) {
-        this.visibleNickTimeout = setTimeout(function(nick) {
-          if (nick) nick.style.opacity = 1;
-
-          setTimeout(function(){
-            if (this.application.overlayVisible) return;
-            if (nick) nick.style.opacity = 0;
-          }.bind(this, nick) , 1000);
-        }.bind(this, nick), 500);
-      }
-    }
-    else {
-      this.visibleNick = "";
-      clearTimeout(this.visibleNickTimeout);
-    }
-  },
-
-  focus: function(event) {
-    if (!this.application.currentSetContains(this)) return;
-
-    this.application.previousFocus = this.application.activeWindow();
-    if (this != this.application.previousFocus)
-      this.application.previousFocus.unFocus();
-
-    if (!this.active) {
-      this.active = true;
-
-      this.scrollToPosition(this.lastScrollPosition);
-
-      this.focusTimer = setTimeout(function(){
-        this.scrollToPosition(this.lastScrollPosition);
-        if (!this.scrollBackEmpty) this.checkScrollBack();
-      }.bind(this), 400);
-    }
-
-    this.element.addClassName('active');
-    this.tab.addClassName('active');
-
-    this.application.setSource(this.id);
-    this.application.displayNicks(this.nicks);
-    this.markRead();
-    this.setWindowHash();
-
-    this.shiftTab();
-
-    var last = this.messages.childElements().last();
-    if (last && last.hasClassName("fold"))
-      last.removeClassName("fold");
-
-    this.application.displayTopic(this.topic);
-    document.title = this.title;
-    return this;
-  },
-
-  setWindowHash: function () {
-    var new_hash = "#" + this.application.selectedSet + this.hashtag;
-    if (new_hash != window.location.hash) {
-      window.location.hash = encodeURI(new_hash);
-      window.location = window.location.toString();
-    }
-  },
-
-  markRead: function () {
-    this.tab.removeClassName("unread");
-    this.tab.removeClassName("highlight");
-    this.statuses = [];
-    this.application.unHighlightChannelSelect(this.id);
-  },
-
-  markUnread: function(classname) {
-    var classes = ["unread"];
-    if (classname) classes.push(classname);
-
-    classes.each(function(c){this.tab.addClassName(c)}.bind(this));
-    this.application.highlightChannelSelect(this.id, classes);
-    this.statuses = classes;
-  },
-
-  disable: function () {
-    this.markRead();
-    this.tab.addClassName('disabled');
-  },
-
-  enable: function () {
-    this.tab.removeClassName('disabled');
-  },
-
-  close: function(event) {
-    this.tab.remove();
-    this.element.remove();
-    this.application.removeWindow(this);
-  },
-
-  showHappyAlert: function (message) {
-    this.messages.insert(
-      "<li class='event happynotice'><div class='msg'>"+message+"</div></li>"
-    );
-    this.scrollToPosition(0);
-  },
-
-  showAlert: function (message) {
-    this.messages.insert(
-      "<li class='event notice'><div class='msg'>"+message+"</div></li>"
-    );
-    this.scrollToPosition(0);
-  },
-
-  announce: function (message) {
-    message = message.escapeHTML();
-    this.messages.insert(
-      "<li class='message monospaced announce'><div class='msg'>"+message+"</div></li>"
-    );
-    this.scrollToPosition(0);
-  },
-
-  trimMessages: function() {
-    this.messages.select("li").reverse().slice(this.messageLimit).invoke("remove");
-  },
-
-  addChunk: function(chunk) {
-    if (chunk.nicks) this.updateNicks(chunk.nicks);
-    clearTimeout(this.scrollListener);
-
-    if (chunk.range.length == 0) {
-      this.scrollBackEmpty = true;
-      this.tab.removeClassName("loading");
-      return;
-    }
-
-    var position = this.captureScrollPosition();
-
-    if (parseInt(chunk['range'][0]) > this.msgid) {
-      this.messages.insert({"bottom": chunk['html']});
-      this.trimMessages();
-      this.msgid = parseInt(chunk['range'][1]);
-    }
-    else {
-      this.bulk_insert = true;
-      this.messages.insert({"top": chunk['html']});
-    }
-
-    var original_timestamp = this.lasttimestamp;
-    this.lasttimestamp = null;
-
-    this.messages.select("li:not(.filtered)").each(function (li) {
-      this.application.applyFilters(li, this);
-    }.bind(this));
-
-    this.lasttimestamp = original_timestamp;
-    this.bulk_insert = false;
-
-    this.scrollToPosition(position);
-    setTimeout(function(){this.removeClassName("loading")}.bind(this.tab), 1000);
-    this.scrollListener = setTimeout(this.checkScrollBack.bind(this), 1000);
-  },
-
-  addMessage: function(message) {
-    if (!message.html || message.msgid <= this.msgid) return;
-
-    if (message.msgid) this.msgid = message.msgid;
-    if (message.nicks) this.updateNicks(message.nicks);
-
-    var position = this.captureScrollPosition();
-
-    this.messages.insert(message.html);
-    this.trimMessages();
-
-    this.scrollToPosition(position);
-
-    var li = this.messages.select("li").last();
-    this.application.applyFilters(li, this, message);
-
-    this.scrollToPosition(position);
-
-    if (message.event == "topic") {
-      this.topic = message.body;
-      if (this.active) this.application.displayTopic(this.topic);
-    }
-
-    this.element.redraw();
-    this.promoteNick(message.nick);
-  },
-
-  promoteNick: function(nick) {
-    if (this.nicks_order.last() == nick) return;
-
-    var index = this.nicks_order.indexOf(nick);
-    if (index > -1) this.nicks_order.splice(index, 1);
-
-    this.nicks_order.push(nick);
-  },
-
-  captureScrollPosition: function() {
-    if (!this.active) return;
-    if (this.forceScroll) return 0;
-
-    var bottom = this.element.scrollTop + this.element.offsetHeight;
-    var height = this.element.scrollHeight;
-
-    return height - bottom;
-  },
-
-  scrollToPosition: function(position) {
-    if (!this.active) return;
-    this.element.scrollTop = this.element.scrollHeight - this.element.offsetHeight - position;
-  },
-
-  getNicknames: function () {
-    return this.nicks.sort(function(a, b) {
-
-      var pos_a = this.nicks_order.indexOf(a),
-          pos_b = this.nicks_order.indexOf(b);
-
-      if (pos_a == pos_b)
-        return a.toLowerCase().localeCompare(b.toLowerCase());
-      else if (pos_a > pos_b)
-        return -1;
-      else if (pos_a < pos_b)
-        return 1;
-
-    }.bind(this));
-  },
-
-  updateNicks: function(nicks) {
-    this.nicks = nicks;
-    if (this.active) this.application.displayNicks(this.nicks);
-  },
-
-  removeImage: function(e) {
-    e.stop();
-    var div = e.findElement('div.image');
-    if (div) {
-      var a = div.down("a");
-      var id = a.identify();
-      a.update(a.href);
-      a.style.display = "inline";
-      div.replace(a);
-      a.observe("click", function(e){e.stop();this.inlineImage(a)}.bind(this));
-    }
-  },
-
-  inlineImage: function(a) {
-    a.stopObserving("click");
-    var src = a.readAttribute("img") || a.innerHTML;
-    var prefix = alice.options.image_prefix;
-
-    var img = new Element("IMG", {src: prefix + src});
-    img.hide();
-
-    img.observe("load", function(){
-      var wrap = new Element("DIV", {"class": "image"});
-      var hide = new Element("A", {"class": "hideimg"});
-      var position = this.captureScrollPosition();
-
-      img.show();
-      a.replace(wrap);
-      wrap.insert(a);
-      a.update(img);
-      a.insert(hide);
-      a.style.display = "inline-block";
-      hide.observe("click", this.removeImage.bind(this));
-      hide.update("hide");
-
-      this.scrollToPosition(position);
-    }.bind(this));
-
-    a.insert({after: img});
-  }
-});
-
-Alice.Toolbar = Class.create(WysiHat.Toolbar, {
-  createButtonElement: function(toolbar, options) {
-    var button = Element('button');
-    button.update(options.get('label'));
-    button.addClassName(options.get('name'));
-    toolbar.appendChild(button);
-
-    return button;
-  },
-  observeButtonClick: function(element, handler) {
-    element.on('click', function(e) {e.stop()});
-    element.on('mouseup', function(event) {
-      alice.input.focus();
-
-      handler(this.editor, element, this);
-
-      this.editor.fire("selection:change");
-
-      event.stop();
-    }.bind(this));
-  },
-});
-
-Object.extend(Alice.Toolbar, {
-  updateColors: function (editor) {
-    var range = alice.input.range || editor;
-    if (range) {
-      var node = range.getNode();
-      var fg = node.getStyle("color");
-      var bg = node.getStyle("background-color");
-      var button = alice.input.toolbar.element.down("button.colors");
-      button.setStyle({"border-color": fg, "background-color": bg});
-    }
-    return 1;
-  }
-});
-
-Alice.Toolbar.ButtonSet = [
-  {
-    label: "",
-    name: "colors",
-    query: Alice.Toolbar.updateColors,
-    handler: function (editor, button, toolbar) {
-      var cb = function (color, fg) {
-        if (fg) {
-          button.setStyle({"border-color": color})
-          editor.colorSelection(color);
-        } else {
-          button.setStyle({"background-color": color});
-          editor.backgroundColorSelection(color);
-        }
-      };
-      if (toolbar.picker) {
-        toolbar.picker.remove();
-        toolbar.picker = undefined;
-      } else {
-        toolbar.picker = new Alice.Colorpicker(button, cb);
-      }
-    }
-  },
-  {
-    label: "b",
-    name: "bold",
-    handler: function (editor, button, toolbar) {
-      editor.boldSelection();
-    }
-  },
-  {
-    label: "i",
-    name: "italic",
-    handler: function (editor, button, toolbar) {
-      editor.italicSelection();
-    }
-  },
-  {
-    label: "u",
-    name: "underline",
-    handler: function (editor, button, toolbar) {
-      var elem = toolbar.element.down(".underline");
-      if (elem.hasClassName("selected"))
-       elem.removeClassName("selected");
-      else
-       elem.addClassName("selected");
-
-      editor.underlineSelection();
-    }
-  }
-];
-
-Alice.Colorpicker = Class.create({
-  initialize: function(button, callback) {
-    var elem = new Element("div").addClassName("color_picker");
-
-    var toggle = new Element("div").addClassName("toggle");
-    var blank = new Element("span").addClassName("blank").addClassName("color");
-    blank.setStyle({"background-color": "none"});
-    blank.insert("&#8416;");
-    toggle.insert('<span id="fg" class="active">fg</span><span id="bg">bg</span>');
-    toggle.insert(blank);
-    elem.insert(toggle);
-
-    var colorcontainer = new Element("div").addClassName("colors");
-    this.colors().each(function(color) {
-      var box = new Element("span").addClassName("color");
-      box.setStyle({"background-color": color});
-      colorcontainer.insert(box);
-    });
-    elem.insert(colorcontainer);
-
-    document.body.insert(elem);
-    elem.observe("mousedown", this.clicked.bind(this));
-    elem.observe("mouseup", function(e) {e.stop()});
-
-    this.button = button;
-    this.elem = elem;
-    this.cb = callback;
-    this.fg = true;
-  },
-
-  clicked: function(e) {
-    e.stop();
-
-    var box = e.findElement("span.color");
-    if (box) {
-      var color = box.getStyle("background-color");
-      if (color) this.cb(color, this.fg);
-      return;
-    }
-
-    if (e.findElement("span#fg")) {
-      this.elem.down("#bg").removeClassName("active");
-      this.elem.down("#fg").addClassName("active");
-
-      this.fg = true;
-      return;
-    }
-
-    if (e.findElement("span#bg")) {
-      this.elem.down("#fg").removeClassName("active");
-      this.elem.down("#bg").addClassName("active");
-      this.fg = false;
-      return;
-    }
-  },
-
-  remove: function() {
-    this.elem.remove();
-  },
-
-  colors: function() {
-    return ["#fff", "#000", "#008", "#080", "#f00", "#800", "#808", "#f80",
-            "#ff0", "#0f0", "#088", "#0ff", "#00f", "#f0f", "#888", "#ccc"];
-  }
-});
-Alice.Input = Class.create({
-  initialize: function(application, element) {
-
-    this.application = application;
-    this.textarea = $(element);
-    this.disabled = false;
-
-    if (this.canContentEditable()) {
-      this.editor = WysiHat.Editor.attach(this.textarea);
-      this.element = this.editor;
-      this.element.writeAttribute("autocapitalize", "off");
-      this.toolbar = new Alice.Toolbar(this.element)
-      this.toolbar.addButtonSet(Alice.Toolbar.ButtonSet);
-      var input = new Element("input", {type: "hidden", name: "html", value: 1});
-      this.textarea.form.appendChild(input);
-
-      document.observe("mousedown", function(e) {
-        if (!e.findElement(".editor")) this.uncancelNextFocus();
-      }.bind(this));
-
-      this.editor.observe("keydown", function(){this.cancelNextFocus()}.bind(this));
-      this.editor.observe("keyup", this.updateRange.bind(this));
-      this.editor.observe("mouseup", this.updateRange.bind(this));
-      this.editor.observe("paste", this.pasteHandler.bind(this));
-
-      this.toolbar.element.on("mouseup","button",function(){
-        this.cancelNextFocus();
-      }.bind(this));
-    } else {
-      this.element = this.textarea;
-      this.element.observe("keydown", this.resize.bind(this));
-      this.element.observe("cut", this.resize.bind(this));
-      this.element.observe("paste", this.resize.bind(this));
-      this.element.observe("change", this.resize.bind(this));
-    }
-
-    this.history = [];
-    this.index = -1;
-    this.buffer = "";
-    this.completion = false;
-    this.focused = false;
-
-    if (!(this.application.isMobile || this.application.isBeefy)) this.focus();
-
-    this.element.observe("blur", this.onBlur.bind(this));
-  },
-
-  setValue: function(value) {
-    this.textarea.setValue(value);
-    if (this.editor) {
-      this.editor.update(value);
-      var text = document.createElement("BR");
-      this.editor.appendChild(text);
-    }
-  },
-
-  getValue: function() {
-    if (this.editor) {
-      return this.editor.innerHTML;
-    }
-    return this.textarea.getValue();
-  },
-
-  onKeyPress: function(event) {
-    if (event.keyCode != Event.KEY_TAB) {
-      this.completion = false;
-      this.element.stopObserving("keypress");
-    }
-  },
-
-  uncancelNextFocus: function() {
-    this.skipThisFocus = false;
-  },
-
-  cancelNextFocus: function() {
-    this.skipThisFocus = true;
-  },
-
-  focus: function(force) {
-    if (this.disabled) return;
-
-    if (!force) {
-      if (this.focused) return;
-
-      if (this.skipThisFocus) {
-        this.skipThisFocus = false;
-        return;
-      }
-    }
-
-    this.focused = true;
-
-    if (this.editor) {
-      var selection = window.getSelection();
-      selection.removeAllRanges();
-      if (this.range) {
-        selection.addRange(this.range);
-      } else {
-        var text = document.createTextNode("");
-        this.editor.appendChild(text);
-        selection.selectNode(text);
-        this.range = selection.getRangeAt(0);
-      }
-      this.editor.focus();
-    } else {
-      this.textarea.focus();
-    }
-  },
-
-  onBlur: function(e) {
-    this.focused = false;
-  },
-
-  previousCommand: function() {
-    if (this.index-- == -1) {
-      this.index = this.history.length - 1;
-      this.stash();
-    }
-
-    this.update();
-  },
-
-  nextCommand: function() {
-    if (this.index++ == -1) {
-      this.stash();
-    } else if (this.index == this.history.length) {
-      this.index = -1;
-    }
-
-    this.update();
-  },
-
-  newLine: function() {
-    this.application.log("newLine");
-  },
-
-  send: function() {
-    var msg = this.getValue();
-
-    if (msg.length > 1024*2) {
-      alert("That message is way too long, dude.");
-      return;
-    }
-
-    if (this.editor) this.textarea.value = msg;
-
-    var success = this.application.connection.sendMessage(this.textarea.form);
-    if (success) {
-      this.history.push(msg);
-      this.setValue("");
-      if (this.editor) this.editor.update();
-      this.index = -1;
-      this.stash();
-      this.update();
-      this.focus(1);
-    }
-    else {
-      alert("Could not send message, not connected!");
-    }
-  },
-
-  completeNickname: function(prev) {
-    if (this.disabled) return;
-    if (!this.completion) {
-      this.completion = new Alice.Completion(this.application.activeWindow().getNicknames(), this.editor);
-      this.element.observe("keypress", this.onKeyPress.bind(this));
-    }
-
-    if (prev)
-      this.completion.prev();
-    else
-      this.completion.next();
-  },
-
-  stopCompletion: function() {
-    if (this.completion) {
-      this.completion.restore();
-      this.completion = false;
-      this.element.stopObserving("keypress");
-    }
-  },
-
-  stash: function() {
-    this.buffer = this.getValue();
-  },
-
-  update: function() {
-    this.setValue(this.getCommand(this.index));
-  },
-
-  getCommand: function(index) {
-    if (index == -1) {
-      return this.buffer;
-    } else {
-      return this.history[index];
-    }
-  },
-
-  resize: function() {
-    (function() {
-      var height = this.getContentHeight();
-      if (height == 0) {
-        this.element.setStyle({ height: null, top: 0 });
-      } else if (height <= 150) {
-        this.element.setStyle({ height: height + "px", top: "0px" });
-      }
-    }).bind(this).defer();
-  },
-
-  getContentHeight: function() {
-    var element = new Element("div").setStyle({
-      position:   "absolute",
-      visibility: "hidden",
-      left:       "-" + this.element.getWidth() + "px",
-      width:      this.element.getWidth() - 7 + "px",
-      fontFamily: this.element.getStyle("fontFamily"),
-      fontSize:   this.element.getStyle("fontSize"),
-      lineHeight: this.element.getStyle("lineHeight"),
-      whiteSpace: "pre-wrap",
-      wordWrap:   "break-word"
-    });
-
-    if (this.editor) element.addClassName("editor");
-
-    var value = this.getValue();
-    element.update(value.replace(/\n$/, "\n\n").replace("\n", "<br>"));
-    $(document.body).insert(element);
-
-    var height = element.getHeight();
-    element.remove();
-    return height;
-  },
-
-  canContentEditable: function() {
-    var element = new Element("div", {contentEditable: "true"});
-    return  ! (element.contentEditable == null || this.application.isMobile || Prototype.Browser.IE);
-  },
-
-  updateRange: function (e) {
-    var selection = window.getSelection();
-    if (selection.rangeCount > 0) {
-      var range = selection.getRangeAt(0);
-      this.range = range;
-    }
-  },
-
-  pasteHandler: function(e) {
-    if (!e.clipboardData) return;
-
-    var items = e.clipboardData.items;
-    if (items) {
-      var output = "";
-      for (var i=0; i < items.length; i++) {
-        var blob = items[i].getAsFile();
-        if (blob && blob.type.match(/image/)) {
-          e.stop();
-          var fd = new FormData();
-          fd.append("image", blob);
-          fd.append("key", "f1f60f1650a07bfe5f402f35205dffd4");
-          var xhr = new XMLHttpRequest();
-          xhr.open("POST", "http://api.imgur.com/2/upload.json");
-          xhr.onload = function() {
-            var url = xhr.responseText.evalJSON();
-            this.editor.insertHTML(url.upload.links.original);
-            this.updateRange();
-          }.bind(this);
-          xhr.send(fd);
-          return;
-        }
-      }
-    }
-
-    var text = e.clipboardData.getData("Text");
-    if (text) {
-      e.preventDefault();
-      text = text.escapeHTML().replace(/\n+/g, "<br>\n");
-      this.editor.insertHTML(text);
-      this.updateRange();
-      return;
-    }
-
-    var url = e.clipboardData.getData("URL");
-    if (url) {
-      e.preventDefault();
-      this.editor.insertHTML(url);
-      this.updateRange();
-      return;
-    }
-
-  }
-});
-Alice.Keyboard = Class.create({
-  initialize: function(application) {
-    this.application = application;
-    this.isMac = navigator.platform.match(/mac/i);
-    this.lastCycle = 0;
-    this.cycleDelay = 300;
-    this.enable();
-
-    if (!this.application.isMobile) {
-      this.shortcut("Cmd+C", { propagate: true });
-      this.shortcut("Ctrl+C", { propagate: true });
-      this.shortcut("Cmd+B");
-      this.shortcut("Cmd+I");
-      this.shortcut("Cmd+Shift+U");
-      this.shortcut("Opt+Up");
-      this.shortcut("Opt+Down");
-      this.shortcut("Cmd+Shift+M");
-      this.shortcut("Cmd+Shift+J");
-      this.shortcut("Cmd+Shift+K");
-      this.shortcut("Cmd+K");
-      this.shortcut("Cmd+Shift+Left");
-      this.shortcut("Cmd+Shift+Right");
-      this.shortcut("Cmd+Shift+H");
-      this.shortcut("Cmd+Shift+L");
-      this.shortcut("Cmd+U");
-      this.shortcut("Esc");
-      this.shortcut("Cmd", { propagate: true });
-      this.shortcut("Tab", { propagate: true });
-      this.shortcut("Shift+Tab", { propagate: true });
-      for (var i = 0; i < 10; i++) {
-        this.shortcut("Cmd+"+i);
-        if (!this.isMac) this.shortcut("Opt+"+i);
-      }
-    }
-
-    this.shortcut("Enter");
-  },
-
-  shortcut: function(name, options) {
-
-    var meta = this.isMac ? "Meta" : "Ctrl";
-
-    var keystroke = name.replace("Cmd", meta).replace("Opt", "Alt"),
-        method = "on" + name.replace(/\+/g, "");
-
-    window.shortcut.add(keystroke, function(event) {
-      if (this.enabled) {
-        this.activeWindow = this.application.activeWindow();
-        if (method.match(/\d$/)) {
-          this.onNumeric.call(this, event, method.substr(-1));
-        }
-        else {
-          this[method].call(this, event);
-        }
-        delete this.activeWindow;
-      }
-    }.bind(this), options);
-  },
-
-  onCmd: function(e) {
-    if (e.keyCode == 186) {
-      e.stop();
-      this.application.nextUnreadWindow();
-    }
-  },
-
-  onNumeric: function(event, number) {
-    var win = this.application.nth_window(number);
-    if (number == 0) {
-      win = this.application.info_window();
-    }
-    if (win) win.focus();
-  },
-
-  onCmdC: function(event) {
-    this.application.input.cancelNextFocus();
-  },
-
-  onCtrlC: function(event) {
-    this.onCmdC(event);
-  },
-
-  onCmdK: function() {
-    this.activeWindow.clearMessages();
-    this.application.connection.sendMessage({
-      msg: "/clear",
-      source: this.activeWindow.id,
-    });
-  },
-
-  onCmdB: function() {
-    if (this.application.input.editor) {
-      this.application.input.focus();
-      this.application.input.editor.boldSelection();
-    }
-  },
-
-  onCmdShiftU: function() {
-    if (this.application.input.editor) {
-      this.application.input.focus();
-      this.application.input.editor.underlineSelection();
-    }
-  },
-
-  onCmdI: function() {
-    if (this.application.input.editor) {
-      this.application.input.focus();
-      this.application.input.editor.italicSelection();
-    }
-  },
-
-  onCmdU: function() {
-    this.application.nextUnreadWindow();
-  },
-
-  onCmdShiftM: function() {
-    this.application.windows().invoke('markRead');
-  },
-
-  onCmdShiftJ: function() {
-    this.activeWindow.scrollToPosition(0);
-  },
-
-  onCmdShiftK: function() {
-    this.application.toggleOverlay();
-  },
-
-  onCmdRight: function() {
-    this.application.nextWindow();
-  },
-
-  onCmdShiftL: function() {
-    this.application.nextWindow();
-  },
-
-  onCmdShiftRight: function() {
-    this.application.nextWindow();
-  },
-
-  onCmdLeft: function() {
-    this.application.previousWindow();
-  },
-
-  onCmdShiftH: function() {
-    this.application.previousWindow();
-  },
-
-  onCmdShiftLeft: function() {
-    this.application.previousWindow();
-  },
-
-  onOptUp: function() {
-    this.application.input.previousCommand();
-  },
-
-  onOptDown: function() {
-    this.application.input.nextCommand();
-  },
-
-  onEnter: function() {
-    this.application.input.send();
-  },
-
-  onTab: function(e) {
-    if (!e.findElement('div.config')) {
-      e.stop();
-      this.application.input.completeNickname();
-    }
-  },
-
-  onShiftTab: function(e) {
-    if (!e.findElement('div.config')) {
-      e.stop();
-      this.application.input.completeNickname(true);
-    }
-  },
-
-  onEsc: function() {
-    this.application.input.stopCompletion();
-  },
-
-  enable: function() {
-    this.enabled = true;
-  },
-
-  disable: function() {
-    this.enabled = false;
-  }
-});
-Alice.Completion = Class.create({
-  initialize: function(candidates, editor) {
-    var range = this.getRange();
-    if (!range) return;
-
-    this.element = range.startContainer;
-    this.editor = editor;
-    if (this.element == this.editor) {
-      this.addTextNode();
-    }
-
-    this.value = this.element.data || "";
-    this.index = range.startOffset;
-
-    this.findStem();
-    this.matches = this.matchAgainst(candidates);
-    this.matchIndex = -1;
-  },
-
-  addTextNode: function() {
-
-    this.editor.innerHTML = "";
-    var node = document.createTextNode("");
-    this.editor.appendChild(node);
-    var selection = window.getSelection();
-    selection.removeAllRanges();
-    selection.selectNode(node);
-    range = selection.getRangeAt(0);
-    this.element = node;
-  },
-
-  getRange: function() {
-    var selection = window.getSelection();
-    if (selection.rangeCount > 0) {
-      return selection.getRangeAt(0);
-    }
-    if (document.createRange) {
-      return document.createRange();
-    }
-    return null;
-  },
-
-  setRange: function(range) {
-    if (!range) return;
-    var selection = window.getSelection();
-    selection.removeAllRanges();
-    selection.addRange(range);
-  },
-
-  next: function() {
-    if (!this.matches.length) return;
-    if (++this.matchIndex == this.matches.length) this.matchIndex = 0;
-    this.complete();
-  },
-
-  prev: function() {
-    if (!this.matches.length) return;
-    if (--this.matchIndex <= 0) this.matchIndex = this.matches.length - 1;
-    this.complete();
-  },
-
-  complete: function() {
-    var match = this.matches[this.matchIndex];
-    match += this.leftOffset == 0 ? ":\u00a0" : "\u00a0";
-    this.restore(match, this.leftOffset + match.length);
-  },
-
-  restore: function(stem, index) {
-    if (!this.element.parentNode)
-      this.addTextNode();
-
-    this.element.data = this.stemLeft + (stem || this.stem) + this.stemRight;
-    this.setCursorToIndex(Object.isUndefined(index) ? this.index : index);
-  },
-
-  setCursorToIndex: function(index) {
-    var range = this.getRange();
-    range.setStart(this.element, index);
-    range.setEnd(this.element, index);
-    this.setRange(range);
-  },
-
-  findStem: function() {
-    var left = [], right = [], chr, index, length = this.value.length;
-
-    for (index = this.index - 1; index >= 0; index--) {
-      chr = this.value.charAt(index);
-      if (!Alice.Completion.PATTERN.test(chr)) break;
-      left.unshift(chr);
-    }
-
-    for (index = this.index; index < length; index++) {
-      chr = this.value.charAt(index);
-      if (!Alice.Completion.PATTERN.test(chr)) break;
-      right.push(chr);
-    }
-
-    this.stem = left.concat(right).join("");
-    this.stemLeft  = this.value.substr(0, this.index - left.length);
-    this.stemRight = this.value.substr(this.index + right.length);
-    this.leftOffset = this.index - left.length;
-  },
-
-  matchAgainst: function(candidates) {
-    return candidates.grep(new RegExp("^" + RegExp.escape(this.stem), "i"));
-  }
-});
-
-Alice.Completion.PATTERN = /[A-Za-z0-9\[\\\]^_{|}-]/;
-
 if (window == window.parent) {
   document.observe("dom:loaded", function () {
     var alice = new Alice.Application();
     window.alice = alice;
 
+    // connect close botton for help 
     $('helpclose').observe("click", function () { $('help').hide(); });
     $('nicklist_toggle').observe("click", function () { alice.toggleNicklist() });
-
+   
     $$('.dropdown').each(function (menu) {
       menu.observe(alice.supportsTouch ? "touchstart" : "mousedown", function (e) {
         e.stop();
@@ -13970,7 +14367,8 @@ if (window == window.parent) {
       $$('.dropdown.open').invoke("removeClassName", "open");
     });
 
-
+    // setup window events
+    
     if (alice.isMobile) {
       $('nicklist_toggle').addClassName('visible');
     }
@@ -14041,7 +14439,7 @@ if (window == window.parent) {
         alice.clearMissed();
       };
 
-      window.status = " ";
+      window.status = " ";  
       window.onblur = function () {
         alice.isFocused = false
       };
@@ -14082,6 +14480,7 @@ if (window == window.parent) {
       }
     });
 
+    // no filters for phones
     if (alice.isMobile) return;
 
     alice.addFilters([
@@ -14123,6 +14522,7 @@ if (window == window.parent) {
       }
     ]);
 
+    // work around chrome bugs! what the fuck.
     if (window.navigator.userAgent.match(/chrome/i)) {
       alice.addFilters([
         function(msg, win) {

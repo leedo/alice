@@ -38,13 +38,11 @@ BUILD := share/static
 SOURCE := src
 JS_SOURCE := $(SOURCE)/js
 CSS_SOURCE := $(SOURCE)/css
-SPROCKETS := alice prototype scriptaculous shortcut wysihat sprintf web-socket-js
-INCLUDES := $(foreach sprocket,$(SPROCKETS),$(JS_SOURCE)/$(sprocket)/src)
-INCLUDE := $(foreach dir,$(INCLUDES),-I $(dir))
-JAVASCRIPT_SOURCES := $(foreach dir,$(INCLUDES),$(wildcard $(dir)/*.js))
+JS_DEPS := prototype scriptaculous effects dragdrop shortcut sprintf swfobject web_socket wysihat
+EXT_JS := $(foreach dep,$(JS_DEPS),$(JS_SOURCE)/external/$(dep).js)
+ALICE_JS := $(JS_SOURCE)/alice.js $(JS_SOURCE)/alice/*.js $(JS_SOURCE)/load.js
 
 ALICE_SCSS := $(CSS_SOURCE)/alice.scss
-ALICE_JS := $(JS_SOURCE)/alice/src/alice.js
 SITE_JS := $(BUILD)/alice.js
 
 COLORFILES := $(foreach dir,$(CSS_SOURCE)/colors,$(wildcard $(dir)/*.scss))
@@ -57,8 +55,8 @@ assets: stylesheets javascript
 
 stylesheets: $(CSSFILES)
 
-javascript: $(JAVASCRIPT_SOURCES)
-	sprocketize $(INCLUDE) $(ALICE_JS) > $(SITE_JS)
+javascript: $(EXT_JS) $(ALICE_JS)
+	cat $(EXT_JS) $(ALICE_JS) > $(SITE_JS)
 };
 
 WriteAll;
