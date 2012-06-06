@@ -40,7 +40,7 @@ Alice.Input = Class.create({
     this.completion = false;
     this.focused = false;
 
-    if (!(this.application.isMobile || this.application.isBeefy)) this.focus();
+    if (!(this.application.isMobile || this.application.isBeefy())) this.focus();
     
     this.element.observe("blur", this.onBlur.bind(this));
   },
