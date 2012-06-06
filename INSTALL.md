@@ -20,4 +20,5 @@ Check out alice's git repository
 Install alice's dependencies into a self-contained directory
 
     cpanm --local-lib extlib local::lib
+    cpanm --local-lib extlib Module::Install
     cpanm --local-lib extlib --installdeps --notest .
