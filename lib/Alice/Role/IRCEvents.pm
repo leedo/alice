@@ -173,6 +173,7 @@ irc_event privatemsg => sub {
   }
   elsif ($msg->{command} eq "NOTICE") {
     $self->send_info($from, $text);
+    $self->announce("$from: $text");
   }
 };
 
