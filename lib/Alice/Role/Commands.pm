@@ -498,6 +498,16 @@ command trim => {
   }
 };
 
+command alice => {
+  name => 'alice',
+  window => 1,
+  cb => sub {
+    my ($self, $req) = @_;
+    my $src = "http://prettybrd.com/~leedo/photos/alicestare.jpg";
+    $self->send_message($req->{window}, "alicecat", $src);
+  }
+};
+
 sub nick_table {
   my @nicks = @_;
 
