@@ -18,7 +18,7 @@ has assetdir => (
     if (-e "$FindBin::Bin/../share/templates") {
       return "$FindBin::Bin/../share";
     }
-    return dist_dir('App-Alice');
+    return dist_dir('Alice');
   }
 );
 
