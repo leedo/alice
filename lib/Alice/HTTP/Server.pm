@@ -7,8 +7,7 @@ use Fliggy::Server;
 use Plack::Builder;
 use Plack::Middleware::Static;
 use Plack::Session::Store::File;
-
-use Alice::Session::State::Cookie;
+use Plack::Session::State::Cookie;
 
 use Alice::HTTP::Request;
 use Alice::HTTP::Stream::XHR;
@@ -97,7 +96,7 @@ sub _build_httpd {
       builder {
         enable "Session",
           store => $self->session,
-          state => Alice::Session::State::Cookie->new(expires => 60 * 60 * 24 * 7);
+          state => Plack::Session::State::Cookie->new(expires => 60 * 60 * 24 * 7);
         enable "Static", path => qr{^/static/}, root => $self->assets;
         enable "+Alice::HTTP::WebSocket";
         sub {
