@@ -4,16 +4,16 @@ use strict;
 use parent qw(Plack::Session::State::Cookie);
 
 use Plack::Util::Accessor qw(serializer deserializer);
-use JSON::XS ();
+use JSON ();
 
 sub prepare_app {
   my $self = shift;
   $self->SUPER::prepare_app;
 
-  $self->serializer(sub {MIME::Base64::encode(JSON::XS::encode_json($_[0]), '' )})
+  $self->serializer(sub {MIME::Base64::encode(JSON::encode_json($_[0]), '' )})
     unless $self->serializer;
 
-  $self->deserializer(sub {JSON::XS::decode_json(MIME::Base64::decode($_[0]))})
+  $self->deserializer(sub {JSON::decode_json(MIME::Base64::decode($_[0]))})
     unless $self->deserializer;
 }
 
