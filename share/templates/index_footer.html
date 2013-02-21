@@ -1,6 +1,6 @@
 ? my ($app, $options, @windows) = @_;
         <script type="text/javascript">
-          WEB_SOCKET_SWF_LOCATION = "/static/WebSocketMain.swf";
+          WEB_SOCKET_SWF_LOCATION = "<?= $app->static_url("WebSocketMain.swf") ?>";
           document.observe("dom:loaded", function () {
             alice.options = <?= Text::MicroTemplate::encoded_string(JSON::to_json $options, {ascii => 1}) ?>;
 

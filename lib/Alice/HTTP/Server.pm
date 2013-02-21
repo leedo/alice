@@ -319,7 +319,7 @@ sub merged_options {
   my $config = $self->app->config;
 
   my $options = { map { $_ => ($req->param($_) || $config->$_) }
-      qw/animate images avatars alerts audio timeformat image_prefix/ };
+      qw/animate images avatars alerts audio timeformat image_prefix static_prefix/ };
 
   if ($options->{images} eq "show" and $options->{animate} eq "hide") {
     $options->{image_prefix} = "https://noembed.com/i/still/";

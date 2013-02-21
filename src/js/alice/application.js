@@ -944,7 +944,7 @@ Alice.Application = Class.create({
             if (this.options.alerts == "show")
               Alice.growlNotify(message);
             if (this.options.audio == "show") {
-              var beep = new Audio("/static/beep.mp3");
+              var beep = new Audio(this.options.static_prefix . "beep.mp3");
               beep.play();
             }
           }
