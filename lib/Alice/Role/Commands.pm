@@ -176,8 +176,7 @@ command qr{join|j} => {
     my ($self, $req, $channel, $password) = @_;
 
     $req->{stream}->reply("joining $channel on ". $req->{irc}->name);
-    $channel .= " $password" if $password;
-    $req->{irc}->send_srv(JOIN => $channel);
+    $req->{irc}->send_srv(JOIN => $channel, $password);
   },
 };
 
