@@ -12316,7 +12316,7 @@ Alice.Application = Class.create({
             if (this.options.alerts == "show")
               Alice.growlNotify(message);
             if (this.options.audio == "show") {
-              var beep = new Audio("/static/beep.mp3");
+              var beep = new Audio(this.options.static_prefix + "beep.mp3");
               beep.play();
             }
           }
@@ -12590,6 +12590,11 @@ Alice.Input = Class.create({
       this.element.observe("cut", this.resize.bind(this));
       this.element.observe("paste", this.resize.bind(this));
       this.element.observe("change", this.resize.bind(this));
+
+      // hack to force input focus on iOS
+      if (this.application.supportsTouch) {
+        this.element.observe("touchstart", this.focus.bind(this));
+      }
     }
 
     this.history = [];
