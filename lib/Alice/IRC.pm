@@ -166,7 +166,7 @@ sub realname_avatar {
   if ($realname =~ $email_re) {
     my $email = $1;
     return "http://www.gravatar.com/avatar/"
-           . md5_hex($email) . "?s=32&amp;r=x";
+           . md5_hex($email) . "?s=64&amp;r=x";
   }
   elsif ($realname =~ $image_re) {
     return $1;
