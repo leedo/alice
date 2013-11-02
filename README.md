@@ -204,6 +204,7 @@ browsers as well. Any help or bug reports would be much appreciated.
 - [Clint Ecker](https://github.com/leedo/alice/commits/master?author=clintecker)
 - [Adam Prescott](https://github.com/leedo/alice/commits/master?author=aprescott)
 - [datamuc](https://github.com/leedo/alice/commits/master?author=datamuc)
+- [Michael Driscoll](https://github.com/leedo/alice/commits/master?author=syncsynchalt)
 
 # COPYRIGHT
 
