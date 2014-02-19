@@ -256,7 +256,7 @@ sub ignores {
 sub is_ignore {
   my ($self, $type, $nick) = @_;
   $type ||= "msg";
-  any {$_ eq $nick} $self->ignores($type);
+  any {lc $_ eq lc $nick} $self->ignores($type);
 }
 
 sub add_ignore {
