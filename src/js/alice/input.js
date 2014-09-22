@@ -32,11 +32,6 @@ Alice.Input = Class.create({
       this.element.observe("cut", this.resize.bind(this));
       this.element.observe("paste", this.resize.bind(this));
       this.element.observe("change", this.resize.bind(this));
-
-      // hack to force input focus on iOS
-      if (this.application.supportsTouch) {
-        this.element.observe("touchstart", this.focus.bind(this));
-      }
     }
 
     this.history = [];
