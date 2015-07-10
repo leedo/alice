@@ -11460,7 +11460,7 @@ Alice.Application = Class.create({
       url: a.href,
       maxheight: 300,
     };
-    var url = "https://www.noembed.com/embed?" + Object.toQueryString(params);
+    var url = "https://noembed.com/embed?" + Object.toQueryString(params);
     this.getJSON(url, function(response) {
       var data = response.evalJSON();
       this.embedContent(a, win, data);
